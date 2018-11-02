@@ -2,7 +2,7 @@
 
 If this provider Add-On is installed alongside of TbSync, TbSync is able to sync Exchange ActiveSync (EAS v2.5 & v14.0) accounts.
 
-## Supported servers
+## Compatibility list
 
 EAS-4-TbSync is known to work with the following EAS providers:
 * Outlook.com
