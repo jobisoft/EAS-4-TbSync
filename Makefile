@@ -1,23 +1,14 @@
-# This file is part of TbSync.
+# This file is part of EAS-4-TbSync.
 #
-# TbSync is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# TbSync is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with TbSync. If not, see <https://www.gnu.org/licenses/>.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 .PHONY: build
 
 build:
 	# Sync all files except git technical files
 	# and screenshots
-	zip ../TbSync-beta.xpi -FS -R '*' \
-		-x 'screenshots' 'github/*' '.git/*' '.gitignore'
+	zip ../EAS-4-TbSync.xpi -FS -R '*' \
+		-x 'screenshots' '.git/*' '.gitignore'
 
