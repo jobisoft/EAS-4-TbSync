@@ -8,11 +8,11 @@
  
  "use strict";
 
-tbSync.includeJS("chrome://tbsync/content/provider/eas/wbxmltools.js");
-tbSync.includeJS("chrome://tbsync/content/provider/eas/xmltools.js");
+tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/wbxmltools.js");
+tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/xmltools.js");
 
 var eas = {
-    bundle: Services.strings.createBundle("chrome://tbsync/locale/eas.strings"),
+    bundle: Services.strings.createBundle("chrome://eas4tbsync/locale/eas.strings"),
     minTbSyncVersionRequired: "0",
 
     //use flags instead of strings to avoid errors due to spelling errors
@@ -34,9 +34,9 @@ var eas = {
      */
     load: Task.async (function* (lightningIsAvail) {
         //dynamically load overlays from xpi
-        yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://tbsync/content/provider/eas/overlays/abCardWindow.xul");
-        yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://tbsync/content/provider/eas/overlays/abCardWindow.xul");
-        yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
+        yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
+        yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
+        yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
 
         //fix criticalBug introduced by changing DeviceType, deviceType now is part of the account data
         let showMigrationPopup = false;
@@ -101,7 +101,7 @@ var eas = {
      * Returns location of 16x16 pixel provider icon.
      */
     getProviderIcon: function () {
-        return "chrome://tbsync/skin/eas16.png";
+        return "chrome://eas4tbsync/skin/eas16.png";
     },
 
 
@@ -2066,7 +2066,7 @@ var eas = {
 };
     
 
-tbSync.includeJS("chrome://tbsync/content/provider/eas/sync.js");
-tbSync.includeJS("chrome://tbsync/content/provider/eas/tasksync.js");
-tbSync.includeJS("chrome://tbsync/content/provider/eas/calendarsync.js");
-tbSync.includeJS("chrome://tbsync/content/provider/eas/contactsync.js");
+tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/sync.js");
+tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/tasksync.js");
+tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/calendarsync.js");
+tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/contactsync.js");

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://tbsync/locale/eas.dtd">
+<!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
 
 <dialog
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -13,7 +13,7 @@
     onclose="return tbSyncEasNewAccount.onClose()"
     ondialogextra1="tbSyncEasNewAccount.onAdd();">
 
-    <script type="application/javascript" src="chrome://tbsync/content/provider/eas/newaccount.js"/>
+    <script type="application/javascript" src="chrome://eas4tbsync/content/provider/eas/newaccount.js"/>
 
     <vbox>
         <description style="width: 450px">&add.description;</description>
