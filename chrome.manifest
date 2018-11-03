@@ -1,6 +1,6 @@
-content tbsync  content/
-skin tbsync  classic/1.0 skin/
-locale tbsync  de    locale/de/
-locale tbsync  en-US locale/en-US/
-locale tbsync  hu    locale/hu/
-locale tbsync  it    locale/it/
+content eas4tbsync  content/
+skin eas4tbsync  classic/1.0 skin/
+locale eas4tbsync  en-US locale/en-US/
+locale eas4tbsync  de    locale/de/
+locale eas4tbsync  hu    locale/hu/
+locale eas4tbsync  it    locale/it/
