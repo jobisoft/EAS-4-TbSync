@@ -262,7 +262,7 @@ eas.sync.Calendar = {
         wbxml.atag("EndTime", item.endDate ? tbSync.getIsoUtcString(item.endDate) : nowDate.toBasicISOString());
         
         //Location
-        wbxml.atag("Location", (item.hasProperty("location")) ? tbSync.encode_utf8(item.getProperty("location")) : "");
+        wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
 
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
         let alarms = item.getAlarms({});
@@ -285,7 +285,7 @@ eas.sync.Calendar = {
         wbxml.atag("Sensitivity", eas.sync.mapThunderbirdPropertyToEas("CLASS", "Sensitivity", item));
 
         //Subject (obmitting these, should remove them from the server - that does not work reliably, so we send blanks)
-        wbxml.atag("Subject", (item.title) ? tbSync.encode_utf8(item.title) : "");
+        wbxml.atag("Subject", (item.title) ? item.title : "");
 
         //StartTime in UTC
         wbxml.atag("StartTime", item.startDate ? tbSync.getIsoUtcString(item.startDate) : nowDate.toBasicISOString());

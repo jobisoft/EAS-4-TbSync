@@ -107,7 +107,7 @@ eas.sync.Tasks = {
         //Order of tags taken from: https://msdn.microsoft.com/en-us/library/dn338924(v=exchg.80).aspx
         
         //Subject
-        wbxml.atag("Subject", (item.title) ? tbSync.encode_utf8(item.title) : "");
+        wbxml.atag("Subject", (item.title) ? item.title : "");
         
         //Body
         wbxml.append(eas.sync.getItemBody(item, syncdata));

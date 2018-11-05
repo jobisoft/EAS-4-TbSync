@@ -734,7 +734,7 @@ eas.sync = {
         let categories = item.getCategories({});
         if (categories.length > 0) {
             wbxml.otag("Categories");
-                for (let i=0; i<categories.length; i++) wbxml.atag("Category", tbSync.encode_utf8(categories[i]));
+                for (let i=0; i<categories.length; i++) wbxml.atag("Category", categories[i]);
             wbxml.ctag();
         } else {
             wbxml.atag("Categories");
@@ -756,7 +756,7 @@ eas.sync = {
         let asversion = tbSync.db.getAccountSetting(syncdata.account, "asversion");
         let wbxml = tbSync.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, also activate type codePage (Calendar, Tasks, Contacts etc)
 
-        let description = (item.hasProperty("description")) ? tbSync.encode_utf8(item.getProperty("description")) : "";
+        let description = (item.hasProperty("description")) ? item.getProperty("description") : "";
         if (asversion == "2.5") {
             wbxml.atag("Body", description);
         } else {
