@@ -13,7 +13,7 @@ tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/xmltools.js");
 
 var eas = {
     bundle: Services.strings.createBundle("chrome://eas4tbsync/locale/eas.strings"),
-    minTbSyncVersionRequired: "0",
+    minTbSyncVersionRequired: "0.7.16",
 
     //use flags instead of strings to avoid errors due to spelling errors
     flags : Object.freeze({
@@ -79,6 +79,15 @@ var eas = {
      */
     getProviderIcon: function () {
         return "chrome://eas4tbsync/skin/eas16.png";
+    },
+
+
+
+    /**
+     * Returns the email address of the maintainer (used for bug reports).
+     */
+    getMaintainerEmail: function () {
+        return "john.bieling@gmx.de";
     },
 
 
