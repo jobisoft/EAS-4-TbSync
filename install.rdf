@@ -10,13 +10,15 @@
         <em:name>Exchange ActiveSync (EAS) provider for TbSync</em:name>
         <em:version>0.7.18</em:version>
         <em:description>Add sync support for Exchange ActiveSync (EAS) accounts to TbSync</em:description>
-        <em:translator>John Bieling (de)</em:translator>
-        <em:translator>John Bieling (en-US)</em:translator>
-        <em:translator>Óvári (hu)</em:translator>
-        <em:translator>Alessandro Menti (it)</em:translator>
-        <em:creator>John Bieling</em:creator>
         <em:homepageURL>https://github.com/jobisoft/EAS-4-TbSync</em:homepageURL>
         <em:iconURL>chrome://eas4tbsync/skin/eas32.png</em:iconURL>
+        <em:translator>John Bieling (de)</em:translator>
+        <em:translator>John Bieling (en-US)</em:translator>
+        <em:translator>Alessandro Menti (it)</em:translator>
+        <em:translator>Óvári (hu)</em:translator>
+        <em:contributor>Chris Allan (recurring events)</em:contributor>
+        <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+        <em:creator>John Bieling</em:creator>
 
         <em:targetApplication>
           <!-- Thunderbird -->
@@ -34,8 +36,11 @@
             <em:description>Synchronisiert Kontakte, Aufgaben und Kalender über Exchange ActiveSync mit Thunderbird</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
-            <em:translator>Óvári (hu)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
+            <em:translator>Óvári (hu)</em:translator>
+            <em:contributor>Chris Allan (recurring events)</em:contributor>
+            <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+            <em:creator>John Bieling</em:creator>
           </Description>
         </em:localized>
 
@@ -46,8 +51,11 @@
             <em:description>Az Exchange ActiveSync (EAS) fiókok szinkronizációs támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync)</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
-            <em:translator>Óvári (hu)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
+            <em:translator>Óvári (hu)</em:translator>
+            <em:contributor>Chris Allan (recurring events)</em:contributor>
+            <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+            <em:creator>John Bieling</em:creator>
           </Description>
         </em:localized>
 
@@ -58,8 +66,11 @@
             <em:description>Aggiunge il supporto per la sincronizzazione di account Exchange ActiveSync (EAS) a TbSync</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
-            <em:translator>Óvári (hu)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
+            <em:translator>Óvári (hu)</em:translator>
+            <em:contributor>Chris Allan (recurring events)</em:contributor>
+            <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+            <em:creator>John Bieling</em:creator>
           </Description>
         </em:localized>
 
