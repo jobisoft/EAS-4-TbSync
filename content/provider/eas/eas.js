@@ -64,6 +64,8 @@ var eas = {
 
     }),
 
+
+
     /**
      * Called during unload of external provider extension to unload provider.
      *
@@ -77,8 +79,13 @@ var eas = {
     /**
      * Returns location of 16x16 pixel provider icon.
      */
-    getProviderIcon: function () {
-        return "chrome://eas4tbsync/skin/eas16.png";
+    getProviderIcon: function (size = 16) {
+        switch (size) {
+            case 16: 
+                return "chrome://eas4tbsync/skin/eas16.png";
+            default: 
+                return "chrome://eas4tbsync/skin/eas64.png";
+        }
     },
 
 
@@ -93,6 +100,20 @@ var eas = {
 
 
     /**
+     * Returns a list of sponsors, they will be sorted by the index
+     */
+    getSponsors: function () {
+        return {
+            "Schiessl, Michael 1" : {name: "Michael Schiessl", description: "Tine 2.0", icon: "", link: "" },
+            "Schiessl, Michael 2" : {name: "Michael Schiessl", description: " Exchange 2007", icon: "", link: "" },
+            "netcup GmbH" : {name: "netcup GmbH", description : "SOGo", icon: "chrome://eas4tbsync/skin/sponsors/netcup.png", link: "http://www.netcup.de/" },
+            "nethinks GmbH" : {name: "nethinks GmbH", description : "Zarafa", icon: "chrome://eas4tbsync/skin/sponsors/nethinks.png", link: "http://www.nethinks.com/" },
+        };
+    },
+
+
+
+	/**
      * Return object which contains all possible fields of a row in the accounts database with the default value if not yet stored in the database.
      */
     getDefaultAccountEntries: function () {
