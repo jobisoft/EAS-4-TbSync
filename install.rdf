@@ -7,9 +7,9 @@
         <em:bootstrap>true</em:bootstrap>
         <em:unpack>false</em:unpack>
         <em:multiprocessCompatible>true</em:multiprocessCompatible>
-        <em:name>Exchange ActiveSync (EAS) provider for TbSync</em:name>
+        <em:name>Provider for Exchange ActiveSync</em:name>
         <em:version>0.7.18</em:version>
-        <em:description>Add sync support for Exchange ActiveSync (EAS) accounts to TbSync</em:description>
+        <em:description>Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)</em:description>
         <em:homepageURL>https://github.com/jobisoft/EAS-4-TbSync</em:homepageURL>
         <em:iconURL>chrome://eas4tbsync/skin/eas32.png</em:iconURL>
         <em:translator>John Bieling (de)</em:translator>
@@ -32,8 +32,8 @@
         <em:localized> <!-- German -->
           <Description>
             <em:locale>de</em:locale>
-            <em:name>Exchange ActiveSync (EAS) Provider für TbSync</em:name>
-            <em:description>Synchronisiert Kontakte, Aufgaben und Kalender über Exchange ActiveSync mit Thunderbird</em:description>
+            <em:name>Provider für Exchange ActiveSync</em:name>
+            <em:description>Erweitert TbSync und erlaubt die Synchronisation von Exchange ActiveSync Konten (Kontakte, Aufgaben und Kalender).</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
@@ -47,8 +47,8 @@
         <em:localized> <!-- Hungarian -->
           <Description>
             <em:locale>hu</em:locale>
-            <em:name>Exchange ActiveSync (EAS) szolgáltató a Thunderbird-összehangolás (TbSync) számára</em:name>
-            <em:description>Az Exchange ActiveSync (EAS) fiókok szinkronizációs támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync)</em:description>
+            <em:name>Exchange ActiveSync szolgáltató a Thunderbird-összehangolás (TbSync) számára</em:name>
+            <em:description>Az Exchange ActiveSync fiókok szinkronizációs támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync)</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
@@ -62,8 +62,8 @@
         <em:localized>  <!-- Italian -->
           <Description>
             <em:locale>it</em:locale>
-            <em:name>Provider Exchange ActiveSync (EAS) per TbSync</em:name>
-            <em:description>Aggiunge il supporto per la sincronizzazione di account Exchange ActiveSync (EAS) a TbSync</em:description>
+            <em:name>Provider Exchange ActiveSync</em:name>
+            <em:description>Aggiunge il supporto per la sincronizzazione di account Exchange ActiveSync a TbSync</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
