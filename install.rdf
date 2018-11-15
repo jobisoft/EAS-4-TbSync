@@ -17,7 +17,11 @@
         <em:translator>Alessandro Menti (it)</em:translator>
         <em:translator>Óvári (hu)</em:translator>
         <em:contributor>Chris Allan (recurring events)</em:contributor>
+        <em:contributor>Emil Ljungdahl</em:contributor>
         <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+        <em:contributor>Dzamo Norton</em:contributor>
+        <em:contributor>Tijuca</em:contributor>
+        <em:contributor>Puran2</em:contributor>	
         <em:creator>John Bieling</em:creator>
 
         <em:targetApplication>
@@ -39,7 +43,11 @@
             <em:translator>Alessandro Menti (it)</em:translator>
             <em:translator>Óvári (hu)</em:translator>
             <em:contributor>Chris Allan (recurring events)</em:contributor>
+            <em:contributor>Emil Ljungdahl</em:contributor>
             <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+            <em:contributor>Dzamo Norton</em:contributor>
+            <em:contributor>Tijuca</em:contributor>
+            <em:contributor>Puran2</em:contributor>	
             <em:creator>John Bieling</em:creator>
           </Description>
         </em:localized>
@@ -54,7 +62,11 @@
             <em:translator>Alessandro Menti (it)</em:translator>
             <em:translator>Óvári (hu)</em:translator>
             <em:contributor>Chris Allan (recurring events)</em:contributor>
+            <em:contributor>Emil Ljungdahl</em:contributor>
             <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+            <em:contributor>Dzamo Norton</em:contributor>
+            <em:contributor>Tijuca</em:contributor>
+            <em:contributor>Puran2</em:contributor>	
             <em:creator>John Bieling</em:creator>
           </Description>
         </em:localized>
@@ -69,7 +81,11 @@
             <em:translator>Alessandro Menti (it)</em:translator>
             <em:translator>Óvári (hu)</em:translator>
             <em:contributor>Chris Allan (recurring events)</em:contributor>
+            <em:contributor>Emil Ljungdahl</em:contributor>
             <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+            <em:contributor>Dzamo Norton</em:contributor>
+            <em:contributor>Tijuca</em:contributor>
+            <em:contributor>Puran2</em:contributor>	
             <em:creator>John Bieling</em:creator>
           </Description>
         </em:localized>
