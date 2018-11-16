@@ -108,7 +108,6 @@ var eas = {
             "Schiessl, Michael 2" : {name: "Michael Schiessl", description: " Exchange 2007", icon: "", link: "" },
             "netcup GmbH" : {name: "netcup GmbH", description : "SOGo", icon: "chrome://eas4tbsync/skin/sponsors/netcup.png", link: "http://www.netcup.de/" },
             "nethinks GmbH" : {name: "nethinks GmbH", description : "Zarafa", icon: "chrome://eas4tbsync/skin/sponsors/nethinks.png", link: "http://www.nethinks.com/" },
-            "Bieling, Annekathrin" : {name: "Annekathrin Bieling", description: "Hotmail", icon: "", link: "" },
             "Jau, Stephan" : {name: "Stephan Jau", description: "Horde", icon: "", link: "" },
             "Zavar " : {name: "Zavar", description: "Zoho", icon: "", link: "" },
         };
