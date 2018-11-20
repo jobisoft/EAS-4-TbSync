@@ -100,6 +100,24 @@ var eas = {
 
 
     /**
+     * Returns XUL URL of the new account dialog.
+     */
+    getCreateAccountXulUrl: function () {
+        return "//eas4tbsync/content/createAccount.xul";
+    },
+
+
+
+    /**
+     * Returns XUL URL of the edit account dialog.
+     */
+    getEditAccountXulUrl: function () {
+        return "//eas4tbsync/content/editAccount.xul";
+    },
+
+
+
+    /**
      * Returns a list of sponsors, they will be sorted by the index
      */
     getSponsors: function () {
