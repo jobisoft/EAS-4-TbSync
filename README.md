@@ -1,28 +1,8 @@
 # EAS-4-TbSync
 
-If this provider Add-On is installed alongside of TbSync, TbSync is able to sync Exchange ActiveSync (EAS v2.5 & v14.0) accounts.
+This provider Add-On adds Exchange ActiveSync (EAS v2.5 & v14.0) synchronization capabilities to TbSync.
 
-## Compatibility list
-
-EAS-4-TbSync is known to work with the following EAS providers:
-* Outlook.com
-* Office 365
-* Hotmail
-* Freenet Sync
-* Sync+ (Deutsche Telekom)
-* Strato Webmail Premium
-* Amazon WorkMail using ActiveSync v2.5
-* mailbox.org
-
-Furthermore, EAS-4-TbSync is known to work with the following server systems:
-* Microsoft Exchange [_if supporting Exchange ActiveSync (EAS), and not only Exchange WebServices (EWS)_]
-* SOGo
-* Kopano (Zarafa)
-* Horde
-* Sonicle WebTop
-* Tine 2.0
-* Kerio
-* Zoho (EAS 2.5)
+More information can be found in the [wiki](https://github.com/jobisoft/EAS-4-TbSync/wiki/About:-Provider-for-Exchange-ActiveSync) of this repository
 
 ## Icon sources and attributions
 
