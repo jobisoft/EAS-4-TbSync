@@ -9,6 +9,21 @@
 //no need to create namespace, we are in a sandbox
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
+
+let thisID = "";
+
+let onInitDoneObserver = {
+    observe: Task.async (function* (aSubject, aTopic, aData) {        
+        //it is now safe to import tbsync.jsm
+        Components.utils.import("chrome://tbsync/content/tbsync.jsm");
+        
+        //load all providers of this provider Add-on into TbSync (one at a time, obey order)
+       try {
+            yield tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
+        } catch (e) {}
+    })
+}
 
 function install(data, reason) {
 }
@@ -27,14 +42,16 @@ function startup(data, reason) {
     branch.setCharPref("eas.clientID.useragent", "Thunderbird ActiveSync");    
     branch.setBoolPref("eas.fix4freedriven", false);
     
-    //during APP_STARTUP, TbSync will find auto load all active providers, if this provider gets enabled later, load it dynamically 
-    if (reason != APP_STARTUP) {
-        Services.obs.notifyObservers(null, "tbsync.registerProvider", JSON.stringify({provider: "eas", js: "//eas4tbsync/content/eas.js"}));
-    }
+    thisID = data.id;
+    Services.obs.addObserver(onInitDoneObserver, "tbsync.init.done", false);
 }
 
 function shutdown(data, reason) {
-    //unload this provider from TbSync
-    Services.obs.notifyObservers(null, "tbsync.unregisterProvider", "eas");
-    Services.obs.notifyObservers(null, "chrome-flush-caches", null);
+    Services.obs.removeObserver(onInitDoneObserver, "tbsync.init.done");
+
+    //unload this provider Add-On and all its loaded providers from TbSync
+    try {
+        tbSync.unloadProviderAddon(data.id);
+    } catch (e) {}
+    Services.obs.notifyObservers(null, "chrome-flush-caches", null);    
 }

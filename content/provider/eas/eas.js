@@ -13,7 +13,6 @@ tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/xmltools.js");
 
 var eas = {
     bundle: Services.strings.createBundle("chrome://eas4tbsync/locale/eas.strings"),
-    minTbSyncVersionRequired: "0.7.16",
 
     //use flags instead of strings to avoid errors due to spelling errors
     flags : Object.freeze({
@@ -113,6 +112,15 @@ var eas = {
      */
     getEditAccountXulUrl: function () {
         return "//eas4tbsync/content/editAccount.xul";
+    },
+
+
+
+    /**
+     * Returns nice string for name of provider (is used in the add account menu).
+     */
+    getNiceProviderName: function () {
+        return "Exchange ActiveSync";
     },
 
 
