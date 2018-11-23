@@ -19,9 +19,7 @@ let onInitDoneObserver = {
         Components.utils.import("chrome://tbsync/content/tbsync.jsm");
         
         //load all providers of this provider Add-on into TbSync (one at a time, obey order)
-       try {
-            yield tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
-        } catch (e) {}
+        yield tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
     })
 }
 
