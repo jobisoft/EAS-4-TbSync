@@ -77,3 +77,7 @@
 <!ENTITY abCard.header.people "Emberek:">
 <!ENTITY abCard.header.eas "Egyéb mezők (EAS)">
 <!ENTITY abCard.header.otheraddress "Egyéb cím (EAS)">
+
+<!ENTITY manager.tabs.settings "?? Server settings ??">
+<!ENTITY manager.tabs.resources "?? Available resources ??">
+<!ENTITY manager.tabs.outOfOffice "?? Autoresponder ??">

@@ -847,7 +847,7 @@ eas.sync = {
             if (data.Recurrence.Until) {
                 //time string could be in compact/basic or extended form of ISO 8601, 
                 //cal.createDateTime only supports  compact/basic, our own method takes both styles
-                recRule.untilDate = tbSync.createDateTime(data.Recurrence.Until);
+                recRule.untilDate = eas.tools.createDateTime(data.Recurrence.Until);
             }
             if (data.Recurrence.Start) {
                 tbSync.synclog("Warning","Start tag in recurring task is ignored, recurrence will start with first entry.", item.icalString);
@@ -1006,7 +1006,7 @@ eas.sync = {
                 // Until
                 else if (recRule.untilDate != null) {
                     //Events need the Until data in compact form, Tasks in the basic form
-                    wbxml.atag("Until", tbSync.getIsoUtcString(recRule.untilDate, (syncdata.type == "Tasks")));
+                    wbxml.atag("Until", eas.tools.getIsoUtcString(recRule.untilDate, (syncdata.type == "Tasks")));
                 }
                 // WeekOfMonth
                 if (weeks.length) {
@@ -1021,7 +1021,7 @@ eas.sync = {
                     wbxml.otag("Exceptions");
                     for (let exception of deleted) {
                         wbxml.otag("Exception");
-                            wbxml.atag("ExceptionStartTime", tbSync.getIsoUtcString(exception.date));
+                            wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exception.date));
                             wbxml.atag("Deleted", "1");
                             //Docs say it is allowed, but if present, it does not work
                             //if (asversion == "2.5") {
@@ -1032,7 +1032,7 @@ eas.sync = {
                     for (let exceptionId of modifiedIds) {
                         let replacement = item.recurrenceInfo.getExceptionFor(exceptionId);
                         wbxml.otag("Exception");
-                            wbxml.atag("ExceptionStartTime", tbSync.getIsoUtcString(exceptionId));
+                            wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exceptionId));
                             wbxml.append(eas.sync.getWbxmlFromThunderbirdItem(replacement, syncdata, true));
                         wbxml.ctag();
                     }
