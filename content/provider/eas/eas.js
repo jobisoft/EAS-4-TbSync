@@ -24,7 +24,11 @@ var eas = {
         abortWithServerError: "abortWithServerError",
     }),
     
-
+    windowsTimezoneMap: {},
+    cachedTimezoneData: null,
+    defaultTimezoneInfo: null,
+    defaultTimezone: null,
+    utcTimezone: null,
 
     /**
      * Called during load of external provider extension to init provider.
@@ -38,6 +42,33 @@ var eas = {
         yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
 
         if (lightningIsAvail) {
+
+           //get timezone info of default timezone (old cal. without dtz are depricated)
+            eas.defaultTimezone = (cal.dtz && cal.dtz.defaultTimezone) ? cal.dtz.defaultTimezone : cal.calendarDefaultTimezone();
+            eas.utcTimezone = (cal.dtz && cal.dtz.UTC) ? cal.dtz.UTC : cal.UTC();
+            //if default timezone is not defined, use utc as default
+            if (eas.defaultTimezone.icalComponent) {
+                eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
+            } else {
+                tbSync.synclog("Critical Warning","Default timezone is not defined, using UTC!");
+                eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.utcTimezone);
+            }
+            
+            //get windows timezone data from CSV
+            let csvData = yield eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
+            for (let i = 0; i<csvData.length; i++) {
+                let lData = csvData[i].split(",");
+                if (lData.length<3) continue;
+                
+                let windowsZoneName = lData[0].toString().trim();
+                let zoneType = lData[1].toString().trim();
+                let ianaZoneName = lData[2].toString().trim();
+                
+                if (zoneType == "001") eas.windowsTimezoneMap[windowsZoneName] = ianaZoneName;
+                if (ianaZoneName == eas.defaultTimezoneInfo.std.id) eas.defaultTimezoneInfo.std.windowsZoneName = windowsZoneName;
+            }
+
+
             //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
             //but do not change any explicitly set association
             // - A) find email identity and accociate (which sets organizer to that user identity)
@@ -70,9 +101,9 @@ var eas = {
      *
      * @param lightningIsAvail       [in] indicate wheter lightning is installed/enabled
      */
-    unload: function (lightningIsAvail) {
+    unload: Task.async(function* (lightningIsAvail) {
         tbSync.dump("Unloading", "eas");
-    },
+    }),
 
 
     /**
@@ -141,7 +172,7 @@ var eas = {
 
 
 
-	/**
+    /**
      * Return object which contains all possible fields of a row in the accounts database with the default value if not yet stored in the database.
      */
     getDefaultAccountEntries: function () {
@@ -772,7 +803,7 @@ var eas = {
                         syncdata.addressbookObj = tbSync.getAddressBookObject(syncdata.targetId);
 
                         //promisify addressbook, so it can be used together with yield
-                        syncdata.targetObj = tbSync.promisifyAddressbook(syncdata.addressbookObj);
+                        syncdata.targetObj = eas.tools.promisifyAddressbook(syncdata.addressbookObj);
                         
                         yield eas.sync.start(syncdata);   //using new tbsync contacts sync code
                         break;
@@ -2083,7 +2114,7 @@ var eas = {
     
 };
     
-
+tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/tools.js");
 tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/sync.js");
 tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/tasksync.js");
 tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/calendarsync.js");

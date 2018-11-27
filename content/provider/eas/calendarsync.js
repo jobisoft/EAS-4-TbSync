@@ -30,8 +30,8 @@ eas.sync.Calendar = {
         eas.sync.setItemBody(item, syncdata, data);
 
         //timezone
-        let stdOffset = tbSync.defaultTimezoneInfo.std.offset;
-        let dstOffset = tbSync.defaultTimezoneInfo.dst.offset;
+        let stdOffset = eas.defaultTimezoneInfo.std.offset;
+        let dstOffset = eas.defaultTimezoneInfo.dst.offset;
 
         if (data.TimeZone) {
             if (data.TimeZone == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") {
@@ -47,7 +47,7 @@ eas.sync.Calendar = {
 
         if (data.StartTime) {
             let utc = cal.createDateTime(data.StartTime); //format "19800101T000000Z" - UTC
-            item.startDate = utc.getInTimezone(tbSync.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
+            item.startDate = utc.getInTimezone(eas.tools.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
             if (data.AllDayEvent && data.AllDayEvent == "1") {
                 item.startDate.timezone = (cal.dtz && cal.dtz.floating) ? cal.dtz.floating : cal.floating();
                 item.startDate.isDate = true;
@@ -56,7 +56,7 @@ eas.sync.Calendar = {
 
         if (data.EndTime) {
             let utc = cal.createDateTime(data.EndTime);
-            item.endDate = utc.getInTimezone(tbSync.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
+            item.endDate = utc.getInTimezone(eas.tools.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
             if (data.AllDayEvent && data.AllDayEvent == "1") {
                 item.endDate.timezone = (cal.dtz && cal.dtz.floating) ? cal.dtz.floating : cal.floating();
                 item.endDate.isDate = true;
@@ -69,7 +69,7 @@ eas.sync.Calendar = {
         //EAS Reminder
         item.clearAlarms();
         if (data.Reminder && data.StartTime) {
-            let startDate = new Date(getIsoUtcString(cal.createDateTime(data.StartTime), true));
+            let startDate = new Date(eas.tools.getIsoUtcString(cal.createDateTime(data.StartTime), true));
             let nowDate = new Date();
 
             let alarm = cal.createAlarm();
@@ -209,9 +209,9 @@ eas.sync.Calendar = {
 
             //if there is no end and no start (or both are floating) use default timezone info
             let tzInfo = null;
-            if (item.startDate && item.startDate.timezone.tzid != "floating") tzInfo = tbSync.getTimezoneInfo(item.startDate.timezone);
-            else if (item.endDate && item.endDate.timezone.tzid != "floating") tzInfo = tbSync.getTimezoneInfo(item.endDate.timezone);
-            else tzInfo = tbSync.defaultTimezoneInfo;
+            if (item.startDate && item.startDate.timezone.tzid != "floating") tzInfo = eas.tools.getTimezoneInfo(item.startDate.timezone);
+            else if (item.endDate && item.endDate.timezone.tzid != "floating") tzInfo = eas.tools.getTimezoneInfo(item.endDate.timezone);
+            else tzInfo = eas.defaultTimezoneInfo;
             
             easTZ.utcOffset =   tzInfo.std.offset;
             easTZ.standardBias = 0;
@@ -256,10 +256,10 @@ eas.sync.Calendar = {
         }
 
         //DtStamp in UTC
-        wbxml.atag("DtStamp", item.stampTime ? tbSync.getIsoUtcString(item.stampTime) : nowDate.toBasicISOString());
+        wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
 
         //EndTime in UTC
-        wbxml.atag("EndTime", item.endDate ? tbSync.getIsoUtcString(item.endDate) : nowDate.toBasicISOString());
+        wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
         
         //Location
         wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
@@ -272,7 +272,7 @@ eas.sync.Calendar = {
             if (alarms[0].offset !== null) {
                 reminder = 0 - alarms[0].offset.inSeconds/60;
             } else if (item.startDate) {
-                let timeDiff =item.startDate.getInTimezone(tbSync.utcTimezone).subtractDate(alarms[0].alarmDate.getInTimezone(tbSync.utcTimezone));     
+                let timeDiff =item.startDate.getInTimezone(eas.utcTimezone).subtractDate(alarms[0].alarmDate.getInTimezone(eas.utcTimezone));     
                 reminder = timeDiff.inSeconds/60;
                 tbSync.synclog("Warning","Converting absolute alarm to relative alarm (not supported).", item.icalString);
             }
@@ -288,7 +288,7 @@ eas.sync.Calendar = {
         wbxml.atag("Subject", (item.title) ? item.title : "");
 
         //StartTime in UTC
-        wbxml.atag("StartTime", item.startDate ? tbSync.getIsoUtcString(item.startDate) : nowDate.toBasicISOString());
+        wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
 
         //UID (limit to 300)
         //each TB event has an ID, which is used as EAS serverId - however there is a second UID in the ApplicationData
