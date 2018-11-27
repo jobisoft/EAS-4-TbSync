@@ -77,3 +77,7 @@
 <!ENTITY abCard.header.people "Personen:">
 <!ENTITY abCard.header.eas "Weitere Felder (EAS)">
 <!ENTITY abCard.header.otheraddress "Weitere Adresse (EAS)">
+
+<!ENTITY manager.tabs.settings "Servereinstellungen">
+<!ENTITY manager.tabs.resources "Verfügbare Resourcen">
+<!ENTITY manager.tabs.outOfOffice "Autoresponder">
