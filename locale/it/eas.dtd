@@ -78,6 +78,6 @@
 <!ENTITY abCard.header.eas "Altri campi (EAS)">
 <!ENTITY abCard.header.otheraddress "Altro indirizzo (EAS)">
 
-<!ENTITY manager.tabs.settings "?? Server settings ??">
-<!ENTITY manager.tabs.resources "?? Available resources ??">
-<!ENTITY manager.tabs.outOfOffice "?? Autoresponder ??">
+<!ENTITY manager.tabs.settings "Impostazioni server">
+<!ENTITY manager.tabs.resources "Risorse disponibili">
+<!ENTITY manager.tabs.outOfOffice "Risponditore automatico">
