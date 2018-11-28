@@ -22,133 +22,187 @@
             <menuitem id="tbsync.accountsettings.FolderListContextMenuDelete" label="delete" oncommand="tbSync.eas.ui.deleteFolder(document, tbSyncAccountSettings.account);"/>
         </menupopup>
     </popupset>
+                 <html:div style="margin: 1ex 0; font-weight:bold;display:none"><html:span id="syncstate"></html:span> <html:span id="syncstate_link" onmouseover="this.style.cursor='pointer'" onmouseout="this.style.cursor='default'" dest="" onclick="tbSync.openLink('https://github.com/jobisoft/TbSync/wiki/' + this.getAttribute('dest'));" style="color:blue;text-decoration: underline"></html:span></html:div>
 
-    <vbox flex="1" id="tbsync.accountsettings.frame" hidden="true">
+    <tabbox id="tbsync.accountsettings.frame" hidden="true" flex="1">
+      <tabs>
+        <tab id="tbsync.accountsettings.group.folders" label="&manager.tabs.resources;"  hidden="true" />
+        <tab id="tbsync.accountsettings.group.settings" label="&pref.generaloptions;" />
+        <tab id="tbsync.accountsettings.group.settings" label="&pref.contactoptions;" />
+      </tabs>
+      
+      <tabpanels flex="1" style="margin:0;padding:1ex;">
 
-        <grid flex="1">
-           <columns>
-                <column flex="0" style="padding-left:12px; padding-right:8px;" />
-                <column flex="1" />
-           </columns>
+        <tabpanel ><!-- RESOURCES -->
+            <vbox flex="1">
+            
+                <richlistbox 
+                  id="tbsync.accountsettings.folderlist"
+                  flex="1"
+                  style="margin: 0 1px 1px 0;padding:0;"
+                  context="tbsync.accountsettings.FolderListContextMenu"
+                  seltype="single"
+                  ondblclick="tbSyncAccountSettings.toggleFolder();">
+                  <listhead style="border-bottom: 1px solid lightgrey;">
+                      <listheader style="font-weight:bold;" label="" width="24" />
+                      <listheader style="font-weight:bold;" label="&pref.foldername;" width="145" />
+                      <listheader style="font-weight:bold;" label="&pref.status;" flex="1" />
+                  </listhead>
+            </richlistbox>
 
-            <rows>
-                <row>
-                    <vbox pack="center">
-                        <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="&pref.AccountName;" />
-                    </vbox>
-                    <textbox style="margin-right:0; margin-left:0;" flex="1" id="tbsync.accountsettings.pref.accountname" />
-                </row>
+            <vbox flex="0" style="margin:1ex 0 0 0; padding:0">
+                <hbox flex="1" style="margin:0; padding:0">
+                    <vbox flex="4" style="margin:0; padding:0" />
+                    <button id="tbsync.accountsettings.enablebtn" style="margin:0;" flex="1" label="&pref.EnableAccount;" oncommand="tbSyncAccountSettings.toggleEnableState();" />
+                    <button id="tbsync.accountsettings.syncbtn" style="margin:0;" flex="1" label="&pref.SynchronizeAccount;" oncommand="tbSync.syncAccount('sync', tbSyncAccountSettings.account)" />
+                </hbox>
+            </vbox>
+        </vbox>
+    
+        </tabpanel>
 
-                <row>
-                    <vbox pack="center">
-                        <label  style="text-align:left" control="tbsync.accountsettings.pref.user" value="&pref.UserName;" />
-                    </vbox>
-                    <textbox style="margin-right:0; margin-left:0;" tooltiptext="&pref.UserNameDescription;" flex="1" id="tbsync.accountsettings.pref.user" />
-                </row>
-                
-                <row id="tbsync.accountsettings.group.server" style="margin-top:1em">
-                    <vbox/>
+        <tabpanel style="overflow:auto" flex="1"><!-- GENERAL -->
 
-                    <vbox>
-                        <label class="header" style="margin-left:0" value="" id="tbsync.accountsettings.label.config" />
-                        <hbox>
-                            <hbox width="235"><label style="padding:1px; margin-left:0" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" /></hbox>
-                            <hbox flex="1"><label style="padding:1px;; margin-left:0"  control="tbsync.accountsettings.pref.asversionselected" value ="ActiveSync version" /></hbox>
-                        </hbox>
+            <vbox flex="1">
+                <html:table style="margin:0; padding:0;" cellpadding="1" flex="1">
 
-                        <hbox>
-                            <hbox width="235"><textbox flex="1" style="margin-left:0; margin-right:0" tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncAccountSettings.stripHost(document, tbSyncAccountSettings.account);" /></hbox>
-                            <vbox flex="1">
-                                <menulist flex="1" style="margin-right:0;" id="tbsync.accountsettings.pref.asversionselected"  >
+                    <html:tr>
+                        <html:td colspan="3">
+                                <label class="header" style="margin-left:0;" value="" id="tbsync.accountsettings.label.config" />
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td style="width:20%">
+                            <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="&pref.AccountName;" />
+                        </html:td>
+                        <html:td>
+                            <textbox style="margin:0; width:100%"  id="tbsync.accountsettings.pref.accountname" />
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td>
+                                <label  style="text-align:left" control="tbsync.accountsettings.pref.user" value="&pref.UserName;" />
+                        </html:td>
+                        <html:td>
+                            <textbox style="margin:0;width:100%" tooltiptext="&pref.UserNameDescription;" id="tbsync.accountsettings.pref.user" />
+                        </html:td>
+                        <html:td rowspan="3">
+                            <image style="margin-left:5px; margin-right:0" tooltiptext="&servertype.unlock;" ondblclick="tbSyncAccountSettings.unlockSettings()" width="24" height="24" id="tbsync.accountsettings.unlock" src="chrome://tbsync/skin/lock24.png" />
+                        </html:td>
+                        
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td>
+                            <vbox pack="center">
+                                <label  style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
+                            </vbox>
+                        </html:td>
+                        <html:td>
+                            <textbox  style="margin:0;width:100%" tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncAccountSettings.stripHost(document, tbSyncAccountSettings.account);" />
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td>
+                            <vbox pack="center">
+                                <label  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="ActiveSync version" />
+                            </vbox>
+                        </html:td>
+                        <html:td>
+                                    <menulist style="margin:0;width:100%" id="tbsync.accountsettings.pref.asversionselected"  >
+                                        <menupopup>
+                                            <menuitem label="&pref.autodetect;" value="auto" />
+                                            <menuitem label="v2.5" value="2.5" />
+                                            <menuitem label="v14.0" value="14.0" />
+                                        </menupopup>
+                                    </menulist>
+                        </html:td>
+                    </html:tr>
+                    
+
+
+
+
+
+
+                    <html:tr>
+                        <html:td>
+                             <vbox pack="center">
+                                <label control="tbsync.accountsettings.pref.autosync" value="&pref.autotime;" tooltiptext="&pref.never;" />
+                            </vbox>
+                        </html:td>
+                        <html:td>
+                             <textbox style="margin-right:0; margin-left:0" id="tbsync.accountsettings.pref.autosync" tooltiptext="&pref.never;" />
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td>
+                             <label  style="text-align:left" value="&pref.DeviceId;" />
+                        </html:td>
+                        <html:td>
+                             <hbox><label style="margin-left:0; margin-bottom: 1ex;"  value="" disabled="true" id="tbsync.accountsettings.pref.deviceId" /></hbox>
+                        </html:td>
+                    </html:tr>
+
+
+
+                    <html:tr>
+                        <html:td colspan="3">
+                                <label style="margin-left:0; margin-top:1ex" class="header" value="&pref.generaloptions;"/>
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td colspan="3">
+                            <vbox>                            
+                                <checkbox id="tbsync.accountsettings.pref.https" label="&pref.usehttps;"  />
+                                <!-- checkbox id="tbsync.accountsettings.pref.horde" label="&pref.isHordeServer;"  / -->
+                                <checkbox id="tbsync.accountsettings.pref.downloadonly" label="&pref.downloadonly;"  />
+                                <checkbox id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
+                                <checkbox id="tbsync.accountsettings.pref.syncdefaultfolders" label="&pref.syncdefaultfolders;"  />
+                            </vbox>                            
+                        </html:td>
+                    </html:tr>
+
+                </html:table>
+            </vbox>
+        </tabpanel>
+
+        <tabpanel style="overflow:auto" flex="1"><!-- CONTACTS -->
+            <vbox flex="1">
+                <html:table style="margin:0; padding:0;" cellpadding="1" flex="1">
+                    <html:tr>
+                        <html:td colspan="3">
+                                <label style="margin-left:0;" class="header" value="&pref.contactoptions;"/>
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td colspan="3">
+                            <vbox>                            
+                            <checkbox id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
+                            <hbox align="center">
+                                <menulist id="tbsync.accountsettings.pref.seperator">
                                     <menupopup>
-                                        <menuitem label="&pref.autodetect;" value="auto" />
-                                        <menuitem label="v2.5" value="2.5" />
-                                        <menuitem label="v14.0" value="14.0" />
+                                        <menuitem label="&pref.seperator.linebreak;" value="10" />
+                                        <menuitem label="&pref.seperator.comma;" value="44" />
                                     </menupopup>
                                 </menulist>
-                            </vbox>
-                            <image style="margin-left:5px; margin-right:0" tooltiptext="&servertype.unlock;" ondblclick="tbSyncAccountSettings.unlockSettings()" width="24" height="24" id="tbsync.accountsettings.unlock" src="chrome://tbsync/skin/lock24.png" />
-                        </hbox>
+                                <description flex="1">&pref.seperator.description;</description>
+                            </hbox>
+                            </vbox>                            
+                        </html:td>
+                    </html:tr>
 
-                    </vbox>
-                </row>
-
-                <row flex="1" style="margin-top:1em; margin-bottom: 1em;" id="tbsync.accountsettings.group.options">
-                    <vbox/>
-                    <vbox style='overflow: auto;'>
-
-                        <hbox height="24" align="center">
-                            <label flex="1" style="margin-left:0" class="header" value="&pref.generaloptions;"/>
-                        </hbox>
-                        <checkbox id="tbsync.accountsettings.pref.https" label="&pref.usehttps;"  />
-                        <!-- checkbox id="tbsync.accountsettings.pref.horde" label="&pref.isHordeServer;"  / -->
-                        <checkbox id="tbsync.accountsettings.pref.downloadonly" label="&pref.downloadonly;"  />
-                        <checkbox id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
-                        <checkbox id="tbsync.accountsettings.pref.syncdefaultfolders" label="&pref.syncdefaultfolders;"  />
-
-                        <hbox height="24" align="center">
-                            <label flex="1" style="margin-left:0" class="header" value="&pref.contactoptions;"/>
-                        </hbox>
-                        <!--checkbox id="tbsync.accountsettings.pref.birthday" label="&pref.birthday;"  /-->
-                        <checkbox id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
-
-                        <hbox align="center">
-                            <menulist id="tbsync.accountsettings.pref.seperator">
-                                <menupopup>
-                                    <menuitem label="&pref.seperator.linebreak;" value="10" />
-                                    <menuitem label="&pref.seperator.comma;" value="44" />
-                                </menupopup>
-                            </menulist>
-                            <description flex="1">&pref.seperator.description;</description>
-                        </hbox>
-                        
-                    </vbox>
-                </row>
-
-                
-                <row flex="1" style="margin-top:0em;" id="tbsync.accountsettings.group.folders">
-                    <vbox/>
-                    <richlistbox 
-                        id="tbsync.accountsettings.folderlist"
-                        flex="1"
-                        style="margin-left:0; margin-right:0;"
-                        context="tbsync.accountsettings.FolderListContextMenu"
-                        seltype="single"
-                        ondblclick="tbSyncAccountSettings.toggleFolder();">
-                        <listhead style="border-bottom: 1px solid lightgrey;">
-                            <listheader style="font-weight:bold;" label="" width="24" />
-                            <listheader style="font-weight:bold;" label="&pref.foldername;" width="145" />
-                            <listheader style="font-weight:bold;" label="&pref.status;" flex="1" />
-                        </listhead>
-                    </richlistbox>
-                </row> 
-
-                <row>
-                     <label  style="text-align:left" value="&pref.DeviceId;" />
-                     <hbox><label style="margin-left:0; margin-bottom: 1ex;" flex="1" value="" disabled="true" id="tbsync.accountsettings.pref.deviceId" /><image style="margin-right:0" tooltiptext="&pref.switchFoldersAndConfig;" onclick="tbSyncAccountSettings.switchFoldersAndConfigView()" width="24" height="24" id="tbsync.accountsettings.slider" src="chrome://tbsync/skin/slider-on.png" /></hbox>
-                </row>
-                <row>
-                     <label  style="text-align:left" value="&pref.syncstate;" />
-                     <html:div style="margin-bottom: 1ex; margin-left:0; font-weight:bold"><html:span id="syncstate"></html:span> <html:span id="syncstate_link" onmouseover="this.style.cursor='pointer'" onmouseout="this.style.cursor='default'" dest="" onclick="tbSync.openLink('https://github.com/jobisoft/TbSync/wiki/' + this.getAttribute('dest'));" style="color:blue;text-decoration: underline"></html:span></html:div>
-                </row>
-
-                <row>
-                     <vbox pack="center">
-                        <label control="tbsync.accountsettings.pref.autosync" value="&pref.autotime;" tooltiptext="&pref.never;" />
-                    </vbox>
-                     <textbox style="margin-right:0; margin-left:0" id="tbsync.accountsettings.pref.autosync" tooltiptext="&pref.never;" />
-                </row>
-                
-                <row>
-                    <vbox/>
-                    <hbox flex="1" >
-                        <button id="tbsync.accountsettings.enablebtn" flex="1" style="margin-right:0; margin-left:0" label="&pref.EnableAccount;" oncommand="tbSyncAccountSettings.toggleEnableState();" />
-                        <button id="tbsync.accountsettings.syncbtn" flex="1" style="margin-right:0; margin-left:0" label="&pref.SynchronizeAccount;" oncommand="tbSync.syncAccount('sync', tbSyncAccountSettings.account)" />
-                    </hbox>
-                </row>
-
-           </rows>
-        </grid>
-    </vbox>
+                </html:table>
+            </vbox>
+        </tabpanel>
+        
+      </tabpanels>
+    </tabbox>
     
 </window>
