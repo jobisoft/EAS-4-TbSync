@@ -1,7 +1,7 @@
-newaccount.add_custom=Add account
-newaccount.add_auto=Autodiscover settings and add account
+newaccount.add_custom=Добавить аккаунт
+newaccount.add_auto=Настройки автообнаружения и добавление аккаунта
 
-autodiscover.Querying=Searching for settings…
+autodiscover.Querying=Поиск настроек…
 autodiscover.Ok=Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection.
 autodiscover.NeedEmail=Autodiscover needs a valid email address as user name.
 
