@@ -95,7 +95,7 @@ status.invalid=Érvénytelen kiszolgáló válasz (szemét).
 status.InvalidServerOptions=A kiszolgáló nem nyújt felvilágosítást a támogatott ActiveSync verziókról. EAS akadályozva van ez a felhasználó vagy az ügyfél (Thunderbird-összehangolás) számára? Megpróbálhatja kézzel beállítani az ActiveSync verziót.
 
 status.security=Biztonsági kapcsolat létrehozása nem sikerült. Ön aláírta vagy egyébként nem megbízható tanúsítványt importálta a Thunderbirdbe? (##replace.1##)||How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F||[help]
-status.network=Nem tudott csatlakozni a szerverhez (##replace.1##).
+status.network=Nem tudott csatlakozni a kiszolgálóhoz (##replace.1##).
 
 status.syncing=Összehangol
 status.skipped=Még nem támogatott, kihagyva
