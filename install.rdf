@@ -98,7 +98,7 @@
           <Description>
             <em:locale>ru</em:locale>
             <em:name>Провайдер для Exchange ActiveSync</em:name>
-            <em:description>Добавляет в TbSync поддержку синхронизации для учетных записей Exchange через протокол ActiveSync (контакты, задачи и календари)</em:description>
+            <em:description>Добавляет в TbSync поддержку синхронизации для учетных записей Exchange через Web протокол ActiveSync (контакты, задачи и календари)</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
