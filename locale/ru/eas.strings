@@ -31,13 +31,13 @@ syncstate.prepare.request.autodiscover=Requesting updated server settings
 syncstate.send.request.autodiscover=Waiting for updated server settings
 syncstate.eval.response.autodiscover=Processing updated server settings
 
-syncstate.prepare.request.options=Requesting server options
-syncstate.send.request.options=Waiting for server options
-syncstate.eval.response.options=Processing server options
+syncstate.prepare.request.options=Запрос обновленных настроек сервера
+syncstate.send.request.options=Ожидание обновленных настроек сервера
+syncstate.eval.response.options=Обработка настроек сервера
 
-syncstate.prepare.request.folders=Sending folder list update
-syncstate.send.request.folders=Waiting for folder list update
-syncstate.eval.response.folders=Processing folder list update
+syncstate.prepare.request.folders=Отправка обновления листа папок
+syncstate.send.request.folders=Ожидание обновления листа папок
+syncstate.eval.response.folders=Обработка обновления листа папок
 
 syncstate.prepare.request.synckey=Requesting synckey
 syncstate.send.request.synckey=Waiting for synckey
@@ -110,10 +110,10 @@ status.policy.3=Unknown PolicyType value. Contact your server administrator or d
 status.policy.4=The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account.
 status.policy.5=The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account.
 
-status.provision=Provisioning failed with status <##replace.1##>
+status.provision=Резервирование не удалось со статусом <##replace.1##>
 
-status.folderDelete.3=Cannot delete a system folder.
-status.folderDelete.6=Command could not be completed, an error occurred on the server.
+status.folderDelete.3=Не удается удалить системную папку.
+status.folderDelete.6=Команда не может быть выполнена, на сервере возникла ошибка.
 
 status.global.101=The request contains WBXML but it could not be decoded into XML (EAS Error 101).
 status.global.102=The request contains WBXML but it could not be decoded into XML (EAS Error 102).
@@ -128,6 +128,6 @@ status.TempServerError=Server reported temporary system issue, or bad item. This
 status.nosupportedeasversion=Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server.
 status.notsupportedeasversion=Server does not support selected ActiveSync v##replace.1## (only ##replace.2##).
 
-config.auto=ActiveSync server configuration (Autodiscover)
-config.custom=ActiveSync server configuration
-config.outlook.com=Server configuration for Outlook.com accounts
+config.auto=ActiveSync конфигурация сервера (Автообнаружение)
+config.custom=ActiveSync конфигурация сервера
+config.outlook.com=Конфигурация сервера для Outlook.com аккаунтов
