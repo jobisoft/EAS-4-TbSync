@@ -59,17 +59,17 @@ syncstate.prepare.request.remotechanges=Запрос удаленных изме
 syncstate.send.request.remotechanges=Ожидание удаленных изменений
 syncstate.eval.response.remotechanges=Обработка удаленных изменений
 
-syncstate.prepare.request.localchanges=Sending local changes
-syncstate.send.request.localchanges=Waiting for acknowledgment of local changes
-syncstate.eval.response.localchanges=Processing acknowledgment of local changes
+syncstate.prepare.request.localchanges=Отправка локальных изменений
+syncstate.send.request.localchanges=Ожидание подтверждения локальных изменений
+syncstate.eval.response.localchanges=Обработка подтверждения локальных изменений
 
-syncstate.prepare.request.revertlocalchanges=Collecting local changes
-syncstate.send.request.revertlocalchanges=Waiting for most recent versions
-syncstate.eval.response.revertlocalchanges=Reverting local changes
+syncstate.prepare.request.revertlocalchanges=Сбор локальных изменений
+syncstate.send.request.revertlocalchanges=Ожидание самых последних версий
+syncstate.eval.response.revertlocalchanges=Откат локальных изменений
 
-syncstate.prepare.request.localdeletes=Sending local deletes
-syncstate.send.request.localdeletes=Waiting for acknowledgment of local deletes
-syncstate.eval.response.localdeletes=Processing acknowledgment of local deletes
+syncstate.prepare.request.localdeletes=Отправка локальных удалений
+syncstate.send.request.localdeletes=Ожидание подтверждения локальных удалений
+syncstate.eval.response.localdeletes=Обработка подтверждения локальных удалений
 
 status.notsyncronized=Account needs to be synchronized, at least one item is out of sync.
 status.needtorevert=Account needs to be synchronized to revert local changes (one-way sync).
