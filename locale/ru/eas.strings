@@ -103,7 +103,7 @@ status.aborted=Не синхронизировано
 status.pending=Ожидание пока синхронизируется
 status.modified=Локальные изменения
 
-status.resync-loop=There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)
+status.resync-loop=Произошла ошибка, из-за которой не удалось пересинхронизировать аккаунт. Отключите аккаунт и повторите попытку. (Ошибка: повторная синхронизация)
 
 status.policy.2=There is no policy for this client. Contact your server administrator or disable provisioning for this account.
 status.policy.3=Unknown PolicyType value. Contact your server administrator or disable provisioning for this account.
