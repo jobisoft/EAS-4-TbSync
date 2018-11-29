@@ -105,10 +105,10 @@ status.modified=Локальные изменения
 
 status.resync-loop=Произошла ошибка, из-за которой не удалось пересинхронизировать аккаунт. Отключите аккаунт и повторите попытку. (Ошибка: повторная синхронизация)
 
-status.policy.2=There is no policy for this client. Contact your server administrator or disable provisioning for this account.
-status.policy.3=Unknown PolicyType value. Contact your server administrator or disable provisioning for this account.
-status.policy.4=The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account.
-status.policy.5=The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account.
+status.policy.2=Для этого клиента нет политики. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
+status.policy.3=Неизвестное значение политики для этого клиента. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
+status.policy.4=Данные политики на сервере повреждены (возможно, подделаны). Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
+status.policy.5=Клиент обнаружил неправильный ключ политики. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
 
 status.provision=Резервирование не удалось со статусом <##replace.1##>
 
