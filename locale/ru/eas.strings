@@ -115,8 +115,8 @@ status.provision=Резервирование не удалось со стат�
 status.folderDelete.3=Не удается удалить системную папку.
 status.folderDelete.6=Команда не может быть выполнена, на сервере возникла ошибка.
 
-status.global.101=The request contains WBXML but it could not be decoded into XML (EAS Error 101).
-status.global.102=The request contains WBXML but it could not be decoded into XML (EAS Error 102).
+status.global.101=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Error 101).
+status.global.102=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Error 102).
 status.global.103=The XML provided in the request does not follow the protocol requirements (EAS Error 103).
 status.global.clientdenied=The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account.||What-if-TbSync-is-blocked-by-my-server%3F||[help]
 
