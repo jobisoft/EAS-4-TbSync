@@ -71,13 +71,13 @@ syncstate.prepare.request.localdeletes=Отправка локальных уд�
 syncstate.send.request.localdeletes=Ожидание подтверждения локальных удалений
 syncstate.eval.response.localdeletes=Обработка подтверждения локальных удалений
 
-status.notsyncronized=Account needs to be synchronized, at least one item is out of sync.
-status.needtorevert=Account needs to be synchronized to revert local changes (one-way sync).
+status.notsyncronized=Аккаунт должен быть синхронизирован, по крайней мере один элемент не синхронизирован.
+status.needtorevert=Аккаунт должен быть синхронизирован для отката локальных изменений (односторонняя синхронизация).
 status.disabled=Account is not enabled, synchronization is disabled.
 status.notargets=Aborting Sync, because sync targets could not be created.
 status.nouserhost=Missing username and/or server. Please provide those values.
 status.timeout=Communication timeout.
-status.networkerror=Could not connect to server.
+status.networkerror=Could not connect to server.one-way sync
 status.404=User not found (HTTP Error 404).
 status.403=Server rejected connection (forbidden) (HTTP Error 403).
 status.401=Could not authenticate, check username and password (HTTP Error 401).
