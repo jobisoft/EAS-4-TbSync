@@ -94,14 +94,14 @@ status.mailformed-xml=Не удалось разобрать XML. Проверь
 status.invalid=Недопустимый ответ сервера (мусор в обмене).
 status.InvalidServerOptions=Сервер не предоставляет информацию о поддерживаемых версиях ActiveSync. EAS блокирован для этого пользователя или этого клиента (TbSync)? Вы можете попробовать установить версию ActiveSync вручную.
 
-status.security=Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)||How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F||[help]
-status.network=Could not connect to server (##replace.1##).
+status.security=Не удалось установить безопасное соединение. Вы используете самоподписанный или ненадежный сертификат без импорта его в Thunderbird? (##replace.1##)||How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F||[help]
+status.network=Не удалось подключиться к серверу (##replace.1##).
 
-status.syncing=Synchronizing
-status.skipped=Not yet supported, skipped
-status.aborted=Not synchronized
-status.pending=Waiting to be synchronized
-status.modified=Local modifications
+status.syncing=Синхронизация
+status.skipped=Пока не поддерживается, пропущено
+status.aborted=Не синхронизировано
+status.pending=Ожидание пока синхронизируется
+status.modified=Локальные изменения
 
 status.resync-loop=There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)
 
