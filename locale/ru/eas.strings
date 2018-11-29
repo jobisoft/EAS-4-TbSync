@@ -2,7 +2,7 @@ newaccount.add_custom=Добавить аккаунт
 newaccount.add_auto=Настройки автообнаружения и добавление аккаунта
 
 autodiscover.Querying=Поиск настроек…
-autodiscover.Ok=Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection.
+autodiscover.Ok=Автообнаружение completed successfully, you can now check the optional settings and establish the synchronization connection.
 autodiscover.NeedEmail=Autodiscover needs a valid email address as user name.
 
 autodiscover.Failed=Autodiscover for user <##user##> failed.
