@@ -20,26 +20,26 @@
 <!ENTITY pref.ServerNameDescription "например: mail.yourserver.com">
 <!ENTITY pref.usehttps "Использовать безопасное соединение (соединение через https)">
 <!ENTITY pref.DeviceId "Идентификатор устройства">
-<!ENTITY pref.contactoptions "Contact options">
-<!ENTITY pref.birthday "Send birthday information">
-<!ENTITY pref.downloadonly "Revert local changes (one-way sync)">
-<!ENTITY pref.generaloptions "General options">
+<!ENTITY pref.contactoptions "Контактная информация">
+<!ENTITY pref.birthday "Отправить информацию о днях рождения">
+<!ENTITY pref.downloadonly "Отменить локальные изменения (односторонняя синхронизация)">
+<!ENTITY pref.generaloptions "Общие настройки">
 <!ENTITY pref.syncdefaultfolders "Subscribe and sync all default folders after the initial connection has been established.">
-<!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
+<!ENTITY pref.provision "Заставить резервировать (требуется для Kerio)">
 
-<!ENTITY pref.autotime "Sync interval (minutes)">
-<!ENTITY pref.never "A setting of 0 disables periodic sync. Push sync is no yet supported.">
-<!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
+<!ENTITY pref.autotime "Интервал синхронизации (минуты)">
+<!ENTITY pref.never "Установка 0 отключает периодическую синхронизацию. Push-синхронизация пока не поддерживается.">
+<!ENTITY pref.ShowTrashedFolders "Показывать папки, найденные в корзине">
 
-<!ENTITY pref.syncstate "Sync status">
-<!ENTITY pref.seperator.comma "Comma">
-<!ENTITY pref.seperator.linebreak "Line break">
-<!ENTITY pref.seperator.description "Separator for multiline address field.">
-<!ENTITY pref.displayoverride "Overide Display Name with “First Name” + “Second Name”">
+<!ENTITY pref.syncstate "Статус синхронизации">
+<!ENTITY pref.seperator.comma "Запятая">
+<!ENTITY pref.seperator.linebreak "Разрыв строки">
+<!ENTITY pref.seperator.description "Сепаратор для многострочного поля адреса.">
+<!ENTITY pref.displayoverride "Переопределить отображаемое имя с помощью “Имя” + “Фамилия”">
 
-<!ENTITY pref.foldername "Folder">
-<!ENTITY pref.targetname "Sync Target">
-<!ENTITY pref.status "Status">
+<!ENTITY pref.foldername "Папка">
+<!ENTITY pref.targetname "Цель синхронизации">
+<!ENTITY pref.status "Статус">
 
 <!ENTITY pref.switchFoldersAndConfig "Double click to switch between folder view and settings view.">
 
