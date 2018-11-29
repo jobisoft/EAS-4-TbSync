@@ -17,13 +17,14 @@
 <!ENTITY pref.UserName "Felhasználónév">
 <!ENTITY pref.UserNameDescription "A felhasználónév általában a fiókod e-mail címe.">
 <!ENTITY pref.ServerName "Kiszolgáló címe">
+<!ENTITY pref.ActiveSyncVersion "?? ActiveSync Version ??">
 <!ENTITY pref.ServerNameDescription "például: posta.kiszolgálód.hu">
 <!ENTITY pref.usehttps "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)">
-<!ENTITY pref.DeviceId "Eszköz azonosító">
-<!ENTITY pref.contactoptions "Kapcsolatfelvételi lehetőségek">
+<!ENTITY pref.DeviceId "?? ActiveSync device ID ??">
 <!ENTITY pref.birthday "Születésnapi adatok küldése">
 <!ENTITY pref.downloadonly "A helyi változások visszaállítása (egyirányú összehangolás)">
-<!ENTITY pref.generaloptions "Általános beállítások">
+<!ENTITY pref.generaloptions "?? General ??">
+<!ENTITY pref.contactoptions "?? Contacts ??">
 <!ENTITY pref.syncdefaultfolders "Az alapértelmezett mappák feliratkozása és összehangolása a kezdeti kapcsolat létrehozása után.">
 <!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
 
@@ -78,6 +79,7 @@
 <!ENTITY abCard.header.eas "Egyéb mezők (EAS)">
 <!ENTITY abCard.header.otheraddress "Egyéb cím (EAS)">
 
-<!ENTITY manager.tabs.settings "Kiszolgáló beállításai">
 <!ENTITY manager.tabs.resources "Elérhető erőforrások">
+<!ENTITY manager.tabs.settings "Kiszolgáló beállításai">
+<!ENTITY manager.tabs.options "?? Synchronization settings ??">
 <!ENTITY manager.tabs.outOfOffice "Önműködő válasz">
