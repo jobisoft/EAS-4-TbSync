@@ -70,14 +70,14 @@
 <!ENTITY abCard.OtherState "Область:">
 
 
-<!ENTITY abCard.header.worknumbers "Additional work numbers:">
-<!ENTITY abCard.header.homenumbers "Additional home numbers:">
-<!ENTITY abCard.header.othernumbers "Additional numbers:">
-<!ENTITY abCard.header.messaging "Messaging:">
-<!ENTITY abCard.header.people "People:">
-<!ENTITY abCard.header.eas "Other Fields (EAS)">
-<!ENTITY abCard.header.otheraddress "Other Address (EAS)">
+<!ENTITY abCard.header.worknumbers "Дополнительные рабочие номера:">
+<!ENTITY abCard.header.homenumbers "Дополнительные домашние номера:">
+<!ENTITY abCard.header.othernumbers "Дополнительные номера:">
+<!ENTITY abCard.header.messaging "Мессаджер:">
+<!ENTITY abCard.header.people "Люди:">
+<!ENTITY abCard.header.eas "Другие поля (EAS)">
+<!ENTITY abCard.header.otheraddress "Другой адрес (EAS)">
 
-<!ENTITY manager.tabs.settings "Server settings">
-<!ENTITY manager.tabs.resources "Available resources">
-<!ENTITY manager.tabs.outOfOffice "Autoresponder">
+<!ENTITY manager.tabs.settings "Настройки сервера">
+<!ENTITY manager.tabs.resources "Доступные ресурсы">
+<!ENTITY manager.tabs.outOfOffice "Автоответчик">
