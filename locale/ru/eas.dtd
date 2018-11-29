@@ -6,8 +6,8 @@
 <!ENTITY add.url "Адрес сервера:">
 <!ENTITY add.urldescription "Достаточно указать только базовый адрес сервера (например: mail.yourserver.com). Однако также можно указать полный URL-адрес (например: https://mail.yourserver.com/Microsoft-Server-ActiveSync).">
 
-<!ENTITY add.server "Server configuration:">
-<!ENTITY add.description "Please enter a name for the new TbSync account, the user name of the ActiveSync account you want to add (probably an email address) and select one of the available server configuration options. ">
+<!ENTITY add.server "Конфигурация сервера:">
+<!ENTITY add.description "Введите имя для нового аккаунта TbSync, имя пользователя аккаунта ActiveSync которое вы хотите добавить (возможно, адрес электронной почты), и выберите один из доступных параметров конфигурации сервера. ">
 
 <!ENTITY pref.EnableAccount "Enable account &amp; try to connect to server">
 <!ENTITY pref.SynchronizeAccount "Synchronize account">
