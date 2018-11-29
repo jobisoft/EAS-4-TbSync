@@ -19,8 +19,8 @@ subscribe.off=Отписаться от “##replace.1##”
 recyclebin = Корзина
 
 syncstate.prepare.request.setdeviceinfo=Отправка информации об устройстве
-syncstate.send.request.setdeviceinfo=Отправка информации об устройстве
-syncstate.eval.response.setdeviceinfo=Отправка информации об устройстве
+syncstate.send.request.setdeviceinfo=Ожидание информации об устройстве
+syncstate.eval.response.setdeviceinfo=Обработка информации об устройстве
 
 syncstate.syncing=Инициализация синхронизации
 syncstate.preparing=Подготовка следующего элемента для синхронизации
