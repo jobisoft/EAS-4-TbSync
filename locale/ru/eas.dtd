@@ -41,33 +41,33 @@
 <!ENTITY pref.targetname "Цель синхронизации">
 <!ENTITY pref.status "Статус">
 
-<!ENTITY pref.switchFoldersAndConfig "Double click to switch between folder view and settings view.">
+<!ENTITY pref.switchFoldersAndConfig "Дважды щелкните, чтобы переключиться между просмотром папок и просмотром настроек.">
 
-<!ENTITY servertype.auto "Automatic configuration via ActiveSync Autodiscover">
-<!ENTITY servertype.custom "Custom configuration">
-<!ENTITY servertype.unlock "Double click to unlock all predefined server settings.">
+<!ENTITY servertype.auto "Автоматическая настройка с помощью ActiveSync автоопределения">
+<!ENTITY servertype.custom "Ручная настройка">
+<!ENTITY servertype.unlock "Дважды щелкните, чтобы разблокировать все предопределенные настройки сервера.">
 
-<!ENTITY abCard.MiddleName "Middle name:">
-<!ENTITY abCard.Email3Address "Alternative Email:">
-<!ENTITY abCard.Home2PhoneNumber "Home Phone 2:">
-<!ENTITY abCard.Business2PhoneNumber "Work Phone 2:">
-<!ENTITY abCard.BusinessFaxNumber "Work Fax:">
+<!ENTITY abCard.MiddleName "Отчество:">
+<!ENTITY abCard.Email3Address "Запасной Email:">
+<!ENTITY abCard.Home2PhoneNumber "Домашний телефон 2:">
+<!ENTITY abCard.Business2PhoneNumber "Рабочий телефон 2:">
+<!ENTITY abCard.BusinessFaxNumber "Рабочий факс:">
 
-<!ENTITY abCard.ManagerName "Manager:">
-<!ENTITY abCard.AssistantPhoneNumber "Assistant Phone:">
-<!ENTITY abCard.AssistantName "Assistant:">
-<!ENTITY abCard.Spouse "Spouse:">
-<!ENTITY abCard.Anniversary "Anniversary:">
+<!ENTITY abCard.ManagerName "Руководитель:">
+<!ENTITY abCard.AssistantPhoneNumber "Телефон помощника:">
+<!ENTITY abCard.AssistantName "Помощник:">
+<!ENTITY abCard.Spouse "Супруг:">
+<!ENTITY abCard.Anniversary "День рождения:">
 
-<!ENTITY abCard.CarPhoneNumber "Car Phone:">
-<!ENTITY abCard.RadioPhoneNumber "Radio Phone:">
-<!ENTITY abCard.CompanyMainPhone "Work Main Phone:">
+<!ENTITY abCard.CarPhoneNumber "Автомобильный телефон:">
+<!ENTITY abCard.RadioPhoneNumber "Радиотелефон:">
+<!ENTITY abCard.CompanyMainPhone "Основной рабочий телефон:">
 
-<!ENTITY abCard.OtherAddress "Address:">
-<!ENTITY abCard.OtherCity "City:">
-<!ENTITY abCard.OtherCountry "Country:">
-<!ENTITY abCard.OtherZip "ZIP Code:">
-<!ENTITY abCard.OtherState "State:">
+<!ENTITY abCard.OtherAddress "Адрес:">
+<!ENTITY abCard.OtherCity "Город:">
+<!ENTITY abCard.OtherCountry "Страна:">
+<!ENTITY abCard.OtherZip "Почтовый индекс:">
+<!ENTITY abCard.OtherState "Область:">
 
 
 <!ENTITY abCard.header.worknumbers "Additional work numbers:">
