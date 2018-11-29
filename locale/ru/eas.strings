@@ -27,12 +27,12 @@ syncstate.preparing=Подготовка следующего элемента �
 syncstate.done=Подготовка следующего элемента для синхронизации
 syncstate.accountdone=Завершенный аккаунт
 
-syncstate.prepare.request.autodiscover=Requesting updated server settings
-syncstate.send.request.autodiscover=Waiting for updated server settings
-syncstate.eval.response.autodiscover=Processing updated server settings
+syncstate.prepare.request.autodiscover=Запрос обновленных настроек сервера
+syncstate.send.request.autodiscover=Ожидание обновленных настроек сервера
+syncstate.eval.response.autodiscover=Обработка обновленных настроек сервера
 
-syncstate.prepare.request.options=Запрос обновленных настроек сервера
-syncstate.send.request.options=Ожидание обновленных настроек сервера
+syncstate.prepare.request.options=Запрос настроек сервера
+syncstate.send.request.options=Ожидание настроек сервера
 syncstate.eval.response.options=Обработка настроек сервера
 
 syncstate.prepare.request.folders=Отправка обновления листа папок
