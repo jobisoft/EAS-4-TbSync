@@ -2,11 +2,11 @@ newaccount.add_custom=Добавить аккаунт
 newaccount.add_auto=Настройки автообнаружения и добавление аккаунта
 
 autodiscover.Querying=Поиск настроек…
-autodiscover.Ok=Автообнаружение completed successfully, you can now check the optional settings and establish the synchronization connection.
-autodiscover.NeedEmail=Autodiscover needs a valid email address as user name.
+autodiscover.Ok=Автообнаружение успешно завершено, теперь вы можете проверить дополнительные настройки и установить соединение синхронизации.
+autodiscover.NeedEmail=Автообнаружению нужен действительный адрес электронной почты в качестве имени пользователя.
 
-autodiscover.Failed=Autodiscover for user <##user##> failed.
-autodiscover.FailedUnknown=Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover.
+autodiscover.Failed=Автообнаружение для пользователя <##user##> не удалось.
+autodiscover.FailedUnknown=Либо предоставленные учетные данные были неправильными, либо у вашего провайдера ActiveSync была временная проблема, или не поддерживается автообнаружение.
 autodiscover.FailedSecurity=Also the following certificate errors have been reported, which *might* indicate a problem with your ActiveSync provider:
 
 deletefolder.notallowed=Please unsubscribe folder “##replace.1##” before trying to purge it from trash.
