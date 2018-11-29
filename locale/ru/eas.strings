@@ -115,10 +115,10 @@ status.provision=Резервирование не удалось со стат�
 status.folderDelete.3=Не удается удалить системную папку.
 status.folderDelete.6=Команда не может быть выполнена, на сервере возникла ошибка.
 
-status.global.101=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Error 101).
-status.global.102=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Error 102).
-status.global.103=The XML provided in the request does not follow the protocol requirements (EAS Error 103).
-status.global.clientdenied=The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account.||What-if-TbSync-is-blocked-by-my-server%3F||[help]
+status.global.101=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 101).
+status.global.102=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 102).
+status.global.103=XML, указанный в запросе, не соответствует требованиям протокола (EAS Ошибка 103).
+status.global.clientdenied=Отчеты сервера EAS <##replace.2##> (статус ##replace.1##) и не позволяют TbSync доступ к вашему аккаунту.||What-if-TbSync-is-blocked-by-my-server%3F||[help]
 
 status.ServerRejectedSomeItems=The EAS server accepted only ##replace.2## of your items and rejected the remaining ones for the following reasons: ##replace.1##. Check the debug log for “Bad item skipped”.||Error:-Bad-item-skipped||[help]
 status.ServerRejectedAllItems=The EAS server rejected your items for the following reasons: ##replace.1##. Check the debug log for “Bad item skipped”.||Error:-Bad-item-skipped||[help]
