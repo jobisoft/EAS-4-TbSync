@@ -125,8 +125,8 @@ status.ServerRejectedAllItems=The EAS server rejected your items for the followi
 status.ServerRejectedRequest=The EAS Server rejected our last request. Check the debug log for more information.
 status.TempServerError=Server reported temporary system issue, or bad item. This is frequently a transient condition (so try again later).
 
-status.nosupportedeasversion=Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server.
-status.notsupportedeasversion=Server does not support selected ActiveSync v##replace.1## (only ##replace.2##).
+status.nosupportedeasversion=Сервер не поддерживает ActiveSync v2.5 или v14.0 (только ##replace.1##). TbSync не будет работать с этим ActiveSync сервером.
+status.notsupportedeasversion=Сервер не поддерживает выбранный ActiveSync v##replace.1## (только ##replace.2##).
 
 config.auto=ActiveSync конфигурация сервера (Автообнаружение)
 config.custom=ActiveSync конфигурация сервера
