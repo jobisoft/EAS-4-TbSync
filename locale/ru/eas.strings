@@ -91,8 +91,8 @@ status.OK=Готово
 status.nolightning=Lightning Add-On не установлен, календари не поддерживаются.
 status.javascriptError=JavaScript дал ошибку! Проверьте журнал отладки.
 status.mailformed-xml=Не удалось разобрать XML. Проверьте журнал отладки. 
-status.invalid=Недопустимый ответ сервера (мусор).
-status.InvalidServerOptions=The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually.
+status.invalid=Недопустимый ответ сервера (мусор в обмене).
+status.InvalidServerOptions=Сервер не предоставляет информацию о поддерживаемых версиях ActiveSync. EAS блокирован для этого пользователя или этого клиента (TbSync)? Вы можете попробовать установить версию ActiveSync вручную.
 
 status.security=Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)||How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F||[help]
 status.network=Could not connect to server (##replace.1##).
