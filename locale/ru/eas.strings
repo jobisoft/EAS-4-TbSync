@@ -120,10 +120,10 @@ status.global.102=Запрос содержит WBXML но он не может 
 status.global.103=XML, указанный в запросе, не соответствует требованиям протокола (EAS Ошибка 103).
 status.global.clientdenied=Отчеты сервера EAS <##replace.2##> (статус ##replace.1##) и не позволяют TbSync доступ к вашему аккаунту.||What-if-TbSync-is-blocked-by-my-server%3F||[help]
 
-status.ServerRejectedSomeItems=The EAS server accepted only ##replace.2## of your items and rejected the remaining ones for the following reasons: ##replace.1##. Check the debug log for “Bad item skipped”.||Error:-Bad-item-skipped||[help]
-status.ServerRejectedAllItems=The EAS server rejected your items for the following reasons: ##replace.1##. Check the debug log for “Bad item skipped”.||Error:-Bad-item-skipped||[help]
-status.ServerRejectedRequest=The EAS Server rejected our last request. Check the debug log for more information.
-status.TempServerError=Server reported temporary system issue, or bad item. This is frequently a transient condition (so try again later).
+status.ServerRejectedSomeItems=Сервер EAS принял только ##replace.2## ваших элементов и отклонил остальные по следующим причинам: ##replace.1##. Проверьте журнал отладки на “Неверный элемент пропущен”.||Error:-Bad-item-skipped||[help]
+status.ServerRejectedAllItems=Сервер EAS отклонил ваши элементы по следующим причинам: ##replace.1##. Проверьте журнал отладки на “Неверный элемент пропущен”.||Error:-Bad-item-skipped||[help]
+status.ServerRejectedRequest=Сервер EAS отклонил наш последний запрос. Проверьте журнал отладки для получения дополнительной информации.
+status.TempServerError=Сервер сообщил о временной проблеме системы или ошибочном элементе. Это часто является переходным состоянием (повторите попытку позже).
 
 status.nosupportedeasversion=Сервер не поддерживает ActiveSync v2.5 или v14.0 (только ##replace.1##). TbSync не будет работать с этим ActiveSync сервером.
 status.notsupportedeasversion=Сервер не поддерживает выбранный ActiveSync v##replace.1## (только ##replace.2##).
