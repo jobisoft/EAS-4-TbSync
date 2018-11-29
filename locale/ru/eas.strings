@@ -10,22 +10,22 @@ autodiscover.FailedUnknown=Либо предоставленные учетны�
 autodiscover.FailedSecurity=Сообщается также о следующих ошибках сертификата, который *может быть* указывает проблему с вашим провайдером ActiveSync:
 
 deletefolder.notallowed=Откажитесь от подписки папки “##replace.1##” прежде чем пытаться очистить ее от мусора.
-deletefolder.confirm=Вы действительно хотите ОЧИЩАТЬ папку “##replace.1##” из корзины?
+deletefolder.confirm=Вы действительно хотите ПЕРМАНЕНТНО ВЫЧИСТИТЬ папку “##replace.1##” из корзины?
 
-deletefolder.menuentry=Permanently purge folder “##replace.1##” from trash
-subscribe.on=Subscribe “##replace.1##”
-subscribe.off=Unsubscribe “##replace.1##”
+deletefolder.menuentry=Перманентно вычистить папку “##replace.1##” из корзины
+subscribe.on=Подписаться на “##replace.1##”
+subscribe.off=Отписаться от “##replace.1##”
 
 recyclebin = Корзина
 
-syncstate.prepare.request.setdeviceinfo=Sending device information
-syncstate.send.request.setdeviceinfo=Sending device information
-syncstate.eval.response.setdeviceinfo=Sending device information
+syncstate.prepare.request.setdeviceinfo=Отправка информации об устройстве
+syncstate.send.request.setdeviceinfo=Отправка информации об устройстве
+syncstate.eval.response.setdeviceinfo=Отправка информации об устройстве
 
-syncstate.syncing=Initialize synchronization
-syncstate.preparing=Preparing next item for synchronization
-syncstate.done=Preparing next item for synchronization
-syncstate.accountdone=Finished account
+syncstate.syncing=Инициализация синхронизации
+syncstate.preparing=Подготовка следующего элемента для синхронизации
+syncstate.done=Подготовка следующего элемента для синхронизации
+syncstate.accountdone=Завершенный аккаунт
 
 syncstate.prepare.request.autodiscover=Requesting updated server settings
 syncstate.send.request.autodiscover=Waiting for updated server settings
