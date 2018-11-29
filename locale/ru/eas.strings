@@ -39,13 +39,13 @@ syncstate.prepare.request.folders=Отправка обновления лист
 syncstate.send.request.folders=Ожидание обновления листа папок
 syncstate.eval.response.folders=Обработка обновления листа папок
 
-syncstate.prepare.request.synckey=Requesting synckey
-syncstate.send.request.synckey=Waiting for synckey
-syncstate.eval.response.synckey=Processing synckey
+syncstate.prepare.request.synckey=Запрос элементов синхронизации
+syncstate.send.request.synckey=Ожидание элементов синхронизации
+syncstate.eval.response.synckey=Обработка элементов синхронизации
 
-syncstate.prepare.request.deletefolder=Preparing to delete folder
-syncstate.send.request.deletefolder=Waiting for folder to be deleted
-syncstate.eval.response.deletefolder=Folder deleted
+syncstate.prepare.request.deletefolder=Подготовка к удалению папки
+syncstate.send.request.deletefolder=Ожидание удаления папки
+syncstate.eval.response.deletefolder=Папка удалена
 
 syncstate.prepare.request.provision=Requesting provision
 syncstate.send.request.provision=Waiting for provision
