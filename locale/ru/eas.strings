@@ -16,7 +16,7 @@ deletefolder.menuentry=Permanently purge folder “##replace.1##” from trash
 subscribe.on=Subscribe “##replace.1##”
 subscribe.off=Unsubscribe “##replace.1##”
 
-recyclebin = Мусорная корзина
+recyclebin = Корзина
 
 syncstate.prepare.request.setdeviceinfo=Sending device information
 syncstate.send.request.setdeviceinfo=Sending device information
