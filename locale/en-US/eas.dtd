@@ -17,17 +17,18 @@
 <!ENTITY pref.UserName "User name">
 <!ENTITY pref.UserNameDescription "User name is usually the email address of your account.">
 <!ENTITY pref.ServerName "Server address">
+<!ENTITY pref.ActiveSyncVersion "ActiveSync version">
 <!ENTITY pref.ServerNameDescription "e.g. mail.yourserver.com">
 <!ENTITY pref.usehttps "Use secure connection (connect via https)">
-<!ENTITY pref.DeviceId "Device Id">
-<!ENTITY pref.contactoptions "Contact options">
+<!ENTITY pref.DeviceId "ActiveSync device ID">
 <!ENTITY pref.birthday "Send birthday information">
 <!ENTITY pref.downloadonly "Revert local changes (one-way sync)">
-<!ENTITY pref.generaloptions "General options">
+<!ENTITY pref.generaloptions "General">
+<!ENTITY pref.contactoptions "Contacts">
 <!ENTITY pref.syncdefaultfolders "Subscribe and sync all default folders after the initial connection has been established.">
 <!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
 
-<!ENTITY pref.autotime "Sync interval (minutes)">
+<!ENTITY pref.autotime "Periodic synchronization (in minutes)">
 <!ENTITY pref.never "A setting of 0 disables periodic sync. Push sync is no yet supported.">
 <!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
 
@@ -78,6 +79,7 @@
 <!ENTITY abCard.header.eas "Other Fields (EAS)">
 <!ENTITY abCard.header.otheraddress "Other Address (EAS)">
 
-<!ENTITY manager.tabs.settings "Server settings">
 <!ENTITY manager.tabs.resources "Available resources">
+<!ENTITY manager.tabs.settings "Server settings">
+<!ENTITY manager.tabs.options "Synchronization settings">
 <!ENTITY manager.tabs.outOfOffice "Autoresponder">

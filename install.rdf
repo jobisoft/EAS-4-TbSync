@@ -57,8 +57,8 @@
         <em:localized> <!-- Hungarian -->
           <Description>
             <em:locale>hu</em:locale>
-            <em:name>Exchange ActiveSync szolgáltató a Thunderbird-összehangolás (TbSync) számára</em:name>
-            <em:description>Az Exchange ActiveSync fiókok szinkronizációs támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync)</em:description>
+            <em:name>Az Exchange ActiveSync szolgáltató</em:name>
+            <em:description>Az Exchange ActiveSync-fiókok összehangolás támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync) (névjegyzék, feladatok és naptárak)</em:description>
             <em:translator>John Bieling (de)</em:translator>
             <em:translator>John Bieling (en-US)</em:translator>
             <em:translator>Alessandro Menti (it)</em:translator>
@@ -86,7 +86,7 @@
             <em:translator>Alexey Sinitsyn (ru)</em:translator>
             <em:contributor>Chris Allan (recurring events)</em:contributor>
             <em:contributor>Emil Ljungdahl</em:contributor>
-            <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
+            <em:contributor>Mark Nethersole (implementazione iniziale della sincronizzazione contatti)</em:contributor>
             <em:contributor>Dzamo Norton</em:contributor>
             <em:contributor>Tijuca</em:contributor>
             <em:contributor>Puran2</em:contributor>	

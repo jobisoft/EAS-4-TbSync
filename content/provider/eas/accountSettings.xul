@@ -53,7 +53,7 @@
                         <label class="header" style="margin-left:0" value="" id="tbsync.accountsettings.label.config" />
                         <hbox>
                             <hbox width="235"><label style="padding:1px; margin-left:0" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" /></hbox>
-                            <hbox flex="1"><label style="padding:1px;; margin-left:0"  control="tbsync.accountsettings.pref.asversionselected" value ="ActiveSync version" /></hbox>
+                            <hbox flex="1"><label style="padding:1px;; margin-left:0"  control="tbsync.accountsettings.pref.asversionselected" value ="&pref.ActiveSyncVersion" /></hbox>
                         </hbox>
 
                         <hbox>

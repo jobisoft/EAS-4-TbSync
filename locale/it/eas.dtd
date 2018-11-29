@@ -17,13 +17,14 @@
 <!ENTITY pref.UserName "Nome utente">
 <!ENTITY pref.UserNameDescription "Il nome utente è solitamente l'indirizzo di posta elettronica del proprio account.">
 <!ENTITY pref.ServerName "Indirizzo server">
+<!ENTITY pref.ActiveSyncVersion "?? ActiveSync Version ??">
 <!ENTITY pref.ServerNameDescription "ad es. mail.yourserver.com">
 <!ENTITY pref.usehttps "Utilizza connessione sicura (connettiti tramite HTTPS)">
-<!ENTITY pref.DeviceId "ID dispositivo">
-<!ENTITY pref.contactoptions "Opzioni contatto">
+<!ENTITY pref.DeviceId "?? ActiveSync device ID ??">
 <!ENTITY pref.birthday "Invia informazioni sui compleanni">
 <!ENTITY pref.downloadonly "Annulla modifiche locali (sincronizzazione a una via)">
-<!ENTITY pref.generaloptions "Opzioni generali">
+<!ENTITY pref.generaloptions "?? General ??">
+<!ENTITY pref.contactoptions "?? Contacts ??">
 <!ENTITY pref.syncdefaultfolders "Sottoscrivi e sincronizza tutte le cartelle predefinite dopo aver stabilito la connessione iniziale.">
 <!ENTITY pref.provision "Forza provisioning (opzione richiesta per Kerio)">
 
@@ -78,6 +79,7 @@
 <!ENTITY abCard.header.eas "Altri campi (EAS)">
 <!ENTITY abCard.header.otheraddress "Altro indirizzo (EAS)">
 
-<!ENTITY manager.tabs.settings "?? Server settings ??">
-<!ENTITY manager.tabs.resources "?? Available resources ??">
-<!ENTITY manager.tabs.outOfOffice "?? Autoresponder ??">
+<!ENTITY manager.tabs.resources "Risorse disponibili">
+<!ENTITY manager.tabs.settings "Impostazioni server">
+<!ENTITY manager.tabs.options "?? Synchronization settings ??">
+<!ENTITY manager.tabs.outOfOffice "Risponditore automatico">

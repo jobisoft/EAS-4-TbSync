@@ -17,17 +17,18 @@
 <!ENTITY pref.UserName "Benutzername">
 <!ENTITY pref.UserNameDescription "Der Benutzername ist meistens die E-Mail Adresse Ihres Kontos.">
 <!ENTITY pref.ServerName "Server Adresse">
+<!ENTITY pref.ActiveSyncVersion "ActiveSync Version">
 <!ENTITY pref.ServerNameDescription "z.B. mail.meinserver.com">
 <!ENTITY pref.usehttps "Sichere Verbindungen verwenden (via https://)">
-<!ENTITY pref.DeviceId "Geräte-ID">
-<!ENTITY pref.contactoptions "Kontakt Optionen">
+<!ENTITY pref.DeviceId "ActiveSync Geräte ID">
 <!ENTITY pref.birthday "Sende Geburtstagsinformation">
 <!ENTITY pref.downloadonly "Lokale Änderungen verwerfen (one-way sync)">
-<!ENTITY pref.generaloptions "Allgemeine Optionen">
+<!ENTITY pref.generaloptions "Allgemein">
+<!ENTITY pref.contactoptions "Kontakte">
 <!ENTITY pref.syncdefaultfolders "Beim ersten Verbindungsaufbau alle Standard-Ordner abonnieren und synchronisieren">
 <!ENTITY pref.provision "Provisionierung erzwingen (wird von Kerio benötigt)">
 
-<!ENTITY pref.autotime "Sync Intervall (Minuten)">
+<!ENTITY pref.autotime "Periodische Synchronisation (in Minuten)">
 <!ENTITY pref.never "Eine Einstellung von 0 deaktiviert periodische Synchronisation. Push Synchronisation wird noch nicht unterstützt.">
 <!ENTITY pref.ShowTrashedFolders "Im Papierkorb gefundene Ordner anzeigen" >
 
@@ -78,6 +79,7 @@
 <!ENTITY abCard.header.eas "Weitere Felder (EAS)">
 <!ENTITY abCard.header.otheraddress "Weitere Adresse (EAS)">
 
-<!ENTITY manager.tabs.settings "Servereinstellungen">
 <!ENTITY manager.tabs.resources "Verfügbare Resourcen">
+<!ENTITY manager.tabs.settings "Servereinstellungen">
+<!ENTITY manager.tabs.options "Synchronisationseinstellungen">
 <!ENTITY manager.tabs.outOfOffice "Autoresponder">
