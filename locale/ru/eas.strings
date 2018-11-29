@@ -47,17 +47,17 @@ syncstate.prepare.request.deletefolder=Подготовка к удалению 
 syncstate.send.request.deletefolder=Ожидание удаления папки
 syncstate.eval.response.deletefolder=Папка удалена
 
-syncstate.prepare.request.provision=Requesting provision
-syncstate.send.request.provision=Waiting for provision
-syncstate.eval.response.provision=Processing provision
+syncstate.prepare.request.provision=Запрос для резервирования
+syncstate.send.request.provision=Ожидание резервирования
+syncstate.eval.response.provision=Обработка резервирования
 
-syncstate.prepare.request.estimate=Requesting change estimate
-syncstate.send.request.estimate=Waiting for change estimate
-syncstate.eval.response.estimate=Processing change estimate
+syncstate.prepare.request.estimate=Запрос оценки изменения
+syncstate.send.request.estimate=Ожидание оценки изменений
+syncstate.eval.response.estimate=Обработка оценки изменений
 
-syncstate.prepare.request.remotechanges=Requesting remote changes
-syncstate.send.request.remotechanges=Waiting for remote changes
-syncstate.eval.response.remotechanges=Processing remote changes
+syncstate.prepare.request.remotechanges=Запрос удаленных изменений
+syncstate.send.request.remotechanges=Ожидание удаленных изменений
+syncstate.eval.response.remotechanges=Обработка удаленных изменений
 
 syncstate.prepare.request.localchanges=Sending local changes
 syncstate.send.request.localchanges=Waiting for acknowledgment of local changes
