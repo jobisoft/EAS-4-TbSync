@@ -22,8 +22,7 @@
             <menuitem id="tbsync.accountsettings.FolderListContextMenuDelete" label="delete" oncommand="tbSync.eas.ui.deleteFolder(document, tbSyncAccountSettings.account);"/>
         </menupopup>
     </popupset>
-                 <html:div style="margin: 1ex 0; font-weight:bold;display:none"><html:span id="syncstate"></html:span> <html:span id="syncstate_link" onmouseover="this.style.cursor='pointer'" onmouseout="this.style.cursor='default'" dest="" onclick="tbSync.openLink('https://github.com/jobisoft/TbSync/wiki/' + this.getAttribute('dest'));" style="color:blue;text-decoration: underline"></html:span></html:div>
-
+    
     <tabbox id="tbsync.accountsettings.frame" hidden="true" flex="1">
       <tabs>
         <tab id="tbsync.accountsettings.group.folders" label="&manager.tabs.resources;"  hidden="true" />
@@ -54,7 +53,7 @@
                         <label control="tbsync.accountsettings.pref.autosync" value="&pref.autotime;" tooltiptext="&pref.never;" />
                     </vbox>
                     <textbox flex="0" style="width:50px;margin-bottom:0; margin-top:0" id="tbsync.accountsettings.pref.autosync" tooltiptext="&pref.never;" />
-                    <button flex="2" id="tbsync.accountsettings.syncbtn" style="margin-right:0; margin-bottom:0; margin-top:0" label="&pref.SynchronizeAccount;" oncommand="tbSync.syncAccount('sync', tbSyncAccountSettings.account)" />
+                    <button flex="2" id="tbsync.accountsettings.syncbtn" style="margin-right:0; margin-bottom:0; margin-top:0" label="" oncommand="tbSync.syncAccount('sync', tbSyncAccountSettings.account)" />
                 </hbox>
             </vbox>
         </tabpanel>
@@ -70,6 +69,23 @@
 
                     <rows>
                         <row>
+                            <vbox pack="center">
+                                <label  style="text-align:left" value="&pref.status;" />
+                            </vbox>
+                            <hbox flex="1">
+                                <vbox pack="center">
+                                    <label  style="text-align:left"  value="" id="globalstatus"/>
+                                </vbox>
+                                <vbox flex="1" />
+                                <button id='tbsync.accountsettings.enablebtn' style="margin:0 1ex 0 0; padding: 0 2em;" label="" oncommand="tbSyncAccountSettings.toggleEnableState();" />
+                            </hbox>
+                        </row>
+                        <row id="error">
+                            <label  style="text-align:left" value="" />
+                            <html:div style="border: 2px solid red; border-radius: 1ex; margin:1ex 0 1ex 0; font-weight:bold; padding:1ex;"><html:span id="syncstate"></html:span> <html:span id="syncstate_link" onmouseover="this.style.cursor='pointer'" onmouseout="this.style.cursor='default'" dest="" onclick="tbSync.openLink('https://github.com/jobisoft/TbSync/wiki/' + this.getAttribute('dest'));" style="color:blue;text-decoration: underline"></html:span></html:div>
+                        </row>
+
+                        <row style="margin-top:2ex;">
                             <vbox pack="center">
                                 <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="&pref.AccountName;" />
                             </vbox>
@@ -116,7 +132,7 @@
 
                 <hbox flex="1"/>
                 <hbox flex="0" pack="end">
-                    <button id="tbsync.accountsettings.enablebtn" style="margin:1ex 0 0 0; padding: 0 2em;" label="&pref.EnableAccount;" oncommand="tbSyncAccountSettings.toggleEnableState();" />
+                    
                 </hbox>
             </vbox>
         </tabpanel>
