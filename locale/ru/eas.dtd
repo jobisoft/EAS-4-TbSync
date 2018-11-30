@@ -24,7 +24,7 @@
 <!ENTITY pref.birthday "Отправить информацию о днях рождения">
 <!ENTITY pref.downloadonly "Отменить локальные изменения (односторонняя синхронизация)">
 <!ENTITY pref.generaloptions "Общие настройки">
-<!ENTITY pref.syncdefaultfolders "Subscribe and sync all default folders after the initial connection has been established.">
+<!ENTITY pref.syncdefaultfolders "Подписать и синхронизировать все папки по умолчанию после установления первоначального соединения.">
 <!ENTITY pref.provision "Заставить резервировать (требуется для Kerio)">
 
 <!ENTITY pref.autotime "Интервал синхронизации (минуты)">
