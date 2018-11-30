@@ -1870,7 +1870,7 @@ var eas = {
          * Returns array of all options, that should not lock while being connected.
          */
         getAlwaysUnlockedSettings: function () {
-            return ["autosync"];
+            return ["autosync", "accountname"];
         },
 
 
