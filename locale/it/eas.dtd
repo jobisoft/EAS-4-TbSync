@@ -32,7 +32,7 @@
 <!ENTITY pref.never "Il valore 0 disabilita la sincronizzazione periodica. La sincronizzazione push non è ancora supportata.">
 <!ENTITY pref.ShowTrashedFolders "Visualizza le cartelle trovate nel Cestino">
 
-<!ENTITY pref.syncstate "Stato sincronizzazione">
+<!ENTITY pref.status "Stato">
 <!ENTITY pref.seperator.comma "Virgola">
 <!ENTITY pref.seperator.linebreak "Separatore riga">
 <!ENTITY pref.seperator.description "Separatore per i campi indirizzo multiriga.">

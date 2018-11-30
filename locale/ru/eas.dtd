@@ -31,7 +31,7 @@
 <!ENTITY pref.never "Установка 0 отключает периодическую синхронизацию. Push-синхронизация пока не поддерживается.">
 <!ENTITY pref.ShowTrashedFolders "Показывать папки, найденные в корзине">
 
-<!ENTITY pref.syncstate "Статус синхронизации">
+<!ENTITY pref.status "Статус">
 <!ENTITY pref.seperator.comma "Запятая">
 <!ENTITY pref.seperator.linebreak "Разрыв строки">
 <!ENTITY pref.seperator.description "Сепаратор для многострочного поля адреса.">

@@ -32,7 +32,7 @@
 <!ENTITY pref.never "Eine Einstellung von 0 deaktiviert periodische Synchronisation. Push Synchronisation wird noch nicht unterstützt.">
 <!ENTITY pref.ShowTrashedFolders "Im Papierkorb gefundene Ordner anzeigen" >
 
-<!ENTITY pref.syncstate "Sync Status">
+<!ENTITY pref.status "Status">
 <!ENTITY pref.seperator.comma "Komma">
 <!ENTITY pref.seperator.linebreak "Zeilenumbruch">
 <!ENTITY pref.seperator.description "Separator für mehrzeilige Adressfelder.">

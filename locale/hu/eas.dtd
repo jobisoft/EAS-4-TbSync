@@ -32,7 +32,7 @@
 <!ENTITY pref.never "A 0 beállítás letiltja az időszakos összehangolást.">
 <!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése" >
 
-<!ENTITY pref.syncstate "Összehangolási állapot">
+<!ENTITY pref.status "Állapot">
 <!ENTITY pref.seperator.comma "Vessző">
 <!ENTITY pref.seperator.linebreak "Sortörés">
 <!ENTITY pref.seperator.description "Több címsort tartalmazó elválasztó.">

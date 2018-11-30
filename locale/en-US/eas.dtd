@@ -32,7 +32,7 @@
 <!ENTITY pref.never "A setting of 0 disables periodic sync. Push sync is no yet supported.">
 <!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
 
-<!ENTITY pref.syncstate "Sync status">
+<!ENTITY pref.status "Status">
 <!ENTITY pref.seperator.comma "Comma">
 <!ENTITY pref.seperator.linebreak "Line break">
 <!ENTITY pref.seperator.description "Separator for multiline address field.">
