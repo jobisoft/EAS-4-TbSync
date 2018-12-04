@@ -14,7 +14,7 @@
 
     <tabpanel id="manager.tabpanels.accountsettings" appendto="manager.tabpanels" flex="1"><!-- ACCOUNT SETTINGS -->
            <vbox flex="1">
-                <label class="header lockable" style="margin-left:0; margin-bottom:1ex;" value="" id="tbsync.accountsettings.label.config" />                
+                <label class="header lockIfConnected" style="margin-left:0; margin-bottom:1ex;" value="" id="tbsync.accountsettings.label.config" />                
                 <grid flex="1">
                    <columns>
                         <column flex="0" style="margin-right:1ex;" />
@@ -31,25 +31,25 @@
                         
                         <row>
                             <vbox pack="center">
-                                <label class="lockable" style="text-align:left" control="tbsync.accountsettings.pref.user" value="&pref.UserName;" />
+                                <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.user" value="&pref.UserName;" />
                             </vbox>
-                            <textbox class="lockable" tooltiptext="&pref.UserNameDescription;" id="tbsync.accountsettings.pref.user" />
+                            <textbox class="lockIfConnected" tooltiptext="&pref.UserNameDescription;" id="tbsync.accountsettings.pref.user" />
                         </row>
                         
                         <row>
                             <vbox pack="center">
-                                <label class="lockable" style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
+                                <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
                             </vbox>
-                            <textbox class="lockable"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncAccountSettings.stripHost(document, tbSyncAccountSettings.account);" />
+                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncAccountSettings.stripHost(document, tbSyncAccountSettings.account);" />
                         </row>
                         <row>
                             <hbox/>
-                            <checkbox class="lockable" style="margin-bottom:1ex" id="tbsync.accountsettings.pref.https" label="&pref.usehttps;"  />
+                            <checkbox class="lockIfConnected" style="margin-bottom:1ex" id="tbsync.accountsettings.pref.https" label="&pref.usehttps;"  />
                         </row>
                         
                         <row>
                             <vbox pack="center">
-                                <label class="lockable"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="ActiveSync version" />
+                                <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="ActiveSync version" />
                             </vbox>
                             <menulist flex="0" id="tbsync.accountsettings.pref.asversionselected"  >
                                 <menupopup>
@@ -60,7 +60,7 @@
                             </menulist>
                         </row>
                         <row>
-                            <label class="lockable" style="text-align:left" value="&pref.DeviceId;" />
+                            <label class="lockIfConnected" style="text-align:left" value="&pref.DeviceId;" />
                             <label value="" disabled="true" id="tbsync.accountsettings.pref.deviceId" />
                         </row>
                    </rows>
@@ -79,15 +79,15 @@
 
     <tabpanel id="manager.tabpanels.syncsettings" appendto="manager.tabpanels" flex="1"><!-- SYNC SETTINGS -->
           <vbox flex="1">
-                <label style="margin-left:0; margin-bottom: 1ex;" class="header lockable" value="&pref.generaloptions;"/>
+                <label style="margin-left:0; margin-bottom: 1ex;" class="header lockIfConnected" value="&pref.generaloptions;"/>
                 <vbox>                            
-                    <checkbox class="lockable" id="tbsync.accountsettings.pref.downloadonly" label="&pref.downloadonly;"  />
-                    <checkbox class="lockable" id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
+                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.downloadonly" label="&pref.downloadonly;"  />
+                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
                 </vbox>                            
 
-                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockable" value="&pref.contactoptions;"/>
+                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="&pref.contactoptions;"/>
                 <vbox>                            
-                    <checkbox class="lockable" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
+                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
                     <hbox align="center">
                         <menulist id="tbsync.accountsettings.pref.seperator">
                             <menupopup>
@@ -95,7 +95,7 @@
                                 <menuitem label="&pref.seperator.comma;" value="44" />
                             </menupopup>
                         </menulist>
-                        <description class="lockable" flex="1">&pref.seperator.description;</description>
+                        <description class="lockIfConnected" flex="1">&pref.seperator.description;</description>
                     </hbox>
                 </vbox>                            
 
