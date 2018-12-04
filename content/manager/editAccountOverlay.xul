@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
+
+<overlay 
+    id="tbSyncAccountConfig" 
+    xmlns:html="http://www.w3.org/1999/xhtml">
+
+    <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
+    <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />
+
+    <tabpanel id="manager.tabpanels.accountsettings" appendto="manager.tabpanels" flex="1"><!-- ACCOUNT SETTINGS -->
+           <vbox flex="1">
+                <label class="header lockable" style="margin-left:0; margin-bottom:1ex;" value="" id="tbsync.accountsettings.label.config" />                
+                <grid flex="1">
+                   <columns>
+                        <column flex="0" style="margin-right:1ex;" />
+                        <column flex="1" />
+                   </columns>
+
+                    <rows>
+                        <row>
+                            <vbox pack="center">
+                                <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="&pref.AccountName;" />
+                            </vbox>
+                            <textbox id="tbsync.accountsettings.pref.accountname" />
+                        </row>
+                        
+                        <row>
+                            <vbox pack="center">
+                                <label class="lockable" style="text-align:left" control="tbsync.accountsettings.pref.user" value="&pref.UserName;" />
+                            </vbox>
+                            <textbox class="lockable" tooltiptext="&pref.UserNameDescription;" id="tbsync.accountsettings.pref.user" />
+                        </row>
+                        
+                        <row>
+                            <vbox pack="center">
+                                <label class="lockable" style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
+                            </vbox>
+                            <textbox class="lockable"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncAccountSettings.stripHost(document, tbSyncAccountSettings.account);" />
+                        </row>
+                        <row>
+                            <hbox/>
+                            <checkbox class="lockable" style="margin-bottom:1ex" id="tbsync.accountsettings.pref.https" label="&pref.usehttps;"  />
+                        </row>
+                        
+                        <row>
+                            <vbox pack="center">
+                                <label class="lockable"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="ActiveSync version" />
+                            </vbox>
+                            <menulist flex="0" id="tbsync.accountsettings.pref.asversionselected"  >
+                                <menupopup>
+                                    <menuitem label="&pref.autodetect;" value="auto" />
+                                    <menuitem label="v2.5" value="2.5" />
+                                    <menuitem label="v14.0" value="14.0" />
+                                </menupopup>
+                            </menulist>
+                        </row>
+                        <row>
+                            <label class="lockable" style="text-align:left" value="&pref.DeviceId;" />
+                            <label value="" disabled="true" id="tbsync.accountsettings.pref.deviceId" />
+                        </row>
+                   </rows>
+                </grid>
+
+                <vbox flex="1" />
+                <vbox class="showIfConnected">
+                    <hbox>
+                        <vbox pack="center"><image src="chrome://tbsync/skin/info16.png" /></vbox>
+                        <description flex="1">To prevent synchronization errors, some settings cannot be edited while the account is enabled.</description>
+                    </hbox>
+                </vbox>
+
+            </vbox>
+    </tabpanel>
+
+    <tabpanel id="manager.tabpanels.syncsettings" appendto="manager.tabpanels" flex="1"><!-- SYNC SETTINGS -->
+          <vbox flex="1">
+                <label style="margin-left:0; margin-bottom: 1ex;" class="header lockable" value="&pref.generaloptions;"/>
+                <vbox>                            
+                    <checkbox class="lockable" id="tbsync.accountsettings.pref.downloadonly" label="&pref.downloadonly;"  />
+                    <checkbox class="lockable" id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
+                </vbox>                            
+
+                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockable" value="&pref.contactoptions;"/>
+                <vbox>                            
+                    <checkbox class="lockable" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
+                    <hbox align="center">
+                        <menulist id="tbsync.accountsettings.pref.seperator">
+                            <menupopup>
+                                <menuitem label="&pref.seperator.linebreak;" value="10" />
+                                <menuitem label="&pref.seperator.comma;" value="44" />
+                            </menupopup>
+                        </menulist>
+                        <description class="lockable" flex="1">&pref.seperator.description;</description>
+                    </hbox>
+                </vbox>                            
+
+                <vbox flex="1" />
+                <vbox class="showIfConnected">
+                    <hbox>
+                        <vbox pack="center"><image src="chrome://tbsync/skin/info16.png" /></vbox>
+                        <description flex="1">To prevent synchronization errors, some settings cannot be edited while the account is enabled.</description>
+                    </hbox>
+                </vbox>
+            </vbox>
+    </tabpanel>
+
+</overlay>
