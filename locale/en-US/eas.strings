@@ -73,7 +73,7 @@ syncstate.eval.response.localdeletes=Processing acknowledgment of local deletes
 
 status.notsyncronized=Account needs to be synchronized, at least one item is out of sync.
 status.needtorevert=Account needs to be synchronized to revert local changes (one-way sync).
-status.disabled=Account is not enabled, synchronization is disabled.
+status.disabled=Disabled
 status.notargets=Aborting Sync, because sync targets could not be created.
 status.nouserhost=Missing username and/or server. Please provide those values.
 status.timeout=Communication timeout.
@@ -87,7 +87,7 @@ status.503=Service unavailable (HTTP Error 503).
 status.httperror=Communication error (HTTP status ##replace.1##).
 status.wbxmlerror=Sync failed. Server responded with status <##replace.1##>.
 status.wbxmlmissingfield=ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response.
-status.OK=Ok
+status.OK=OK
 status.nolightning=Lightning Add-On not installed, calendars are not supported.
 status.javascriptError=JavaScript error! Check debug log for details.
 status.mailformed-xml=Could not parse XML. Check debug log for details. 
@@ -130,4 +130,3 @@ status.notsupportedeasversion=Server does not support selected ActiveSync v##rep
 
 config.auto=ActiveSync server configuration (Autodiscover)
 config.custom=ActiveSync server configuration
-config.outlook.com=Server configuration for Outlook.com accounts

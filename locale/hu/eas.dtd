@@ -9,8 +9,6 @@
 <!ENTITY add.server "Kiszolgáló beállítások:">
 <!ENTITY add.description "Adja meg az új Thunderbird-összehangolás-fiók nevét, a hozzáadni kívánt ActiveSync-fiók (valószínűleg egy e-mail cím) felhasználónevét, és válassza ki az elérhető kiszolgáló beállítások egyikét.">
 
-<!ENTITY pref.EnableAccount "Engedélyezze a fiókot és próbáljon csatlakozni a kiszolgálóhoz">
-<!ENTITY pref.SynchronizeAccount "Fiók összehangolása">
 <!ENTITY pref.autodetect "az elérhető legjobb">
 
 <!ENTITY pref.AccountName "Fióknév">
@@ -25,14 +23,10 @@
 <!ENTITY pref.downloadonly "A helyi változások visszaállítása (egyirányú összehangolás)">
 <!ENTITY pref.generaloptions "?? General ??">
 <!ENTITY pref.contactoptions "?? Contacts ??">
-<!ENTITY pref.syncdefaultfolders "Az alapértelmezett mappák feliratkozása és összehangolása a kezdeti kapcsolat létrehozása után.">
 <!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
 
-<!ENTITY pref.autotime "Összehangolás időközönként (perc)">
-<!ENTITY pref.never "A 0 beállítás letiltja az időszakos összehangolást.">
 <!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése" >
 
-<!ENTITY pref.status "Állapot">
 <!ENTITY pref.seperator.comma "Vessző">
 <!ENTITY pref.seperator.linebreak "Sortörés">
 <!ENTITY pref.seperator.description "Több címsort tartalmazó elválasztó.">
@@ -41,8 +35,6 @@
 <!ENTITY pref.foldername "Mappa">
 <!ENTITY pref.targetname "Összehangolási cél">
 <!ENTITY pref.status "Állapot">
-
-<!ENTITY pref.switchFoldersAndConfig "Kattintson kétszer a mappa nézet és a beállítások nézet közötti váltáshoz.">
 
 <!ENTITY servertype.auto "Önműködő beállítás az ActiveSync önműködő felismerésével">
 <!ENTITY servertype.custom "Egyéni beállítások">
@@ -70,7 +62,6 @@
 <!ENTITY abCard.OtherZip "Irányítószám:">
 <!ENTITY abCard.OtherState "Állam/tartomány:">
 
-
 <!ENTITY abCard.header.worknumbers "További munkahelyi számok:">
 <!ENTITY abCard.header.homenumbers "További otthoni számok:">
 <!ENTITY abCard.header.othernumbers "További számok:">
@@ -79,7 +70,6 @@
 <!ENTITY abCard.header.eas "Egyéb mezők (EAS)">
 <!ENTITY abCard.header.otheraddress "Egyéb cím (EAS)">
 
-<!ENTITY manager.tabs.resources "Elérhető erőforrások">
-<!ENTITY manager.tabs.settings "Kiszolgáló beállításai">
-<!ENTITY manager.tabs.options "?? Synchronization settings ??">
+<!ENTITY manager.tabs.accountsettings "?? Account settings ??">
+<!ENTITY manager.tabs.syncsettings "?? Synchronisation settings ??"> <!-- if too long, just "Options" would also be ok -->
 <!ENTITY manager.tabs.outOfOffice "Önműködő válasz">

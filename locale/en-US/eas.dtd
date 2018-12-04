@@ -9,11 +9,9 @@
 <!ENTITY add.server "Server configuration:">
 <!ENTITY add.description "Please enter a name for the new TbSync account, the user name of the ActiveSync account you want to add (probably an email address) and select one of the available server configuration options. ">
 
-<!ENTITY pref.EnableAccount "Enable account &amp; try to connect to server">
-<!ENTITY pref.SynchronizeAccount "Synchronize account">
 <!ENTITY pref.autodetect "best available">
 
-<!ENTITY pref.AccountName "Account name">
+<!ENTITY pref.AccountName "Description">
 <!ENTITY pref.UserName "User name">
 <!ENTITY pref.UserNameDescription "User name is usually the email address of your account.">
 <!ENTITY pref.ServerName "Server address">
@@ -25,14 +23,10 @@
 <!ENTITY pref.downloadonly "Revert local changes (one-way sync)">
 <!ENTITY pref.generaloptions "General">
 <!ENTITY pref.contactoptions "Contacts">
-<!ENTITY pref.syncdefaultfolders "Subscribe and sync all default folders after the initial connection has been established.">
 <!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
 
-<!ENTITY pref.autotime "Periodic synchronization (in minutes)">
-<!ENTITY pref.never "A setting of 0 disables periodic sync. Push sync is no yet supported.">
 <!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
 
-<!ENTITY pref.status "Status">
 <!ENTITY pref.seperator.comma "Comma">
 <!ENTITY pref.seperator.linebreak "Line break">
 <!ENTITY pref.seperator.description "Separator for multiline address field.">
@@ -41,8 +35,6 @@
 <!ENTITY pref.foldername "Folder">
 <!ENTITY pref.targetname "Sync Target">
 <!ENTITY pref.status "Status">
-
-<!ENTITY pref.switchFoldersAndConfig "Double click to switch between folder view and settings view.">
 
 <!ENTITY servertype.auto "Automatic configuration via ActiveSync Autodiscover">
 <!ENTITY servertype.custom "Custom configuration">
@@ -70,7 +62,6 @@
 <!ENTITY abCard.OtherZip "ZIP Code:">
 <!ENTITY abCard.OtherState "State:">
 
-
 <!ENTITY abCard.header.worknumbers "Additional work numbers:">
 <!ENTITY abCard.header.homenumbers "Additional home numbers:">
 <!ENTITY abCard.header.othernumbers "Additional numbers:">
@@ -79,7 +70,6 @@
 <!ENTITY abCard.header.eas "Other Fields (EAS)">
 <!ENTITY abCard.header.otheraddress "Other Address (EAS)">
 
-<!ENTITY manager.tabs.resources "Available resources">
-<!ENTITY manager.tabs.settings "Server settings">
-<!ENTITY manager.tabs.options "Synchronization settings">
+<!ENTITY manager.tabs.accountsettings "Account settings">
+<!ENTITY manager.tabs.syncsettings "Synchronisation settings">
 <!ENTITY manager.tabs.outOfOffice "Autoresponder">

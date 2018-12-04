@@ -87,7 +87,7 @@ status.503=Service nicht erreichbar.
 status.httperror=Kommunikationsfehler (HTTP Status ##replace.1##).
 status.wbxmlerror=Synchronisation fehlgeschlagen. Der Server antwortete mit dem Status <##replace.1##>.
 status.wbxmlmissingfield=Verletzung des ActiveSync Protokolls: Notwendiges Feld <##replace.1##> ist nicht in der Serverantwort enthalten.
-status.OK=Ok
+status.OK=OK
 status.nolightning=Lightning Add-On nicht installiert, Kalender nicht nutzbar.
 status.javascriptError=Javascript Fehler! Prüfen Sie bitte den Fehlerbericht für weitere Details.
 status.mailformed-xml=Der XML Baum konnte nicht geparst werden. Prüfen Sie bitte den Fehlerbericht für weitere Details.  
@@ -130,4 +130,3 @@ status.notsupportedeasversion=Der Server unterstützt nicht die ausgewählte Act
 
 config.auto=ActiveSync Server Konfiguration (Autodiscover)
 config.custom=ActiveSync Server Konfiguration
-config.outlook.com=Server Konfiguration für Outlook.com Konten
