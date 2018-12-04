@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
-<!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
-
+<!DOCTYPE window [
+  <!ENTITY % tbsyncDTD SYSTEM "chrome://tbsync/locale/tbSync.dtd">
+  %tbsyncDTD;
+  <!ENTITY % easDTD SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
+  %easDTD;
+]>
 <overlay 
     id="tbSyncAccountConfig" 
     xmlns:html="http://www.w3.org/1999/xhtml">
@@ -66,7 +70,7 @@
                 <vbox class="showIfConnected">
                     <hbox>
                         <vbox pack="center"><image src="chrome://tbsync/skin/info16.png" /></vbox>
-                        <description flex="1">To prevent synchronization errors, some settings cannot be edited while the account is enabled.</description>
+                        <description flex="1">&manager.lockedsettings.description;</description>
                     </hbox>
                 </vbox>
 
@@ -99,7 +103,7 @@
                 <vbox class="showIfConnected">
                     <hbox>
                         <vbox pack="center"><image src="chrome://tbsync/skin/info16.png" /></vbox>
-                        <description flex="1">To prevent synchronization errors, some settings cannot be edited while the account is enabled.</description>
+                        <description flex="1">&manager.lockedsettings.description;</description>
                     </hbox>
                 </vbox>
             </vbox>
