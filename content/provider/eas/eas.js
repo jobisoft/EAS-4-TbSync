@@ -133,16 +133,16 @@ var eas = {
      * Returns XUL URL of the new account dialog.
      */
     getCreateAccountXulUrl: function () {
-        return "//eas4tbsync/content/createAccount.xul";
+        return "//eas4tbsync/content/manager/createAccount.xul";
     },
 
 
 
     /**
-     * Returns XUL URL of the edit account dialog.
+     * Returns overlay XUL URL of the edit account dialog (chrome://tbsync/content/manager/editAccount.xul)
      */
-    getEditAccountXulUrl: function () {
-        return "//eas4tbsync/content/editAccount.xul";
+    getEditAccountOverlayUrl: function () {
+        return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";
     },
 
 
@@ -192,7 +192,6 @@ var eas = {
             "servertype" : "",
             "seperator" : "10",
             "https" : "1",
-            "syncdefaultfolders" : "1",
             "provision" : "0",
             "birthday" : "0",
             "displayoverride" : "0", 
@@ -239,7 +238,7 @@ var eas = {
      * Returns an array of folder settings, that should survive disable and re-enable
      */
     getPersistentFolderSettings: function () {
-        return ["targetName", "targetColor", "selected"];
+        return ["targetName", "targetColor"];
     },
 
 
@@ -682,16 +681,13 @@ var eas = {
                     newFolderSettings.name = add[count].DisplayName;
                     newFolderSettings.type = add[count].Type;
                     newFolderSettings.parentID = add[count].ParentId;
+                    newFolderSettings.selected = "0";
 
                     if (tbSync.prefSettings.getBoolPref("eas.fix4freedriven")) {
                         let target = tbSync.db.getFolderSetting(syncdata.account, add[count].ServerId, "target");                    
                         if (target) newFolderSettings.target = target;
                     }
-                        
-                    if (tbSync.db.getAccountSetting(syncdata.account, "syncdefaultfolders") == "1") {
-                        newFolderSettings.selected = (newFolderSettings.type == "9" || newFolderSettings.type == "8" || newFolderSettings.type == "7" ) ? "1" : "0";
-                    } else newFolderSettings.selected = "0";
-                                
+
                     //if there is a cached version of this folderID, addFolder will merge all persistent settings - all other settings not defined here will be set to their defaults
                     tbSync.db.addFolder(syncdata.account, newFolderSettings);
                 }
@@ -1852,60 +1848,9 @@ var eas = {
     
     
     /**
-     * Implements the TbSync UI interface for external provider extensions, 
-     * only needed, if the standard TbSync UI logic is used (chrome://tbsync/content/manager/accountSettings.js).
+     * Functions used by the folderlist in the main account settings tab
      */
-    ui: {
-
-        /**
-         * Returns array of all possible account options (field names of a row in the accounts database).
-         */
-        getAccountStorageFields: function () {
-            return Object.keys(tbSync.eas.getDefaultAccountEntries()).sort();
-        },
-
-
-
-        /**
-         * Returns array of all options, that should not lock while being connected.
-         */
-        getAlwaysUnlockedSettings: function () {
-            return ["autosync", "accountname"];
-        },
-
-
-
-        /**
-         * Returns object with fixed entries for rows in the accounts database. This is useable for two cases:
-         *   1. indicate which entries where retrieved by autodiscover, do not assign a value
-         *   2. other special server profiles (like "outlook") which the user can select during account creation with predefined values
-         * In either case, these entries are not editable in the UI by default,but the user has to unlock them.
-         *
-         * @param servertype       [in] return fixed set based on the given servertype
-         */
-        getFixedServerSettings: function (servertype) {
-            let settings = {};
-
-            switch (servertype) {
-                case "auto":
-                    settings["host"] = null;
-                    settings["https"] = null;
-                    settings["asversionselected"] = null;
-                    break;
-
-                //just here for reference, if this method is going to be used again
-                case "outlook.com":
-                    settings["host"] = "eas.outlook.com";
-                    settings["https"] = "1";
-                    settings["asversionselected"] = "2.5";
-                    settings["seperator"] = "44";
-                    break;
-            }
-            
-            return settings;
-        },
-
-
+    folderList: {
 
         /**
          * Is called before the context menu of the folderlist is shown, allows to 
@@ -1914,7 +1859,7 @@ var eas = {
          * @param document       [in] document object of the account settings window
          * @param folder         [in] folder databasse object of the selected folder
          */
-        onFolderListContextMenuShowing: function (document, folder) {
+        onContextMenuShowing: function (document, folder) {
             let hideContextMenuDelete = true;
 
             if (folder !== null) {
@@ -1933,18 +1878,18 @@ var eas = {
         /**
          * Returns an array of folderRowData objects, containing all information needed 
          * to fill the folderlist. The content of the folderRowData object is free to choose,
-         * it will be passed back to addRowToFolderList() and updateRowOfFolderList()
+         * it will be passed back to addRow() and updateRow()
          *
          * @param account        [in] account id for which the folder data should be returned
          */
-        getSortedFolderData: function (account) {
+        getSortedData: function (account) {
             let folderData = [];
             let folders = tbSync.db.getFolders(account);
             let allowedTypesOrder = ["9","14","8","13","7","15"];
-            let folderIDs = Object.keys(folders).filter(f => allowedTypesOrder.includes(folders[f].type)).sort((a, b) => (tbSync.eas.ui.getIdChain(allowedTypesOrder, account, a).localeCompare(tbSync.eas.ui.getIdChain(allowedTypesOrder, account, b))));
+            let folderIDs = Object.keys(folders).filter(f => allowedTypesOrder.includes(folders[f].type)).sort((a, b) => (tbSync.eas.folderList.getIdChain(allowedTypesOrder, account, a).localeCompare(tbSync.eas.folderList.getIdChain(allowedTypesOrder, account, b))));
             
             for (let i=0; i < folderIDs.length; i++) {
-                folderData.push(tbSync.eas.ui.getFolderRowData(folders[folderIDs[i]]));
+                folderData.push(tbSync.eas.folderList.getRowData(folders[folderIDs[i]]));
             }
             return folderData;
         },
@@ -1954,16 +1899,16 @@ var eas = {
         /**
          * Returns a folderRowData object, containing all information needed to fill one row
          * in the folderlist. The content of the folderRowData object is free to choose, it
-         * will be passed back to addRowToFolderList() and updateRowOfFolderList()
+         * will be passed back to addRow() and updateRow()
          *
          * Use tbSync.getSyncStatusMsg(folder, syncdata, provider) to get a nice looking 
          * status message, including sync progress (if folder is synced)
          *
          * @param folder         [in] folder databasse object of requested folder
-         * @param syncdata       [in] optional syncdata obj send by updateRowOfFolderList(),
+         * @param syncdata       [in] optional syncdata obj send by updateRow(),
          *                            needed to check if the folder is currently synced
          */
-        getFolderRowData: function (folder, syncdata = null) {
+        getRowData: function (folder, syncdata = null) {
             let rowData = {};
             rowData.folderID = folder.folderID;
             rowData.selected = (folder.selected == "1");
@@ -1985,14 +1930,15 @@ var eas = {
          * @param newListItem    [in] the listitem of the row, where row items should be added to
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
-        addRowToFolderList: function (document, newListItem, rowData) {
+        addRow: function (document, newListItem, rowData) {
+            //http://hyperstruct.net/2006/09/30/xul-patterns-modular-interfaces/
             //add folder type/img
             let itemTypeCell = document.createElement("listcell");
             itemTypeCell.setAttribute("class", "img");
             itemTypeCell.setAttribute("width", "24");
             itemTypeCell.setAttribute("height", "24");
                 let itemType = document.createElement("image");
-                itemType.setAttribute("src", tbSync.eas.ui.getTypeImage(rowData.type));
+                itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
                 itemType.setAttribute("style", "margin: 4px;");
             itemTypeCell.appendChild(itemType);
             newListItem.appendChild(itemTypeCell);
@@ -2027,7 +1973,7 @@ var eas = {
          * @param listItem       [in] the listitem of the row, which needs to be updated
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
-        updateRowOfFolderList: function (document, item, rowData) {
+        updateRow: function (document, item, rowData) {
             tbSync.updateListItemCell(item.childNodes[1], ["label","tooltiptext"], rowData.name);
             tbSync.updateListItemCell(item.childNodes[2], ["label","tooltiptext"], rowData.status);
             if (rowData.selected) {
