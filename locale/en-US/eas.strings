@@ -39,9 +39,9 @@ syncstate.prepare.request.folders=Sending folder list update
 syncstate.send.request.folders=Waiting for folder list update
 syncstate.eval.response.folders=Processing folder list update
 
-syncstate.prepare.request.synckey=Requesting synckey
-syncstate.send.request.synckey=Waiting for synckey
-syncstate.eval.response.synckey=Processing synckey
+syncstate.prepare.request.synckey=Requesting SyncKey
+syncstate.send.request.synckey=Waiting for SyncKey
+syncstate.eval.response.synckey=Processing SyncKey
 
 syncstate.prepare.request.deletefolder=Preparing to delete folder
 syncstate.send.request.deletefolder=Waiting for folder to be deleted
