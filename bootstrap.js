@@ -18,7 +18,7 @@ let onInitDoneObserver = {
         //it is now safe to import tbsync.jsm
         Components.utils.import("chrome://tbsync/content/tbsync.jsm");
         
-        //load all providers of this provider Add-on into TbSync (one at a time, obey order)
+        //load all providers of this provider add-on into TbSync (one at a time, obey order)
         yield tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
     })
 }
@@ -53,7 +53,7 @@ function startup(data, reason) {
 function shutdown(data, reason) {
     Services.obs.removeObserver(onInitDoneObserver, "tbsync.init.done");
 
-    //unload this provider Add-On and all its loaded providers from TbSync
+    //unload this provider add-on and all its loaded providers from TbSync
     try {
         tbSync.unloadProviderAddon(data.id);
     } catch (e) {}
