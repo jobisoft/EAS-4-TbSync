@@ -7,7 +7,10 @@
 ]>
 <overlay 
     id="tbSyncAccountConfig" 
+    oninject="tbSyncEasEditAccount.onInject(window)"
     xmlns:html="http://www.w3.org/1999/xhtml">
+
+    <script type="text/javascript" src="chrome://eas4tbsync/content/manager/editAccountOverlay.js" /> 
 
     <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
     <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />
@@ -48,16 +51,15 @@
                         </row>
                         
                         <row>
-                            <vbox pack="center">
+                            <vbox id="asversion.hook" pack="center">
                                 <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="ActiveSync version" />
                             </vbox>
-                            <menulist flex="0" id="tbsync.accountsettings.pref.asversionselected"  >
-                                <menupopup>
-                                    <menuitem label="&pref.autodetect;" value="auto" />
-                                    <menuitem label="v2.5" value="2.5" />
-                                    <menuitem label="v14.0" value="14.0" />
-                                </menupopup>
-                            </menulist>
+                            <!-- menulist flex="0" id="tbsync.accountsettings.pref.asversionselected"  ></menulist -->
+                            <menupopup id="asversion.popup">
+                                <menuitem label="&pref.autodetect;" value="auto" />
+                                <menuitem label="v2.5" value="2.5" />
+                                <menuitem label="v14.0" value="14.0" />
+                            </menupopup>
                         </row>
                         <row>
                             <label class="lockIfConnected" style="text-align:left" value="&pref.DeviceId;" />
@@ -89,13 +91,12 @@
                 <vbox>                            
                     <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
                     <hbox align="center">
-                        <menulist id="tbsync.accountsettings.pref.seperator">
-                            <menupopup>
-                                <menuitem label="&pref.seperator.linebreak;" value="10" />
-                                <menuitem label="&pref.seperator.comma;" value="44" />
-                            </menupopup>
-                        </menulist>
-                        <description class="lockIfConnected" flex="1">&pref.seperator.description;</description>
+                        <!-- menulist id="tbsync.accountsettings.pref.seperator"></menulist-->
+                        <menupopup id="separator.popup">
+                            <menuitem label="&pref.seperator.linebreak;" value="10" />
+                            <menuitem label="&pref.seperator.comma;" value="44" />
+                        </menupopup>
+                        <description id="separator.hook" class="lockIfConnected" flex="1">&pref.seperator.description;</description>
                     </hbox>
                 </vbox>                            
 
