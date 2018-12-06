@@ -1981,21 +1981,21 @@ var eas = {
 
 
         /**
-         * Is called to update a row of the folderlist.
+         * Is called to update a row of the folderlist (the first cell is a select checkbox inserted by TbSync)
          *
          * @param document       [in] document object of the account settings window
          * @param listItem       [in] the listitem of the row, which needs to be updated
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
         updateRow: function (document, item, rowData) {
-            tbSync.updateListItemCell(item.childNodes[1], ["label","tooltiptext"], rowData.name);
-            tbSync.updateListItemCell(item.childNodes[2], ["label","tooltiptext"], rowData.status);
+            tbSync.updateListItemCell(item.childNodes[2], ["label","tooltiptext"], rowData.name);
+            tbSync.updateListItemCell(item.childNodes[3], ["label","tooltiptext"], rowData.status);
             if (rowData.selected) {
-                tbSync.updateListItemCell(item.childNodes[1], ["style"], "font-style:normal;");
-                tbSync.updateListItemCell(item.childNodes[1], ["disabled"], "false");
+                tbSync.updateListItemCell(item.childNodes[2], ["style"], "font-style:normal;");
+                tbSync.updateListItemCell(item.childNodes[2], ["disabled"], "false");
             } else {
-                tbSync.updateListItemCell(item.childNodes[1], ["style"], "font-style:italic;");
-                tbSync.updateListItemCell(item.childNodes[1], ["disabled"], "true");
+                tbSync.updateListItemCell(item.childNodes[2], ["style"], "font-style:italic;");
+                tbSync.updateListItemCell(item.childNodes[2], ["disabled"], "true");
             }
         },
 
