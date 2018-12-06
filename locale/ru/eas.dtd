@@ -32,10 +32,6 @@
 <!ENTITY pref.seperator.description "Сепаратор для многострочного поля адреса.">
 <!ENTITY pref.displayoverride "Переопределить отображаемое имя с помощью “Имя” + “Фамилия”">
 
-<!ENTITY pref.foldername "Папка">
-<!ENTITY pref.targetname "Цель синхронизации">
-<!ENTITY pref.status "Статус">
-
 <!ENTITY servertype.auto "Автоматическая настройка с помощью ActiveSync автоопределения">
 <!ENTITY servertype.custom "Ручная настройка">
 <!ENTITY servertype.unlock "Дважды щелкните, чтобы разблокировать все предопределенные настройки сервера.">

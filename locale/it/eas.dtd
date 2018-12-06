@@ -32,10 +32,6 @@
 <!ENTITY pref.seperator.description "Separatore per i campi indirizzo multiriga.">
 <!ENTITY pref.displayoverride "Ignora il Nome visualizzato e mostra Nome + Cognome">
 
-<!ENTITY pref.foldername "Cartella">
-<!ENTITY pref.targetname "Obiettivo sincronizzazione">
-<!ENTITY pref.status "Stato">
-
 <!ENTITY servertype.auto "Configurazione automatica tramite rilevamento automatico ActiveSync">
 <!ENTITY servertype.custom "Configurazione personalizzata">
 <!ENTITY servertype.unlock "Cliccare due volte per sbloccare tutte le impostazioni server predefinite.">

@@ -32,10 +32,6 @@
 <!ENTITY pref.seperator.description "Több címsort tartalmazó elválasztó.">
 <!ENTITY pref.displayoverride "A megjelenítési név felülbírálása „keresztnév” és „második keresztnév”">
 
-<!ENTITY pref.foldername "Mappa">
-<!ENTITY pref.targetname "Összehangolási cél">
-<!ENTITY pref.status "Állapot">
-
 <!ENTITY servertype.auto "Önműködő beállítás az ActiveSync önműködő felismerésével">
 <!ENTITY servertype.custom "Egyéni beállítások">
 <!ENTITY servertype.unlock "Dupla kattintson az összes előre meghatározott kiszolgáló beállításának feloldásához.">

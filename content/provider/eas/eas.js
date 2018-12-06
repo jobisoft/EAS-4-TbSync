@@ -1876,6 +1876,20 @@ var eas = {
 
 
         /**
+         * Returns an array of attribute objects, which define the number of columns 
+         * and the look of the header
+         */
+        getHeader: function () {
+            return [
+                {style: "font-weight:bold;", label: "", width:"24"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"145"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex:"1"},
+            ]
+        },
+
+
+
+        /**
          * Returns an array of folderRowData objects, containing all information needed 
          * to fill the folderlist. The content of the folderRowData object is free to choose,
          * it will be passed back to addRow() and updateRow()
