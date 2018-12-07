@@ -9,8 +9,6 @@
 <!ENTITY add.server "Server Konfiguration:">
 <!ENTITY add.description "Bitte wählen Sie einen Namen für das neue TbSync Konto, tragen den Benutzername für das ActiveSync Konto welches Sie hinzufügen möchten (üblicher Weise eine E-Mail Adresse) ein und wählen Sie die passende Option für die Server Konfiguration aus. ">
 
-<!ENTITY pref.EnableAccount "Konto aktivieren &amp; mit dem Server verbinden">
-<!ENTITY pref.SynchronizeAccount "Konto synchronisieren">
 <!ENTITY pref.autodetect "bestmöglich">
 
 <!ENTITY pref.AccountName "Kontoname">
@@ -25,24 +23,14 @@
 <!ENTITY pref.downloadonly "Lokale Änderungen verwerfen (one-way sync)">
 <!ENTITY pref.generaloptions "Allgemein">
 <!ENTITY pref.contactoptions "Kontakte">
-<!ENTITY pref.syncdefaultfolders "Beim ersten Verbindungsaufbau alle Standard-Ordner abonnieren und synchronisieren">
 <!ENTITY pref.provision "Provisionierung erzwingen (wird von Kerio benötigt)">
 
-<!ENTITY pref.autotime "Periodische Synchronisation (in Minuten)">
-<!ENTITY pref.never "Eine Einstellung von 0 deaktiviert periodische Synchronisation. Push Synchronisation wird noch nicht unterstützt.">
 <!ENTITY pref.ShowTrashedFolders "Im Papierkorb gefundene Ordner anzeigen" >
 
-<!ENTITY pref.syncstate "Sync Status">
 <!ENTITY pref.seperator.comma "Komma">
 <!ENTITY pref.seperator.linebreak "Zeilenumbruch">
 <!ENTITY pref.seperator.description "Separator für mehrzeilige Adressfelder.">
 <!ENTITY pref.displayoverride "Überschreibe Anzeigename mit 'Vorname' + 'Nachname'">
-
-<!ENTITY pref.foldername "Ordner">
-<!ENTITY pref.targetname "Synchronisationsziel">
-<!ENTITY pref.status "Status">
-
-<!ENTITY pref.switchFoldersAndConfig "Doppelklick um zwischen der Ordneransicht und der Anzeige der Einstellungen zu wechseln.">
 
 <!ENTITY servertype.auto "Automatische Konfiguration via ActiveSync Autodiscover">
 <!ENTITY servertype.custom "Benutzerspezifische Konfiguration">
@@ -70,7 +58,6 @@
 <!ENTITY abCard.OtherZip "Postleitzahl:">
 <!ENTITY abCard.OtherState "Bundesland:">
 
-
 <!ENTITY abCard.header.worknumbers "Zusätzliche Nummern Arbeit:">
 <!ENTITY abCard.header.homenumbers "Zusätzliche Nummern zu Hause:">
 <!ENTITY abCard.header.othernumbers "Zusätzliche Nummern:">
@@ -79,7 +66,6 @@
 <!ENTITY abCard.header.eas "Weitere Felder (EAS)">
 <!ENTITY abCard.header.otheraddress "Weitere Adresse (EAS)">
 
-<!ENTITY manager.tabs.resources "Verfügbare Resourcen">
-<!ENTITY manager.tabs.settings "Servereinstellungen">
-<!ENTITY manager.tabs.options "Synchronisationseinstellungen">
+<!ENTITY manager.tabs.accountsettings "Accounteinstellungen">
+<!ENTITY manager.tabs.syncsettings "Optionen">
 <!ENTITY manager.tabs.outOfOffice "Autoresponder">
