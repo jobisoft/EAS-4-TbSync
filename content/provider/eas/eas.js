@@ -108,8 +108,12 @@ var eas = {
 
     /**
      * Returns location of 16x16 pixel provider icon.
+     *
+     * @param size       [in] size of requested icon
+     * @param accountId  [in] optional ID of the account related to this request
+     *
      */
-    getProviderIcon: function (size = 16) {
+    getProviderIcon: function (size, accountId = null) {
         switch (size) {
             case 16: 
                 return "chrome://eas4tbsync/skin/eas16.png";
@@ -133,7 +137,7 @@ var eas = {
      * Returns XUL URL of the new account dialog.
      */
     getCreateAccountXulUrl: function () {
-        return "//eas4tbsync/content/manager/createAccount.xul";
+        return "chrome://eas4tbsync/content/manager/createAccount.xul";
     },
 
 
