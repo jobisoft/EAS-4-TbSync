@@ -15,14 +15,14 @@
 <!ENTITY pref.UserName "Nome utente">
 <!ENTITY pref.UserNameDescription "Il nome utente è solitamente l'indirizzo di posta elettronica del proprio account.">
 <!ENTITY pref.ServerName "Indirizzo server">
-<!ENTITY pref.ActiveSyncVersion "?? ActiveSync Version ??">
+<!ENTITY pref.ActiveSyncVersion "Versione ActiveSync">
 <!ENTITY pref.ServerNameDescription "ad es. mail.yourserver.com">
 <!ENTITY pref.usehttps "Utilizza connessione sicura (connettiti tramite HTTPS)">
-<!ENTITY pref.DeviceId "?? ActiveSync device ID ??">
+<!ENTITY pref.DeviceId "ID dispositivo ActiveSync">
 <!ENTITY pref.birthday "Invia informazioni sui compleanni">
 <!ENTITY pref.downloadonly "Annulla modifiche locali (sincronizzazione a una via)">
-<!ENTITY pref.generaloptions "?? General ??">
-<!ENTITY pref.contactoptions "?? Contacts ??">
+<!ENTITY pref.generaloptions "Generale">
+<!ENTITY pref.contactoptions "Contatti">
 <!ENTITY pref.provision "Forza provisioning (opzione richiesta per Kerio)">
 
 <!ENTITY pref.ShowTrashedFolders "Visualizza le cartelle trovate nel Cestino">
@@ -66,6 +66,6 @@
 <!ENTITY abCard.header.eas "Altri campi (EAS)">
 <!ENTITY abCard.header.otheraddress "Altro indirizzo (EAS)">
 
-<!ENTITY manager.tabs.accountsettings "?? Account settings ??">
-<!ENTITY manager.tabs.syncsettings "?? Synchronisation settings ??"> <!-- if too long, just "Options" would also be ok -->
+<!ENTITY manager.tabs.accountsettings "Impostazioni account">
+<!ENTITY manager.tabs.syncsettings "Impostazioni sincronizzazione"> <!-- if too long, just "Options" would also be ok -->
 <!ENTITY manager.tabs.outOfOffice "Risponditore automatico">
