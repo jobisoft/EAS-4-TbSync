@@ -8,7 +8,7 @@
         <em:unpack>false</em:unpack>
         <em:multiprocessCompatible>true</em:multiprocessCompatible>
         <em:name>Provider for Exchange ActiveSync</em:name>
-        <em:version>0.7.20</em:version>
+        <em:version>0.7.21</em:version>
         <em:description>Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)</em:description>
         <em:homepageURL>https://github.com/jobisoft/EAS-4-TbSync</em:homepageURL>
         <em:iconURL>chrome://eas4tbsync/skin/eas32.png</em:iconURL>
