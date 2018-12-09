@@ -152,6 +152,53 @@ var eas = {
 
 
     /**
+     * Is called after the settings overlay of this provider has been added to the main settings window
+     *
+     * @param window       [in] window object of the settings window
+     * @param accountID    [in] accountId of the selected account
+     */
+    onSettingsGUILoad: function (window, accountID) {
+        // special treatment for configuration label, which is a permanent setting and will not change by switching modes
+        let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
+        if (configlabel) {
+            configlabel.setAttribute("value", tbSync.getLocalizedMessage("config.custom", "eas"));
+        }
+
+        //for some unknown reason, my OverlayManager cannot create menulists, so I need to do that
+        //manually and append the already loaded menupopus into the manually created menulists
+        let asversionPopup = window.document.getElementById('asversion.popup');
+        let asversionHook = window.document.getElementById('asversion.hook');
+        let asversionMenuList = window.document.createElement("menulist");
+        asversionMenuList.setAttribute("id", "tbsync.accountsettings.pref.asversionselected");
+        asversionMenuList.setAttribute("class", "lockIfConnected");
+        asversionMenuList.appendChild(asversionPopup);
+        //add after the hook element
+        asversionHook.parentNode.insertBefore(asversionMenuList, asversionHook.nextSibling);
+
+        let separatorPopup = window.document.getElementById('separator.popup');
+        let separatorHook = window.document.getElementById('separator.hook');
+        let separatorMenuList = window.document.createElement("menulist");
+        separatorMenuList.setAttribute("id", "tbsync.accountsettings.pref.seperator");
+        separatorMenuList.setAttribute("class", "lockIfConnected");
+        separatorMenuList.appendChild(separatorPopup);
+        //add before the hook element
+        separatorHook.parentNode.insertBefore(separatorMenuList, separatorHook);        	
+    },
+
+
+
+    /**
+     * Is called each time after the settings window has been updated
+     *
+     * @param window       [in] window object of the settings window
+     * @param accountID    [in] accountId of the selected account
+     */
+    onSettingsGUIUpdate: function (window, accountID) {
+    },
+
+
+
+    /**
      * Returns nice string for name of provider (is used in the add account menu).
      */
     getNiceProviderName: function () {
