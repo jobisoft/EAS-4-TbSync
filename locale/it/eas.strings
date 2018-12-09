@@ -13,9 +13,6 @@ deletefolder.notallowed=Annullare la sottoscrizione alla cartella "##replace.1##
 deletefolder.confirm=ELIMINARE PERMANENTEMENTE la cartella "##replace.1##" dal Cestino?
 
 deletefolder.menuentry=Elimina permanentemente la cartella "##replace.1##" dal Cestino
-subscribe.on=Sottoscrivi "##replace.1##"
-subscribe.off=Annulla la sottoscrizione a "##replace.1##"
-
 recyclebin = Cestino
 
 syncstate.prepare.request.setdeviceinfo=Invio informazioni dispositivo in corso
