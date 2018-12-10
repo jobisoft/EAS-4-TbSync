@@ -7,10 +7,7 @@
 ]>
 <overlay 
     id="tbSyncAccountConfig" 
-    oninject="tbSyncEasEditAccount.onInject(window)"
     xmlns:html="http://www.w3.org/1999/xhtml">
-
-    <script type="text/javascript" src="chrome://eas4tbsync/content/manager/editAccountOverlay.js" /> 
 
     <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
     <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />

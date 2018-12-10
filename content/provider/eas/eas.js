@@ -108,8 +108,12 @@ var eas = {
 
     /**
      * Returns location of 16x16 pixel provider icon.
+     *
+     * @param size       [in] size of requested icon
+     * @param accountId  [in] optional ID of the account related to this request
+     *
      */
-    getProviderIcon: function (size = 16) {
+    getProviderIcon: function (size, accountId = null) {
         switch (size) {
             case 16: 
                 return "chrome://eas4tbsync/skin/eas16.png";
@@ -133,7 +137,7 @@ var eas = {
      * Returns XUL URL of the new account dialog.
      */
     getCreateAccountXulUrl: function () {
-        return "//eas4tbsync/content/manager/createAccount.xul";
+        return "chrome://eas4tbsync/content/manager/createAccount.xul";
     },
 
 
@@ -143,6 +147,53 @@ var eas = {
      */
     getEditAccountOverlayUrl: function () {
         return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";
+    },
+
+
+
+    /**
+     * Is called after the settings overlay of this provider has been added to the main settings window
+     *
+     * @param window       [in] window object of the settings window
+     * @param accountID    [in] accountId of the selected account
+     */
+    onSettingsGUILoad: function (window, accountID) {
+        // special treatment for configuration label, which is a permanent setting and will not change by switching modes
+        let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
+        if (configlabel) {
+            configlabel.setAttribute("value", tbSync.getLocalizedMessage("config.custom", "eas"));
+        }
+
+        //for some unknown reason, my OverlayManager cannot create menulists, so I need to do that
+        //manually and append the already loaded menupopus into the manually created menulists
+        let asversionPopup = window.document.getElementById('asversion.popup');
+        let asversionHook = window.document.getElementById('asversion.hook');
+        let asversionMenuList = window.document.createElement("menulist");
+        asversionMenuList.setAttribute("id", "tbsync.accountsettings.pref.asversionselected");
+        asversionMenuList.setAttribute("class", "lockIfConnected");
+        asversionMenuList.appendChild(asversionPopup);
+        //add after the hook element
+        asversionHook.parentNode.insertBefore(asversionMenuList, asversionHook.nextSibling);
+
+        let separatorPopup = window.document.getElementById('separator.popup');
+        let separatorHook = window.document.getElementById('separator.hook');
+        let separatorMenuList = window.document.createElement("menulist");
+        separatorMenuList.setAttribute("id", "tbsync.accountsettings.pref.seperator");
+        separatorMenuList.setAttribute("class", "lockIfConnected");
+        separatorMenuList.appendChild(separatorPopup);
+        //add before the hook element
+        separatorHook.parentNode.insertBefore(separatorMenuList, separatorHook);        	
+    },
+
+
+
+    /**
+     * Is called each time after the settings window has been updated
+     *
+     * @param window       [in] window object of the settings window
+     * @param accountID    [in] accountId of the selected account
+     */
+    onSettingsGUIUpdate: function (window, accountID) {
     },
 
 
@@ -720,14 +771,27 @@ var eas = {
         }
     }),
 
+
+
+    getNextPendingFolder: function (accountID) {
+        //using getSortedData, to sync in the same order as shown in the list
+        let sortedFolders = eas.folderList.getSortedData(accountID);       
+        for (let i=0; i < sortedFolders.length; i++) {
+            if (sortedFolders[i].statusCode != "pending") continue;
+            return tbSync.db.getFolder(accountID, sortedFolders[i].folderID);
+        }
+        return null;
+    },
+
+
     //Process all folders with PENDING status
     syncPendingFolders: Task.async (function* (syncdata)  {
         let folderReSyncs = 1;
         
         do {                
             //any pending folders left?
-            let folders = tbSync.db.findFoldersWithSetting("status", "pending", syncdata.account);
-            if (folders.length == 0) {
+            let nextFolder = eas.getNextPendingFolder(syncdata.account);
+            if (nextFolder === null) {
                 //all folders of this account have been synced
                 return;
             };
@@ -737,9 +801,9 @@ var eas = {
             try {
                 
                 //resync loop control
-                if (syncdata.folderID == folders[0].folderID) folderReSyncs++;
+                if (syncdata.folderID == nextFolder.folderID) folderReSyncs++;
                 else folderReSyncs = 1;
-                syncdata.folderID = folders[0].folderID;
+                syncdata.folderID = nextFolder.folderID;;
 
                 if (folderReSyncs > 3) {
                     throw eas.finishSync("resync-loop");
@@ -747,7 +811,7 @@ var eas = {
 
                 //get syncdata type, which is also used in WBXML for the CLASS element
                 syncdata.type = null;
-                switch (eas.getThunderbirdFolderType(folders[0].type)) {
+                switch (eas.getThunderbirdFolderType(nextFolder.type)) {
                     case "tb-contact": 
                         syncdata.type = "Contacts";
                         // check SyncTarget
@@ -783,7 +847,7 @@ var eas = {
                 tbSync.setSyncState("preparing", syncdata.account, syncdata.folderID);
                 
                 //get synckey if needed
-                syncdata.synckey = folders[0].synckey;                
+                syncdata.synckey = nextFolder.synckey;                
                 if (syncdata.synckey == "") {
                     yield eas.getSynckey(syncdata);
                 }
@@ -1928,7 +1992,8 @@ var eas = {
             rowData.selected = (folder.selected == "1");
             rowData.type = folder.type;
             rowData.name = folder.name;
-            rowData.status = tbSync.getSyncStatusMsg(folder, syncdata, "eas");
+            rowData.statusCode = folder.status;
+            rowData.statusMsg = tbSync.getSyncStatusMsg(folder, syncdata, "eas");
 
             if (tbSync.eas.parentIsTrash(folder.account, folder.parentID)) rowData.name = tbSync.getLocalizedMessage("recyclebin", "eas") + " | " + rowData.name;
 
@@ -1973,8 +2038,8 @@ var eas = {
             itemStatusCell.setAttribute("class", "label");
             itemStatusCell.setAttribute("flex", "1");
             itemStatusCell.setAttribute("crop", "end");
-            itemStatusCell.setAttribute("label", rowData.status);
-            itemStatusCell.setAttribute("tooltiptext", rowData.status);
+            itemStatusCell.setAttribute("label", rowData.statusMsg);
+            itemStatusCell.setAttribute("tooltiptext", rowData.statusMsg);
             newListItem.appendChild(itemStatusCell);
         },		
 
@@ -1989,7 +2054,7 @@ var eas = {
          */        
         updateRow: function (document, item, rowData) {
             tbSync.updateListItemCell(item.childNodes[2], ["label","tooltiptext"], rowData.name);
-            tbSync.updateListItemCell(item.childNodes[3], ["label","tooltiptext"], rowData.status);
+            tbSync.updateListItemCell(item.childNodes[3], ["label","tooltiptext"], rowData.statusMsg);
             if (rowData.selected) {
                 tbSync.updateListItemCell(item.childNodes[2], ["style"], "font-style:normal;");
                 tbSync.updateListItemCell(item.childNodes[2], ["disabled"], "false");

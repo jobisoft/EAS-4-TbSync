@@ -13,9 +13,6 @@ deletefolder.notallowed=Kérjük, törölje le a(z) „##replace.1##” mappát,
 deletefolder.confirm=Tényleg azt szeretné, hogy a(z) „##replace.1##” mappa véglegesen törölje a kukát?
 
 deletefolder.menuentry=„##replace.1##” mappa kuka ürítése
-subscribe.on=Feliratkozás a(z) „##replace.1##”
-subscribe.off=Leiratkozás a(z) „##replace.1##”
-
 recyclebin=Kuka
 
 syncstate.prepare.request.setdeviceinfo=Eszköz tájékoztatás küldése
