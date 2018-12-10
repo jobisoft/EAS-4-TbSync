@@ -1377,7 +1377,7 @@ var eas = {
     getServerOptions: function (syncdata) {        
         tbSync.setSyncState("prepare.request.options", syncdata.account);
         let connection = tbSync.eas.getConnection(syncdata.account);
-        let password = tbSync.getPassword(tbSync.db.getAccount(syncdata.account));
+        let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
 
         let userAgent = tbSync.db.getAccountSetting(syncdata.account, "useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
         tbSync.dump("Sending", "OPTIONS " + connection.host);
@@ -1445,7 +1445,7 @@ var eas = {
         tbSync.eas.logxml(wbxml, msg);
 
         let connection = tbSync.eas.getConnection(syncdata.account);
-        let password = tbSync.getPassword(tbSync.db.getAccount(syncdata.account));
+        let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
 
         let userAgent = tbSync.db.getAccountSetting(syncdata.account, "useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
         let deviceType = tbSync.db.getAccountSetting(syncdata.account, "devicetype");
@@ -1709,7 +1709,7 @@ var eas = {
     updateServerConnectionViaAutodiscover: Task.async (function* (syncdata) {
         tbSync.setSyncState("prepare.request.autodiscover", syncdata.account);
         let user = tbSync.db.getAccountSetting(syncdata.account, "user");
-        let password = tbSync.getPassword(tbSync.db.getAccount(syncdata.account));
+        let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
 
         tbSync.setSyncState("send.request.autodiscover", syncdata.account);
         let result = yield tbSync.eas.getServerConnectionViaAutodiscover(user, password, 30*1000);
