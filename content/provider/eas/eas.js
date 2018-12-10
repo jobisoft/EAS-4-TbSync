@@ -106,6 +106,32 @@ var eas = {
     },
 
 
+
+    /**
+     * Called to get passwords of accounts of this provider
+     *
+     * @param accountdata       [in] account data structure
+     */
+    getPassword: function (accountdata) {
+        let host4PasswordManager = tbSync.getHost4PasswordManager(accountdata.provider, accountdata.host);
+        return tbSync.getLoginInfo(host4PasswordManager, "TbSync", accountdata.user);
+    },
+
+
+
+    /**
+     * Called to set passwords of accounts of this provider
+     *
+     * @param accountdata       [in] account data structure
+     * @param newPassword       [in] new password
+     */
+    setPassword: function (accountdata, newPassword) {
+        let host4PasswordManager = tbSync.getHost4PasswordManager(accountdata.provider, accountdata.host);
+        tbSync.setLoginInfo(host4PasswordManager, "TbSync", accountdata.user, newPassword);
+    },
+
+
+
     /**
      * Returns location of 16x16 pixel provider icon.
      *
