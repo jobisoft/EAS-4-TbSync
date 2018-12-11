@@ -106,6 +106,32 @@ var eas = {
     },
 
 
+
+    /**
+     * Called to get passwords of accounts of this provider
+     *
+     * @param accountdata       [in] account data structure
+     */
+    getPassword: function (accountdata) {
+        let host4PasswordManager = tbSync.getHost4PasswordManager(accountdata.provider, accountdata.host);
+        return tbSync.getLoginInfo(host4PasswordManager, "TbSync", accountdata.user);
+    },
+
+
+
+    /**
+     * Called to set passwords of accounts of this provider
+     *
+     * @param accountdata       [in] account data structure
+     * @param newPassword       [in] new password
+     */
+    setPassword: function (accountdata, newPassword) {
+        let host4PasswordManager = tbSync.getHost4PasswordManager(accountdata.provider, accountdata.host);
+        tbSync.setLoginInfo(host4PasswordManager, "TbSync", accountdata.user, newPassword);
+    },
+
+
+
     /**
      * Returns location of 16x16 pixel provider icon.
      *
@@ -1351,7 +1377,7 @@ var eas = {
     getServerOptions: function (syncdata) {        
         tbSync.setSyncState("prepare.request.options", syncdata.account);
         let connection = tbSync.eas.getConnection(syncdata.account);
-        let password = tbSync.getPassword(tbSync.db.getAccount(syncdata.account));
+        let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
 
         let userAgent = tbSync.db.getAccountSetting(syncdata.account, "useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
         tbSync.dump("Sending", "OPTIONS " + connection.host);
@@ -1419,7 +1445,7 @@ var eas = {
         tbSync.eas.logxml(wbxml, msg);
 
         let connection = tbSync.eas.getConnection(syncdata.account);
-        let password = tbSync.getPassword(tbSync.db.getAccount(syncdata.account));
+        let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
 
         let userAgent = tbSync.db.getAccountSetting(syncdata.account, "useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
         let deviceType = tbSync.db.getAccountSetting(syncdata.account, "devicetype");
@@ -1683,7 +1709,7 @@ var eas = {
     updateServerConnectionViaAutodiscover: Task.async (function* (syncdata) {
         tbSync.setSyncState("prepare.request.autodiscover", syncdata.account);
         let user = tbSync.db.getAccountSetting(syncdata.account, "user");
-        let password = tbSync.getPassword(tbSync.db.getAccount(syncdata.account));
+        let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
 
         tbSync.setSyncState("send.request.autodiscover", syncdata.account);
         let result = yield tbSync.eas.getServerConnectionViaAutodiscover(user, password, 30*1000);
