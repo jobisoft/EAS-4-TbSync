@@ -40,6 +40,17 @@ eas.tools = {
             });
         });
     },
+    
+
+    //simple util to set one or more attributes of a dom element to a new value
+    updateListItemCell: function (e, attribs, value) {
+        if (e.getAttribute(attribs[0]) != value) {
+            for (let i=0; i<attribs.length; i++) {
+                e.setAttribute(attribs[i],value);
+            }
+        }
+    },
+    
 
     //Date has a toISOString method, which returns the Date obj as extended ISO 8601,
     //however EAS MS-ASCAL uses compact/basic ISO 8601,
