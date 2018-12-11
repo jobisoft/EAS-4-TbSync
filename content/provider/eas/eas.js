@@ -1966,20 +1966,6 @@ var eas = {
 
 
         /**
-         * Returns an array of attribute objects, which define the number of columns 
-         * and the look of the header
-         */
-        getHeader: function () {
-            return [
-                {style: "font-weight:bold;", label: "", width:"24"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"145"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex:"1"},
-            ]
-        },
-
-
-
-        /**
          * Returns an array of folderRowData objects, containing all information needed 
          * to fill the folderlist. The content of the folderRowData object is free to choose,
          * it will be passed back to addRow() and updateRow()
@@ -2029,6 +2015,21 @@ var eas = {
 
 
         /**
+         * Returns an array of attribute objects, which define the number of columns 
+         * and the look of the header
+         */
+        getHeader: function () {
+            return [
+                {style: "font-weight:bold;", label: "", width:"30"},
+                {style: "font-weight:bold;", label: "", width:"24"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"165"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex:"1"},
+            ]
+        },
+
+
+
+        /**
          * Is called to add a row to the folderlist.
          *
          * @param document       [in] document object of the account settings window
@@ -2036,37 +2037,49 @@ var eas = {
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
         addRow: function (document, newListItem, rowData) {
-            //http://hyperstruct.net/2006/09/30/xul-patterns-modular-interfaces/
-            //add folder type/img
-            let itemTypeCell = document.createElement("listcell");
-            itemTypeCell.setAttribute("class", "img");
-            itemTypeCell.setAttribute("width", "24");
-            itemTypeCell.setAttribute("height", "24");
-                let itemType = document.createElement("image");
-                itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
-                itemType.setAttribute("style", "margin: 4px;");
+            //checkbox
+            let itemSelected = document.createElement("checkbox");
+            itemSelected.setAttribute("style", "margin: 4px;");
+            if (rowData.selected) itemSelected.setAttribute("checked", true);
+            itemSelected.setAttribute("oncommand", "tbSyncAccountSettings.toggleFolder(this);");
+            let itemSelectedCell = document.createElement("vbox");
+            itemSelectedCell.setAttribute("pack", "center");
+            itemSelectedCell.appendChild(itemSelected);
+
+            //icon
+            let itemType = document.createElement("image");
+            itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
+            itemType.setAttribute("style", "margin: 4px;");
+            let itemTypeCell = document.createElement("vbox");
+            itemTypeCell.setAttribute("pack", "center");
             itemTypeCell.appendChild(itemType);
-            newListItem.appendChild(itemTypeCell);
 
-            //add folder name
-            let itemLabelCell = document.createElement("listcell");
-            itemLabelCell.setAttribute("class", "label");
-            itemLabelCell.setAttribute("width", "145");
-            itemLabelCell.setAttribute("crop", "end");
-            itemLabelCell.setAttribute("label", rowData.name);
-            itemLabelCell.setAttribute("tooltiptext", rowData.name);
-            itemLabelCell.setAttribute("disabled", !rowData.selected);
-            if (!rowData.selected) itemLabelCell.setAttribute("style", "font-style:italic;");
-            newListItem.appendChild(itemLabelCell);
+            //folder name
+            let itemLabel = document.createElement("label");
+            itemLabel.setAttribute("width", "155");
+            itemLabel.setAttribute("crop", "end");
+            itemLabel.setAttribute("value", rowData.name);
+            itemLabel.setAttribute("tooltiptext", rowData.name);
+            itemLabel.setAttribute("disabled", !rowData.selected);
+            if (!rowData.selected) itemLabel.setAttribute("style", "font-style:italic;");
+            let itemLabelCell = document.createElement("vbox");
+            itemLabelCell.setAttribute("pack", "center");
+            itemLabelCell.appendChild(itemLabel);
 
-            //add folder status
-            let itemStatusCell = document.createElement("listcell");
-            itemStatusCell.setAttribute("class", "label");
-            itemStatusCell.setAttribute("flex", "1");
-            itemStatusCell.setAttribute("crop", "end");
-            itemStatusCell.setAttribute("label", rowData.statusMsg);
-            itemStatusCell.setAttribute("tooltiptext", rowData.statusMsg);
-            newListItem.appendChild(itemStatusCell);
+            //status
+            let itemDescription = document.createElement("description");
+            itemDescription.setAttribute("flex", "1");
+            itemDescription.textContent = rowData.statusMsg;
+            itemDescription.setAttribute("disabled", !rowData.selected);
+            itemDescription.setAttribute("style", eas.tools.updateListItemStyle(rowData));
+
+            let row = document.createElement("hbox");
+            row.setAttribute("flex", "1");
+            row.appendChild(itemSelectedCell);
+            row.appendChild(itemTypeCell);
+            row.appendChild(itemLabelCell);
+            row.appendChild(itemDescription);            
+            newListItem.appendChild(row);                
         },		
 
 
@@ -2079,17 +2092,13 @@ var eas = {
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
         updateRow: function (document, item, rowData) {
-            tbSync.updateListItemCell(item.childNodes[2], ["label","tooltiptext"], rowData.name);
-            tbSync.updateListItemCell(item.childNodes[3], ["label","tooltiptext"], rowData.statusMsg);
-            if (rowData.selected) {
-                tbSync.updateListItemCell(item.childNodes[2], ["style"], "font-style:normal;");
-                tbSync.updateListItemCell(item.childNodes[2], ["disabled"], "false");
-            } else {
-                tbSync.updateListItemCell(item.childNodes[2], ["style"], "font-style:italic;");
-                tbSync.updateListItemCell(item.childNodes[2], ["disabled"], "true");
-            }
+            item.childNodes[0].childNodes[2].setAttribute("value", rowData.name);
+            item.childNodes[0].childNodes[2].setAttribute("tooltiptext", rowData.name);
+            item.childNodes[0].childNodes[2].setAttribute("disabled", !rowData.selected);
+            item.childNodes[0].childNodes[2].setAttribute("style", rowData.selected ? "" : "font-style:italic");
+            item.childNodes[0].childNodes[3].setAttribute("style", eas.tools.updateListItemStyle(rowData));
+            item.childNodes[0].childNodes[3].textContent = rowData.statusMsg;
         },
-
 
 
         /**
