@@ -2020,65 +2020,74 @@ var eas = {
          */
         getHeader: function () {
             return [
-                {style: "font-weight:bold;", label: "", width:"30"},
-                {style: "font-weight:bold;", label: "", width:"24"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"165"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex:"1"},
+                {style: "font-weight:bold;", label: "", width: "51"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"155"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex :"1"},
             ]
         },
 
 
 
         /**
-         * Is called to add a row to the folderlist.
+         * Is called to add a row to the folderlist. After this call, updateRow is called as well.
          *
-         * @param document       [in] document object of the account settings window
-         * @param newListItem    [in] the listitem of the row, where row items should be added to
-         * @param rowData        [in] rowData object with all information needed to add the row
+         * @param document        [in] document object of the account settings window
+         * @param newListItem     [in] the listitem of the row, where row items should be added to
+         * @param rowData         [in] rowData object with all information needed to add the row
+         * @param itemSelCheckbox [in] a checkbox object which can be used to allow the user to select/deselect this resource
          */        
-        addRow: function (document, newListItem, rowData) {
+        addRow: function (document, newListItem, rowData, itemSelCheckbox) {
             //checkbox
-            let itemSelected = document.createElement("checkbox");
-            itemSelected.setAttribute("style", "margin: 4px;");
-            if (rowData.selected) itemSelected.setAttribute("checked", true);
-            itemSelected.setAttribute("oncommand", "tbSyncAccountSettings.toggleFolder(this);");
-            let itemSelectedCell = document.createElement("vbox");
-            itemSelectedCell.setAttribute("pack", "center");
-            itemSelectedCell.appendChild(itemSelected);
+            itemSelCheckbox.setAttribute("style", "margin: 3px; padding: 0;");
 
             //icon
             let itemType = document.createElement("image");
             itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
-            itemType.setAttribute("style", "margin: 4px;");
-            let itemTypeCell = document.createElement("vbox");
-            itemTypeCell.setAttribute("pack", "center");
-            itemTypeCell.appendChild(itemType);
+            itemType.setAttribute("style", "margin: 2px 6px 3px 3px;");
 
             //folder name
-            let itemLabel = document.createElement("label");
-            itemLabel.setAttribute("width", "155");
-            itemLabel.setAttribute("crop", "end");
-            itemLabel.setAttribute("value", rowData.name);
-            itemLabel.setAttribute("tooltiptext", rowData.name);
+            let itemLabel = document.createElement("description");
             itemLabel.setAttribute("disabled", !rowData.selected);
-            if (!rowData.selected) itemLabel.setAttribute("style", "font-style:italic;");
-            let itemLabelCell = document.createElement("vbox");
-            itemLabelCell.setAttribute("pack", "center");
-            itemLabelCell.appendChild(itemLabel);
 
             //status
-            let itemDescription = document.createElement("description");
-            itemDescription.setAttribute("flex", "1");
-            itemDescription.textContent = rowData.statusMsg;
-            itemDescription.setAttribute("disabled", !rowData.selected);
-            itemDescription.setAttribute("style", eas.tools.updateListItemStyle(rowData));
+            let itemStatus = document.createElement("description");
+            itemStatus.setAttribute("disabled", !rowData.selected);
 
+            //group1
+            let itemHGroup1 = document.createElement("hbox");
+            itemHGroup1.setAttribute("align", "center");
+            itemHGroup1.appendChild(itemSelCheckbox);
+            itemHGroup1.appendChild(itemType);
+
+            let itemVGroup1 = document.createElement("vbox");
+            itemVGroup1.setAttribute("style", "padding: 3px");
+            itemVGroup1.appendChild(itemHGroup1);
+
+            //group2
+            let itemHGroup2 = document.createElement("hbox");
+            itemHGroup2.setAttribute("align", "center");
+            itemHGroup2.setAttribute("width", "150");
+            itemHGroup2.appendChild(itemLabel);
+
+            let itemVGroup2 = document.createElement("vbox");
+            itemVGroup2.setAttribute("style", "padding: 3px");
+            itemVGroup2.appendChild(itemHGroup2);
+
+            //group3
+            let itemHGroup3 = document.createElement("hbox");
+            itemHGroup3.setAttribute("align", "center");
+            itemHGroup3.setAttribute("width", "250");
+            itemHGroup3.appendChild(itemStatus);
+
+            let itemVGroup3 = document.createElement("vbox");
+            itemVGroup3.setAttribute("style", "padding: 3px");
+            itemVGroup3.appendChild(itemHGroup3);
+
+            //final row
             let row = document.createElement("hbox");
-            row.setAttribute("flex", "1");
-            row.appendChild(itemSelectedCell);
-            row.appendChild(itemTypeCell);
-            row.appendChild(itemLabelCell);
-            row.appendChild(itemDescription);            
+            row.appendChild(itemVGroup1);
+            row.appendChild(itemVGroup2);            
+            row.appendChild(itemVGroup3);            
             newListItem.appendChild(row);                
         },		
 
@@ -2092,12 +2101,12 @@ var eas = {
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
         updateRow: function (document, item, rowData) {
-            item.childNodes[0].childNodes[2].setAttribute("value", rowData.name);
-            item.childNodes[0].childNodes[2].setAttribute("tooltiptext", rowData.name);
-            item.childNodes[0].childNodes[2].setAttribute("disabled", !rowData.selected);
-            item.childNodes[0].childNodes[2].setAttribute("style", rowData.selected ? "" : "font-style:italic");
-            item.childNodes[0].childNodes[3].setAttribute("style", eas.tools.updateListItemStyle(rowData));
-            item.childNodes[0].childNodes[3].textContent = rowData.statusMsg;
+            item.childNodes[0].childNodes[1].childNodes[0].textContent = rowData.name;
+            item.childNodes[0].childNodes[1].childNodes[0].setAttribute("disabled", !rowData.selected);
+            item.childNodes[0].childNodes[1].childNodes[0].setAttribute("style", rowData.selected ? "" : "font-style:italic");
+            item.childNodes[0].childNodes[2].childNodes[0].setAttribute("style", rowData.selected ? "" : "font-style:italic");
+            //item.childNodes[0].childNodes[2].childNodes[0].setAttribute("style", eas.tools.updateListItemStyle(rowData));
+            item.childNodes[0].childNodes[2].childNodes[0].textContent = rowData.statusMsg;
         },
 
 

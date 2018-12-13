@@ -41,25 +41,6 @@ eas.tools = {
         });
     },
     
-    //simple util to set style of folderlist entry
-    updateListItemStyle: function (rowData) {
-        let styles = [];
-        switch (rowData.statusCode) {
-            case "OK":
-            case "modified":
-            case "nolightning":
-            case "pending":
-            case "aborted":
-                styles.push("font-weight:normal");
-            break;
-            
-            default:
-                styles.push("font-weight:bold");
-        }
-        if (!rowData.selected) styles.push("font-style:italic");
-        return styles.join(";");
-    },
-
     //Date has a toISOString method, which returns the Date obj as extended ISO 8601,
     //however EAS MS-ASCAL uses compact/basic ISO 8601,
     dateToBasicISOString : function (date) {
