@@ -662,7 +662,7 @@ var eas = {
                     
                 switch (report.type) {
                     case eas.flags.resyncAccount:
-                        tbSync.dump("Account Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Reason: " + report.message);                        
+                        tbSync.synclog("SyncError", "Account Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Reason: " + report.message);                        
                         continue;
 
                     case eas.flags.abortWithServerError: 
@@ -926,7 +926,7 @@ var eas = {
                     case eas.flags.resyncFolder:
                         //takeTargetOffline will backup the current folder and on next run, a fresh copy 
                         //of the folder will be synced down - the folder itself is NOT deleted
-                        tbSync.dump("Folder Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Folder: "+ tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ", Reason: " + report.message);
+                        tbSync.synclog("SyncError", "Folder Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Folder: "+ tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ", Reason: " + report.message);
                         tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
                         continue;
                     
@@ -1231,7 +1231,7 @@ var eas = {
         //include xml in log, if userdatalevel 2 or greater
         if ((tbSync.prefSettings.getBoolPref("log.toconsole") || tbSync.prefSettings.getBoolPref("log.tofile")) && tbSync.prefSettings.getIntPref("log.userdatalevel")>1) {
 
-            //log aw wbxml if userdatalevel is 3 or greater
+            //log raw wbxml if userdatalevel is 3 or greater
             if (tbSync.prefSettings.getIntPref("log.userdatalevel")>2) {
                 let charcodes = [];
                 for (let i=0; i< wbxml.length; i++) charcodes.push(wbxml.charCodeAt(i).toString(16));
