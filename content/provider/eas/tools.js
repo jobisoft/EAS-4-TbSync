@@ -40,7 +40,7 @@ eas.tools = {
             });
         });
     },
-
+    
     //Date has a toISOString method, which returns the Date obj as extended ISO 8601,
     //however EAS MS-ASCAL uses compact/basic ISO 8601,
     dateToBasicISOString : function (date) {

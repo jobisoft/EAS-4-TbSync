@@ -90,6 +90,7 @@ status.javascriptError=JavaScript дал ошибку! Проверьте жур
 status.mailformed-xml=Не удалось разобрать XML. Проверьте журнал отладки. 
 status.invalid=Недопустимый ответ сервера (мусор в обмене).
 status.InvalidServerOptions=Сервер не предоставляет информацию о поддерживаемых версиях ActiveSync. EAS блокирован для этого пользователя или этого клиента (TbSync)? Вы можете попробовать установить версию ActiveSync вручную.
+status.foldererror=По крайней мере один ресурс обнаружил ошибку синхронизации.
 
 status.security=Не удалось установить безопасное соединение. Вы используете самоподписанный или ненадежный сертификат без импорта его в Thunderbird? (##replace.1##)||How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F||[help]
 status.network=Не удалось подключиться к серверу (##replace.1##).
