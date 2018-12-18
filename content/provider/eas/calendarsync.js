@@ -138,7 +138,7 @@ eas.sync.Calendar = {
                     // Add attendee to event
                     item.addAttendee(attendee);
                 } else {
-                    tbSync.synclog("Warning","Attendee without required name and/or email found. Skipped.");
+                    tbSync.errorlog("Warning","Attendee without required name and/or email found. Skipped.");
                 }
             }
         }
@@ -274,10 +274,10 @@ eas.sync.Calendar = {
             } else if (item.startDate) {
                 let timeDiff =item.startDate.getInTimezone(eas.utcTimezone).subtractDate(alarms[0].alarmDate.getInTimezone(eas.utcTimezone));     
                 reminder = timeDiff.inSeconds/60;
-                tbSync.synclog("Warning","Converting absolute alarm to relative alarm (not supported).", item.icalString);
+                tbSync.errorlog("Warning","Converting absolute alarm to relative alarm (not supported).", item.icalString);
             }
             if (reminder >= 0) wbxml.atag("Reminder", reminder.toString());
-            else tbSync.synclog("Warning","Droping alarm after start date (not supported).", item.icalString);
+            else tbSync.errorlog("Warning","Droping alarm after start date (not supported).", item.icalString);
 
         }
 
