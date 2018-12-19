@@ -50,10 +50,10 @@ var eas = {
             if (eas.defaultTimezone.icalComponent) {
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
             } else {
-                tbSync.errorlog("Critical Warning","Default timezone is not defined, using UTC!");
+                tbSync.errorlog(null, "Default timezone is not defined, using UTC!");
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.utcTimezone);
             }
-            
+
             //get windows timezone data from CSV
             let csvData = yield eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
             for (let i = 0; i<csvData.length; i++) {
@@ -662,7 +662,7 @@ var eas = {
                     
                 switch (report.type) {
                     case eas.flags.resyncAccount:
-                        tbSync.errorlog("SyncError", "Account Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Reason: " + report.message);                        
+                        tbSync.errorlog(syncdata, "Forced Account Resync", "Reason: " + report.message);                        
                         continue;
 
                     case eas.flags.abortWithServerError: 
@@ -690,6 +690,7 @@ var eas = {
                     default:
                         //there was some other error
                         Components.utils.reportError(report);
+                        tbSync.errorlog(syncdata, "JavaScript Error", report.toString());
                         tbSync.finishAccountSync(syncdata, "javascriptError");
                         return;
                 }
@@ -926,7 +927,7 @@ var eas = {
                     case eas.flags.resyncFolder:
                         //takeTargetOffline will backup the current folder and on next run, a fresh copy 
                         //of the folder will be synced down - the folder itself is NOT deleted
-                        tbSync.errorlog("SyncError", "Folder Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Folder: "+ tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ", Reason: " + report.message);
+                        tbSync.errorlog(syncdata, "Forced Folder Resync", "Reason: " + report.message);
                         tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
                         continue;
                     
@@ -1583,7 +1584,7 @@ var eas = {
             let mainStatus = xmltools.getWbxmlDataField(wbxmlData, type + "." + elements[elements.length-1]);
             if (mainStatus === false) {
                 //both possible status fields are missing, report and abort
-                tbSync.errorlog("Warning", "WBXML: Server response does not contain mandatory <"+fullpath+"> field . Error? Aborting Sync.");
+                tbSync.errorlog(syncdata, "WBXML: Server response does not contain mandatory <"+fullpath+"> field . Error? Aborting Sync.");
                 throw eas.finishSync("wbxmlmissingfield::" + fullpath);
             } else {
                 //the alternative status could be extracted
@@ -1605,7 +1606,7 @@ var eas = {
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
-                tbSync.errorlog("Warning", "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
+                tbSync.errorlog(syncdata, "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
                 throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder);
             
             case "Sync:4":
@@ -1626,7 +1627,7 @@ var eas = {
         
             case "Sync:8": // Object not found - takeTargetOffline and remove folder
                 {
-                    tbSync.errorlog("Warning", "WBXML: Server reports <object not found> (" +  tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + "), keeping local copy and removing folder.");
+                    tbSync.errorlog(syncdata, "WBXML: Server reports <object not found>, keeping local copy and removing folder.");
                     let folder = tbSync.db.getFolder(syncdata.account, syncdata.folderID);
                     if (folder !== null) {
                         tbSync.takeTargetOffline("eas", folder, "[deleted from server]");
@@ -1694,7 +1695,7 @@ var eas = {
                 throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
             
             default:
-                tbSync.errorlog("Warning", "WBXML: Server reports unhandled status <" + fullpath + " = " + status + ">. Aborting Sync.");
+                tbSync.errorlog(syncdata, "WBXML: Server reports unhandled status <" + fullpath + " = " + status + ">. Aborting Sync.");
                 if (allowSoftFail) return "Server reports unhandled status <" + fullpath + " = " + status + ">";
                 throw eas.finishSync("wbxmlerror::" + fullpath + " = " + status, eas.flags.abortWithError);
 
