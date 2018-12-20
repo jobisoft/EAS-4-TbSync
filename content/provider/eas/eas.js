@@ -934,6 +934,7 @@ var eas = {
                     default:
                         Components.utils.reportError(report);
                         let msg = "javascriptError";
+                        tbSync.errorlog(syncdata, "JavaScript Error", report.toString());			
                         tbSync.finishFolderSync(syncdata, msg);
                         //this is a fatal error, re-throw error to finish account sync
                         throw eas.finishSync(msg, eas.flags.abortWithError);
