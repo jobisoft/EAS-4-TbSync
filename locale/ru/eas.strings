@@ -92,7 +92,8 @@ status.invalid=Недопустимый ответ сервера (мусор в
 status.InvalidServerOptions=Сервер не предоставляет информацию о поддерживаемых версиях ActiveSync. EAS блокирован для этого пользователя или этого клиента (TbSync)? Вы можете попробовать установить версию ActiveSync вручную.
 status.foldererror=По крайней мере один ресурс обнаружил ошибку синхронизации.
 
-status.security=Не удалось установить безопасное соединение. Вы используете самоподписанный или ненадежный сертификат без импорта его в Thunderbird? (##replace.1##)||How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F||[help]
+status.security=Не удалось установить безопасное соединение. Вы используете самоподписанный или ненадежный сертификат без импорта его в Thunderbird? (##replace.1##)
+status.security.helplink=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
 status.network=Не удалось подключиться к серверу (##replace.1##).
 
 status.syncing=Синхронизация
@@ -116,10 +117,13 @@ status.folderDelete.6=Команда не может быть выполнена
 status.global.101=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 101).
 status.global.102=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 102).
 status.global.103=XML, указанный в запросе, не соответствует требованиям протокола (EAS Ошибка 103).
-status.global.clientdenied=Отчеты сервера EAS <##replace.2##> (статус ##replace.1##) и не позволяют TbSync доступ к вашему аккаунту.||What-if-TbSync-is-blocked-by-my-server%3F||[help]
+status.global.clientdenied=Отчеты сервера EAS <##replace.2##> (статус ##replace.1##) и не позволяют TbSync доступ к вашему аккаунту.
+status.global.clientdenied.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
 
-status.ServerRejectedSomeItems=Сервер EAS принял только ##replace.2## ваших элементов и отклонил остальные по следующим причинам: ##replace.1##. Проверьте журнал отладки на “Неверный элемент пропущен”.||Error:-Bad-item-skipped||[help]
-status.ServerRejectedAllItems=Сервер EAS отклонил ваши элементы по следующим причинам: ##replace.1##. Проверьте журнал отладки на “Неверный элемент пропущен”.||Error:-Bad-item-skipped||[help]
+status.ServerRejectedSomeItems=Сервер EAS принял только ##replace.2## ваших элементов и отклонил остальные по следующим причинам: ##replace.1##. Проверьте журнал отладки на “Неверный элемент пропущен”.
+status.ServerRejectedSomeItems.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+status.ServerRejectedAllItems=Сервер EAS отклонил ваши элементы по следующим причинам: ##replace.1##. Проверьте журнал отладки на “Неверный элемент пропущен”.
+status.ServerRejectedAllItems.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 status.ServerRejectedRequest=Сервер EAS отклонил наш последний запрос. Проверьте журнал отладки для получения дополнительной информации.
 status.TempServerError=Сервер сообщил о временной проблеме системы или ошибочном элементе. Это часто является переходным состоянием (повторите попытку позже).
 
