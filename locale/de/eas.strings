@@ -93,7 +93,7 @@ status.InvalidServerOptions=Der Server sendet keine Informationen zu den unterst
 status.foldererror=Bei mindestens einer Resource trat ein Synchronisationsfehler auf.
 
 status.security=Fehler beim Aufbau einer sicherern Verbindung. Benutzen Sie eventuell ein selbst signiertes Zertifikat oder ein andersartiges nicht vertrauenswürdiges Zertifikat welches nicht in Thunderbird importiert ist? (##replace.1##)
-status.security.helplink=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
+helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
 status.network=Verbindung zum Server fehlgeschlagen (##replace.1##).
 
 status.syncing=Synchronisierung
@@ -118,12 +118,12 @@ status.global.101=Das WBXML der Anfrage konnte nicht in gültiges XML dekodiert 
 status.global.102=Das WBXML der Anfrage konnte nicht in gültiges XML dekodiert werden (Fehler 102).
 status.global.103=Das XML der Anfrage entspricht nicht den Protokollanforderungen (Fehler 103).
 status.global.clientdenied=Der EAS Server antwortet mit <##replace.2##> (status ##replace.1##) und verweigert TbSync den Zugriff auf Ihr Konto.
-status.global.clientdenied.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
+helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
 
 status.ServerRejectedSomeItems=Der EAS Server akzeptierte nur ##replace.2## von Ihren Elementen und hat die verbliebenen Elemente mit den folgenden Gründe zurückgewiesen: ##replace.1##. Prüfen Sie bitte den Fehlerbericht für weitere Details.
-status.ServerRejectedSomeItems.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+helplink.ServerRejectedSomeItems=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 status.ServerRejectedAllItems=Der EAS Server hat Ihre Elemente wegen der folgenden Gründe zurückgewiesen : ##replace.1##. Prüfen Sie bitte den Fehlerbericht für weitere Details.
-status.ServerRejectedAllItems.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+helplink.ServerRejectedAllItems=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 status.ServerRejectedRequest=Der EAS Server hat die letzte Anforderung zurückgewiesen. Prüfen Sie den Fehlerbericht für weitere Informationen.
 status.TempServerError=Der Server meldete einen temporären Systemfehler, oder ein fehlerhaftes Element. Dies ist häufig ein vorübergehender Zustand (versuchen Sie es später erneut).
 

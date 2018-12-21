@@ -93,7 +93,7 @@ status.InvalidServerOptions=The server does not provide information about the su
 status.foldererror=At least one resource encountered a synchronization error.
 
 status.security=Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)
-status.security.helplink=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
+helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
 status.network=Could not connect to server (##replace.1##).
 
 status.syncing=Synchronizing
@@ -118,12 +118,12 @@ status.global.101=The request contains WBXML but it could not be decoded into XM
 status.global.102=The request contains WBXML but it could not be decoded into XML (EAS Error 102).
 status.global.103=The XML provided in the request does not follow the protocol requirements (EAS Error 103).
 status.global.clientdenied=The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account.
-status.global.clientdenied.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
+helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
 
 status.ServerRejectedSomeItems=The EAS server accepted only ##replace.2## of your items and rejected the remaining ones for the following reasons: ##replace.1##. Check error log details.
-status.ServerRejectedSomeItems.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+helplink.ServerRejectedSomeItems=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 status.ServerRejectedAllItems=The EAS server rejected your items for the following reasons: ##replace.1##. Check error log details.
-status.ServerRejectedAllItems.helplink=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+helplink.ServerRejectedAllItems=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 status.ServerRejectedRequest=The EAS Server rejected our last request. Check error log details.
 status.TempServerError=Server reported temporary system issue, or bad item. This is frequently a transient condition (so try again later).
 

@@ -684,7 +684,7 @@ var eas = {
                     case eas.flags.abortWithError: //fatal error, finish account sync
                     case eas.flags.syncNextFolder: //no more folders left, finish account sync
                     case eas.flags.resyncFolder: //should not happen here, just in case
-                        if (report.message) tbSync.errorlog(syncdata, tbSync.getLocalizedMessage(report.message, "eas"));                        
+                        if (report.message) tbSync.errorlog(syncdata, report.message);                        
                         tbSync.finishAccountSync(syncdata, report.message);
                         return;
 
