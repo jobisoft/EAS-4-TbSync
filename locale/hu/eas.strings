@@ -120,12 +120,13 @@ status.global.103=A kérésben megadott XML nem követi a egyezménykövetelmén
 status.global.clientdenied=Az EAS kiszolgáló jelentése <##replace.2##> (állapota ##replace.1##), és nem engedélyezi a Thunderbird-összehangolás számára a fiók elérését.
 helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
 
-status.ServerRejectedSomeItems=Az EAS kiszolgáló csak ##replace.2##-ját, és elutasította a fennmaradóakat a következő okok miatt: ##replace.1##. Ellenőrizze a hiba naplóját a „Csekély tétel átugrása” miatt.
-helplink.ServerRejectedSomeItems=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
-status.ServerRejectedAllItems=Az EAS kiszolgáló elutasította az elemeket az alábbi okok miatt: ##replace.1##. Ellenőrizze a hiba naplóját a „Csekély tétel átugrása” miatt.
-helplink.ServerRejectedAllItems=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
-status.ServerRejectedRequest=Az EAS kiszolgáló elutasította az utolsó kérésünket. További információért ellenőrizze a hibakeresési naplót.
+status.ServerRejectedSomeItems=Az EAS kiszolgáló csak ##replace.1## helyettesítette az elemeit, és elutasította a fennmaradóakat. Ellenőrizze a hiba napló részleteit.
+status.ServerRejectedAllItems=Az EAS szerver elutasította az elemeket. Ellenőrizze a hiba napló részleteit
+status.ServerRejectedRequest=Az EAS szerver megtagadta az utolsó kérésünket. További információért lásd a hibajelentést.
 status.TempServerError=A kiszolgáló ideiglenes rendszerhibát vagy rossz elemet jelentett be. Ez gyakran átmeneti feltétel (próbálkozz később).
+
+status.BadItemSkipped=Bad Item Skipped <##replace.1##>
+helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 
 status.nosupportedeasversion=A kiszolgáló nem támogatja az ActiveSync 2.5 vagy 14.0 verziót (csak ##replace.1##). A Thunderbird-összehangolás nem fog működni az ActiveSync kiszolgálóval.
 status.notsupportedeasversion=A kiszolgáló nem támogatja a kiválasztott ActiveSync ##replace.1## verziót (csak ##replace.2## verzió).

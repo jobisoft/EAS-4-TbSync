@@ -250,10 +250,8 @@ eas.sync = {
         
         //was there an error?
         if (syncdata.failedItems.length > 0) {
-            let types = [];
-            for (let t in syncdata.failedItemTypes) types.push(syncdata.failedItemTypes[t] + "x <" + t + ">");
-            if (syncdata.done>0) throw eas.finishSync("ServerRejectedSomeItems::"+types.toString()+"::"+syncdata.done);                            
-            throw eas.finishSync("ServerRejectedAllItems::"+types.toString());               
+            if (syncdata.done>0) throw eas.finishSync("ServerRejectedSomeItems::"+syncdata.done);                            
+            throw eas.finishSync("ServerRejectedAllItems");               
         }
         
     }),
@@ -383,7 +381,7 @@ eas.sync = {
                                         yield syncdata.targetObj.adoptItem(newItem);
                                     } catch (e) {
                                         xmltools.printXmlData(add[count], true); //include application data in log                  
-                                        tbSync.errorlog(syncdata, "Bad item skipped <JavaScript Error>.", newItem.icalString);
+                                        tbSync.errorlog(syncdata, "BadItemSkipped::JavaScriptError", newItem.icalString);
                                         throw e; // unable to add item to Thunderbird - fatal error
                                     }
                             } else {
@@ -473,7 +471,7 @@ eas.sync = {
                         yield syncdata.targetObj.adoptItem(newItem); //yield pcal.addItem(newItem); //We are not using the added item after is has been added, so we might be faster using adoptItem
                     } catch (e) {
                         xmltools.printXmlData(add[count], true); //include application data in log                  
-                        tbSync.errorlog(syncdata, "Bad item skipped <JavaScript Error>", newItem.icalString);
+                        tbSync.errorlog(syncdata, "BadItemSkipped::JavaScriptError", newItem.icalString);
                         throw e; // unable to add item to Thunderbird - fatal error
                     }
                 } else {
@@ -511,7 +509,7 @@ eas.sync = {
                             db.addItemToChangeLog(syncdata.targetId, ServerId, "modified_by_server");
                             yield syncdata.targetObj.modifyItem(newItem, foundItems[0]);
                         } catch (e) {
-                            tbSync.errorlog(syncdata, "Bad item skipped <JavaScript Error>", newItem.icalString);
+                            tbSync.errorlog(syncdata, "BadItemSkipped::JavaScriptError", newItem.icalString);
                             xmltools.printXmlData(upd[count], true);  //include application data in log                   
                             throw e; // unable to mod item to Thunderbird - fatal error
                         }
@@ -549,7 +547,7 @@ eas.sync = {
             if (!syncdata.failedItemTypes[cause]) syncdata.failedItemTypes[cause] = 1; 
             else syncdata.failedItemTypes[cause]++;
             
-            tbSync.errorlog(syncdata, "Bad item skipped <"+cause+">", data);
+            tbSync.errorlog(syncdata, "BadItemSkipped::"+cause, data);
         }
     },
 
@@ -690,7 +688,7 @@ eas.sync = {
             let wbxml = eas.sync[syncdata.type].getWbxmlFromThunderbirdItem(item, syncdata, isException);
             return wbxml;
         } catch (e) {
-            tbSync.errorlog(syncdata, "Bad item skipped <JavaScript Error>", item.icalString);
+            tbSync.errorlog(syncdata, "BadItemSkipped::JavaScriptError", item.icalString);
             throw e; // unable to read item from Thunderbird - fatal error
         }        
     },
