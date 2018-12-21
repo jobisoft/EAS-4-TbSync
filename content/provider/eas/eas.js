@@ -1599,6 +1599,7 @@ var eas = {
         tbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
 
         //handle errrors based on type
+        let msg = "";
         switch (type+":"+status) {
             case "Sync:3": /*
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
@@ -1608,16 +1609,22 @@ var eas = {
                 throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder);
             
             case "Sync:4":
-                if (allowSoftFail) return "Mailformed request. Bug in TbSync?";
+                msg = "malformed request (status 4)";
+                if (allowSoftFail) return msg;
+                else tbSync.errorlog(syncdata, msg);
                 throw eas.finishSync("ServerRejectedRequest");                            
             
             case "Sync:5":
-                if (allowSoftFail) return "Temporary server issues or invalid item";
+                msg = "temporary server issues or invalid item (status 5)";
+                if (allowSoftFail) return msg;
+                else tbSync.errorlog(syncdata, msg);
                 throw eas.finishSync("TempServerError");                            
 
             case "Sync:6":
                 //Server does not accept one of our items or the entire request.
-                if (allowSoftFail) return "Invalid item!";
+                msg = "invalid item (status 6)";
+                if (allowSoftFail) return msg;
+                else tbSync.errorlog(syncdata, msg);
                 throw eas.finishSync("ServerRejectedRequest");                            
 
             case "Sync:7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
