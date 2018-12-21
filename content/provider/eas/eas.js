@@ -684,14 +684,14 @@ var eas = {
                     case eas.flags.abortWithError: //fatal error, finish account sync
                     case eas.flags.syncNextFolder: //no more folders left, finish account sync
                     case eas.flags.resyncFolder: //should not happen here, just in case
+                        if (report.message) tbSync.errorlog(syncdata, tbSync.getLocalizedMessage(report.message, "eas"));                        
                         tbSync.finishAccountSync(syncdata, report.message);
                         return;
 
                     default:
                         //there was some other error
-                        Components.utils.reportError(report);
-                        tbSync.errorlog(syncdata, "JavaScript Error", report.toString());
-                        tbSync.finishAccountSync(syncdata, "javascriptError");
+                        tbSync.errorlog(syncdata, "JavaScriptError", report);
+                        tbSync.finishAccountSync(syncdata, "JavaScriptError");
                         return;
                 }
 
@@ -932,12 +932,9 @@ var eas = {
                         continue;
                     
                     default:
-                        Components.utils.reportError(report);
-                        let msg = "javascriptError";
-                        tbSync.errorlog(syncdata, "JavaScript Error", report.toString());			
-                        tbSync.finishFolderSync(syncdata, msg);
+                        tbSync.finishFolderSync(syncdata, "JavaScriptError");
                         //this is a fatal error, re-throw error to finish account sync
-                        throw eas.finishSync(msg, eas.flags.abortWithError);
+                        throw report;
                 }
 
             }
