@@ -86,11 +86,11 @@ status.wbxmlerror=Synchronisation fehlgeschlagen. Der Server antwortete mit dem 
 status.wbxmlmissingfield=Verletzung des ActiveSync Protokolls: Notwendiges Feld <##replace.1##> ist nicht in der Serverantwort enthalten.
 status.OK=OK
 status.nolightning=Lightning Add-On nicht installiert, Kalender nicht nutzbar.
-status.JavaScriptError=Javascript Fehler! Prüfen Sie bitte den Fehlerbericht für weitere Details.
+status.JavaScriptError=Javascript Fehler!
 status.mailformed-xml=Antwort enthält fehlerhaftes XML, Sync angebrochen. Prüfen Sie bitte den Fehlerbericht für weitere Details.
 status.invalid=Ungültige Serverantwort.
 status.InvalidServerOptions=Der Server sendet keine Informationen zu den unterstützten ActiveSync Versionen. Ist EAS für diesen Benutzer bzw. für dieses Programm (TbSync) freigeschaltet? Sie können versuchen, die ActiveSync Version manuell festzulegen.
-status.foldererror=Bei mindestens einer Resource trat ein Synchronisationsfehler auf.
+status.foldererror=Bei mindestens einer Resource trat ein Synchronisationsfehler auf. Prüfen Sie bitte den Fehlerbericht für weitere Informationen.
 
 status.security=Fehler beim Aufbau einer sicherern Verbindung. Benutzen Sie eventuell ein selbst signiertes Zertifikat oder ein andersartiges nicht vertrauenswürdiges Zertifikat welches nicht in Thunderbird importiert ist? (##replace.1##)
 helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
@@ -120,12 +120,11 @@ status.global.103=Das XML der Anfrage entspricht nicht den Protokollanforderunge
 status.global.clientdenied=Der EAS Server antwortet mit <##replace.2##> (status ##replace.1##) und verweigert TbSync den Zugriff auf Ihr Konto.
 helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
 
-status.ServerRejectedSomeItems=Der EAS Server akzeptierte nur ##replace.1## von Ihren Elementen und hat die verbliebenen Elemente zurückgewiesen. Prüfen Sie bitte den Fehlerbericht für weitere Informationen.
-status.ServerRejectedAllItems=Der EAS Server hat Ihre Elemente zurückgewiesen. Prüfen Sie bitte den Fehlerbericht für weitere Informationen.
-status.ServerRejectedRequest=Der EAS Server hat die letzte Anforderung zurückgewiesen. Prüfen Sie den Fehlerbericht für weitere Informationen.
+status.ServerRejectedSomeItems=Der EAS Server hat ##replace.1## Elemente nicht akzeptiert.
+status.ServerRejectedRequest=Der EAS Server hat die letzte Anforderung zurückgewiesen.
 status.TempServerError=Der Server meldete einen temporären Systemfehler, oder ein fehlerhaftes Element. Dies ist häufig ein vorübergehender Zustand (versuchen Sie es später erneut).
 
-status.BadItemSkipped=Bad Item Skipped <##replace.1##>
+status.BadItemSkipped=Bad Item Skipped: ##replace.1##
 helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 
 status.nosupportedeasversion=Der Server unterstützt kein ActiveSync v2.5 oder v14.0 (nur ##replace.1##). TbSync kann nicht mit diesem Server arbeiten.

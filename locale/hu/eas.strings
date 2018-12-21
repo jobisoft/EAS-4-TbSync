@@ -86,11 +86,11 @@ status.wbxmlerror=A összehangolás sikertelen. A kiszolgáló <##replace.1##> �
 status.wbxmlmissingfield=ActiveSync egyezmény megsértése: A(z) <##replace.1##> kötelező mező hiányzik a kiszolgáló válaszából.
 status.OK=Rendben van
 status.nolightning=A Lightning kiegészítő nincs telepítve, a naptárak nem támogatottak.
-status.JavaScriptError=JavaScript hiba! Ellenőrizze a hibakeresési naplót a részletekért.
-status.mailformed-xml=Nem sikerült XML elemzést végezni. Ellenőrizze a hibakeresési naplót a részletekért.
+status.JavaScriptError=JavaScript hiba!
+status.mailformed-xml=Nem sikerült XML elemzést végezni. További információért lásd a hibajelentést.
 status.invalid=Érvénytelen kiszolgáló válasz (szemét).
 status.InvalidServerOptions=A kiszolgáló nem nyújt felvilágosítást a támogatott ActiveSync verziókról. EAS akadályozva van ez a felhasználó vagy az ügyfél (Thunderbird-összehangolás) számára? Megpróbálhatja kézzel beállítani az ActiveSync verziót.
-status.foldererror=Legalább egy erőforrás szinkronizálási hibát észlelt.
+status.foldererror=Legalább egy erőforrás szinkronizálási hibát észlelt. További információért lásd a hibajelentést.
 
 status.security=Biztonsági kapcsolat létrehozása nem sikerült. Ön aláírta vagy egyébként nem megbízható tanúsítványt importálta a Thunderbirdbe? (##replace.1##)
 helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
@@ -120,12 +120,11 @@ status.global.103=A kérésben megadott XML nem követi a egyezménykövetelmén
 status.global.clientdenied=Az EAS kiszolgáló jelentése <##replace.2##> (állapota ##replace.1##), és nem engedélyezi a Thunderbird-összehangolás számára a fiók elérését.
 helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
 
-status.ServerRejectedSomeItems=Az EAS kiszolgáló csak ##replace.1## helyettesítette az elemeit, és elutasította a fennmaradóakat. Ellenőrizze a hiba napló részleteit.
-status.ServerRejectedAllItems=Az EAS szerver elutasította az elemeket. Ellenőrizze a hiba napló részleteit
-status.ServerRejectedRequest=Az EAS szerver megtagadta az utolsó kérésünket. További információért lásd a hibajelentést.
+status.ServerRejectedSomeItems=Az EAS-kiszolgáló nem fogadta el a ##replace.1## elemeket.
+status.ServerRejectedRequest=Az EAS szerver megtagadta az utolsó kérésünket.
 status.TempServerError=A kiszolgáló ideiglenes rendszerhibát vagy rossz elemet jelentett be. Ez gyakran átmeneti feltétel (próbálkozz később).
 
-status.BadItemSkipped=Bad Item Skipped <##replace.1##>
+status.BadItemSkipped=Bad Item Skipped: ##replace.1##
 helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 
 status.nosupportedeasversion=A kiszolgáló nem támogatja az ActiveSync 2.5 vagy 14.0 verziót (csak ##replace.1##). A Thunderbird-összehangolás nem fog működni az ActiveSync kiszolgálóval.

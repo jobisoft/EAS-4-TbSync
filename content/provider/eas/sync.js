@@ -113,7 +113,6 @@ eas.sync = {
         
         //keep track of failed items
         syncdata.failedItems = [];
-        syncdata.failedItemTypes = {};
         
         let done = false;
         do {
@@ -250,8 +249,7 @@ eas.sync = {
         
         //was there an error?
         if (syncdata.failedItems.length > 0) {
-            if (syncdata.done>0) throw eas.finishSync("ServerRejectedSomeItems::"+syncdata.done);                            
-            throw eas.finishSync("ServerRejectedAllItems");               
+            throw eas.finishSync("ServerRejectedSomeItems::" + syncdata.failedItems.length);                            
         }
         
     }),
@@ -542,11 +540,7 @@ eas.sync = {
         if (!syncdata.failedItems.includes(id)) {
             //the extra parameter true will re-add the item to the end of the changelog
             db.removeItemFromChangeLog(syncdata.targetId, id, true);                        
-            syncdata.failedItems.push(id);
-
-            if (!syncdata.failedItemTypes[cause]) syncdata.failedItemTypes[cause] = 1; 
-            else syncdata.failedItemTypes[cause]++;
-            
+            syncdata.failedItems.push(id);            
             tbSync.errorlog(syncdata, "BadItemSkipped::"+cause, data);
         }
     },
