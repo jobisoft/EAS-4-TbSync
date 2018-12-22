@@ -436,7 +436,7 @@ eas.sync = {
             }
             syncdata.done++;
         }
-        throw tbSync.eas.finishSync("CannotRevertViaItemOperations", eas.flags.resyncFolder);
+        throw tbSync.eas.finishSync("CannotRevertViaItemOperations", eas.flags.resyncFolder); //This will trigger take Target Offline!
     }),
 
 
