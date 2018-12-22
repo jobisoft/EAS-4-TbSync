@@ -672,7 +672,8 @@ var eas = {
                             switch (errorcode) {
                                 case 401:
                                 case 403: //failed to authenticate
-                                    tbSync.finishAccountSync(syncdata, "401");
+                                    report.message = "401"
+                                    tbSync.finishAccountSync(syncdata, report);
                                     return;                            
                                 case 200: //server and/or user was updated, retry
                                     Services.obs.notifyObservers(null, "tbsync.updateAccountSettingsGui", syncdata.account);
@@ -684,14 +685,14 @@ var eas = {
                     case eas.flags.abortWithError: //fatal error, finish account sync
                     case eas.flags.syncNextFolder: //no more folders left, finish account sync
                     case eas.flags.resyncFolder: //should not happen here, just in case
-                        if (report.message) tbSync.errorlog(syncdata, report.message);                        
-                        tbSync.finishAccountSync(syncdata, report.message);
+                        tbSync.finishAccountSync(syncdata, report);
                         return;
 
                     default:
                         //there was some other error
-                        tbSync.errorlog(syncdata, "JavaScriptError", report);
-                        tbSync.finishAccountSync(syncdata, "JavaScriptError");
+                        report.details = report.message + "\n\nfile: " + report.fileName + "\nline: " + report.lineNumber + "\n" + report.stack;
+                        report.message = "JavaScriptError";
+                        tbSync.finishAccountSync(syncdata, report);
                         return;
                 }
 
@@ -1197,10 +1198,11 @@ var eas = {
         }
     }),
 
-    finishSync: function (msg = "", type = eas.flags.syncNextFolder) {
+    finishSync: function (msg = "", type = eas.flags.syncNextFolder, details = "") {
         let e = new Error(); 
         e.type = type;
         e.message = msg;
+        e.details = details
         return e; 
     },    
     
