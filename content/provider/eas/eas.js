@@ -917,12 +917,12 @@ var eas = {
                     case eas.flags.abortWithError:  //if there was a fatal error during folder sync, re-throw error to finish account sync (with error)
                     case eas.flags.abortWithServerError:
                     case eas.flags.resyncAccount:   //if the entire account needs to be resynced, finish this folder and re-throw account (re)sync request                                                    
-                        tbSync.finishFolderSync(syncdata, report.message);
+                        tbSync.finishFolderSync(syncdata, report);
                         throw eas.finishSync(report.message, report.type);
                         break;
 
                     case eas.flags.syncNextFolder:
-                        tbSync.finishFolderSync(syncdata, report.message);
+                        tbSync.finishFolderSync(syncdata, report);
                         break;
                                             
                     case eas.flags.resyncFolder:
@@ -933,7 +933,10 @@ var eas = {
                         continue;
                     
                     default:
-                        tbSync.finishFolderSync(syncdata, "JavaScriptError");
+                        //some other error
+                        report.details = report.message + "\n\nfile: " + report.fileName + "\nline: " + report.lineNumber + "\n" + report.stack;
+                        report.message = "JavaScriptError";                
+                        tbSync.finishFolderSync(syncdata, report);
                         //this is a fatal error, re-throw error to finish account sync
                         throw report;
                 }
