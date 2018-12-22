@@ -1198,9 +1198,9 @@ var eas = {
         }
     }),
 
-    finishSync: function (msg = "", type = eas.flags.syncNextFolder, details = "") {
+    finishSync: function (msg = "", type = null, details = "") {
         let e = new Error(); 
-        e.type = type;
+        e.type = type ? type : eas.flags.syncNextFolder;
         e.message = msg;
         e.details = details
         e.failed = (msg != "");
