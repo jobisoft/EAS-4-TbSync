@@ -1610,18 +1610,18 @@ var eas = {
                 throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder, "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
             
             case "Sync:4":
-                msg = "malformed request (status 4)";
+                msg = "Malformed request (status 4)";
                 if (allowSoftFail) return msg;
                 throw eas.finishSync("ServerRejectedRequest", null, msg);                            
             
             case "Sync:5":
-                msg = "temporary server issues or invalid item (status 5)";
+                msg = "Temporary server issues or invalid item (status 5)";
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("TempServerError", null, msg);                            
+                throw eas.finishSync("ServerRejectedRequest", null, msg);                            
 
             case "Sync:6":
                 //Server does not accept one of our items or the entire request.
-                msg = "invalid item (status 6)";
+                msg = "Invalid item (status 6)";
                 if (allowSoftFail) return msg;
                 throw eas.finishSync("ServerRejectedRequest", null, msg);                            
 

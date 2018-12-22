@@ -122,7 +122,6 @@ helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-
 
 status.ServerRejectedSomeItems=The EAS server did not accept ##replace.1## elements.
 status.ServerRejectedRequest=The EAS Server rejected the last request.
-status.TempServerError=Server reported temporary system issue, or bad item. This is frequently a transient condition (so try again later).
 
 status.BadItemSkipped=Bad Item Skipped: ##replace.1##
 helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
