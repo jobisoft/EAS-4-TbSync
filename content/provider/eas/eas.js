@@ -1203,6 +1203,7 @@ var eas = {
         e.type = type;
         e.message = msg;
         e.details = details
+        e.failed = (msg != "");
         return e; 
     },    
     
