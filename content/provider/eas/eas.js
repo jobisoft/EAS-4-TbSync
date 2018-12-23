@@ -1482,13 +1482,17 @@ var eas = {
             syncdata.req.timeout = tbSync.prefSettings.getIntPref("timeout");
 
             syncdata.req.ontimeout = function () {
-                if (allowSoftFail) resolve("");
-                else reject(eas.finishSync("timeout", eas.flags.abortWithError));
+                if (allowSoftFail) {
+                    resolve("");
+                } else {
+                    reject(eas.finishSync("timeout", eas.flags.abortWithError));
+                }
             };
 
             syncdata.req.onerror = function () {
-                if (allowSoftFail) resolve("");
-                else {
+                if (allowSoftFail) {
+                    resolve("");
+                } else {
                     let error = tbSync.createTCPErrorFromFailedXHR(syncdata.req);
                     if (!error) {
                         reject(eas.finishSync("networkerror", eas.flags.abortWithServerError));
@@ -1540,8 +1544,11 @@ var eas = {
                         break;
                         
                     default:
-                        if (allowSoftFail) resolve("");
-                        else reject(eas.finishSync("httperror::" + syncdata.req.status, eas.flags.abortWithError));
+                        if (allowSoftFail) {
+                            resolve("");
+                        } else {
+                            reject(eas.finishSync("httperror::" + syncdata.req.status, eas.flags.abortWithError));
+                        }
                 }
             };
 
