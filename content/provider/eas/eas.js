@@ -1229,7 +1229,14 @@ var eas = {
         return "MZTB" + uuid;
     },
         
-    logxml : function (wbxml, what) {
+    logxml : function (wbxml, what, syncdata = null) {
+        let rawxml = tbSync.wbxmltools.convert2xml(wbxml);
+        let xml = null;
+        if (rawxml)  {
+            xml = rawxml.split('><').join('>\n<');
+            if (syncdata) syncdata.lastrequest = xml;
+        }
+        
         //include xml in log, if userdatalevel 2 or greater
         if ((tbSync.prefSettings.getBoolPref("log.toconsole") || tbSync.prefSettings.getBoolPref("log.tofile")) && tbSync.prefSettings.getIntPref("log.userdatalevel")>1) {
 
@@ -1241,16 +1248,13 @@ var eas = {
                 tbSync.dump("WBXML: " + what, "\n" + bytestring);
             }
 
-            let rawxml = tbSync.wbxmltools.convert2xml(wbxml);
-            if (rawxml === false) {
-                tbSync.dump(what +" (XML)", "\nFailed to convert WBXML to XML!\n");
-                return;
+            if (xml) {
+                //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
+                //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
+                tbSync.dump("XML: " + what, "\n" + xml);
+            } else {
+                tbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
             }
-            
-            //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
-            //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
-            let xml = rawxml.split('><').join('>\n<');
-            tbSync.dump("XML: " + what, "\n" + xml);
         }
     },
  
@@ -1444,7 +1448,7 @@ var eas = {
     sendRequest: function (wbxml, command, syncdata, allowSoftFail = false) {
         let msg = "Sending data <" + syncdata.syncstate.split("||")[0] + "> for " + tbSync.db.getAccountSetting(syncdata.account, "accountname");
         if (syncdata.folderID !== "") msg += " (" + tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ")";
-        tbSync.eas.logxml(wbxml, msg);
+        tbSync.eas.logxml(wbxml, msg, syncdata);
 
         let connection = tbSync.eas.getConnection(syncdata.account);
         let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
@@ -1612,18 +1616,18 @@ var eas = {
             case "Sync:4":
                 msg = "Malformed request (status 4)";
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg);                            
+                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\n" + syncdata.lastrequest);                            
             
             case "Sync:5":
                 msg = "Temporary server issues or invalid item (status 5)";
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg);                            
+                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\n" + syncdata.lastrequest);                            
 
             case "Sync:6":
                 //Server does not accept one of our items or the entire request.
                 msg = "Invalid item (status 6)";
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg);                            
+                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\n" + syncdata.lastrequest);                            
 
             case "Sync:7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
                 return "";
