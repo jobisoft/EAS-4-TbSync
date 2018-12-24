@@ -1229,12 +1229,11 @@ var eas = {
         return "MZTB" + uuid;
     },
         
-    logxml : function (wbxml, what, syncdata = null) {
+    logxml : function (wbxml, what) {
         let rawxml = tbSync.wbxmltools.convert2xml(wbxml);
         let xml = null;
         if (rawxml)  {
             xml = rawxml.split('><').join('>\n<');
-            if (syncdata) syncdata.lastrequest = xml;
         }
         
         //include xml in log, if userdatalevel 2 or greater
@@ -1256,6 +1255,8 @@ var eas = {
                 tbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
             }
         }
+    
+    return xml;
     },
  
     getConnection: function(account) {
@@ -1448,7 +1449,8 @@ var eas = {
     sendRequest: function (wbxml, command, syncdata, allowSoftFail = false) {
         let msg = "Sending data <" + syncdata.syncstate.split("||")[0] + "> for " + tbSync.db.getAccountSetting(syncdata.account, "accountname");
         if (syncdata.folderID !== "") msg += " (" + tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ")";
-        tbSync.eas.logxml(wbxml, msg, syncdata);
+        syncdata.request = tbSync.eas.logxml(wbxml, msg);
+        syncdata.response = "";
 
         let connection = tbSync.eas.getConnection(syncdata.account);
         let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
@@ -1509,7 +1511,7 @@ var eas = {
                     case 200: //OK
                         let msg = "Receiving data <" + syncdata.syncstate.split("||")[0] + "> for " + tbSync.db.getAccountSetting(syncdata.account, "accountname");
                         if (syncdata.folderID !== "") msg += " (" + tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ")";
-                        tbSync.eas.logxml(response, msg);
+                        syncdata.response = tbSync.eas.logxml(response, msg);
 
                         //What to do on error? IS this an error? Yes!
                         if (!allowSoftFail && response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
@@ -1623,18 +1625,18 @@ var eas = {
             case "Sync:4":
                 msg = "Malformed request (status 4)";
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\n" + syncdata.lastrequest);                            
+                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             
             case "Sync:5":
                 msg = "Temporary server issues or invalid item (status 5)";
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\n" + syncdata.lastrequest);                            
+                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "Sync:6":
                 //Server does not accept one of our items or the entire request.
                 msg = "Invalid item (status 6)";
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\n" + syncdata.lastrequest);                            
+                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "Sync:7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
                 return "";
