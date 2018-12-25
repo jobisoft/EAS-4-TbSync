@@ -252,7 +252,7 @@ eas.sync.Calendar = {
         //Organizer
         if (!isException) {
             if (item.organizer && item.organizer.commonName) wbxml.atag("OrganizerName", item.organizer.commonName);
-            if (item.organizer && item.organizer.id) wbxml.atag("OrganizerEmail",  cal.removeMailTo(item.organizer.id));
+            if (item.organizer && item.organizer.id) wbxml.atag("OrganizerEmail",  cal.email.removeMailTo(item.organizer.id));
         }
 
         //DtStamp in UTC
@@ -321,7 +321,7 @@ eas.sync.Calendar = {
                 //get owner information
                 let isReceived = false;
                 if (item.hasProperty("X-EAS-MEETINGSTATUS")) isReceived = item.getProperty("X-EAS-MEETINGSTATUS") & 0x2;
-                else isReceived = (item.organizer && item.organizer.id && cal.removeMailTo(item.organizer.id) != tbSync.db.getAccountSetting(syncdata.account, "user"));
+                else isReceived = (item.organizer && item.organizer.id && cal.email.removeMailTo(item.organizer.id) != tbSync.db.getAccountSetting(syncdata.account, "user"));
 
                 //either 1,3,5 or 7
                 if (item.hasProperty("STATUS") && item.getProperty("STATUS") == "CANCELLED") {
@@ -341,8 +341,8 @@ eas.sync.Calendar = {
                 wbxml.otag("Attendees");
                     for (let attendee of attendees) {
                         wbxml.otag("Attendee");
-                            wbxml.atag("Email", cal.removeMailTo(attendee.id));
-                            wbxml.atag("Name", (attendee.commonName ? attendee.commonName : cal.removeMailTo(attendee.id).split("@")[0]));
+                            wbxml.atag("Email", cal.email.removeMailTo(attendee.id));
+                            wbxml.atag("Name", (attendee.commonName ? attendee.commonName : cal.email.removeMailTo(attendee.id).split("@")[0]));
                             if (asversion != "2.5") {
                                 //it's pointless to send AttendeeStatus, 
                                 // - if we are the owner of a meeting, TB does not have an option to actually set the attendee status (on behalf of an attendee) in the UI
