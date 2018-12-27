@@ -1063,7 +1063,7 @@ var eas = {
                         wbxml.atag("Class", syncdata.type); //only 2.5
                         wbxml.atag("CollectionId", syncdata.folderID);
                         wbxml.switchpage("AirSync");
-                        wbxml.atag("FilterType", tbSync.prefSettings.getIntPref("eas.synclimit").toString());
+                        wbxml.atag("FilterType", eas.tools.getFilterType());
                         wbxml.atag("SyncKey", syncdata.synckey);
                         wbxml.switchpage("GetItemEstimate");
                     } else { //14.0
@@ -1073,7 +1073,7 @@ var eas = {
                         wbxml.atag("CollectionId", syncdata.folderID);
                         wbxml.switchpage("AirSync");
                         wbxml.otag("Options");
-                            if (syncdata.type == "Calendar") wbxml.atag("FilterType", tbSync.prefSettings.getIntPref("eas.synclimit").toString()); //0, 4,5,6,7
+                            if (syncdata.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
                             wbxml.atag("Class", syncdata.type);
                         wbxml.ctag();
                         wbxml.switchpage("GetItemEstimate");

@@ -61,7 +61,7 @@ eas.sync = {
 
                         if (tbSync.db.getAccountSetting(syncdata.account, "asversion") != "2.5") {
                             wbxml.otag("Options");
-                                if (syncdata.type == "Calendar") wbxml.atag("FilterType", tbSync.prefSettings.getIntPref("eas.synclimit").toString()); //0, 4,5,6,7
+                                if (syncdata.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
                                 wbxml.atag("Class", syncdata.type);
                                 wbxml.switchpage("AirSyncBase");
                                 wbxml.otag("BodyPreference");
@@ -71,7 +71,7 @@ eas.sync = {
                             wbxml.ctag();
                         } else if (syncdata.type == "Calendar") { //in 2.5 we only send it to filter Calendar
                             wbxml.otag("Options");
-                                 wbxml.atag("FilterType", tbSync.prefSettings.getIntPref("eas.synclimit").toString()); //0, 4,5,6,7
+                                 wbxml.atag("FilterType", eas.tools.getFilterType());
                             wbxml.ctag();
                         }
 
