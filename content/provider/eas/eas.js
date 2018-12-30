@@ -2123,7 +2123,6 @@ var eas = {
             item.childNodes[0].childNodes[1].childNodes[0].setAttribute("disabled", !rowData.selected);
             item.childNodes[0].childNodes[1].childNodes[0].setAttribute("style", rowData.selected ? "" : "font-style:italic");
             item.childNodes[0].childNodes[2].childNodes[0].setAttribute("style", rowData.selected ? "" : "font-style:italic");
-            //item.childNodes[0].childNodes[2].childNodes[0].setAttribute("style", eas.tools.updateListItemStyle(rowData));
             item.childNodes[0].childNodes[2].childNodes[0].textContent = rowData.statusMsg;
         },
 
