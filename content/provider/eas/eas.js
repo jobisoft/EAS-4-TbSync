@@ -2037,8 +2037,8 @@ var eas = {
          */
         getHeader: function () {
             return [
-                {style: "font-weight:bold;", label: "", width: "51"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"155"},
+                {style: "font-weight:bold;", label: "", width: "50"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"150"},
                 {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex :"1"},
             ]
         },
@@ -2060,7 +2060,7 @@ var eas = {
             //icon
             let itemType = document.createElement("image");
             itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
-            itemType.setAttribute("style", "margin: 2px 6px 3px 3px;");
+            itemType.setAttribute("style", "margin: 2px 3px 3px 3px;");
 
             //folder name
             let itemLabel = document.createElement("description");
@@ -2078,12 +2078,13 @@ var eas = {
 
             let itemVGroup1 = document.createElement("vbox");
             itemVGroup1.setAttribute("style", "padding: 3px");
+            itemVGroup1.setAttribute("width", "53");	    
             itemVGroup1.appendChild(itemHGroup1);
 
             //group2
             let itemHGroup2 = document.createElement("hbox");
             itemHGroup2.setAttribute("align", "center");
-            itemHGroup2.setAttribute("width", "150");
+            itemHGroup2.setAttribute("width", "146");
             itemHGroup2.appendChild(itemLabel);
 
             let itemVGroup2 = document.createElement("vbox");
