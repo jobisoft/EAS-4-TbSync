@@ -24,6 +24,7 @@
 <!ENTITY pref.generaloptions "Általános">
 <!ENTITY pref.contactoptions "Névjegyzék">
 <!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
+<!ENTITY pref.galautocomplete "A globális címjegyzékből (GAL) kapott eredményeket e-mailben töltse ki automatikusan">
 
 <!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése" >
 

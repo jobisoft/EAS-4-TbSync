@@ -280,11 +280,15 @@ var eas = {
             "allowedEasCommands": "",
             "useragent": tbSync.prefSettings.getCharPref("eas.clientID.useragent"),
             "devicetype": tbSync.prefSettings.getCharPref("eas.clientID.type"),
+            "galautocomplete": "1", 
             }; 
         return row;
     },
 
 
+    hasAutocompleteSupport: function (accountdata) {
+        return accountdata.galautocomplete;
+    },
 
     /**
      * Return object which contains all possible fields of a row in the folder database with the default value if not yet stored in the database.
@@ -458,8 +462,6 @@ var eas = {
      * if something is typed into the search field of the Thunderbird address book.
      *
      * TbSync will execute this only for queries longer than 3 chars.
-     *
-     * DO NOT IMPLEMENT AT ALL, IF NOT SUPPORTED
      *
      * @param account       [in] id of the account which should be searched
      * @param currentQuery  [in] search query

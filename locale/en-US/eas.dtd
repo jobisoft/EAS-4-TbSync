@@ -24,6 +24,7 @@
 <!ENTITY pref.generaloptions "General">
 <!ENTITY pref.contactoptions "Contacts">
 <!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
+<!ENTITY pref.galautocomplete "Include results from global adress book (GAL) in email autocompletion">
 
 <!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
 

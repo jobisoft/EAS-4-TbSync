@@ -24,6 +24,7 @@
 <!ENTITY pref.generaloptions "Generale">
 <!ENTITY pref.contactoptions "Contatti">
 <!ENTITY pref.provision "Forza provisioning (opzione richiesta per Kerio)">
+<!ENTITY pref.galautocomplete "Includi i risultati dalla rubrica globale (GAL) nel completamento automatico della posta elettronica">
 
 <!ENTITY pref.ShowTrashedFolders "Visualizza le cartelle trovate nel Cestino">
 

@@ -24,6 +24,7 @@
 <!ENTITY pref.generaloptions "Allgemein">
 <!ENTITY pref.contactoptions "Kontakte">
 <!ENTITY pref.provision "Provisionierung erzwingen (wird von Kerio benötigt)">
+<!ENTITY pref.galautocomplete "E-Mail Autovervollständigung mit Ergebnissen aus dem globalen Adressbuch (GAL) ">
 
 <!ENTITY pref.ShowTrashedFolders "Im Papierkorb gefundene Ordner anzeigen" >
 
