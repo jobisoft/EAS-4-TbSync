@@ -286,10 +286,6 @@ var eas = {
     },
 
 
-    hasAutocompleteSupport: function (accountdata) {
-        return accountdata.galautocomplete;
-    },
-
     /**
      * Return object which contains all possible fields of a row in the folder database with the default value if not yet stored in the database.
      */
@@ -461,16 +457,24 @@ var eas = {
      * It is used for autocompletion while typing something into the address field of the message composer and for the address book search,
      * if something is typed into the search field of the Thunderbird address book.
      *
+     * DO NOT IMPLEMENT AT ALL, IF NOT SUPPORTED
+     *
      * TbSync will execute this only for queries longer than 3 chars.
      *
      * @param account       [in] id of the account which should be searched
      * @param currentQuery  [in] search query
+     * @param caller  [in] "autocomplete" or "search"
+    
      */
-    abServerSearch: Task.async (function* (account, currentQuery)  {
+    abServerSearch: Task.async (function* (account, currentQuery, caller)  {
         if (!tbSync.db.getAccountSetting(account, "allowedEasCommands").split(",").includes("Search")) {
             return null;
         }
 
+        if (caller == "autocomplete" && tbSync.db.getAccountSetting(account, "galautocomplete") != "1") {
+            return null;
+        }
+        
         let wbxml = wbxmltools.createWBXML();
         wbxml.switchpage("Search");
         wbxml.otag("Search");
@@ -504,22 +508,28 @@ var eas = {
                     //tbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
                     let resultset = {};
 
-                    resultset.properties = {};                    
-                    resultset.properties["FirstName"] = results[count].Properties.FirstName;
-                    resultset.properties["LastName"] = results[count].Properties.LastName;
-                    resultset.properties["DisplayName"] = results[count].Properties.DisplayName;
-                    resultset.properties["PrimaryEmail"] = results[count].Properties.EmailAddress;
-                    resultset.properties["CellularNumber"] = results[count].Properties.MobilePhone;
-                    resultset.properties["HomePhone"] = results[count].Properties.HomePhone;
-                    resultset.properties["WorkPhone"] = results[count].Properties.Phone;
-                    resultset.properties["Company"] = accountname; //results[count].Properties.Company;
-                    resultset.properties["Department"] = results[count].Properties.Title;
-                    resultset.properties["JobTitle"] = results[count].Properties.Office;
-
-                    resultset.autocomplete = {};                    
-                    resultset.autocomplete.value = results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">";
-                    resultset.autocomplete.account = account;
-                        
+                    switch (caller) {
+                        case "search":
+                            resultset.properties = {};                    
+                            resultset.properties["FirstName"] = results[count].Properties.FirstName;
+                            resultset.properties["LastName"] = results[count].Properties.LastName;
+                            resultset.properties["DisplayName"] = results[count].Properties.DisplayName;
+                            resultset.properties["PrimaryEmail"] = results[count].Properties.EmailAddress;
+                            resultset.properties["CellularNumber"] = results[count].Properties.MobilePhone;
+                            resultset.properties["HomePhone"] = results[count].Properties.HomePhone;
+                            resultset.properties["WorkPhone"] = results[count].Properties.Phone;
+                            resultset.properties["Company"] = accountname; //results[count].Properties.Company;
+                            resultset.properties["Department"] = results[count].Properties.Title;
+                            resultset.properties["JobTitle"] = results[count].Properties.Office;
+                            break;
+                       
+                        case "autocomplete":
+                            resultset.autocomplete = {};                    
+                            resultset.autocomplete.value = results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">";
+                            resultset.autocomplete.account = account;
+                            break;
+                    }
+                    
                     galdata.push(resultset);
                 }
             }
