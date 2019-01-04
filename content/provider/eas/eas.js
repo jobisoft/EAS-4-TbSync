@@ -2066,12 +2066,12 @@ var eas = {
          */        
         getRow: function (document, rowData, itemSelCheckbox) {
             //checkbox
-            itemSelCheckbox.setAttribute("style", "margin: 3px; padding: 0;");
+            itemSelCheckbox.setAttribute("style", "margin: 4px 3px 0px 3px;");
 
             //icon
             let itemType = document.createElement("image");
             itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
-            itemType.setAttribute("style", "margin: 2px 3px 3px 3px;");
+            itemType.setAttribute("style", "margin: 2px 3px 0px 3px;");
 
             //folder name
             let itemLabel = document.createElement("description");
@@ -2088,7 +2088,6 @@ var eas = {
             itemHGroup1.appendChild(itemType);
 
             let itemVGroup1 = document.createElement("vbox");
-            itemVGroup1.setAttribute("style", "padding: 3px");
             itemVGroup1.setAttribute("width", "53");	    
             itemVGroup1.appendChild(itemHGroup1);
 
@@ -2114,6 +2113,7 @@ var eas = {
 
             //final row
             let row = document.createElement("hbox");
+            row.setAttribute("style", "min-height: 24px;");
             row.appendChild(itemVGroup1);
             row.appendChild(itemVGroup2);            
             row.appendChild(itemVGroup3);            
