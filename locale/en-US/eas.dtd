@@ -68,5 +68,5 @@
 <!ENTITY abCard.header.otheraddress "Other Address (EAS)">
 
 <!ENTITY manager.tabs.accountsettings "Account settings">
-<!ENTITY manager.tabs.syncsettings "Synchronization settings">
+<!ENTITY manager.tabs.syncsettings "Options">
 <!ENTITY manager.tabs.outOfOffice "Auto responder">

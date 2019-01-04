@@ -67,6 +67,6 @@
 <!ENTITY abCard.header.eas "Weitere Felder (EAS)">
 <!ENTITY abCard.header.otheraddress "Weitere Adresse (EAS)">
 
-<!ENTITY manager.tabs.accountsettings "Accounteinstellungen">
+<!ENTITY manager.tabs.accountsettings "Kontoeinstellungen">
 <!ENTITY manager.tabs.syncsettings "Optionen">
 <!ENTITY manager.tabs.outOfOffice "Autoresponder">

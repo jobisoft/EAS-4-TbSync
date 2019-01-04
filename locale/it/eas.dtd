@@ -68,5 +68,5 @@
 <!ENTITY abCard.header.otheraddress "Altro indirizzo (EAS)">
 
 <!ENTITY manager.tabs.accountsettings "Impostazioni account">
-<!ENTITY manager.tabs.syncsettings "Impostazioni sincronizzazione"> <!-- if too long, just "Options" would also be ok -->
+<!ENTITY manager.tabs.syncsettings "Opzioni">
 <!ENTITY manager.tabs.outOfOffice "Risponditore automatico">

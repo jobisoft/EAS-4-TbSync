@@ -68,5 +68,5 @@
 <!ENTITY abCard.header.otheraddress "Egyéb cím (EAS)">
 
 <!ENTITY manager.tabs.accountsettings "Fiók beállításai">
-<!ENTITY manager.tabs.syncsettings "Összehangolás beállításai"> <!-- if too long, just "Options" would also be ok -->
+<!ENTITY manager.tabs.syncsettings "Beállítások">
 <!ENTITY manager.tabs.outOfOffice "Önműködő válasz">
