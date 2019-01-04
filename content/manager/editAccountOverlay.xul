@@ -86,7 +86,7 @@
 
                 <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="&pref.contactoptions;"/>
                 <vbox>                            
-                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.galautocomplete" label="&pref.galautocomplete;" />
+                    <checkbox id="tbsync.accountsettings.pref.galautocomplete" label="&pref.galautocomplete;" />
                     <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
                     <hbox align="center">
                         <!-- menulist id="tbsync.accountsettings.pref.seperator"></menulist-->
