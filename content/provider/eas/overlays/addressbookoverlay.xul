@@ -7,4 +7,7 @@
         <html:a href="" id="cvEmail3" />
     </description>
 
+    <description class="CardViewText easContainer" id="easPhWork2" labelprefix="Work 2:" insertafter="cvPhWork" />
+    <description class="CardViewText easContainer" id="easPhWorkFax" labelprefix="Work Fax:" insertafter="cvPhFax" />
+
 </overlay>        

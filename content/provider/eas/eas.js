@@ -560,6 +560,32 @@ var eas = {
                 window.HandleLink(email3Element, window.zSecondaryEmail, email3Value, email3Box, "mailto:" + email3Value);
             }
         }
+        
+        let phoneNumbers = {
+            easPhWork2: "Business2PhoneNumber",
+            easPhWorkFax: "BusinessFaxNumber",
+        };
+        
+        let phoneFound = false;
+        for (let field in phoneNumbers) {
+            if (phoneNumbers.hasOwnProperty(field)) {
+                let element = window.document.getElementById(field);
+                if (element) {
+                    let value = card.getProperty(phoneNumbers[field],"");
+                    if (value) {
+                        element.hidden = false;
+                        element.textContent = element.getAttribute("labelprefix") + " " + value;
+                        phoneFound = true;
+                    }
+                }
+            }
+        }
+
+        if (phoneFound) {
+            window.document.getElementById("cvbPhone").collapsed = false;
+            window.document.getElementById("cvhPhone").collapsed = false;
+        }
+        
     },
     
 
