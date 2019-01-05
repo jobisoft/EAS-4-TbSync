@@ -564,6 +564,11 @@ var eas = {
         let phoneNumbers = {
             easPhWork2: "Business2PhoneNumber",
             easPhWorkFax: "BusinessFaxNumber",
+            easPhCompany: "CompanyMainPhone",
+            easPhAssistant: "AssistantPhoneNumber",
+            easPhHome2: "Home2PhoneNumber",
+            easPhCar: "CarPhoneNumber",
+            easPhRadio: "RadioPhoneNumber"
         };
         
         let phoneFound = false;

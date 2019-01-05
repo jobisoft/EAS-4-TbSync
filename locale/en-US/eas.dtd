@@ -39,8 +39,8 @@
 
 <!ENTITY abCard.MiddleName "Middle name:">
 <!ENTITY abCard.Email3Address "Alternative Email:">
-<!ENTITY abCard.Home2PhoneNumber "Home Phone 2:">
-<!ENTITY abCard.Business2PhoneNumber "Work Phone 2:">
+<!ENTITY abCard.Home2PhoneNumber "Home Alternative Phone:">
+<!ENTITY abCard.Business2PhoneNumber "Work Alternative Phone:">
 <!ENTITY abCard.BusinessFaxNumber "Work Fax:">
 
 <!ENTITY abCard.ManagerName "Manager:">
