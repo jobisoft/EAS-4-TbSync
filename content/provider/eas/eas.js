@@ -1607,20 +1607,20 @@ var eas = {
         //check for empty wbxml
         if (wbxml.length === 0) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("empty-response");
+            else throw eas.finishSync("empty-response", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
         }
 
         //convert to save xml (all special chars in user data encoded by encodeURIComponent) and check for parse errors
         let xml = wbxmltools.convert2xml(wbxml);
         if (xml === false) {
-            throw eas.finishSync("wbxml-parse-error");
+            throw eas.finishSync("wbxml-parse-error", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
         }
         
         //retrieve data and check for empty data (all returned data fields are already decoded by decodeURIComponent)
         let wbxmlData = xmltools.getDataFromXMLString(xml);
         if (wbxmlData === null) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("response-contains-no-data");
+            else throw eas.finishSync("response-contains-no-data", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
         }
         
         //debug
