@@ -2103,7 +2103,7 @@ var eas = {
             //icon
             let itemType = document.createElement("image");
             itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
-            itemType.setAttribute("style", "margin: 2px 3px 0px 3px;");
+            itemType.setAttribute("style", "margin: 4px 3px 0px 3px;");
 
             //folder name
             let itemLabel = document.createElement("description");
