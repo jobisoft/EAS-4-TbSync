@@ -735,6 +735,7 @@ var eas = {
                         //there was some other error
                         report.type = "JavaScriptError";
                         tbSync.finishAccountSync(syncdata, report);
+                        Components.utils.reportError(report);
                         return;
                 }
 
