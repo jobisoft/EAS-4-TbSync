@@ -69,7 +69,6 @@ syncstate.send.request.localdeletes=Várakozás a helyi törlések nyugtázásá
 syncstate.eval.response.localdeletes=A helyi törlések feldolgozása
 
 status.notsyncronized=A fiókot összehangolni kell, legalább egy elem nem összehangolva van.
-status.needtorevert=A fiókot összehangolni kell a helyi változások visszaállítása érdekében (egyirányú összehangolás)
 status.disabled=A fiók nincs engedélyezve, az összehangolás le van tiltva.
 status.notargets=Az összehangolás megszakítása, mert a szinkronizálási célokat nem lehetett létrehozni.
 status.nouserhost=Hiányzik a felhasználónév és/vagy a kiszolgáló név. Kérjük, adja meg ezeket az értékeket.

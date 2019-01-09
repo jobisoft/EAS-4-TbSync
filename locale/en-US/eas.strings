@@ -69,7 +69,6 @@ syncstate.send.request.localdeletes=Waiting for acknowledgment of local deletes
 syncstate.eval.response.localdeletes=Processing acknowledgment of local deletes
 
 status.notsyncronized=Account needs to be synchronized, at least one item is out of sync.
-status.needtorevert=Account needs to be synchronized to revert local changes (one-way sync).
 status.disabled=Disabled
 status.notargets=Aborting Sync, because sync targets could not be created.
 status.nouserhost=Missing username and/or server. Please provide those values.
