@@ -795,22 +795,25 @@ var eas = {
                     //only add allowed folder types to DB
                     if (!["9","14","8","13","7","15"].includes(add[count].Type)) 
                         continue;
-                                        
-                    //create folder obj for new  folder settings
-                    let newFolderSettings = {};
-                    newFolderSettings.folderID = add[count].ServerId;
-                    newFolderSettings.name = add[count].DisplayName;
-                    newFolderSettings.type = add[count].Type;
-                    newFolderSettings.parentID = add[count].ParentId;
-                    newFolderSettings.selected = "0";
 
-                    if (tbSync.prefSettings.getBoolPref("eas.fix4freedriven")) {
-                        let target = tbSync.db.getFolderSetting(syncdata.account, add[count].ServerId, "target");                    
-                        if (target) newFolderSettings.target = target;
+                    let existingFolder = tbSync.db.getFolder(syncdata.account, add[count].ServerId);
+                    if (existingFolder !== null && existingFolder.cached == "0") {
+                        //there was an error at the server, he has send us an ADD for a folder we alreay have, treat as update
+                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "name", add[count].DisplayName);
+                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "type", add[count].Type);
+                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "parentID", add[count].ParentId);
+                    } else {
+                        //create folder obj for new  folder settings
+                        let newFolder = {};
+
+                        newFolder.folderID = add[count].ServerId;
+                        newFolder.name = add[count].DisplayName;
+                        newFolder.type = add[count].Type;
+                        newFolder.parentID = add[count].ParentId;
+
+                        //if there is a cached version of this folderID, addFolder will merge all persistent settings - all other settings not defined here will be set to their defaults
+                        tbSync.db.addFolder(syncdata.account, newFolder);
                     }
-
-                    //if there is a cached version of this folderID, addFolder will merge all persistent settings - all other settings not defined here will be set to their defaults
-                    tbSync.db.addFolder(syncdata.account, newFolderSettings);
                 }
                 
                 //looking for updates
