@@ -272,7 +272,6 @@ var eas = {
             "provision" : "0",
             "birthday" : "0",
             "displayoverride" : "0", 
-            "downloadonly" : "0",
             "autosync" : "0",
             "horde" : "0",
             "lastEasOptionsUpdate":"0",
@@ -304,7 +303,7 @@ var eas = {
             "status" : "",
             "parentID" : "",
             "useChangeLog" : "1", //log changes into changelog
-            "downloadonly" : tbSync.db.getAccountSetting(account, "downloadonly"), //each folder has its own settings, the main setting is just the default,
+            "downloadonly" : "0",
             };
         return folder;
     },
@@ -432,7 +431,7 @@ var eas = {
         newCalendar.setProperty("color", tbSync.db.getFolderSetting(account, folderID, "targetColor"));
         newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
         newCalendar.setProperty("calendar-main-in-composite",true);
-
+        newCalendar.setProperty("readOnly", tbSync.db.getFolderSetting(account, folderID, "downloadonly") == "1");
         calManager.registerCalendar(newCalendar);
 
         //is there an email identity we can associate this calendar to? 
@@ -869,6 +868,7 @@ var eas = {
 
             //The individual folder sync is placed inside a try ... catch block. If a folder sync has finished, a throwFinishSync error is thrown
             //and catched here. If that error has a message attached, it ist re-thrown to the main account sync loop, which will abort sync completely
+            let calendarReadOnlyStatus = null;
             try {
                 
                 //resync loop control
@@ -948,14 +948,20 @@ var eas = {
                         syncdata.targetObj = cal.async.promisifyCalendar(syncdata.calendarObj.wrappedJSObject);
 
                         syncdata.calendarObj.startBatch();
+                        //save current value of readOnly (or take it from the setting
+                        calendarReadOnlyStatus = syncdata.calendarObj.getProperty("readOnly") || (tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "downloadonly") == "1");                       
+                        syncdata.calendarObj.setProperty("readOnly", false);
                         yield eas.sync.start(syncdata);
-                        syncdata.calendarObj.endBatch();
-
                         break;
                 }
 
             } catch (report) { 
-
+                
+                if (calendarReadOnlyStatus !== null) { //null, true, false
+                    syncdata.calendarObj.setProperty("readOnly", calendarReadOnlyStatus);
+                    syncdata.calendarObj.endBatch();
+                }
+                
                 switch (report.type) {
                     case eas.flags.abortWithError:  //if there was a fatal error during folder sync, re-throw error to finish account sync (with error)
                     case eas.flags.abortWithServerError:
@@ -981,7 +987,6 @@ var eas = {
                         //this is a fatal error, re-throw error to finish account sync
                         throw report;
                 }
-
             }
 
         }
@@ -2061,10 +2066,12 @@ var eas = {
          */
         getRowData: function (folder, syncdata = null) {
             let rowData = {};
+            rowData.account = folder.account;
             rowData.folderID = folder.folderID;
             rowData.selected = (folder.selected == "1");
             rowData.type = folder.type;
             rowData.name = folder.name;
+            rowData.downloadonly = folder.downloadonly;
             rowData.statusCode = folder.status;
             rowData.statusMsg = tbSync.getSyncStatusMsg(folder, syncdata, "eas");
 
@@ -2081,13 +2088,32 @@ var eas = {
          */
         getHeader: function () {
             return [
-                {style: "font-weight:bold;", label: "", width: "50"},
+                {style: "font-weight:bold;", label: "", width: "93"},
                 {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"150"},
                 {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex :"1"},
             ]
         },
 
-
+        //not part of API
+        updateReadOnly: function (account, folderID, value) {
+            let type = tbSync.db.getFolderSetting(account, folderID, "type");
+            tbSync.db.setFolderSetting(account, folderID, "downloadonly", value);
+            switch (type) {
+                case "8":
+                case "13":
+                case "7":
+                case "15":
+                    {
+                        let target = tbSync.db.getFolderSetting(account, folderID, "target");
+                        if (target != "") {
+                            let calManager = cal.getCalendarManager();
+                            let targetCal = calManager.getCalendarById(target); 
+                            targetCal.setProperty("readOnly", value == '1');
+                        }
+                    }
+                break;
+            };
+        },
 
         /**
          * Is called to add a row to the folderlist. After this call, updateRow is called as well.
@@ -2098,13 +2124,40 @@ var eas = {
          */        
         getRow: function (document, rowData, itemSelCheckbox) {
             //checkbox
-            itemSelCheckbox.setAttribute("style", "margin: 4px 3px 0px 3px;");
+            itemSelCheckbox.setAttribute("style", "margin: 0px 0px 0px 3px;");
 
             //icon
             let itemType = document.createElement("image");
-            itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
-            itemType.setAttribute("style", "margin: 4px 3px 0px 3px;");
+            itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData));
+            itemType.setAttribute("style", "margin: 0px 9px 0px 3px;");
 
+            //read/write access             
+            let itemACL = document.createElement("button");
+            itemACL.setAttribute("image", "chrome://tbsync/skin/acl_" + (rowData.downloadonly == "1" ? "ro" : "rw") + ".png");
+            itemACL.setAttribute("class", "plain");
+            itemACL.setAttribute("style", "width: 35px; min-width: 35px; margin: 0; height:26px");
+            itemACL.setAttribute("account", rowData.account);
+            itemACL.setAttribute("folderID", rowData.folderID);
+            itemACL.setAttribute("type", "menu");
+            let menupopup = document.createElement("menupopup");
+                let menuitem1 = document.createElement("menuitem");
+                menuitem1.setAttribute("value", "1");
+                menuitem1.setAttribute("class", "menuitem-iconic");
+                menuitem1.setAttribute("label", tbSync.getLocalizedMessage("acl.readonly", "eas"));
+                menuitem1.setAttribute("image", "chrome://tbsync/skin/acl_ro2.png");
+                menuitem1.setAttribute("oncommand", "let p = this.parentNode.parentNode; p.setAttribute('image','chrome://tbsync/skin/acl_ro.png');tbSync.eas.folderList.updateReadOnly(p.getAttribute('account'), p.getAttribute('folderID'), '1');"  );
+
+                let menuitem2 = document.createElement("menuitem");
+                menuitem1.setAttribute("value", "0");
+                menuitem2.setAttribute("class", "menuitem-iconic");
+                menuitem2.setAttribute("label", tbSync.getLocalizedMessage("acl.readwrite", "eas"));
+                menuitem2.setAttribute("image", "chrome://tbsync/skin/acl_rw2.png");
+                menuitem2.setAttribute("oncommand", "let p = this.parentNode.parentNode; p.setAttribute('image','chrome://tbsync/skin/acl_rw.png'); tbSync.eas.folderList.updateReadOnly(p.getAttribute('account'), p.getAttribute('folderID'), '0');"  );
+
+                menupopup.appendChild(menuitem2);
+                menupopup.appendChild(menuitem1);
+            itemACL.appendChild(menupopup);
+            
             //folder name
             let itemLabel = document.createElement("description");
             itemLabel.setAttribute("disabled", !rowData.selected);
@@ -2118,9 +2171,10 @@ var eas = {
             itemHGroup1.setAttribute("align", "center");
             itemHGroup1.appendChild(itemSelCheckbox);
             itemHGroup1.appendChild(itemType);
+            itemHGroup1.appendChild(itemACL);
 
             let itemVGroup1 = document.createElement("vbox");
-            itemVGroup1.setAttribute("width", "53");	    
+            itemVGroup1.setAttribute("width", "93");
             itemVGroup1.appendChild(itemHGroup1);
 
             //group2
@@ -2136,7 +2190,7 @@ var eas = {
             //group3
             let itemHGroup3 = document.createElement("hbox");
             itemHGroup3.setAttribute("align", "center");
-            itemHGroup3.setAttribute("width", "250");
+            itemHGroup3.setAttribute("width", "200");
             itemHGroup3.appendChild(itemStatus);
 
             let itemVGroup3 = document.createElement("vbox");
@@ -2162,6 +2216,16 @@ var eas = {
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
         updateRow: function (document, item, rowData) {
+            //acl image
+            item.childNodes[0].childNodes[0].childNodes[0].childNodes[2].setAttribute("image", "chrome://tbsync/skin/acl_" + (rowData.downloadonly == "1" ? "ro" : "rw") + ".png");
+
+            //select checkbox
+            if (rowData.selected) {
+                item.childNodes[0].childNodes[0].childNodes[0].childNodes[0].setAttribute("checked", true);
+            } else {
+                item.childNodes[0].childNodes[0].childNodes[0].childNodes[0].removeAttribute("checked");
+            }
+
             if (item.childNodes[0].childNodes[1].childNodes[0].textContent != rowData.name) item.childNodes[0].childNodes[1].childNodes[0].textContent = rowData.name;
             if (item.childNodes[0].childNodes[2].childNodes[0].textContent != rowData.statusMsg) item.childNodes[0].childNodes[2].childNodes[0].textContent = rowData.statusMsg;
             item.childNodes[0].childNodes[1].childNodes[0].setAttribute("disabled", !rowData.selected);
@@ -2171,13 +2235,14 @@ var eas = {
 
 
         /**
-         * Return the icon used in the folderlist to represent the different folder types
+         * Return the icon used in the folderlist to represent the different folder types 
+         * Not part of API, only called by getRow
          *
-         * @param type       [in] provider folder type
+         * @param rowData       [in] rowData object
          */
-        getTypeImage: function (type) {
+        getTypeImage: function (rowData) {
             let src = ""; 
-            switch (type) {
+            switch (rowData.type) {
                 case "9": 
                 case "14": 
                     src = "contacts16.png";

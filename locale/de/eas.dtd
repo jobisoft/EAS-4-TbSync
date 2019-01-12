@@ -20,7 +20,6 @@
 <!ENTITY pref.usehttps "Sichere Verbindungen verwenden (via https://)">
 <!ENTITY pref.DeviceId "ActiveSync Geräte ID">
 <!ENTITY pref.birthday "Sende Geburtstagsinformation">
-<!ENTITY pref.downloadonly "Lokale Änderungen verwerfen (one-way sync)">
 <!ENTITY pref.generaloptions "Allgemein">
 <!ENTITY pref.contactoptions "Kontakte">
 <!ENTITY pref.provision "Provisionierung erzwingen (wird von Kerio benötigt)">

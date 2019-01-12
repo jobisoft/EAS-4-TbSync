@@ -20,7 +20,6 @@
 <!ENTITY pref.usehttps "Utilizza connessione sicura (connettiti tramite HTTPS)">
 <!ENTITY pref.DeviceId "ID dispositivo ActiveSync">
 <!ENTITY pref.birthday "Invia informazioni sui compleanni">
-<!ENTITY pref.downloadonly "Annulla modifiche locali (sincronizzazione a una via)">
 <!ENTITY pref.generaloptions "Generale">
 <!ENTITY pref.contactoptions "Contatti">
 <!ENTITY pref.provision "Forza provisioning (opzione richiesta per Kerio)">

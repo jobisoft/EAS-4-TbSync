@@ -133,4 +133,6 @@ status.notsupportedeasversion=Il server non supporta la versione di ActiveSync s
 
 config.auto=Configurazione server ActiveSync (rilevamento automatico)
 config.custom=Configurazione server ActiveSync
-config.outlook.com=Configurazione server per account Outlook.com
+
+acl.readwrite=Two-way-sync (read from and write to server)
+acl.readonly=One-way-sync (read-only server access)

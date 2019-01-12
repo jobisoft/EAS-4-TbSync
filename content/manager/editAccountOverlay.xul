@@ -80,7 +80,6 @@
           <vbox flex="1">
                 <label style="margin-left:0; margin-bottom: 1ex;" class="header lockIfConnected" value="&pref.generaloptions;"/>
                 <vbox>                            
-                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.downloadonly" label="&pref.downloadonly;"  />
                     <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
                 </vbox>                            
 

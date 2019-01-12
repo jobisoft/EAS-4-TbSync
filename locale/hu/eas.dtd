@@ -20,7 +20,6 @@
 <!ENTITY pref.usehttps "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)">
 <!ENTITY pref.DeviceId "ActiveSync eszközazonosító">
 <!ENTITY pref.birthday "Születésnapi adatok küldése">
-<!ENTITY pref.downloadonly "A helyi változások visszaállítása (egyirányú összehangolás)">
 <!ENTITY pref.generaloptions "Általános">
 <!ENTITY pref.contactoptions "Névjegyzék">
 <!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
