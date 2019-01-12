@@ -1695,7 +1695,7 @@ var eas = {
                     tbSync.errorlog(syncdata, "Object not found", "WBXML: Server reports <object not found>, keeping local copy and removing folder.");
                     let folder = tbSync.db.getFolder(syncdata.account, syncdata.folderID);
                     if (folder !== null) {
-                        tbSync.takeTargetOffline("eas", folder, "[deleted from server]");
+                        tbSync.takeTargetOffline("eas", folder, "[not found on server]");
                         //folder is no longer there, unset current folder
                         syncdata.folderID = "";
                     }
