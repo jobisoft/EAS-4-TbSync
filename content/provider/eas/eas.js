@@ -978,10 +978,15 @@ var eas = {
                         break;
                                             
                     case eas.flags.resyncFolder:
-                        //takeTargetOffline will backup the current folder and on next run, a fresh copy 
-                        //of the folder will be synced down - the folder itself is NOT deleted
-                        tbSync.errorlog(syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
-                        tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
+                        if (report.message == "RevertViaFolderResync") {
+                            //the user requested to throw away local modifications, no need to backup, just invalidate the synckey
+                            eas.onResetTarget(syncdata.account, syncdata.folderID);
+                        } else {
+                            //takeTargetOffline will backup the current folder and on next run, a fresh copy 
+                            //of the folder will be synced down - the folder itself is NOT deleted
+                            tbSync.errorlog(syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
+                            tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
+                        }
                         continue;
                     
                     default:

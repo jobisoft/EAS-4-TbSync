@@ -424,6 +424,7 @@ eas.sync = {
         syncdata.todo = changes.length;
         tbSync.setSyncState("prepare.request.revertlocalchanges", syncdata.account, syncdata.folderID);
         
+        //remove all changes, so we can get them fresh from the server
         for (let i=0; i<changes.length; i++) {
             let items = null;
             let ServerId = changes[i].id;
@@ -436,7 +437,7 @@ eas.sync = {
             }
             syncdata.done++;
         }
-        throw tbSync.eas.finishSync("CannotRevertViaItemOperations", eas.flags.resyncFolder); //This will trigger take Target Offline!
+        throw tbSync.eas.finishSync("RevertViaFolderResync", eas.flags.resyncFolder); //This will resync a fresh copy from the server
     }),
 
 
