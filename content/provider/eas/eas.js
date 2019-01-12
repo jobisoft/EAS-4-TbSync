@@ -314,7 +314,7 @@ var eas = {
      * Returns an array of folder settings, that should survive disable and re-enable
      */
     getPersistentFolderSettings: function () {
-        return ["targetName", "targetColor"];
+        return ["targetName", "targetColor", "downloadonly"];
     },
 
 
