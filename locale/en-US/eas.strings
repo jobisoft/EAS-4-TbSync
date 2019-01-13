@@ -134,5 +134,5 @@ status.notsupportedeasversion=Server does not support selected ActiveSync v##rep
 config.auto=ActiveSync server configuration (Autodiscover)
 config.custom=ActiveSync server configuration
 
-acl.readwrite=Two-way-sync (read from and write to server)
-acl.readonly=One-way-sync (read-only server access)
+acl.readwrite=Read from and write to server
+acl.readonly=Read-only server access (revert local changes)

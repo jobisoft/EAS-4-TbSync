@@ -134,5 +134,5 @@ status.notsupportedeasversion=A kiszolgáló nem támogatja a kiválasztott Acti
 config.auto=Az ActiveSync kiszolgáló beállítások (önműködő észlelés)
 config.custom=Az ActiveSync kiszolgáló beállítások
 
-acl.readwrite=Two-way-sync (read from and write to server)
-acl.readonly=One-way-sync (read-only server access)
+acl.readwrite=Read from and write to server
+acl.readonly=Read-only server access (revert local changes)

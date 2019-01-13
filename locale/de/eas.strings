@@ -134,5 +134,5 @@ status.notsupportedeasversion=Der Server unterstützt nicht die ausgewählte Act
 config.auto=ActiveSync Server Konfiguration (Autodiscover)
 config.custom=ActiveSync Server Konfiguration
 
-acl.readwrite=Zwei-Wege-Synchronisation (Serverzugriff lesend und schreibend)
-acl.readonly=Ein-Weg-Synchronisation (Serverzugriff nur lesend, verwerfe lokale Änderungen)
+acl.readwrite=Serverzugriff lesend und schreibend
+acl.readonly=Serverzugriff nur lesend (verwerfe lokale Änderungen)

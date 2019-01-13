@@ -134,5 +134,5 @@ status.notsupportedeasversion=Сервер не поддерживает выб�
 config.auto=ActiveSync конфигурация сервера (Автообнаружение)
 config.custom=ActiveSync конфигурация сервера
 
-acl.readwrite=Two-way-sync (read from and write to server)
-acl.readonly=One-way-sync (read-only server access)
+acl.readwrite=Read from and write to server
+acl.readonly=Read-only server access (revert local changes)
