@@ -2103,9 +2103,24 @@ var eas = {
         },
 
         //not part of API
-        updateReadOnly: function (account, folderID, value) {
+        updateReadOnly: function (event) {
+            let p = event.target.parentNode.parentNode;
+            let account = p.getAttribute('account');
+            let folderID = p.getAttribute('folderID');
+            let value = event.target.value;
             let type = tbSync.db.getFolderSetting(account, folderID, "type");
+
+            //update value
             tbSync.db.setFolderSetting(account, folderID, "downloadonly", value);
+
+            //update icon
+            if (value == "0") {
+                p.setAttribute('image','chrome://tbsync/skin/acl_rw.png');
+            } else {
+                p.setAttribute('image','chrome://tbsync/skin/acl_ro.png');
+            }
+                
+            //update ro flag if calendar
             switch (type) {
                 case "8":
                 case "13":
@@ -2153,14 +2168,14 @@ var eas = {
                 menuitem1.setAttribute("class", "menuitem-iconic");
                 menuitem1.setAttribute("label", tbSync.getLocalizedMessage("acl.readonly", "eas"));
                 menuitem1.setAttribute("image", "chrome://tbsync/skin/acl_ro2.png");
-                menuitem1.setAttribute("oncommand", "let p = this.parentNode.parentNode; p.setAttribute('image','chrome://tbsync/skin/acl_ro.png');tbSync.eas.folderList.updateReadOnly(p.getAttribute('account'), p.getAttribute('folderID'), '1');"  );
+                menuitem1.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
 
                 let menuitem2 = document.createElement("menuitem");
-                menuitem1.setAttribute("value", "0");
+                menuitem2.setAttribute("value", "0");
                 menuitem2.setAttribute("class", "menuitem-iconic");
                 menuitem2.setAttribute("label", tbSync.getLocalizedMessage("acl.readwrite", "eas"));
                 menuitem2.setAttribute("image", "chrome://tbsync/skin/acl_rw2.png");
-                menuitem2.setAttribute("oncommand", "let p = this.parentNode.parentNode; p.setAttribute('image','chrome://tbsync/skin/acl_rw.png'); tbSync.eas.folderList.updateReadOnly(p.getAttribute('account'), p.getAttribute('folderID'), '0');"  );
+                menuitem2.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
 
                 menupopup.appendChild(menuitem2);
                 menupopup.appendChild(menuitem1);
