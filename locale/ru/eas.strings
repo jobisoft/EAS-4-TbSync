@@ -77,7 +77,7 @@ status.networkerror=Не удалось подключиться к сервер
 status.404=Пользователь не найден (HTTP Ошибка 404).
 status.403=Сервер отклонил соединение (запрещено) (HTTP Ошибка 403).
 status.401=Не удалось аутентифицировать, проверить имя пользователя и пароль. (HTTP Ошибка 401).
-status.449=Серверные запросы резервируются (HTTP Ошибка 449).
+status.449=Серверные запросы дублируются (HTTP Ошибка 449).
 status.500=Неизвестная ошибка сервера (HTTP Ошибка 500).
 status.503=Сервис недоступен (HTTP Ошибка 503).
 status.httperror=Ошибка связи (HTTP статус ##replace.1##).
@@ -125,7 +125,7 @@ helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-
 status.ServerRejectedSomeItems=Сервер EAS не принял элементы ##replace.1##.
 status.ServerRejectedRequest=Сервер EAS отклонил наш последний запрос.
 
-status.BadItemSkipped=Bad Item Skipped: ##replace.1##
+status.BadItemSkipped=Плохой элемент пропущен: ##replace.1##
 helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 
 status.nosupportedeasversion=Сервер не поддерживает ActiveSync v2.5 или v14.0 (только ##replace.1##). TbSync не будет работать с этим ActiveSync сервером.
@@ -134,5 +134,5 @@ status.notsupportedeasversion=Сервер не поддерживает выб�
 config.auto=ActiveSync конфигурация сервера (Автообнаружение)
 config.custom=ActiveSync конфигурация сервера
 
-acl.readwrite=Read from and write to server
-acl.readonly=Read-only server access (revert local changes)
+acl.readwrite=Читать и писать на сервер
+acl.readonly=Доступ к серверу только для чтения (отменить локальные изменения)
