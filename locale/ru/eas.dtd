@@ -22,7 +22,7 @@
 <!ENTITY pref.contactoptions "Контактная информация">
 <!ENTITY pref.birthday "Отправить информацию о днях рождения">
 <!ENTITY pref.generaloptions "Общие настройки">
-<!ENTITY pref.provision "Заставить резервировать (требуется для Kerio)">
+<!ENTITY pref.provision "Заставить поддерживать (требуется для Kerio)">
 <!ENTITY pref.galautocomplete "Включить результаты из глобальной адресной книги (GAL) в автозаполнение электронной почты">
 
 <!ENTITY pref.ShowTrashedFolders "Показывать папки, найденные в корзине">
