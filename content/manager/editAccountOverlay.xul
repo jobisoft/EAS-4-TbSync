@@ -12,7 +12,7 @@
     <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
     <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />
 
-    <tabpanel id="manager.tabpanels.accountsettings" appendto="manager.tabpanels" flex="1"><!-- ACCOUNT SETTINGS -->
+    <tabpanel id="manager.tabpanels.accountsettings" appendto="manager.tabpanels" flex="1" orient="vertical"><!-- ACCOUNT SETTINGS -->
            <vbox flex="1">
                 <label class="header lockIfConnected" style="margin-left:0; margin-bottom:1ex;" value="" id="tbsync.accountsettings.label.config" />                
                 <grid flex="1">
@@ -76,16 +76,16 @@
             </vbox>
     </tabpanel>
 
-    <tabpanel id="manager.tabpanels.syncsettings" appendto="manager.tabpanels" flex="1"><!-- SYNC SETTINGS -->
+    <tabpanel id="manager.tabpanels.syncsettings" appendto="manager.tabpanels" flex="1" orient="vertical"><!-- SYNC SETTINGS -->
           <vbox flex="1">
                 <label style="margin-left:0; margin-bottom: 1ex;" class="header lockIfConnected" value="&pref.generaloptions;"/>
                 <vbox>                            
-                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.downloadonly" label="&pref.downloadonly;"  />
                     <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
                 </vbox>                            
 
                 <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="&pref.contactoptions;"/>
                 <vbox>                            
+                    <checkbox id="tbsync.accountsettings.pref.galautocomplete" label="&pref.galautocomplete;" />
                     <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
                     <hbox align="center">
                         <!-- menulist id="tbsync.accountsettings.pref.seperator"></menulist-->

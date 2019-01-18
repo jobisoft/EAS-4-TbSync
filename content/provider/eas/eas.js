@@ -50,10 +50,10 @@ var eas = {
             if (eas.defaultTimezone.icalComponent) {
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
             } else {
-                tbSync.synclog("Critical Warning","Default timezone is not defined, using UTC!");
+                tbSync.errorlog(null, "Default timezone is not defined, using UTC!");
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.utcTimezone);
             }
-            
+
             //get windows timezone data from CSV
             let csvData = yield eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
             for (let i = 0; i<csvData.length; i++) {
@@ -272,7 +272,6 @@ var eas = {
             "provision" : "0",
             "birthday" : "0",
             "displayoverride" : "0", 
-            "downloadonly" : "0",
             "autosync" : "0",
             "horde" : "0",
             "lastEasOptionsUpdate":"0",
@@ -280,10 +279,10 @@ var eas = {
             "allowedEasCommands": "",
             "useragent": tbSync.prefSettings.getCharPref("eas.clientID.useragent"),
             "devicetype": tbSync.prefSettings.getCharPref("eas.clientID.type"),
+            "galautocomplete": "1", 
             }; 
         return row;
     },
-
 
 
     /**
@@ -304,7 +303,7 @@ var eas = {
             "status" : "",
             "parentID" : "",
             "useChangeLog" : "1", //log changes into changelog
-            "downloadonly" : tbSync.db.getAccountSetting(account, "downloadonly"), //each folder has its own settings, the main setting is just the default,
+            "downloadonly" : "0",
             };
         return folder;
     },
@@ -315,7 +314,7 @@ var eas = {
      * Returns an array of folder settings, that should survive disable and re-enable
      */
     getPersistentFolderSettings: function () {
-        return ["targetName", "targetColor"];
+        return ["targetName", "targetColor", "downloadonly"];
     },
 
 
@@ -432,7 +431,7 @@ var eas = {
         newCalendar.setProperty("color", tbSync.db.getFolderSetting(account, folderID, "targetColor"));
         newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
         newCalendar.setProperty("calendar-main-in-composite",true);
-
+        newCalendar.setProperty("readOnly", tbSync.db.getFolderSetting(account, folderID, "downloadonly") == "1");
         calManager.registerCalendar(newCalendar);
 
         //is there an email identity we can associate this calendar to? 
@@ -457,18 +456,24 @@ var eas = {
      * It is used for autocompletion while typing something into the address field of the message composer and for the address book search,
      * if something is typed into the search field of the Thunderbird address book.
      *
-     * TbSync will execute this only for queries longer than 3 chars.
-     *
      * DO NOT IMPLEMENT AT ALL, IF NOT SUPPORTED
+     *
+     * TbSync will execute this only for queries longer than 3 chars.
      *
      * @param account       [in] id of the account which should be searched
      * @param currentQuery  [in] search query
+     * @param caller  [in] "autocomplete" or "search"
+    
      */
-    abServerSearch: Task.async (function* (account, currentQuery)  {
+    abServerSearch: Task.async (function* (account, currentQuery, caller)  {
         if (!tbSync.db.getAccountSetting(account, "allowedEasCommands").split(",").includes("Search")) {
             return null;
         }
 
+        if (caller == "autocomplete" && tbSync.db.getAccountSetting(account, "galautocomplete") != "1") {
+            return null;
+        }
+        
         let wbxml = wbxmltools.createWBXML();
         wbxml.switchpage("Search");
         wbxml.otag("Search");
@@ -502,22 +507,28 @@ var eas = {
                     //tbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
                     let resultset = {};
 
-                    resultset.properties = {};                    
-                    resultset.properties["FirstName"] = results[count].Properties.FirstName;
-                    resultset.properties["LastName"] = results[count].Properties.LastName;
-                    resultset.properties["DisplayName"] = results[count].Properties.DisplayName;
-                    resultset.properties["PrimaryEmail"] = results[count].Properties.EmailAddress;
-                    resultset.properties["CellularNumber"] = results[count].Properties.MobilePhone;
-                    resultset.properties["HomePhone"] = results[count].Properties.HomePhone;
-                    resultset.properties["WorkPhone"] = results[count].Properties.Phone;
-                    resultset.properties["Company"] = accountname; //results[count].Properties.Company;
-                    resultset.properties["Department"] = results[count].Properties.Title;
-                    resultset.properties["JobTitle"] = results[count].Properties.Office;
-
-                    resultset.autocomplete = {};                    
-                    resultset.autocomplete.value = results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">";
-                    resultset.autocomplete.account = account;
-                        
+                    switch (caller) {
+                        case "search":
+                            resultset.properties = {};                    
+                            resultset.properties["FirstName"] = results[count].Properties.FirstName;
+                            resultset.properties["LastName"] = results[count].Properties.LastName;
+                            resultset.properties["DisplayName"] = results[count].Properties.DisplayName;
+                            resultset.properties["PrimaryEmail"] = results[count].Properties.EmailAddress;
+                            resultset.properties["CellularNumber"] = results[count].Properties.MobilePhone;
+                            resultset.properties["HomePhone"] = results[count].Properties.HomePhone;
+                            resultset.properties["WorkPhone"] = results[count].Properties.Phone;
+                            resultset.properties["Company"] = accountname; //results[count].Properties.Company;
+                            resultset.properties["Department"] = results[count].Properties.Title;
+                            resultset.properties["JobTitle"] = results[count].Properties.Office;
+                            break;
+                       
+                        case "autocomplete":
+                            resultset.autocomplete = {};                    
+                            resultset.autocomplete.value = results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">";
+                            resultset.autocomplete.account = account;
+                            break;
+                    }
+                    
                     galdata.push(resultset);
                 }
             }
@@ -548,6 +559,37 @@ var eas = {
                 window.HandleLink(email3Element, window.zSecondaryEmail, email3Value, email3Box, "mailto:" + email3Value);
             }
         }
+        
+        let phoneNumbers = {
+            easPhWork2: "Business2PhoneNumber",
+            easPhWorkFax: "BusinessFaxNumber",
+            easPhCompany: "CompanyMainPhone",
+            easPhAssistant: "AssistantPhoneNumber",
+            easPhHome2: "Home2PhoneNumber",
+            easPhCar: "CarPhoneNumber",
+            easPhRadio: "RadioPhoneNumber"
+        };
+        
+        let phoneFound = false;
+        for (let field in phoneNumbers) {
+            if (phoneNumbers.hasOwnProperty(field)) {
+                let element = window.document.getElementById(field);
+                if (element) {
+                    let value = card.getProperty(phoneNumbers[field],"");
+                    if (value) {
+                        element.hidden = false;
+                        element.textContent = element.getAttribute("labelprefix") + " " + value;
+                        phoneFound = true;
+                    }
+                }
+            }
+        }
+
+        if (phoneFound) {
+            window.document.getElementById("cvbPhone").collapsed = false;
+            window.document.getElementById("cvhPhone").collapsed = false;
+        }
+        
     },
     
 
@@ -662,7 +704,7 @@ var eas = {
                     
                 switch (report.type) {
                     case eas.flags.resyncAccount:
-                        tbSync.synclog("SyncError", "Account Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Reason: " + report.message);                        
+                        tbSync.errorlog(syncdata, "Forced Account Resync", report.message);                        
                         continue;
 
                     case eas.flags.abortWithServerError: 
@@ -672,7 +714,8 @@ var eas = {
                             switch (errorcode) {
                                 case 401:
                                 case 403: //failed to authenticate
-                                    tbSync.finishAccountSync(syncdata, "401");
+                                    report.message = "401"
+                                    tbSync.finishAccountSync(syncdata, report);
                                     return;                            
                                 case 200: //server and/or user was updated, retry
                                     Services.obs.notifyObservers(null, "tbsync.updateAccountSettingsGui", syncdata.account);
@@ -684,13 +727,14 @@ var eas = {
                     case eas.flags.abortWithError: //fatal error, finish account sync
                     case eas.flags.syncNextFolder: //no more folders left, finish account sync
                     case eas.flags.resyncFolder: //should not happen here, just in case
-                        tbSync.finishAccountSync(syncdata, report.message);
+                        tbSync.finishAccountSync(syncdata, report);
                         return;
 
                     default:
                         //there was some other error
+                        report.type = "JavaScriptError";
+                        tbSync.finishAccountSync(syncdata, report);
                         Components.utils.reportError(report);
-                        tbSync.finishAccountSync(syncdata, "javascriptError");
                         return;
                 }
 
@@ -751,22 +795,25 @@ var eas = {
                     //only add allowed folder types to DB
                     if (!["9","14","8","13","7","15"].includes(add[count].Type)) 
                         continue;
-                                        
-                    //create folder obj for new  folder settings
-                    let newFolderSettings = {};
-                    newFolderSettings.folderID = add[count].ServerId;
-                    newFolderSettings.name = add[count].DisplayName;
-                    newFolderSettings.type = add[count].Type;
-                    newFolderSettings.parentID = add[count].ParentId;
-                    newFolderSettings.selected = "0";
 
-                    if (tbSync.prefSettings.getBoolPref("eas.fix4freedriven")) {
-                        let target = tbSync.db.getFolderSetting(syncdata.account, add[count].ServerId, "target");                    
-                        if (target) newFolderSettings.target = target;
+                    let existingFolder = tbSync.db.getFolder(syncdata.account, add[count].ServerId);
+                    if (existingFolder !== null && existingFolder.cached == "0") {
+                        //there was an error at the server, he has send us an ADD for a folder we alreay have, treat as update
+                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "name", add[count].DisplayName);
+                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "type", add[count].Type);
+                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "parentID", add[count].ParentId);
+                    } else {
+                        //create folder obj for new  folder settings
+                        let newFolder = {};
+
+                        newFolder.folderID = add[count].ServerId;
+                        newFolder.name = add[count].DisplayName;
+                        newFolder.type = add[count].Type;
+                        newFolder.parentID = add[count].ParentId;
+
+                        //if there is a cached version of this folderID, addFolder will merge all persistent settings - all other settings not defined here will be set to their defaults
+                        tbSync.db.addFolder(syncdata.account, newFolder);
                     }
-
-                    //if there is a cached version of this folderID, addFolder will merge all persistent settings - all other settings not defined here will be set to their defaults
-                    tbSync.db.addFolder(syncdata.account, newFolderSettings);
                 }
                 
                 //looking for updates
@@ -824,6 +871,7 @@ var eas = {
 
             //The individual folder sync is placed inside a try ... catch block. If a folder sync has finished, a throwFinishSync error is thrown
             //and catched here. If that error has a message attached, it ist re-thrown to the main account sync loop, which will abort sync completely
+            let calendarReadOnlyStatus = null;
             try {
                 
                 //resync loop control
@@ -903,41 +951,50 @@ var eas = {
                         syncdata.targetObj = cal.async.promisifyCalendar(syncdata.calendarObj.wrappedJSObject);
 
                         syncdata.calendarObj.startBatch();
+                        //save current value of readOnly (or take it from the setting
+                        calendarReadOnlyStatus = syncdata.calendarObj.getProperty("readOnly") || (tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "downloadonly") == "1");                       
+                        syncdata.calendarObj.setProperty("readOnly", false);
                         yield eas.sync.start(syncdata);
-                        syncdata.calendarObj.endBatch();
-
                         break;
                 }
 
             } catch (report) { 
-
+                
+                if (calendarReadOnlyStatus !== null) { //null, true, false
+                    syncdata.calendarObj.setProperty("readOnly", calendarReadOnlyStatus);
+                    syncdata.calendarObj.endBatch();
+                }
+                
                 switch (report.type) {
                     case eas.flags.abortWithError:  //if there was a fatal error during folder sync, re-throw error to finish account sync (with error)
                     case eas.flags.abortWithServerError:
                     case eas.flags.resyncAccount:   //if the entire account needs to be resynced, finish this folder and re-throw account (re)sync request                                                    
-                        tbSync.finishFolderSync(syncdata, report.message);
-                        throw eas.finishSync(report.message, report.type);
+                        tbSync.finishFolderSync(syncdata, report);
+                        throw report;
                         break;
 
                     case eas.flags.syncNextFolder:
-                        tbSync.finishFolderSync(syncdata, report.message);
+                        tbSync.finishFolderSync(syncdata, report);
                         break;
                                             
                     case eas.flags.resyncFolder:
-                        //takeTargetOffline will backup the current folder and on next run, a fresh copy 
-                        //of the folder will be synced down - the folder itself is NOT deleted
-                        tbSync.synclog("SyncError", "Folder Resync", "Account: " + tbSync.db.getAccountSetting(syncdata.account, "accountname") + ", Folder: "+ tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ", Reason: " + report.message);
-                        tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
+                        if (report.message == "RevertViaFolderResync") {
+                            //the user requested to throw away local modifications, no need to backup, just invalidate the synckey
+                            eas.onResetTarget(syncdata.account, syncdata.folderID);
+                        } else {
+                            //takeTargetOffline will backup the current folder and on next run, a fresh copy 
+                            //of the folder will be synced down - the folder itself is NOT deleted
+                            tbSync.errorlog(syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
+                            tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
+                        }
                         continue;
                     
                     default:
-                        Components.utils.reportError(report);
-                        let msg = "javascriptError";
-                        tbSync.finishFolderSync(syncdata, msg);
+                        report.type = "JavaScriptError";
+                        tbSync.finishFolderSync(syncdata, report);
                         //this is a fatal error, re-throw error to finish account sync
-                        throw eas.finishSync(msg, eas.flags.abortWithError);
+                        throw report;
                 }
-
             }
 
         }
@@ -1063,7 +1120,7 @@ var eas = {
                         wbxml.atag("Class", syncdata.type); //only 2.5
                         wbxml.atag("CollectionId", syncdata.folderID);
                         wbxml.switchpage("AirSync");
-                        wbxml.atag("FilterType", tbSync.prefSettings.getIntPref("eas.synclimit").toString());
+                        wbxml.atag("FilterType", eas.tools.getFilterType());
                         wbxml.atag("SyncKey", syncdata.synckey);
                         wbxml.switchpage("GetItemEstimate");
                     } else { //14.0
@@ -1073,7 +1130,7 @@ var eas = {
                         wbxml.atag("CollectionId", syncdata.folderID);
                         wbxml.switchpage("AirSync");
                         wbxml.otag("Options");
-                            if (syncdata.type == "Calendar") wbxml.atag("FilterType", tbSync.prefSettings.getIntPref("eas.synclimit").toString()); //0, 4,5,6,7
+                            if (syncdata.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
                             wbxml.atag("Class", syncdata.type);
                         wbxml.ctag();
                         wbxml.switchpage("GetItemEstimate");
@@ -1198,10 +1255,12 @@ var eas = {
         }
     }),
 
-    finishSync: function (msg = "", type = eas.flags.syncNextFolder) {
+    finishSync: function (msg = "", type = null, details = "") {
         let e = new Error(); 
-        e.type = type;
+        e.type = type ? type : eas.flags.syncNextFolder;
         e.message = msg;
+        e.details = details
+        e.failed = (msg != "");
         return e; 
     },    
     
@@ -1228,6 +1287,12 @@ var eas = {
     },
         
     logxml : function (wbxml, what) {
+        let rawxml = tbSync.wbxmltools.convert2xml(wbxml);
+        let xml = null;
+        if (rawxml)  {
+            xml = rawxml.split('><').join('>\n<');
+        }
+        
         //include xml in log, if userdatalevel 2 or greater
         if ((tbSync.prefSettings.getBoolPref("log.toconsole") || tbSync.prefSettings.getBoolPref("log.tofile")) && tbSync.prefSettings.getIntPref("log.userdatalevel")>1) {
 
@@ -1239,17 +1304,16 @@ var eas = {
                 tbSync.dump("WBXML: " + what, "\n" + bytestring);
             }
 
-            let rawxml = tbSync.wbxmltools.convert2xml(wbxml);
-            if (rawxml === false) {
-                tbSync.dump(what +" (XML)", "\nFailed to convert WBXML to XML!\n");
-                return;
+            if (xml) {
+                //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
+                //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
+                tbSync.dump("XML: " + what, "\n" + xml);
+            } else {
+                tbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
             }
-            
-            //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
-            //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
-            let xml = rawxml.split('><').join('>\n<');
-            tbSync.dump("XML: " + what, "\n" + xml);
         }
+    
+    return xml;
     },
  
     getConnection: function(account) {
@@ -1442,7 +1506,8 @@ var eas = {
     sendRequest: function (wbxml, command, syncdata, allowSoftFail = false) {
         let msg = "Sending data <" + syncdata.syncstate.split("||")[0] + "> for " + tbSync.db.getAccountSetting(syncdata.account, "accountname");
         if (syncdata.folderID !== "") msg += " (" + tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ")";
-        tbSync.eas.logxml(wbxml, msg);
+        syncdata.request = tbSync.eas.logxml(wbxml, msg);
+        syncdata.response = "";
 
         let connection = tbSync.eas.getConnection(syncdata.account);
         let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
@@ -1476,13 +1541,17 @@ var eas = {
             syncdata.req.timeout = tbSync.prefSettings.getIntPref("timeout");
 
             syncdata.req.ontimeout = function () {
-                if (allowSoftFail) resolve("");
-                else reject(eas.finishSync("timeout", eas.flags.abortWithError));
+                if (allowSoftFail) {
+                    resolve("");
+                } else {
+                    reject(eas.finishSync("timeout", eas.flags.abortWithError));
+                }
             };
 
             syncdata.req.onerror = function () {
-                if (allowSoftFail) resolve("");
-                else {
+                if (allowSoftFail) {
+                    resolve("");
+                } else {
                     let error = tbSync.createTCPErrorFromFailedXHR(syncdata.req);
                     if (!error) {
                         reject(eas.finishSync("networkerror", eas.flags.abortWithServerError));
@@ -1499,7 +1568,7 @@ var eas = {
                     case 200: //OK
                         let msg = "Receiving data <" + syncdata.syncstate.split("||")[0] + "> for " + tbSync.db.getAccountSetting(syncdata.account, "accountname");
                         if (syncdata.folderID !== "") msg += " (" + tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + ")";
-                        tbSync.eas.logxml(response, msg);
+                        syncdata.response = tbSync.eas.logxml(response, msg);
 
                         //What to do on error? IS this an error? Yes!
                         if (!allowSoftFail && response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
@@ -1534,8 +1603,11 @@ var eas = {
                         break;
                         
                     default:
-                        if (allowSoftFail) resolve("");
-                        else reject(eas.finishSync("httperror::" + syncdata.req.status, eas.flags.abortWithError));
+                        if (allowSoftFail) {
+                            resolve("");
+                        } else {
+                            reject(eas.finishSync("httperror::" + syncdata.req.status, eas.flags.abortWithError));
+                        }
                 }
             };
 
@@ -1549,20 +1621,20 @@ var eas = {
         //check for empty wbxml
         if (wbxml.length === 0) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("empty-response");
+            else throw eas.finishSync("empty-response", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
         }
 
         //convert to save xml (all special chars in user data encoded by encodeURIComponent) and check for parse errors
         let xml = wbxmltools.convert2xml(wbxml);
         if (xml === false) {
-            throw eas.finishSync("wbxml-parse-error");
+            throw eas.finishSync("wbxml-parse-error", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
         }
         
         //retrieve data and check for empty data (all returned data fields are already decoded by decodeURIComponent)
         let wbxmlData = xmltools.getDataFromXMLString(xml);
         if (wbxmlData === null) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("response-contains-no-data");
+            else throw eas.finishSync("response-contains-no-data", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
         }
         
         //debug
@@ -1582,9 +1654,8 @@ var eas = {
         if (status === false) {
             let mainStatus = xmltools.getWbxmlDataField(wbxmlData, type + "." + elements[elements.length-1]);
             if (mainStatus === false) {
-                //both possible status fields are missing, report and abort
-                tbSync.synclog("Warning", "WBXML: Server response does not contain mandatory <"+fullpath+"> field . Error? Aborting Sync.");
-                throw eas.finishSync("wbxmlmissingfield::" + fullpath);
+                //both possible status fields are missing, abort
+                throw eas.finishSync("wbxmlmissingfield::" + fullpath, null, "WBXML: Server response does not contain mandatory <"+fullpath+"> field . Error? Aborting Sync.");
             } else {
                 //the alternative status could be extracted
                 status = mainStatus;
@@ -1600,36 +1671,39 @@ var eas = {
         tbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
 
         //handle errrors based on type
+        let msg = "";
         switch (type+":"+status) {
             case "Sync:3": /*
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
-                tbSync.synclog("Warning", "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
-                throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder);
+                throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder, "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
             
             case "Sync:4":
-                if (allowSoftFail) return "Mailformed request. Bug in TbSync?";
-                throw eas.finishSync("ServerRejectedRequest");                            
+                msg = "Malformed request (status 4)";
+                if (allowSoftFail) return msg;
+                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             
             case "Sync:5":
-                if (allowSoftFail) return "Temporary server issues or invalid item";
-                throw eas.finishSync("TempServerError");                            
+                msg = "Temporary server issues or invalid item (status 5)";
+                if (allowSoftFail) return msg;
+                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "Sync:6":
                 //Server does not accept one of our items or the entire request.
-                if (allowSoftFail) return "Invalid item!";
-                throw eas.finishSync("ServerRejectedRequest");                            
+                msg = "Invalid item (status 6)";
+                if (allowSoftFail) return msg;
+                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "Sync:7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
                 return "";
         
             case "Sync:8": // Object not found - takeTargetOffline and remove folder
                 {
-                    tbSync.synclog("Warning", "WBXML: Server reports <object not found> (" +  tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "name") + "), keeping local copy and removing folder.");
+                    tbSync.errorlog(syncdata, "Object not found", "WBXML: Server reports <object not found>, keeping local copy and removing folder.");
                     let folder = tbSync.db.getFolder(syncdata.account, syncdata.folderID);
                     if (folder !== null) {
-                        tbSync.takeTargetOffline("eas", folder, "[deleted from server]");
+                        tbSync.takeTargetOffline("eas", folder, "[not found on server]");
                         //folder is no longer there, unset current folder
                         syncdata.folderID = "";
                     }
@@ -1694,9 +1768,9 @@ var eas = {
                 throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
             
             default:
-                tbSync.synclog("Warning", "WBXML: Server reports unhandled status <" + fullpath + " = " + status + ">. Aborting Sync.");
-                if (allowSoftFail) return "Server reports unhandled status <" + fullpath + " = " + status + ">";
-                throw eas.finishSync("wbxmlerror::" + fullpath + " = " + status, eas.flags.abortWithError);
+                msg = "WBXML: Server reports unhandled status <" + fullpath + " = " + status + ">.";
+                if (allowSoftFail) return msg;
+                throw eas.finishSync("wbxmlerror::" + fullpath + " = " + status, eas.flags.abortWithError, msg);
 
         }		
     },
@@ -1968,7 +2042,7 @@ var eas = {
         /**
          * Returns an array of folderRowData objects, containing all information needed 
          * to fill the folderlist. The content of the folderRowData object is free to choose,
-         * it will be passed back to addRow() and updateRow()
+         * it will be passed back to getRow() and updateRow()
          *
          * @param account        [in] account id for which the folder data should be returned
          */
@@ -1989,7 +2063,7 @@ var eas = {
         /**
          * Returns a folderRowData object, containing all information needed to fill one row
          * in the folderlist. The content of the folderRowData object is free to choose, it
-         * will be passed back to addRow() and updateRow()
+         * will be passed back to getRow() and updateRow()
          *
          * Use tbSync.getSyncStatusMsg(folder, syncdata, provider) to get a nice looking 
          * status message, including sync progress (if folder is synced)
@@ -2000,10 +2074,12 @@ var eas = {
          */
         getRowData: function (folder, syncdata = null) {
             let rowData = {};
+            rowData.account = folder.account;
             rowData.folderID = folder.folderID;
             rowData.selected = (folder.selected == "1");
             rowData.type = folder.type;
             rowData.name = folder.name;
+            rowData.downloadonly = folder.downloadonly;
             rowData.statusCode = folder.status;
             rowData.statusMsg = tbSync.getSyncStatusMsg(folder, syncdata, "eas");
 
@@ -2020,31 +2096,91 @@ var eas = {
          */
         getHeader: function () {
             return [
-                {style: "font-weight:bold;", label: "", width: "51"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"155"},
+                {style: "font-weight:bold;", label: "", width: "93"},
+                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"150"},
                 {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex :"1"},
             ]
         },
 
+        //not part of API
+        updateReadOnly: function (event) {
+            let p = event.target.parentNode.parentNode;
+            let account = p.getAttribute('account');
+            let folderID = p.getAttribute('folderID');
+            let value = event.target.value;
+            let type = tbSync.db.getFolderSetting(account, folderID, "type");
 
+            //update value
+            tbSync.db.setFolderSetting(account, folderID, "downloadonly", value);
+
+            //update icon
+            if (value == "0") {
+                p.setAttribute('image','chrome://tbsync/skin/acl_rw.png');
+            } else {
+                p.setAttribute('image','chrome://tbsync/skin/acl_ro.png');
+            }
+                
+            //update ro flag if calendar
+            switch (type) {
+                case "8":
+                case "13":
+                case "7":
+                case "15":
+                    {
+                        let target = tbSync.db.getFolderSetting(account, folderID, "target");
+                        if (target != "") {
+                            let calManager = cal.getCalendarManager();
+                            let targetCal = calManager.getCalendarById(target); 
+                            targetCal.setProperty("readOnly", value == '1');
+                        }
+                    }
+                break;
+            }
+        },
 
         /**
          * Is called to add a row to the folderlist. After this call, updateRow is called as well.
          *
          * @param document        [in] document object of the account settings window
-         * @param newListItem     [in] the listitem of the row, where row items should be added to
          * @param rowData         [in] rowData object with all information needed to add the row
          * @param itemSelCheckbox [in] a checkbox object which can be used to allow the user to select/deselect this resource
          */        
-        addRow: function (document, newListItem, rowData, itemSelCheckbox) {
+        getRow: function (document, rowData, itemSelCheckbox) {
             //checkbox
-            itemSelCheckbox.setAttribute("style", "margin: 3px; padding: 0;");
+            itemSelCheckbox.setAttribute("style", "margin: 0px 0px 0px 3px;");
 
             //icon
             let itemType = document.createElement("image");
-            itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData.type));
-            itemType.setAttribute("style", "margin: 2px 6px 3px 3px;");
+            itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData));
+            itemType.setAttribute("style", "margin: 0px 9px 0px 3px;");
 
+            //read/write access             
+            let itemACL = document.createElement("button");
+            itemACL.setAttribute("image", "chrome://tbsync/skin/acl_" + (rowData.downloadonly == "1" ? "ro" : "rw") + ".png");
+            itemACL.setAttribute("class", "plain");
+            itemACL.setAttribute("style", "width: 35px; min-width: 35px; margin: 0; height:26px");
+            itemACL.setAttribute("account", rowData.account);
+            itemACL.setAttribute("folderID", rowData.folderID);
+            itemACL.setAttribute("type", "menu");
+            let menupopup = document.createElement("menupopup");
+                let menuitem1 = document.createElement("menuitem");
+                menuitem1.setAttribute("value", "1");
+                menuitem1.setAttribute("class", "menuitem-iconic");
+                menuitem1.setAttribute("label", tbSync.getLocalizedMessage("acl.readonly", "eas"));
+                menuitem1.setAttribute("image", "chrome://tbsync/skin/acl_ro2.png");
+                menuitem1.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
+
+                let menuitem2 = document.createElement("menuitem");
+                menuitem2.setAttribute("value", "0");
+                menuitem2.setAttribute("class", "menuitem-iconic");
+                menuitem2.setAttribute("label", tbSync.getLocalizedMessage("acl.readwrite", "eas"));
+                menuitem2.setAttribute("image", "chrome://tbsync/skin/acl_rw2.png");
+                menuitem2.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
+
+                menupopup.appendChild(menuitem2);
+                menupopup.appendChild(menuitem1);
+            itemACL.appendChild(menupopup);
+            
             //folder name
             let itemLabel = document.createElement("description");
             itemLabel.setAttribute("disabled", !rowData.selected);
@@ -2058,15 +2194,16 @@ var eas = {
             itemHGroup1.setAttribute("align", "center");
             itemHGroup1.appendChild(itemSelCheckbox);
             itemHGroup1.appendChild(itemType);
+            itemHGroup1.appendChild(itemACL);
 
             let itemVGroup1 = document.createElement("vbox");
-            itemVGroup1.setAttribute("style", "padding: 3px");
+            itemVGroup1.setAttribute("width", "93");
             itemVGroup1.appendChild(itemHGroup1);
 
             //group2
             let itemHGroup2 = document.createElement("hbox");
             itemHGroup2.setAttribute("align", "center");
-            itemHGroup2.setAttribute("width", "150");
+            itemHGroup2.setAttribute("width", "146");
             itemHGroup2.appendChild(itemLabel);
 
             let itemVGroup2 = document.createElement("vbox");
@@ -2076,7 +2213,7 @@ var eas = {
             //group3
             let itemHGroup3 = document.createElement("hbox");
             itemHGroup3.setAttribute("align", "center");
-            itemHGroup3.setAttribute("width", "250");
+            itemHGroup3.setAttribute("width", "200");
             itemHGroup3.appendChild(itemStatus);
 
             let itemVGroup3 = document.createElement("vbox");
@@ -2085,10 +2222,11 @@ var eas = {
 
             //final row
             let row = document.createElement("hbox");
+            row.setAttribute("style", "min-height: 24px;");
             row.appendChild(itemVGroup1);
             row.appendChild(itemVGroup2);            
             row.appendChild(itemVGroup3);            
-            newListItem.appendChild(row);                
+            return row;             
         },		
 
 
@@ -2101,23 +2239,33 @@ var eas = {
          * @param rowData        [in] rowData object with all information needed to add the row
          */        
         updateRow: function (document, item, rowData) {
-            item.childNodes[0].childNodes[1].childNodes[0].textContent = rowData.name;
+            //acl image
+            item.childNodes[0].childNodes[0].childNodes[0].childNodes[2].setAttribute("image", "chrome://tbsync/skin/acl_" + (rowData.downloadonly == "1" ? "ro" : "rw") + ".png");
+
+            //select checkbox
+            if (rowData.selected) {
+                item.childNodes[0].childNodes[0].childNodes[0].childNodes[0].setAttribute("checked", true);
+            } else {
+                item.childNodes[0].childNodes[0].childNodes[0].childNodes[0].removeAttribute("checked");
+            }
+
+            if (item.childNodes[0].childNodes[1].childNodes[0].textContent != rowData.name) item.childNodes[0].childNodes[1].childNodes[0].textContent = rowData.name;
+            if (item.childNodes[0].childNodes[2].childNodes[0].textContent != rowData.statusMsg) item.childNodes[0].childNodes[2].childNodes[0].textContent = rowData.statusMsg;
             item.childNodes[0].childNodes[1].childNodes[0].setAttribute("disabled", !rowData.selected);
             item.childNodes[0].childNodes[1].childNodes[0].setAttribute("style", rowData.selected ? "" : "font-style:italic");
             item.childNodes[0].childNodes[2].childNodes[0].setAttribute("style", rowData.selected ? "" : "font-style:italic");
-            //item.childNodes[0].childNodes[2].childNodes[0].setAttribute("style", eas.tools.updateListItemStyle(rowData));
-            item.childNodes[0].childNodes[2].childNodes[0].textContent = rowData.statusMsg;
         },
 
 
         /**
-         * Return the icon used in the folderlist to represent the different folder types
+         * Return the icon used in the folderlist to represent the different folder types 
+         * Not part of API, only called by getRow
          *
-         * @param type       [in] provider folder type
+         * @param rowData       [in] rowData object
          */
-        getTypeImage: function (type) {
+        getTypeImage: function (rowData) {
             let src = ""; 
-            switch (type) {
+            switch (rowData.type) {
                 case "9": 
                 case "14": 
                     src = "contacts16.png";

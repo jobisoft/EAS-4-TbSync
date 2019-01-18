@@ -69,7 +69,6 @@ syncstate.send.request.localdeletes=In attesa del riconoscimento delle eliminazi
 syncstate.eval.response.localdeletes=Elaborazione riconoscimento eliminazioni locali in corso
 
 status.notsyncronized=L'account deve essere sincronizzato, almeno un elemento non è sincronizzato.
-status.needtorevert=L'account deve essere sincronizzato per eliminare le modifiche locali (sincronizzazione a una via).
 status.disabled=L'account non è abilitato, la sincronizzazione è disabilitata.
 status.notargets=Interruzione sincronizzazione in corso: non è possibile creare le destinazioni sincronizzazione.
 status.nouserhost=Nome utente e/o server mancanti. Fornire tali valori.
@@ -82,17 +81,21 @@ status.449=Il server richiede il provisioning.
 status.500=Errore server sconosciuto (errore HTTP 500).
 status.503=Servizio non disponibile.
 status.httperror=Errore di comunicazione (stato HTTP ##replace.1##).
+status.empty-response=Il server invia una risposta vuota inaspettata.
+status.wbxml-parse-error=Il server invia una risposta illeggibile.
+status.response-contains-no-data=La risposta dal server non contiene dati.
 status.wbxmlerror=Sincronizzazione non riuscita. Il server ha risposto con lo stato <##replace.1##>.
 status.wbxmlmissingfield=Violazione protocollo ActiveSync: il campo obbligatorio <##replace.1##> manca dalla risposta del server.
 status.OK=OK
 status.nolightning=Componente aggiuntivo Lightning non installato, i calendari non sono supportati.
-status.javascriptError=Errore JavaScript! Consultare il log di debug per i dettagli.
-status.mailformed-xml=Impossibile eseguire il parsing dell'XML. Consultare il log di debug per i dettagli.
+status.JavaScriptError=Errore JavaScript!
+status.mailformed-xml=Impossibile eseguire il parsing dell'XML. Consultare il log di errore per i dettagli.
 status.invalid=Risposta del server non valida (inutile).
 status.InvalidServerOptions=Il server non fornisce informazioni sulle versioni di ActiveSync supportate. EAS è bloccato per questo utente o questo client (TbSync)? È possibile provare a impostare manualmente la versione di ActiveSync.
-status.foldererror=Almeno una risorsa ha riscontrato un errore di sincronizzazione.
+status.foldererror=Almeno una risorsa ha riscontrato un errore di sincronizzazione. Consultare il log di errore per i dettagli.
 
-status.security=Impossibile stabilire una connessione sicura. Si sta utilizzando un certificato autofirmato o non affidabile senza averlo importato in Thunderbird? (##replace.1##)||How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F||[Guida]
+status.security=Impossibile stabilire una connessione sicura. Si sta utilizzando un certificato autofirmato o non affidabile senza averlo importato in Thunderbird? (##replace.1##)
+helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
 status.network=Impossibile collegarsi al server (##replace.1##).
 
 status.syncing=Sincronizzazione in corso
@@ -116,16 +119,20 @@ status.folderDelete.6=Impossibile completare il comando, si è verificato un err
 status.global.101=La richiesta contiene WBXML ma non è possibile decodificarlo in XML (errore 101).
 status.global.102=La richiesta contiene WBXML ma non è possibile decodificarlo in XML (errore 102).
 status.global.103=L'XML fornito nella richiesta non rispetta i requisiti del protocollo (errore 103).
-status.global.clientdenied=Il server EAS segnala <##replace.2##> (stato ##replace.1##) e non consente a TbSync l'accesso al proprio account.||What-if-TbSync-is-blocked-by-my-server%3F||[Guida]
+status.global.clientdenied=Il server EAS segnala <##replace.2##> (stato ##replace.1##) e non consente a TbSync l'accesso al proprio account.
+helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
 
-status.ServerRejectedSomeItems=Il server EAS server ha accettato solo ##replace.2## elementi e ha rifiutato quelli rimanenti per i seguenti motivi: ##replace.1##. Controllare il log di debug, in particolare i messaggi "Bad item skipped".||Error:-Bad-item-skipped||[help]
-status.ServerRejectedAllItems=Il server EAS ha rifiutato gli elementi per i seguenti motivi: ##replace.1##. Controllare il log di debug, in particolare i messaggi "Bad item skipped".||Error:-Bad-item-skipped||[help]
-status.ServerRejectedRequest=Il server EAS ha rifiutato l'ultima richiesta. Controllare il log di debug per ulteriori informazioni.
-status.TempServerError=Il server ha segnalato un problema temporaneo di sistema o un elemento errato. Questa condizione è frequentemente temporanea (riprovare in seguito).
+status.ServerRejectedSomeItems=Il server EAS non ha accettato ##replace.1## elementi.
+status.ServerRejectedRequest=Il server EAS ha rifiutato l'ultima richiesta.
+
+status.BadItemSkipped=Bad Item Skipped: ##replace.1##
+helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 
 status.nosupportedeasversion=Il server non supporta ActiveSync v2.5 o v14.0 (solo ##replace.1##). TbSync non funzionerà con questo server ActiveSync.
 status.notsupportedeasversion=Il server non supporta la versione di ActiveSync selezionata ##replace.1## (solo ##replace.2##).
 
 config.auto=Configurazione server ActiveSync (rilevamento automatico)
 config.custom=Configurazione server ActiveSync
-config.outlook.com=Configurazione server per account Outlook.com
+
+acl.readwrite=Read from and write to server
+acl.readonly=Read-only server access (revert local changes)

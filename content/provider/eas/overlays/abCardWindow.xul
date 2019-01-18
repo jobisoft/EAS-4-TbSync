@@ -31,9 +31,9 @@
           <!-- WORK -->
           <groupbox>
             <caption label="&abCard.header.worknumbers;"/>
+            <hbox id="CompanyMainPhoneContainer" align="center"><spacer flex="1"/><label control="CompanyMainPhone" value="&abCard.CompanyMainPhone;"/><textbox id="CompanyMainPhone" class="easProperty PhoneEditWidth" /></hbox>
             <hbox id="Business2PhoneNumberContainer" align="center"><spacer flex="1"/><label control="Business2PhoneNumber" value="&abCard.Business2PhoneNumber;"/><textbox id="Business2PhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
             <hbox id="BusinessFaxNumberContainer" align="center" insertafter="FaxNumberContainer"><spacer flex="1"/><label control="BusinessFaxNumber" value="&abCard.BusinessFaxNumber;"/><textbox id="BusinessFaxNumber" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="CompanyMainPhoneContainer" align="center"><spacer flex="1"/><label control="CompanyMainPhone" value="&abCard.CompanyMainPhone;"/><textbox id="CompanyMainPhone" class="easProperty PhoneEditWidth" /></hbox>
             <hbox id="AssistantPhoneNumberContainer" align="center"><spacer flex="1"/><label control="AssistantPhoneNumber" value="&abCard.AssistantPhoneNumber;"/><textbox id="AssistantPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
           </groupbox>
           <!-- HOME -->

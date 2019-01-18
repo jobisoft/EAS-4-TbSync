@@ -20,10 +20,10 @@
 <!ENTITY pref.usehttps "Use secure connection (connect via https)">
 <!ENTITY pref.DeviceId "ActiveSync device ID">
 <!ENTITY pref.birthday "Send birthday information">
-<!ENTITY pref.downloadonly "Revert local changes (one-way sync)">
 <!ENTITY pref.generaloptions "General">
 <!ENTITY pref.contactoptions "Contacts">
 <!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
+<!ENTITY pref.galautocomplete "Include results from global adress book (GAL) in email autocompletion">
 
 <!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
 
@@ -38,8 +38,8 @@
 
 <!ENTITY abCard.MiddleName "Middle name:">
 <!ENTITY abCard.Email3Address "Alternative Email:">
-<!ENTITY abCard.Home2PhoneNumber "Home Phone 2:">
-<!ENTITY abCard.Business2PhoneNumber "Work Phone 2:">
+<!ENTITY abCard.Home2PhoneNumber "Home Alternative Phone:">
+<!ENTITY abCard.Business2PhoneNumber "Work Alternative Phone:">
 <!ENTITY abCard.BusinessFaxNumber "Work Fax:">
 
 <!ENTITY abCard.ManagerName "Manager:">
@@ -67,5 +67,5 @@
 <!ENTITY abCard.header.otheraddress "Other Address (EAS)">
 
 <!ENTITY manager.tabs.accountsettings "Account settings">
-<!ENTITY manager.tabs.syncsettings "Synchronisation settings">
-<!ENTITY manager.tabs.outOfOffice "Autoresponder">
+<!ENTITY manager.tabs.syncsettings "Options">
+<!ENTITY manager.tabs.outOfOffice "Auto responder">

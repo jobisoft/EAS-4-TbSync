@@ -15,15 +15,15 @@
 <!ENTITY pref.UserName "Felhasználónév">
 <!ENTITY pref.UserNameDescription "A felhasználónév általában a fiókod e-mail címe.">
 <!ENTITY pref.ServerName "Kiszolgáló címe">
-<!ENTITY pref.ActiveSyncVersion "?? ActiveSync Version ??">
+<!ENTITY pref.ActiveSyncVersion "ActiveSync verzió">
 <!ENTITY pref.ServerNameDescription "például: posta.kiszolgálód.hu">
 <!ENTITY pref.usehttps "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)">
-<!ENTITY pref.DeviceId "?? ActiveSync device ID ??">
+<!ENTITY pref.DeviceId "ActiveSync eszközazonosító">
 <!ENTITY pref.birthday "Születésnapi adatok küldése">
-<!ENTITY pref.downloadonly "A helyi változások visszaállítása (egyirányú összehangolás)">
-<!ENTITY pref.generaloptions "?? General ??">
-<!ENTITY pref.contactoptions "?? Contacts ??">
+<!ENTITY pref.generaloptions "Általános">
+<!ENTITY pref.contactoptions "Névjegyzék">
 <!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
+<!ENTITY pref.galautocomplete "A globális címjegyzékből (GAL) kapott eredményeket e-mailben töltse ki automatikusan">
 
 <!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése" >
 
@@ -66,6 +66,6 @@
 <!ENTITY abCard.header.eas "Egyéb mezők (EAS)">
 <!ENTITY abCard.header.otheraddress "Egyéb cím (EAS)">
 
-<!ENTITY manager.tabs.accountsettings "?? Account settings ??">
-<!ENTITY manager.tabs.syncsettings "?? Synchronisation settings ??"> <!-- if too long, just "Options" would also be ok -->
+<!ENTITY manager.tabs.accountsettings "Fiók beállításai">
+<!ENTITY manager.tabs.syncsettings "Beállítások">
 <!ENTITY manager.tabs.outOfOffice "Önműködő válasz">
