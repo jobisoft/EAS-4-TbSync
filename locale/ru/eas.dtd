@@ -61,7 +61,7 @@
 <!ENTITY abCard.header.worknumbers "Дополнительные рабочие номера:">
 <!ENTITY abCard.header.homenumbers "Дополнительные домашние номера:">
 <!ENTITY abCard.header.othernumbers "Дополнительные номера:">
-<!ENTITY abCard.header.messaging "Мессаджер:">
+<!ENTITY abCard.header.messaging "Мессенджер:">
 <!ENTITY abCard.header.people "Люди:">
 <!ENTITY abCard.header.eas "Другие поля (EAS)">
 <!ENTITY abCard.header.otheraddress "Другой адрес (EAS)">
