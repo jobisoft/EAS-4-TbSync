@@ -1698,17 +1698,10 @@ var eas = {
             case "Sync:7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
                 return "";
         
-            case "Sync:8": // Object not found - takeTargetOffline and remove folder
-                {
-                    tbSync.errorlog(syncdata, "Object not found", "WBXML: Server reports <object not found>, keeping local copy and removing folder.");
-                    let folder = tbSync.db.getFolder(syncdata.account, syncdata.folderID);
-                    if (folder !== null) {
-                        tbSync.takeTargetOffline("eas", folder, "[not found on server]");
-                        //folder is no longer there, unset current folder
-                        syncdata.folderID = "";
-                    }
-                    throw eas.finishSync();
-                }
+            case "Sync:8": // Object not found
+                msg = "Object not found (status 8)";
+                if (allowSoftFail) return msg;
+                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "Sync:9": //User account could be out of disk space, also send if no write permission (TODO)
                 return "";
