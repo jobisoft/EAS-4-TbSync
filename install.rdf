@@ -17,6 +17,7 @@
         <em:translator>Alessandro Menti (it)</em:translator>
         <em:translator>Óvári (hu)</em:translator>
         <em:translator>Alexey Sinitsyn (ru)</em:translator>
+        <em:translator>Wanderlei Hüttel (pt-BR)</em:translator>
         <em:contributor>Chris Allan (recurring events)</em:contributor>
         <em:contributor>Emil Ljungdahl</em:contributor>
         <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
@@ -44,6 +45,7 @@
             <em:translator>Alessandro Menti (it)</em:translator>
             <em:translator>Óvári (hu)</em:translator>
             <em:translator>Alexey Sinitsyn (ru)</em:translator>
+            <em:translator>Wanderlei Hüttel (pt-BR)</em:translator>
             <em:contributor>Chris Allan (recurring events)</em:contributor>
             <em:contributor>Emil Ljungdahl</em:contributor>
             <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
@@ -64,6 +66,7 @@
             <em:translator>Alessandro Menti (it)</em:translator>
             <em:translator>Óvári (hu)</em:translator>
             <em:translator>Alexey Sinitsyn (ru)</em:translator>
+            <em:translator>Wanderlei Hüttel (pt-BR)</em:translator>
             <em:contributor>Chris Allan (recurring events)</em:contributor>
             <em:contributor>Emil Ljungdahl</em:contributor>
             <em:contributor>Mark Nethersole (initial implementation of contact sync)</em:contributor>
@@ -84,6 +87,7 @@
             <em:translator>Alessandro Menti (it)</em:translator>
             <em:translator>Óvári (hu)</em:translator>
             <em:translator>Alexey Sinitsyn (ru)</em:translator>
+            <em:translator>Wanderlei Hüttel (pt-BR)</em:translator>
             <em:contributor>Chris Allan (eventi ricorrenti)</em:contributor>
             <em:contributor>Emil Ljungdahl</em:contributor>
             <em:contributor>Mark Nethersole (implementazione iniziale della sincronizzazione contatti)</em:contributor>
@@ -104,6 +108,7 @@
             <em:translator>Alessandro Menti (it)</em:translator>
             <em:translator>Óvári (hu)</em:translator>
             <em:translator>Alexey Sinitsyn (ru)</em:translator>  
+            <em:translator>Wanderlei Hüttel (pt-BR)</em:translator>
             <em:contributor>Chris Allan (повторяющиеся события)</em:contributor>
             <em:contributor>Emil Ljungdahl</em:contributor>
             <em:contributor>Mark Nethersole (первоначальная реализация синхронизации контактов)</em:contributor>
@@ -113,6 +118,27 @@
             <em:creator>John Bieling</em:creator>
           </Description>
          </em:localized>
+
+        <em:localized>  <!-- Portuguese Brazilian -->
+          <Description>
+            <em:locale>pt-BR</em:locale>
+            <em:name>Provedor Exchange ActiveSync</em:name>
+            <em:description>Adiciona suporte para sincronizar contas do Exchange ActiveSync (contatos, tarefas e calendários) para o TbSync</em:description>
+            <em:translator>John Bieling (de)</em:translator>
+            <em:translator>John Bieling (en-US)</em:translator>
+            <em:translator>Alessandro Menti (it)</em:translator>
+            <em:translator>Óvári (hu)</em:translator>
+            <em:translator>Alexey Sinitsyn (ru)</em:translator>
+            <em:translator>Wanderlei Hüttel (pt-BR)</em:translator>
+            <em:contributor>Chris Allan (eventi ricorrenti)</em:contributor>
+            <em:contributor>Emil Ljungdahl</em:contributor>
+            <em:contributor>Mark Nethersole (implementazione iniziale della sincronizzazione contatti)</em:contributor>
+            <em:contributor>Dzamo Norton</em:contributor>
+            <em:contributor>Tijuca</em:contributor>
+            <em:contributor>Puran2</em:contributor>	
+            <em:creator>John Bieling</em:creator>
+          </Description>
+        </em:localized>
          
     </Description>
 </RDF>
