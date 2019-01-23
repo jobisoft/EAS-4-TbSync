@@ -1,17 +1,17 @@
 <!ENTITY add.title "Adicionando uma conta do Exchange ActiveSync ao TbSync">
 <!ENTITY add.ok "Adicionar conta">
 <!ENTITY add.name "Nome da conta:">
-<!ENTITY add.user "Usuário (endereço de email):">
+<!ENTITY add.user "Usuário:">
 <!ENTITY add.password "Senha:">
 <!ENTITY add.url "Endereço do servidor:">
 <!ENTITY add.urldescription "Deve ser suficiente fornecer apenas o endereço básico do servidor (ex.: mail.yourserver.com). No entanto, também é possível fornecer a URL completa (ex.: https://mail.yourserver.com/Microsoft-Server-ActiveSync).">
 
 <!ENTITY add.server "Configuração do servidor:">
-<!ENTITY add.description "Por favor, insira um nome para a nova conta TbSync, o nome de usuário da conta do ActiveSync que você deseja adicionar (provavelmente um endereço de e-mail), a senha e selecione uma das opções de configuração do servidor disponíveis.">
+<!ENTITY add.description "Por favor, defina um nome para a nova conta TbSync, informe o nome de usuário (geralmente um endereço de e-mail), a senha e selecione uma das opções de configuração do servidor disponíveis.">
 
 <!ENTITY pref.autodetect "melhor disponível">
 
-<!ENTITY pref.AccountName "Descrição">
+<!ENTITY pref.AccountName "Nome da conta">
 <!ENTITY pref.UserName "Usuário">
 <!ENTITY pref.UserNameDescription "O nome do usuário geralmente é o endereço de e-mail da sua conta.">
 <!ENTITY pref.ServerName "Endereço do servidor">
@@ -30,7 +30,7 @@
 <!ENTITY pref.seperator.comma "Vírgula">
 <!ENTITY pref.seperator.linebreak "Quebra de linha">
 <!ENTITY pref.seperator.description "Separador para campo de endereço de múltiplas linhas.">
-<!ENTITY pref.displayoverride "Substituir nome de exibição com "Nome" + "Segundo nome">
+<!ENTITY pref.displayoverride "Substituir nome de exibição com Nome + Segundo nome">
 
 <!ENTITY servertype.auto "Configuração automática via Autodiscover do ActiveSync">
 <!ENTITY servertype.custom "Configuração personalizada">

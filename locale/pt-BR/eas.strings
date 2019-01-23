@@ -132,7 +132,7 @@ status.nosupportedeasversion=O servidor não suporta o ActiveSync v2.5 ou v14.0 
 status.notsupportedeasversion=O servidor não suporta o ActiveSync selecionado v##replace.1## (somente ##replace.2##).
 
 config.auto=Configuração do servidor ActiveSync (Descoberta Automática)
-config.custom=Configuração do servidor do ActiveSync
+config.custom=Configuração do servidor ActiveSync
 
 acl.readwrite=Ler e escrever no servidor
 acl.readonly=Acesso ao servidor somente leitura (reverter alterações locais)
