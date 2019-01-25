@@ -14,6 +14,55 @@ tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/xmltools.js");
 var eas = {
     bundle: Services.strings.createBundle("chrome://eas4tbsync/locale/eas.strings"),
 
+    onSettingsGUILoad: function (window, accountID) {
+        // special treatment for configuration label, which is a permanent setting and will not change by switching modes
+        let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
+        if (configlabel) {
+            configlabel.setAttribute("value", tbSync.getLocalizedMessage("config.custom", "eas"));
+        }
+
+        //for some unknown reason, my OverlayManager cannot create menulists, so I need to do that
+        //manually and append the already loaded menupopus into the manually created menulists
+        let asversionPopup = window.document.getElementById('asversion.popup');
+        let asversionHook = window.document.getElementById('asversion.hook');
+        let asversionMenuList = window.document.createElement("menulist");
+        asversionMenuList.setAttribute("id", "tbsync.accountsettings.pref.asversionselected");
+        asversionMenuList.setAttribute("class", "lockIfConnected");
+        asversionMenuList.appendChild(asversionPopup);
+        //add after the hook element
+        asversionHook.parentNode.insertBefore(asversionMenuList, asversionHook.nextSibling);
+
+        let separatorPopup = window.document.getElementById('separator.popup');
+        let separatorHook = window.document.getElementById('separator.hook');
+        let separatorMenuList = window.document.createElement("menulist");
+        separatorMenuList.setAttribute("id", "tbsync.accountsettings.pref.seperator");
+        separatorMenuList.setAttribute("class", "lockIfConnected");
+        separatorMenuList.appendChild(separatorPopup);
+        //add before the hook element
+        separatorHook.parentNode.insertBefore(separatorMenuList, separatorHook);        	
+    },
+
+    stripHost: function (document, account) {
+        let host = document.getElementById('tbsync.accountsettings.pref.host').value;
+        if (host.indexOf("https://") == 0) {
+            host = host.replace("https://","");
+            document.getElementById('tbsync.accountsettings.pref.https').checked = true;
+            tbSync.db.setAccountSetting(account, "https", "1");
+        } else if (host.indexOf("http://") == 0) {
+            host = host.replace("http://","");
+            document.getElementById('tbsync.accountsettings.pref.https').checked = false;
+            tbSync.db.setAccountSetting(account, "https", "0");
+        }
+        
+        while (host.endsWith("/")) { host = host.slice(0,-1); }        
+        document.getElementById('tbsync.accountsettings.pref.host').value = host
+        tbSync.db.setAccountSetting(account, "host", host);
+    },
+
+
+
+    /** API **/
+
     //use flags instead of strings to avoid errors due to spelling errors
     flags : Object.freeze({
         allowEmptyResponse: true, 
@@ -173,53 +222,6 @@ var eas = {
      */
     getEditAccountOverlayUrl: function () {
         return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";
-    },
-
-
-
-    /**
-     * Is called after the settings overlay of this provider has been added to the main settings window
-     *
-     * @param window       [in] window object of the settings window
-     * @param accountID    [in] accountId of the selected account
-     */
-    onSettingsGUILoad: function (window, accountID) {
-        // special treatment for configuration label, which is a permanent setting and will not change by switching modes
-        let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
-        if (configlabel) {
-            configlabel.setAttribute("value", tbSync.getLocalizedMessage("config.custom", "eas"));
-        }
-
-        //for some unknown reason, my OverlayManager cannot create menulists, so I need to do that
-        //manually and append the already loaded menupopus into the manually created menulists
-        let asversionPopup = window.document.getElementById('asversion.popup');
-        let asversionHook = window.document.getElementById('asversion.hook');
-        let asversionMenuList = window.document.createElement("menulist");
-        asversionMenuList.setAttribute("id", "tbsync.accountsettings.pref.asversionselected");
-        asversionMenuList.setAttribute("class", "lockIfConnected");
-        asversionMenuList.appendChild(asversionPopup);
-        //add after the hook element
-        asversionHook.parentNode.insertBefore(asversionMenuList, asversionHook.nextSibling);
-
-        let separatorPopup = window.document.getElementById('separator.popup');
-        let separatorHook = window.document.getElementById('separator.hook');
-        let separatorMenuList = window.document.createElement("menulist");
-        separatorMenuList.setAttribute("id", "tbsync.accountsettings.pref.seperator");
-        separatorMenuList.setAttribute("class", "lockIfConnected");
-        separatorMenuList.appendChild(separatorPopup);
-        //add before the hook element
-        separatorHook.parentNode.insertBefore(separatorMenuList, separatorHook);        	
-    },
-
-
-
-    /**
-     * Is called each time after the settings window has been updated
-     *
-     * @param window       [in] window object of the settings window
-     * @param accountID    [in] accountId of the selected account
-     */
-    onSettingsGUIUpdate: function (window, accountID) {
     },
 
 

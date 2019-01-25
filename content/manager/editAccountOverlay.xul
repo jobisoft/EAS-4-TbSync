@@ -7,6 +7,7 @@
 ]>
 <overlay 
     id="tbSyncAccountConfig" 
+    oninject="tbSync.eas.onSettingsGUILoad(window, tbSyncAccountSettings.account)"
     xmlns:html="http://www.w3.org/1999/xhtml">
 
     <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
@@ -40,7 +41,7 @@
                             <vbox pack="center">
                                 <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
                             </vbox>
-                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncAccountSettings.stripHost(document, tbSyncAccountSettings.account);" />
+                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSync.eas.stripHost(document, tbSyncAccountSettings.account);" />
                         </row>
                         <row>
                             <hbox/>
