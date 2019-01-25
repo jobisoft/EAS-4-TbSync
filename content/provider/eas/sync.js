@@ -84,8 +84,6 @@ eas.sync = {
             let response = yield eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
 
             //VALIDATE RESPONSE
-            tbSync.setSyncState("eval.response.remotechanges", syncdata.account, syncdata.folderID);
-
             // get data from wbxml response, some servers send empty response if there are no changes, which is not an error
             let wbxmlData = eas.getDataFromResponse(response, eas.flags.allowEmptyResponse);
             if (wbxmlData === null) return;
@@ -96,10 +94,17 @@ eas.sync = {
             //PROCESS COMMANDS        
             yield eas.sync.processCommands(wbxmlData, syncdata);
 
+            //Update count in UI
+            tbSync.setSyncState("eval.response.remotechanges", syncdata.account, syncdata.folderID);
+
             //update synckey
             eas.updateSynckey(syncdata, wbxmlData);
-
-            if (!xmltools.hasWbxmlDataField(wbxmlData,"Sync.Collections.Collection.MoreAvailable")) return;
+            
+            if (!xmltools.hasWbxmlDataField(wbxmlData,"Sync.Collections.Collection.MoreAvailable")) {
+                //Feedback from users: They want to see the final count
+                yield tbSync.sleep(100, false);
+                return;
+            }
         } while (true);
                 
     }),
