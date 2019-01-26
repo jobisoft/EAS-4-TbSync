@@ -99,7 +99,7 @@ var eas = {
             if (eas.defaultTimezone.icalComponent) {
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
             } else {
-                tbSync.errorlog(null, "Default timezone is not defined, using UTC!");
+                tbSync.errorlog("info", null, "Default timezone is not defined, using UTC!");
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.utcTimezone);
             }
 
@@ -706,7 +706,7 @@ var eas = {
                     
                 switch (report.type) {
                     case eas.flags.resyncAccount:
-                        tbSync.errorlog(syncdata, "Forced Account Resync", report.message);                        
+                        tbSync.errorlog("info", syncdata, "Forced Account Resync", report.message);                        
                         continue;
 
                     case eas.flags.abortWithServerError: 
@@ -986,7 +986,7 @@ var eas = {
                         } else {
                             //takeTargetOffline will backup the current folder and on next run, a fresh copy 
                             //of the folder will be synced down - the folder itself is NOT deleted
-                            tbSync.errorlog(syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
+                            tbSync.errorlog("info", syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
                             tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
                         }
                         continue;
