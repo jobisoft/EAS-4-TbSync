@@ -795,7 +795,7 @@ var eas = {
                 let add = xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Add);
                 for (let count = 0; count < add.length; count++) {
                     //only add allowed folder types to DB
-                    if (!["9","14","8","13","7","15"].includes(add[count].Type)) 
+                    if (!["9","14","8","13","7","15","4"].includes(add[count].Type)) 
                         continue;
 
                     let existingFolder = tbSync.db.getFolder(syncdata.account, add[count].ServerId);
