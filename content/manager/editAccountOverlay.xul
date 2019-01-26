@@ -13,6 +13,8 @@
     <menuitem 
         id="TbSync.eas.FolderListContextMenuDelete" 
         label="&pref.ShowTrashedFolders;" 
+        class="menuitem-iconic"
+        image="chrome://tbsync/skin/trash16.png"
         appendto="tbsync.accountsettings.FolderListContextMenu"
         oncommand="tbSync.eas.folderList.deleteFolder(document, tbSyncAccountSettings.account);"/>
     
