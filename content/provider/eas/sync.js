@@ -265,6 +265,7 @@ eas.sync = {
                         break;
                     
                     case "softfail.Sync.4": //Malformed request
+                    case "softfail.Sync.6": //Malformed request
                         //some servers send a global error - to catch this, we reduce the number of items we send to the server
                         if (sendItems.length == 1) {
                             //the request contained only one item, so we know which one failed
