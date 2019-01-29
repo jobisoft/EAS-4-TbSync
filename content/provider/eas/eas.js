@@ -1674,50 +1674,35 @@ var eas = {
 
         //handle errrors based on type
         let msg = "";
-        switch (type+":"+status) {
-            case "Sync:3": /*
+        switch (type+"."+status) {
+            case "Sync.3": /*
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
                 throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder, "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
             
-            case "Sync:4":
-                msg = "Malformed request (status 4)";
+            case "Sync.4": //Malformed request
+            case "Sync.5": //Temporary server issues or invalid item
+            case "Sync.6": //Invalid item
+            case "Sync.8": //Object not found
+                msg = "softfail." + type+"."+status;
                 if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-            
-            case "Sync:5":
-                msg = "Temporary server issues or invalid item (status 5)";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+                throw eas.finishSync("ServerRejectedRequest", null, tbSync.getLocalizedMessage(msg ,"eas") + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
-            case "Sync:6":
-                //Server does not accept one of our items or the entire request.
-                msg = "Invalid item (status 6)";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-
-            case "Sync:7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
-                return "";
-        
-            case "Sync:8": // Object not found
-                msg = "Object not found (status 8)";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-
-            case "Sync:9": //User account could be out of disk space, also send if no write permission (TODO)
+            case "Sync.7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
+            case "Sync.9": //User account could be out of disk space, also send if no write permission (TODO)
                 return "";
 
-            case "FolderDelete:3": // special system folder - fatal error
+            case "FolderDelete.3": // special system folder - fatal error
                 throw eas.finishSync("folderDelete.3");
 
-            case "FolderDelete:6": // error on server
+            case "FolderDelete.6": // error on server
                 throw eas.finishSync("folderDelete.6");
 
-            case "FolderDelete:4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
-            case "FolderDelete:9": // invalid synchronization key - resync
-            case "FolderSync:9": // invalid synchronization key - resync
-            case "Sync:12": // folder hierarchy changed
+            case "FolderDelete.4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
+            case "FolderDelete.9": // invalid synchronization key - resync
+            case "FolderSync.9": // invalid synchronization key - resync
+            case "Sync.12": // folder hierarchy changed
                 {
                     let folders = tbSync.db.getFolders(syncdata.account);
                     for (let f in folders) {

@@ -125,11 +125,18 @@ helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-
 status.ServerRejectedSomeItems=Der EAS Server hat ##replace.1## Elemente nicht akzeptiert.
 status.ServerRejectedRequest=Der EAS Server hat die letzte Anforderung zurückgewiesen.
 
-status.BadItemSkipped=Bad Item Skipped: ##replace.1##
+status.BadItemSkipped=Ein Element wurde nicht synchronisiert: ##replace.1##
 helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 
 status.nosupportedeasversion=Der Server unterstützt kein ActiveSync v2.5 oder v14.0 (nur ##replace.1##). TbSync kann nicht mit diesem Server arbeiten.
 status.notsupportedeasversion=Der Server unterstützt nicht die ausgewählte ActiveSync Version v##replace.1## (nur ##replace.2##).
+
+softfail.Sync.4=Fehlerhafte Anfrage (Status 4)
+softfail.Sync.5=Temporäres Serverproblem oder ungültiges Element (Status 5)
+softfail.Sync.6=Ungültiges Element (Status 6)
+softfail.Sync.8=Objekt nicht gefunden (Status 8)
+softfail.forbiddenTasksItemInCalendarFolder=Unerlaubtes Aufgaben-Element in einem Kalender-Objekt (bitte umsortieren)
+softfail.forbiddenCalendarItemInTasksFolder=Unerlaubtes Kalender-Element in einem Aufgaben-Objekt (bitte umsortieren)
 
 config.auto=ActiveSync Server Konfiguration (Autodiscover)
 config.custom=ActiveSync Server Konfiguration

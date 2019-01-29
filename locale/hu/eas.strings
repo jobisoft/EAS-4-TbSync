@@ -131,6 +131,13 @@ helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad
 status.nosupportedeasversion=A kiszolgáló nem támogatja az ActiveSync 2.5 vagy 14.0 verziót (csak ##replace.1##). A Thunderbird-összehangolás nem fog működni az ActiveSync kiszolgálóval.
 status.notsupportedeasversion=A kiszolgáló nem támogatja a kiválasztott ActiveSync ##replace.1## verziót (csak ##replace.2## verzió).
 
+softfail.Sync.4=?? Malformed request (status 4) ??
+softfail.Sync.5=?? Temporary server issues or invalid item (status 5) ??
+softfail.Sync.6=?? Invalid item (status 6) ??
+softfail.Sync.8=?? Object not found (status 8) ??
+softfail.forbiddenTasksItemInCalendarFolder=?? Forbidden task item in a calendar folder (please resort) ??
+softfail.forbiddenCalendarItemInTasksFolder=?? Forbidden calendar item in a task folder (please resort) ??
+
 config.auto=Az ActiveSync kiszolgáló beállítások (önműködő észlelés)
 config.custom=Az ActiveSync kiszolgáló beállítások
 
