@@ -197,7 +197,7 @@ eas.sync = {
                                                 wbxml.ctag();
                                                 c++;
                                             } else {
-                                                eas.sync.updateFailedItems(syncdata, "softfail.forbidden" + eas.sync.getEasItemType(items[0]) +"ItemIn" + syncdata.type + "Folder", items[0].id, items[0].icalString);
+                                                eas.sync.updateFailedItems(syncdata, "forbidden" + eas.sync.getEasItemType(items[0]) +"ItemIn" + syncdata.type + "Folder", items[0].id, items[0].icalString);
                                                 e++;
                                             }
                                         } else {
@@ -222,7 +222,7 @@ eas.sync = {
                                                 sendItems.push({type: changes[i].status, id: changes[i].id});
                                                 c++;
                                             } else {
-                                                eas.sync.updateFailedItems(syncdata, "softfail.forbidden" + eas.sync.getEasItemType(items[0]) +"ItemIn" + syncdata.type + "Folder", items[0].id, items[0].icalString);
+                                                eas.sync.updateFailedItems(syncdata, "forbidden" + eas.sync.getEasItemType(items[0]) +"ItemIn" + syncdata.type + "Folder", items[0].id, items[0].icalString);
                                                 e++;
                                             }
                                         } else {
@@ -264,8 +264,8 @@ eas.sync = {
                     case "":
                         break;
                     
-                    case "softfail.Sync.4": //Malformed request
-                    case "softfail.Sync.6": //Malformed request
+                    case "Sync.4": //Malformed request
+                    case "Sync.6": //Malformed request
                         //some servers send a global error - to catch this, we reduce the number of items we send to the server
                         if (sendItems.length == 1) {
                             //the request contained only one item, so we know which one failed
@@ -619,7 +619,7 @@ eas.sync = {
             //the extra parameter true will re-add the item to the end of the changelog
             db.removeItemFromChangeLog(syncdata.targetId, id, true);                        
             syncdata.failedItems.push(id);            
-            tbSync.errorlog("info", syncdata, "BadItemSkipped::" + tbSync.getLocalizedMessage(cause ,"eas"), "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response + "\n\nElement:\n" + data);
+            tbSync.errorlog("info", syncdata, "BadItemSkipped::" + tbSync.getLocalizedMessage("status." + cause ,"eas"), "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response + "\n\nElement:\n" + data);
         }
     },
 

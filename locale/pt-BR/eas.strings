@@ -113,9 +113,6 @@ status.policy.5=O cliente está reconhecendo a chave de política incorreta. Ent
 
 status.provision=O provisionamento falhou com o status <##replace.1##>
 
-status.folderDelete.3=Não é possível excluir uma pasta do sistema.
-status.folderDelete.6=O comando não pôde ser concluído, ocorreu um erro no servidor.
-
 status.global.101=A solicitação contém WBXML, mas não pôde ser decodificada em XML (Erro EAS 101).
 status.global.102=A solicitação contém WBXML, mas não pôde ser decodificada em XML (Erro EAS 102).
 status.global.103=O XML fornecido na solicitação não segue os requisitos do protocolo (Erro EAS 103).
@@ -131,12 +128,20 @@ helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad
 status.nosupportedeasversion=O servidor não suporta o ActiveSync v2.5 ou v14.0 (somente ##replace.1##). TbSync não funcionará com este servidor ActiveSync.
 status.notsupportedeasversion=O servidor não suporta o ActiveSync selecionado v##replace.1## (somente ##replace.2##).
 
-softfail.Sync.4=?? Malformed request (status 4) ??
-softfail.Sync.5=?? Temporary server issues or invalid item (status 5) ??
-softfail.Sync.6=?? Invalid item (status 6) ??
-softfail.Sync.8=?? Object not found (status 8) ??
-softfail.forbiddenTasksItemInCalendarFolder=?? Forbidden task item in a calendar folder (please resort) ??
-softfail.forbiddenCalendarItemInTasksFolder=?? Forbidden calendar item in a task folder (please resort) ??
+status.Sync.3=?? Invalid synchronization key (status 3), resyncing ??
+status.Sync.4=?? Malformed request (status 4) ??
+status.Sync.5=?? Temporary server issues or invalid item (status 5) ??
+status.Sync.6=?? Invalid item (status 6) ??
+status.Sync.8=?? Object not found (status 8) ??
+status.Sync.12=?? Folder hierarchy changed (status 12), resyncing ??
+status.FolderDelete.3=Não é possível excluir uma pasta do sistema.
+status.FolderDelete.6=O comando não pôde ser concluído, ocorreu um erro no servidor.
+status.FolderDelete.4=?? Folder does not exist (status 4), resyncing ??
+status.FolderDelete.9=?? Invalid synchronization key (status 9), resyncing ??
+status.FolderSync.9=?? Invalid synchronization key (status 9), resyncing ??
+
+status.forbiddenTasksItemInCalendarFolder=?? Forbidden task item in a calendar folder (please resort) ??
+status.forbiddenCalendarItemInTasksFolder=?? Forbidden calendar item in a task folder (please resort) ??
 
 config.auto=Configuração do servidor ActiveSync (Descoberta Automática)
 config.custom=Configuração do servidor ActiveSync

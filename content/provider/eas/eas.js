@@ -1623,20 +1623,20 @@ var eas = {
         //check for empty wbxml
         if (wbxml.length === 0) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("empty-response", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+            else throw eas.finishSync("empty-response");
         }
 
         //convert to save xml (all special chars in user data encoded by encodeURIComponent) and check for parse errors
         let xml = wbxmltools.convert2xml(wbxml);
         if (xml === false) {
-            throw eas.finishSync("wbxml-parse-error", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+            throw eas.finishSync("wbxml-parse-error");
         }
         
         //retrieve data and check for empty data (all returned data fields are already decoded by decodeURIComponent)
         let wbxmlData = xmltools.getDataFromXMLString(xml);
         if (wbxmlData === null) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("response-contains-no-data", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+            else throw eas.finishSync("response-contains-no-data");
         }
         
         //debug
@@ -1657,7 +1657,7 @@ var eas = {
             let mainStatus = xmltools.getWbxmlDataField(wbxmlData, type + "." + elements[elements.length-1]);
             if (mainStatus === false) {
                 //both possible status fields are missing, abort
-                throw eas.finishSync("wbxmlmissingfield::" + fullpath, null, "WBXML: Server response does not contain mandatory <"+fullpath+"> field . Error? Aborting Sync.");
+                throw eas.finishSync("wbxmlmissingfield::" + fullpath, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             } else {
                 //the alternative status could be extracted
                 status = mainStatus;
@@ -1673,31 +1673,28 @@ var eas = {
         tbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
 
         //handle errrors based on type
-        let msg = "";
-        switch (type+"."+status) {
+        let statusType = type+"."+status;
+        switch (statusType) {
             case "Sync.3": /*
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
-                throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder, "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
+                throw eas.finishSync(statusType, eas.flags.resyncFolder, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             
             case "Sync.4": //Malformed request
             case "Sync.5": //Temporary server issues or invalid item
             case "Sync.6": //Invalid item
             case "Sync.8": //Object not found
-                msg = "softfail." + type+"."+status;
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, tbSync.getLocalizedMessage(msg ,"eas") + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+                if (allowSoftFail) return statusType;
+                throw eas.finishSync(statusType, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "Sync.7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
             case "Sync.9": //User account could be out of disk space, also send if no write permission (TODO)
                 return "";
 
             case "FolderDelete.3": // special system folder - fatal error
-                throw eas.finishSync("folderDelete.3");
-
             case "FolderDelete.6": // error on server
-                throw eas.finishSync("folderDelete.6");
+                throw eas.finishSync(statusType, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "FolderDelete.4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
             case "FolderDelete.9": // invalid synchronization key - resync
@@ -1713,7 +1710,7 @@ var eas = {
                     syncdata.folderID = "";
                     //reset account
                     tbSync.eas.onEnableAccount(syncdata.account);
-                    throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
+                    throw eas.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
                 }
         }
         
@@ -1723,7 +1720,7 @@ var eas = {
             case "101": //invalid content
             case "102": //invalid wbxml
             case "103": //invalid xml
-                throw eas.finishSync("global." + status, eas.flags.abortWithError);
+                throw eas.finishSync("global." + status, eas.flags.abortWithError, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             
             case "109": descriptions["109"]="DeviceTypeMissingOrInvalid";
             case "112": descriptions["112"]="ActiveDirectoryAccessDenied";
@@ -1736,7 +1733,7 @@ var eas = {
                 throw eas.finishSync("global.clientdenied"+ "::" + status + "::" + descriptions[status], eas.flags.abortWithError);
 
             case "110": //server error - resync
-                throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
+                throw eas.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "141": // The device is not provisionable
             case "142": // DeviceNotProvisioned
@@ -1745,12 +1742,11 @@ var eas = {
                 //enable provision
                 tbSync.db.setAccountSetting(syncdata.account, "provision","1");
                 tbSync.db.resetAccountSetting(syncdata.account, "policykey");
-                throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
+                throw eas.finishSync(statusType, eas.flags.resyncAccount);
             
             default:
-                msg = "WBXML: Server reports unhandled status <" + fullpath + " = " + status + ">.";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("wbxmlerror::" + fullpath + " = " + status, eas.flags.abortWithError, msg);
+                if (allowSoftFail) return statusType;
+                throw eas.finishSync(statusType, eas.flags.abortWithError, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
         }		
     },
