@@ -265,7 +265,7 @@ eas.sync = {
                         break;
                     
                     case "Sync.4": //Malformed request
-                    case "Sync.6": //Malformed request
+                    case "Sync.6": //Invalid item
                         //some servers send a global error - to catch this, we reduce the number of items we send to the server
                         if (sendItems.length == 1) {
                             //the request contained only one item, so we know which one failed
@@ -285,9 +285,12 @@ eas.sync = {
                             syncdata.done++;                            
                             //restore numberOfItemsToSend
                             numberOfItemsToSend = maxnumbertosend;                            
-                        } else {
+                        } else if (sendItems.length > 1) {
                             //reduce further
-                            numberOfItemsToSend = Math.min(1, Math.round(numberOfItemsToSend / 10));
+                            numberOfItemsToSend = Math.min(1, Math.round(sendItems.length / 5));
+                        } else {
+                            //sendItems.length == 0 ??? recheck but this time let it handle all cases
+                            eas.checkStatus(syncdata, wbxmlData, "Sync.Collections.Collection.Status");
                         }
                         break;
 
