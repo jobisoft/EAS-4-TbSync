@@ -168,29 +168,48 @@ eas.sync = {
                                                     wbxml.otag("ApplicationData");
                                                         wbxml.switchpage(syncdata.type);
 
-                                                        /*wbxml.atag("TimeZone", "xP///0UAdQByAG8AcABlAC8AQgBlAHIAbABpAG4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAIAAAAAAAAAAAAAAEUAdQByAG8AcABlAC8AQgBlAHIAbABpAG4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAEAAAAAAAAAxP///w==");
-                                                        wbxml.atag("AllDayEvent", "0");
-                                                        
-                                                        wbxml.switchpage("AirSyncBase");
-                                                        wbxml.otag("Body");
-                                                            wbxml.atag("Type", "1");
-                                                            wbxml.atag("EstimatedDataSize", "0");
-                                                            wbxml.atag("Data");
-                                                        wbxml.ctag();
-                                                        wbxml.switchpage(syncdata.type);
-                                                        
-                                                        wbxml.atag("BusyStatus", "1");
-                                                        wbxml.atag("DtStamp", "20190125T073313Z");
-                                                        wbxml.atag("EndTime", "20190125T091500Z");
-                                                        wbxml.atag("Location");
-                                                        wbxml.atag("Sensitivity", "1");
-                                                        wbxml.atag("Subject");
-                                                        wbxml.atag("StartTime", "20190125T091500Z");
-                                                        wbxml.atag("UID", "040000008200E00074C5B7101A82E00800000000D07D39E3C792D401000000000000000010000000DA1DCC67F984C145A5142EE825BF17AA");
-                                                        wbxml.atag("MeetingStatus","1");
-                                                        wbxml.atag("Attendees");
-                                                        wbxml.atag("Categories");*/
-                            
+/*wbxml.atag("TimeZone", "xP///0UAdQByAG8AcABlAC8AQgBlAHIAbABpAG4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAIAAAAAAAAAAAAAAEUAdQByAG8AcABlAC8AQgBlAHIAbABpAG4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAFAAEAAAAAAAAAxP///w==");
+wbxml.atag("AllDayEvent", "0");
+wbxml.switchpage("AirSyncBase");
+wbxml.otag("Body");
+    wbxml.atag("Type", "1");
+    wbxml.atag("EstimatedDataSize", "0");
+    wbxml.atag("Data");
+wbxml.ctag();
+
+wbxml.switchpage(syncdata.type);						
+wbxml.atag("BusyStatus", "2");
+wbxml.atag("OrganizerName", "REDACTED.REDACTED");
+wbxml.atag("OrganizerEmail", "REDACTED.REDACTED@REDACTED");
+wbxml.atag("DtStamp", "20190131T091024Z");
+wbxml.atag("EndTime", "20180906T083000Z");
+wbxml.atag("Location");
+wbxml.atag("Reminder", "5");
+wbxml.atag("Sensitivity", "0");
+wbxml.atag("Subject", "SE-CN weekly sync");
+wbxml.atag("StartTime", "20180906T080000Z");
+wbxml.atag("UID", "1D51E503-9DFE-4A46-A6C2-9129E5E00C1D");
+wbxml.atag("MeetingStatus", "3");
+wbxml.otag("Attendees");
+    wbxml.otag("Attendee");
+        wbxml.atag("Email", "REDACTED.REDACTED@REDACTED");
+        wbxml.atag("Name", "REDACTED.REDACTED");
+        wbxml.atag("AttendeeType", "1");
+    wbxml.ctag();
+wbxml.ctag();
+wbxml.atag("Categories");
+wbxml.otag("Recurrence");
+    wbxml.atag("Type", "1");
+    wbxml.atag("DayOfWeek", "16");
+    wbxml.atag("Interval", "1");
+wbxml.ctag();
+wbxml.otag("Exceptions");
+    wbxml.otag("Exception");
+        wbxml.atag("ExceptionStartTime", "20181227T090000Z");
+        wbxml.atag("Deleted", "1");
+    wbxml.ctag();
+wbxml.ctag();*/
+
                                                         wbxml.append(eas.sync.getWbxmlFromThunderbirdItem(items[0], syncdata));
                                                         wbxml.switchpage("AirSync");
                                                     wbxml.ctag();
