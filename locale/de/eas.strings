@@ -113,9 +113,6 @@ status.policy.5=Der Klient bestätigt einen falschen Richtlinienschlüssel (poli
 
 status.provision=Provisionierung fehlerhaft mit folgendem Status <##replace.1##>
 
-status.folderDelete.3=Systemordner können nicht gelöscht werden.
-status.folderDelete.6=Das Kommando konnte nicht abgeschlossen werden, auf dem Server ist ein Fehler aufgetreten.
-
 status.global.101=Das WBXML der Anfrage konnte nicht in gültiges XML dekodiert werden (Fehler 101).
 status.global.102=Das WBXML der Anfrage konnte nicht in gültiges XML dekodiert werden (Fehler 102).
 status.global.103=Das XML der Anfrage entspricht nicht den Protokollanforderungen (Fehler 103).
@@ -125,11 +122,26 @@ helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-
 status.ServerRejectedSomeItems=Der EAS Server hat ##replace.1## Elemente nicht akzeptiert.
 status.ServerRejectedRequest=Der EAS Server hat die letzte Anforderung zurückgewiesen.
 
-status.BadItemSkipped=Bad Item Skipped: ##replace.1##
+status.BadItemSkipped=Ein Element wurde nicht synchronisiert: ##replace.1##
 helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
 
 status.nosupportedeasversion=Der Server unterstützt kein ActiveSync v2.5 oder v14.0 (nur ##replace.1##). TbSync kann nicht mit diesem Server arbeiten.
 status.notsupportedeasversion=Der Server unterstützt nicht die ausgewählte ActiveSync Version v##replace.1## (nur ##replace.2##).
+
+status.Sync.3=Ungültiger Synchronisationsschlüssel, es wird neu synchronisiert
+status.Sync.4=Fehlerhafte Anfrage (Status 4)
+status.Sync.5=Temporäres Serverproblem oder ungültiges Element (Status 5)
+status.Sync.6=Ungültiges Element (Status 6)
+status.Sync.8=Objekt nicht gefunden (Status 8)
+status.Sync.12=Ordnerhierarchie hat sich geändert, es wird neu synchronisiert
+status.FolderDelete.3=Systemordner können nicht gelöscht werden.
+status.FolderDelete.6=Das Kommando konnte nicht abgeschlossen werden, auf dem Server ist ein Fehler aufgetreten.
+status.FolderDelete.4=Ordner existiert nicht,  es wird neu synchronisiert
+status.FolderDelete.9=Ungültiger Synchronisationsschlüssel, es wird neu synchronisiert
+status.FolderSync.9=Ungültiger Synchronisationsschlüssel, es wird neu synchronisiert
+
+status.forbiddenTasksItemInCalendarFolder=Unerlaubtes Aufgaben-Element in einem Kalender-Objekt (bitte umsortieren)
+status.forbiddenCalendarItemInTasksFolder=Unerlaubtes Kalender-Element in einem Aufgaben-Objekt (bitte umsortieren)
 
 config.auto=ActiveSync Server Konfiguration (Autodiscover)
 config.custom=ActiveSync Server Konfiguration

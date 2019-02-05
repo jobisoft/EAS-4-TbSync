@@ -14,6 +14,55 @@ tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/xmltools.js");
 var eas = {
     bundle: Services.strings.createBundle("chrome://eas4tbsync/locale/eas.strings"),
 
+    onSettingsGUILoad: function (window, accountID) {
+        // special treatment for configuration label, which is a permanent setting and will not change by switching modes
+        let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
+        if (configlabel) {
+            configlabel.setAttribute("value", tbSync.getLocalizedMessage("config.custom", "eas"));
+        }
+
+        //for some unknown reason, my OverlayManager cannot create menulists, so I need to do that
+        //manually and append the already loaded menupopus into the manually created menulists
+        let asversionPopup = window.document.getElementById('asversion.popup');
+        let asversionHook = window.document.getElementById('asversion.hook');
+        let asversionMenuList = window.document.createElement("menulist");
+        asversionMenuList.setAttribute("id", "tbsync.accountsettings.pref.asversionselected");
+        asversionMenuList.setAttribute("class", "lockIfConnected");
+        asversionMenuList.appendChild(asversionPopup);
+        //add after the hook element
+        asversionHook.parentNode.insertBefore(asversionMenuList, asversionHook.nextSibling);
+
+        let separatorPopup = window.document.getElementById('separator.popup');
+        let separatorHook = window.document.getElementById('separator.hook');
+        let separatorMenuList = window.document.createElement("menulist");
+        separatorMenuList.setAttribute("id", "tbsync.accountsettings.pref.seperator");
+        separatorMenuList.setAttribute("class", "lockIfConnected");
+        separatorMenuList.appendChild(separatorPopup);
+        //add before the hook element
+        separatorHook.parentNode.insertBefore(separatorMenuList, separatorHook);        	
+    },
+
+    stripHost: function (document, account) {
+        let host = document.getElementById('tbsync.accountsettings.pref.host').value;
+        if (host.indexOf("https://") == 0) {
+            host = host.replace("https://","");
+            document.getElementById('tbsync.accountsettings.pref.https').checked = true;
+            tbSync.db.setAccountSetting(account, "https", "1");
+        } else if (host.indexOf("http://") == 0) {
+            host = host.replace("http://","");
+            document.getElementById('tbsync.accountsettings.pref.https').checked = false;
+            tbSync.db.setAccountSetting(account, "https", "0");
+        }
+        
+        while (host.endsWith("/")) { host = host.slice(0,-1); }        
+        document.getElementById('tbsync.accountsettings.pref.host').value = host
+        tbSync.db.setAccountSetting(account, "host", host);
+    },
+
+
+
+    /** API **/
+
     //use flags instead of strings to avoid errors due to spelling errors
     flags : Object.freeze({
         allowEmptyResponse: true, 
@@ -50,7 +99,7 @@ var eas = {
             if (eas.defaultTimezone.icalComponent) {
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
             } else {
-                tbSync.errorlog(null, "Default timezone is not defined, using UTC!");
+                tbSync.errorlog("info", null, "Default timezone is not defined, using UTC!");
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.utcTimezone);
             }
 
@@ -173,53 +222,6 @@ var eas = {
      */
     getEditAccountOverlayUrl: function () {
         return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";
-    },
-
-
-
-    /**
-     * Is called after the settings overlay of this provider has been added to the main settings window
-     *
-     * @param window       [in] window object of the settings window
-     * @param accountID    [in] accountId of the selected account
-     */
-    onSettingsGUILoad: function (window, accountID) {
-        // special treatment for configuration label, which is a permanent setting and will not change by switching modes
-        let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
-        if (configlabel) {
-            configlabel.setAttribute("value", tbSync.getLocalizedMessage("config.custom", "eas"));
-        }
-
-        //for some unknown reason, my OverlayManager cannot create menulists, so I need to do that
-        //manually and append the already loaded menupopus into the manually created menulists
-        let asversionPopup = window.document.getElementById('asversion.popup');
-        let asversionHook = window.document.getElementById('asversion.hook');
-        let asversionMenuList = window.document.createElement("menulist");
-        asversionMenuList.setAttribute("id", "tbsync.accountsettings.pref.asversionselected");
-        asversionMenuList.setAttribute("class", "lockIfConnected");
-        asversionMenuList.appendChild(asversionPopup);
-        //add after the hook element
-        asversionHook.parentNode.insertBefore(asversionMenuList, asversionHook.nextSibling);
-
-        let separatorPopup = window.document.getElementById('separator.popup');
-        let separatorHook = window.document.getElementById('separator.hook');
-        let separatorMenuList = window.document.createElement("menulist");
-        separatorMenuList.setAttribute("id", "tbsync.accountsettings.pref.seperator");
-        separatorMenuList.setAttribute("class", "lockIfConnected");
-        separatorMenuList.appendChild(separatorPopup);
-        //add before the hook element
-        separatorHook.parentNode.insertBefore(separatorMenuList, separatorHook);        	
-    },
-
-
-
-    /**
-     * Is called each time after the settings window has been updated
-     *
-     * @param window       [in] window object of the settings window
-     * @param accountID    [in] accountId of the selected account
-     */
-    onSettingsGUIUpdate: function (window, accountID) {
     },
 
 
@@ -480,11 +482,12 @@ var eas = {
             wbxml.otag("Store");
                 wbxml.atag("Name", "GAL");
                 wbxml.atag("Query", currentQuery);
-// Not valid for GAL: https://msdn.microsoft.com/en-us/library/gg675461(v=exchg.80).aspx
-//                wbxml.otag("Options");
-//                    wbxml.atag("DeepTraversal");
-//                    wbxml.atag("RebuildResults");
-//                wbxml.ctag();
+                wbxml.otag("Options");
+                    wbxml.atag("Range", "0-99"); //Z-Push needs a Range
+                    //Not valid for GAL: https://msdn.microsoft.com/en-us/library/gg675461(v=exchg.80).aspx
+                    //wbxml.atag("DeepTraversal");
+                    //wbxml.atag("RebuildResults");
+                wbxml.ctag();
             wbxml.ctag();
         wbxml.ctag();
 
@@ -704,7 +707,7 @@ var eas = {
                     
                 switch (report.type) {
                     case eas.flags.resyncAccount:
-                        tbSync.errorlog(syncdata, "Forced Account Resync", report.message);                        
+                        tbSync.errorlog("info", syncdata, "Forced Account Resync", report.message);                        
                         continue;
 
                     case eas.flags.abortWithServerError: 
@@ -793,7 +796,7 @@ var eas = {
                 let add = xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Add);
                 for (let count = 0; count < add.length; count++) {
                     //only add allowed folder types to DB
-                    if (!["9","14","8","13","7","15"].includes(add[count].Type)) 
+                    if (!["9","14","8","13","7","15","4"].includes(add[count].Type)) 
                         continue;
 
                     let existingFolder = tbSync.db.getFolder(syncdata.account, add[count].ServerId);
@@ -984,7 +987,7 @@ var eas = {
                         } else {
                             //takeTargetOffline will backup the current folder and on next run, a fresh copy 
                             //of the folder will be synced down - the folder itself is NOT deleted
-                            tbSync.errorlog(syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
+                            tbSync.errorlog("info", syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
                             tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
                         }
                         continue;
@@ -1621,20 +1624,20 @@ var eas = {
         //check for empty wbxml
         if (wbxml.length === 0) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("empty-response", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+            else throw eas.finishSync("empty-response");
         }
 
         //convert to save xml (all special chars in user data encoded by encodeURIComponent) and check for parse errors
         let xml = wbxmltools.convert2xml(wbxml);
         if (xml === false) {
-            throw eas.finishSync("wbxml-parse-error", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+            throw eas.finishSync("wbxml-parse-error");
         }
         
         //retrieve data and check for empty data (all returned data fields are already decoded by decodeURIComponent)
         let wbxmlData = xmltools.getDataFromXMLString(xml);
         if (wbxmlData === null) {
             if (allowEmptyResponse) return null;
-            else throw eas.finishSync("response-contains-no-data", null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+            else throw eas.finishSync("response-contains-no-data");
         }
         
         //debug
@@ -1655,7 +1658,7 @@ var eas = {
             let mainStatus = xmltools.getWbxmlDataField(wbxmlData, type + "." + elements[elements.length-1]);
             if (mainStatus === false) {
                 //both possible status fields are missing, abort
-                throw eas.finishSync("wbxmlmissingfield::" + fullpath, null, "WBXML: Server response does not contain mandatory <"+fullpath+"> field . Error? Aborting Sync.");
+                throw eas.finishSync("wbxmlmissingfield::" + fullpath, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             } else {
                 //the alternative status could be extracted
                 status = mainStatus;
@@ -1671,58 +1674,33 @@ var eas = {
         tbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
 
         //handle errrors based on type
-        let msg = "";
-        switch (type+":"+status) {
-            case "Sync:3": /*
+        let statusType = type+"."+status;
+        switch (statusType) {
+            case "Sync.3": /*
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
-                throw eas.finishSync(type+"("+status+")", eas.flags.resyncFolder, "WBXML: Server reports <invalid synchronization key> (" + fullpath + " = " + status + "), resyncing.");
+                throw eas.finishSync(statusType, eas.flags.resyncFolder, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             
-            case "Sync:4":
-                msg = "Malformed request (status 4)";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-            
-            case "Sync:5":
-                msg = "Temporary server issues or invalid item (status 5)";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
+            case "Sync.4": //Malformed request
+            case "Sync.5": //Temporary server issues or invalid item
+            case "Sync.6": //Invalid item
+            case "Sync.8": //Object not found
+                if (allowSoftFail) return statusType;
+                throw eas.finishSync(statusType, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
-            case "Sync:6":
-                //Server does not accept one of our items or the entire request.
-                msg = "Invalid item (status 6)";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("ServerRejectedRequest", null, msg +  + "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-
-            case "Sync:7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
-                return "";
-        
-            case "Sync:8": // Object not found - takeTargetOffline and remove folder
-                {
-                    tbSync.errorlog(syncdata, "Object not found", "WBXML: Server reports <object not found>, keeping local copy and removing folder.");
-                    let folder = tbSync.db.getFolder(syncdata.account, syncdata.folderID);
-                    if (folder !== null) {
-                        tbSync.takeTargetOffline("eas", folder, "[not found on server]");
-                        //folder is no longer there, unset current folder
-                        syncdata.folderID = "";
-                    }
-                    throw eas.finishSync();
-                }
-
-            case "Sync:9": //User account could be out of disk space, also send if no write permission (TODO)
+            case "Sync.7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
+            case "Sync.9": //User account could be out of disk space, also send if no write permission (TODO)
                 return "";
 
-            case "FolderDelete:3": // special system folder - fatal error
-                throw eas.finishSync("folderDelete.3");
+            case "FolderDelete.3": // special system folder - fatal error
+            case "FolderDelete.6": // error on server
+                throw eas.finishSync(statusType, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
-            case "FolderDelete:6": // error on server
-                throw eas.finishSync("folderDelete.6");
-
-            case "FolderDelete:4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
-            case "FolderDelete:9": // invalid synchronization key - resync
-            case "FolderSync:9": // invalid synchronization key - resync
-            case "Sync:12": // folder hierarchy changed
+            case "FolderDelete.4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
+            case "FolderDelete.9": // invalid synchronization key - resync
+            case "FolderSync.9": // invalid synchronization key - resync
+            case "Sync.12": // folder hierarchy changed
                 {
                     let folders = tbSync.db.getFolders(syncdata.account);
                     for (let f in folders) {
@@ -1733,7 +1711,7 @@ var eas = {
                     syncdata.folderID = "";
                     //reset account
                     tbSync.eas.onEnableAccount(syncdata.account);
-                    throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
+                    throw eas.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
                 }
         }
         
@@ -1743,7 +1721,7 @@ var eas = {
             case "101": //invalid content
             case "102": //invalid wbxml
             case "103": //invalid xml
-                throw eas.finishSync("global." + status, eas.flags.abortWithError);
+                throw eas.finishSync("global." + status, eas.flags.abortWithError, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
             
             case "109": descriptions["109"]="DeviceTypeMissingOrInvalid";
             case "112": descriptions["112"]="ActiveDirectoryAccessDenied";
@@ -1756,7 +1734,7 @@ var eas = {
                 throw eas.finishSync("global.clientdenied"+ "::" + status + "::" + descriptions[status], eas.flags.abortWithError);
 
             case "110": //server error - resync
-                throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
+                throw eas.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
             case "141": // The device is not provisionable
             case "142": // DeviceNotProvisioned
@@ -1765,12 +1743,11 @@ var eas = {
                 //enable provision
                 tbSync.db.setAccountSetting(syncdata.account, "provision","1");
                 tbSync.db.resetAccountSetting(syncdata.account, "policykey");
-                throw eas.finishSync(type+"("+status+")", eas.flags.resyncAccount);
+                throw eas.finishSync(statusType, eas.flags.resyncAccount);
             
             default:
-                msg = "WBXML: Server reports unhandled status <" + fullpath + " = " + status + ">.";
-                if (allowSoftFail) return msg;
-                throw eas.finishSync("wbxmlerror::" + fullpath + " = " + status, eas.flags.abortWithError, msg);
+                if (allowSoftFail) return statusType;
+                throw eas.finishSync(statusType, eas.flags.abortWithError, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
 
         }		
     },
@@ -2030,11 +2007,11 @@ var eas = {
                 //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
                 if (tbSync.eas.parentIsTrash(folder.account, folder.parentID) && tbSync.db.getAccountSetting(folder.account, "allowedEasCommands").split(",").includes("FolderDelete")) {// folder in recycle bin
                     hideContextMenuDelete = false;
-                    document.getElementById("tbsync.accountsettings.FolderListContextMenuDelete").label = tbSync.getLocalizedMessage("deletefolder.menuentry::" + folder.name, "eas");
+                    document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getLocalizedMessage("deletefolder.menuentry::" + folder.name, "eas");
                 }                
             }
 
-            document.getElementById("tbsync.accountsettings.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
+            document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
         },
 
 

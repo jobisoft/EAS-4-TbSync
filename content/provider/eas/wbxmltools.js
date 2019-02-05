@@ -87,7 +87,7 @@ var wbxmltools = {
                     }
 
                     if (this.isUnknownToken(codepage, token)) {
-                        tbSync.errorlog(null, "WBXML: Unknown token <" + token + "> for codepage <"+codepage+">.");
+                        tbSync.errorlog("warning", null, "WBXML: Unknown token <" + token + "> for codepage <"+codepage+">.");
                     }
             }
             num = num + 1;

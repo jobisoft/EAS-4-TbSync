@@ -113,9 +113,6 @@ status.policy.5=Il client sta riconoscendo una policy con nome errato. Contattar
 
 status.provision=Provisioning non riuscito: stato <##replace.1##>
 
-status.folderDelete.3=Impossibile eliminare una cartella di sistema.
-status.folderDelete.6=Impossibile completare il comando, si è verificato un errore sul server.
-
 status.global.101=La richiesta contiene WBXML ma non è possibile decodificarlo in XML (errore 101).
 status.global.102=La richiesta contiene WBXML ma non è possibile decodificarlo in XML (errore 102).
 status.global.103=L'XML fornito nella richiesta non rispetta i requisiti del protocollo (errore 103).
@@ -130,6 +127,21 @@ helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad
 
 status.nosupportedeasversion=Il server non supporta ActiveSync v2.5 o v14.0 (solo ##replace.1##). TbSync non funzionerà con questo server ActiveSync.
 status.notsupportedeasversion=Il server non supporta la versione di ActiveSync selezionata ##replace.1## (solo ##replace.2##).
+
+status.Sync.3=?? Invalid synchronization key (status 3), resyncing ??
+status.Sync.4=?? Malformed request (status 4) ??
+status.Sync.5=?? Temporary server issues or invalid item (status 5) ??
+status.Sync.6=?? Invalid item (status 6) ??
+status.Sync.8=?? Object not found (status 8) ??
+status.Sync.12=?? Folder hierarchy changed (status 12), resyncing ??
+status.FolderDelete.3=Impossibile eliminare una cartella di sistema.
+status.FolderDelete.6=Impossibile completare il comando, si è verificato un errore sul server.
+status.FolderDelete.4=?? Folder does not exist (status 4), resyncing ??
+status.FolderDelete.9=?? Invalid synchronization key (status 9), resyncing ??
+status.FolderSync.9=?? Invalid synchronization key (status 9), resyncing ??
+
+status.forbiddenTasksItemInCalendarFolder=?? Forbidden task item in a calendar folder (please resort) ??
+status.forbiddenCalendarItemInTasksFolder=?? Forbidden calendar item in a task folder (please resort) ??
 
 config.auto=Configurazione server ActiveSync (rilevamento automatico)
 config.custom=Configurazione server ActiveSync

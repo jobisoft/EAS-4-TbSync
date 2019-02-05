@@ -7,8 +7,17 @@
 ]>
 <overlay 
     id="tbSyncAccountConfig" 
+    oninject="tbSync.eas.onSettingsGUILoad(window, tbSyncAccountSettings.account)"
     xmlns:html="http://www.w3.org/1999/xhtml">
 
+    <menuitem 
+        id="TbSync.eas.FolderListContextMenuDelete" 
+        label="&pref.ShowTrashedFolders;" 
+        class="menuitem-iconic"
+        image="chrome://tbsync/skin/trash16.png"
+        appendto="tbsync.accountsettings.FolderListContextMenu"
+        oncommand="tbSync.eas.folderList.deleteFolder(document, tbSyncAccountSettings.account);"/>
+    
     <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
     <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />
 
@@ -40,7 +49,7 @@
                             <vbox pack="center">
                                 <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
                             </vbox>
-                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncAccountSettings.stripHost(document, tbSyncAccountSettings.account);" />
+                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSync.eas.stripHost(document, tbSyncAccountSettings.account);" />
                         </row>
                         <row>
                             <hbox/>

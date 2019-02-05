@@ -216,7 +216,7 @@ eas.tools = {
                 }
 
                 //check for international abbreviation for standard period (CET, CAT, ...)
-                if (eas.cachedTimezoneData.abbreviations[parts[i]] && eas.cachedTimezoneData.iana[eas.cachedTimezoneData.abbreviations[parts[i]]].std.offset == stdOffset) {
+                if (eas.cachedTimezoneData.abbreviations[parts[i]] && eas.cachedTimezoneData.iana[eas.cachedTimezoneData.abbreviations[parts[i]]] && eas.cachedTimezoneData.iana[eas.cachedTimezoneData.abbreviations[parts[i]]].std.offset == stdOffset) {
                     tbSync.dump("Timezone matched via international abbreviation (" + parts[i] +")", eas.cachedTimezoneData.abbreviations[parts[i]]);
                     return eas.cachedTimezoneData.iana[eas.cachedTimezoneData.abbreviations[parts[i]]].timezone;
                 }
