@@ -58,7 +58,7 @@
                         
                         <row>
                             <vbox id="asversion.hook" pack="center">
-                                <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="ActiveSync version" />
+                                <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="&pref.ActiveSyncVersion;" />
                             </vbox>
                             <!-- menulist flex="0" id="tbsync.accountsettings.pref.asversionselected"  ></menulist -->
                             <menupopup id="asversion.popup">
