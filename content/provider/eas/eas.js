@@ -607,8 +607,9 @@ var eas = {
      *
      * @param document       [in] document obj of edit/new dialog
      * @param isOwnProvider  [in] true if the open card belongs to this provider
+     * @param aCard          [in] the card being loaded
      */
-    onAbCardLoad: function (document, isOwnProvider) {
+    onAbCardLoad: function (document, isOwnProvider, aCard = null) {
     },
 
 
