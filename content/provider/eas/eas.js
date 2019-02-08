@@ -395,7 +395,13 @@ var eas = {
      */
     createAddressBook: function (newname, account, folderID) {
         let abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
-        return abManager.newAddressBook(newname, "", 2); /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
+
+        let dirPrefId = abManager.newAddressBook(newname, "", 2); /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
+        let data = abManager.getDirectoryFromId(dirPrefId);
+        if (data instanceof Components.interfaces.nsIAbDirectory && data.dirPrefId == dirPrefId) {
+            data.setStringValue("tbSyncIcon", "eas");
+        }
+        return dirPrefId; //change this to data on next big change
     },
 
 
