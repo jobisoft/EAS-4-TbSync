@@ -470,7 +470,7 @@ var eas = {
      *
      * @param account       [in] id of the account which should be searched
      * @param currentQuery  [in] search query
-     * @param caller  [in] "autocomplete" or "search"
+     * @param caller        [in] "autocomplete" or "search"
     
      */
     abServerSearch: Task.async (function* (account, currentQuery, caller)  {
@@ -556,12 +556,12 @@ var eas = {
      * address book
      *
      * @param window       [in] window obj of address book
-     * @param card         [in] selected card
+     * @param aCard        [in] selected card
      */
-    onAbResultsPaneSelectionChanged: function (window, card) {
+    onAbResultsPaneSelectionChanged: function (window, aCard) {
         let email3Box = window.document.getElementById("cvEmail3Box");
         if (email3Box) {
-            let email3Value = card.getProperty("Email3Address","");
+            let email3Value = aCard.getProperty("Email3Address","");
             if (email3Value) {
                 email3Box.hidden = false;
                 let email3Element = window.document.getElementById("cvEmail3");
@@ -584,7 +584,7 @@ var eas = {
             if (phoneNumbers.hasOwnProperty(field)) {
                 let element = window.document.getElementById(field);
                 if (element) {
-                    let value = card.getProperty(phoneNumbers[field],"");
+                    let value = aCard.getProperty(phoneNumbers[field],"");
                     if (value) {
                         element.hidden = false;
                         element.textContent = element.getAttribute("labelprefix") + " " + value;
@@ -599,8 +599,8 @@ var eas = {
             window.document.getElementById("cvhPhone").collapsed = false;
         }
         
-    },
-    
+    },   
+
 
 
     /**
@@ -611,11 +611,11 @@ var eas = {
      * the edit/new dialog beyond toggeling the elements of 
      * class  "<provider>Container"
      *
-     * @param document       [in] document obj of edit/new dialog
+     * @param aDocument      [in] document obj of edit/new dialog
      * @param isOwnProvider  [in] true if the open card belongs to this provider
      * @param aCard          [in] the card being loaded
      */
-    onAbCardLoad: function (document, isOwnProvider, aCard = null) {
+    onAbCardLoad: function (aDocument, isOwnProvider, aCard = null) {
     },
 
 
