@@ -211,7 +211,7 @@ eas.sync.Calendar = {
             let tzInfo = null;
             if (item.startDate && item.startDate.timezone.tzid != "floating") tzInfo = eas.tools.getTimezoneInfo(item.startDate.timezone);
             else if (item.endDate && item.endDate.timezone.tzid != "floating") tzInfo = eas.tools.getTimezoneInfo(item.endDate.timezone);
-            else tzInfo = eas.defaultTimezoneInfo;
+            if (!tzInfo) tzInfo = eas.defaultTimezoneInfo;
             
             easTZ.utcOffset =   tzInfo.std.offset;
             easTZ.standardBias = 0;
