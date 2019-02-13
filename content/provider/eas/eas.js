@@ -90,19 +90,24 @@ var eas = {
         yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
         yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
 
+        try {
         if (lightningIsAvail) {
-
-           //get timezone info of default timezone (old cal. without dtz are depricated)
+            
+            //get timezone info of default timezone (old cal. without dtz are depricated)
             eas.defaultTimezone = (cal.dtz && cal.dtz.defaultTimezone) ? cal.dtz.defaultTimezone : cal.calendarDefaultTimezone();
             eas.utcTimezone = (cal.dtz && cal.dtz.UTC) ? cal.dtz.UTC : cal.UTC();
-            //if default timezone is not defined, use utc as default
-            if (eas.defaultTimezone.icalComponent) {
-                eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
+            if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
+                tbSync.errorlog("info", null, "Default timezone has been found.");
             } else {
                 tbSync.errorlog("info", null, "Default timezone is not defined, using UTC!");
-                eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.utcTimezone);
+                eas.defaultTimezone = eas.utcTimezone;
             }
 
+            eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
+            if (!eas.defaultTimezoneInfo) {
+                tbSync.errorlog("info", null, "Could not create defaultTimezoneInfo");
+            }
+            
             //get windows timezone data from CSV
             let csvData = yield eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
             for (let i = 0; i<csvData.length; i++) {
@@ -139,7 +144,12 @@ var eas = {
                     }
                 }
             }
+        } else {
+                tbSync.errorlog("info", null, "Lightning was not loaded, creation of timezone objects has been skipped.");
         }
+    } catch(e) {
+                Components.utils.reportError(e);        
+    }
 
     }),
 
