@@ -573,7 +573,7 @@ var eas = {
         if (email3Box) {
             let email3Value = aCard.getProperty("Email3Address","");
             if (email3Value) {
-                email3Box.hidden = false;
+                email3Box.collapsed = false;
                 let email3Element = window.document.getElementById("cvEmail3");
                 window.HandleLink(email3Element, window.zSecondaryEmail, email3Value, email3Box, "mailto:" + email3Value);
             }
@@ -596,7 +596,7 @@ var eas = {
                 if (element) {
                     let value = aCard.getProperty(phoneNumbers[field],"");
                     if (value) {
-                        element.hidden = false;
+                        element.collapsed = false;
                         element.textContent = element.getAttribute("labelprefix") + " " + value;
                         phoneFound = true;
                     }
@@ -629,7 +629,7 @@ var eas = {
         //store hide action in DOM
         for (let i=0; i < elementsToHide.length; i++) {
             if (elementsToHide[i]) {
-                elementsToHide[i].hidden = true;
+                elementsToHide[i].collapsed = true;
                 let classStr = elementsToHide[i].getAttribute("class");
                 let classArr = (classStr) ? classStr.split(" ") : [];
                 classArr.push("davHidden");
