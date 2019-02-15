@@ -2,7 +2,7 @@
 <!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
 
 <overlay 
-	id="abCardWindow" 
+	id="abEasCardWindow" 
 	xmlns:html="http://www.w3.org/1999/xhtml">
 
     <hbox id="MiddleNameContainer" align="center" collapsed="true" class="easContainer" insertafter="NameField1Container" >

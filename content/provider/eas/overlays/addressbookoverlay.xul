@@ -3,7 +3,7 @@
 <!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
 
 <overlay 
-    id="abOverlay" 
+    id="abEasOverlay" 
     xmlns:html="http://www.w3.org/1999/xhtml">
 
     <description class="CardViewLink tbsyncContainer" id="cvEmail3Box" insertafter="cvEmail2Box">
