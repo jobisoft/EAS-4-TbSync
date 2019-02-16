@@ -86,71 +86,72 @@ var eas = {
      */
     load: Task.async (function* (lightningIsAvail) {
         //dynamically load overlays from xpi
+        eas.overlayManager = new OverlayManager({verbose: 5});
         yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
         yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
         yield tbSync.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
-
+        eas.overlayManager.startObserving();
+        
         try {
-        if (lightningIsAvail) {
-            
-            //get timezone info of default timezone (old cal. without dtz are depricated)
-            eas.defaultTimezone = (cal.dtz && cal.dtz.defaultTimezone) ? cal.dtz.defaultTimezone : cal.calendarDefaultTimezone();
-            eas.utcTimezone = (cal.dtz && cal.dtz.UTC) ? cal.dtz.UTC : cal.UTC();
-            if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
-                tbSync.errorlog("info", null, "Default timezone has been found.");
-            } else {
-                tbSync.errorlog("info", null, "Default timezone is not defined, using UTC!");
-                eas.defaultTimezone = eas.utcTimezone;
-            }
-
-            eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
-            if (!eas.defaultTimezoneInfo) {
-                tbSync.errorlog("info", null, "Could not create defaultTimezoneInfo");
-            }
-            
-            //get windows timezone data from CSV
-            let csvData = yield eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
-            for (let i = 0; i<csvData.length; i++) {
-                let lData = csvData[i].split(",");
-                if (lData.length<3) continue;
+            if (lightningIsAvail) {
                 
-                let windowsZoneName = lData[0].toString().trim();
-                let zoneType = lData[1].toString().trim();
-                let ianaZoneName = lData[2].toString().trim();
+                //get timezone info of default timezone (old cal. without dtz are depricated)
+                eas.defaultTimezone = (cal.dtz && cal.dtz.defaultTimezone) ? cal.dtz.defaultTimezone : cal.calendarDefaultTimezone();
+                eas.utcTimezone = (cal.dtz && cal.dtz.UTC) ? cal.dtz.UTC : cal.UTC();
+                if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
+                    tbSync.errorlog("info", null, "Default timezone has been found.");
+                } else {
+                    tbSync.errorlog("info", null, "Default timezone is not defined, using UTC!");
+                    eas.defaultTimezone = eas.utcTimezone;
+                }
+
+                eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
+                if (!eas.defaultTimezoneInfo) {
+                    tbSync.errorlog("info", null, "Could not create defaultTimezoneInfo");
+                }
                 
-                if (zoneType == "001") eas.windowsTimezoneMap[windowsZoneName] = ianaZoneName;
-                if (ianaZoneName == eas.defaultTimezoneInfo.std.id) eas.defaultTimezoneInfo.std.windowsZoneName = windowsZoneName;
-            }
+                //get windows timezone data from CSV
+                let csvData = yield eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
+                for (let i = 0; i<csvData.length; i++) {
+                    let lData = csvData[i].split(",");
+                    if (lData.length<3) continue;
+                    
+                    let windowsZoneName = lData[0].toString().trim();
+                    let zoneType = lData[1].toString().trim();
+                    let ianaZoneName = lData[2].toString().trim();
+                    
+                    if (zoneType == "001") eas.windowsTimezoneMap[windowsZoneName] = ianaZoneName;
+                    if (ianaZoneName == eas.defaultTimezoneInfo.std.id) eas.defaultTimezoneInfo.std.windowsZoneName = windowsZoneName;
+                }
 
 
-            //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
-            //but do not change any explicitly set association
-            // - A) find email identity and accociate (which sets organizer to that user identity)
-            // - B) overwrite default organizer with current best guess
-            //TODO: Do this after email accounts changed, not only on restart? 
-            let folders = tbSync.db.findFoldersWithSetting(["selected","type"], ["1","8,13"], "provider", "eas");
-            for (let f=0; f < folders.length; f++) {
-                let calendar = cal.getCalendarManager().getCalendarById(folders[f].target);
-                if (calendar && calendar.getProperty("imip.identity.key") == "") {
-                    //is there an email identity for this eas account?
-                    let key = tbSync.getIdentityKey(tbSync.db.getAccountSetting(folders[f].account, "user"));
-                    if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?
-                        //set transient calendar organizer settings based on current best guess and 
-                        calendar.setProperty("organizerId", cal.email.prependMailTo(tbSync.db.getAccountSetting(folders[f].account, "user")));
-                        calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
-                    } else {                      
-                        //force switch to found identity
-                        calendar.setProperty("imip.identity.key", key);
+                //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
+                //but do not change any explicitly set association
+                // - A) find email identity and accociate (which sets organizer to that user identity)
+                // - B) overwrite default organizer with current best guess
+                //TODO: Do this after email accounts changed, not only on restart? 
+                let folders = tbSync.db.findFoldersWithSetting(["selected","type"], ["1","8,13"], "provider", "eas");
+                for (let f=0; f < folders.length; f++) {
+                    let calendar = cal.getCalendarManager().getCalendarById(folders[f].target);
+                    if (calendar && calendar.getProperty("imip.identity.key") == "") {
+                        //is there an email identity for this eas account?
+                        let key = tbSync.getIdentityKey(tbSync.db.getAccountSetting(folders[f].account, "user"));
+                        if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?
+                            //set transient calendar organizer settings based on current best guess and 
+                            calendar.setProperty("organizerId", cal.email.prependMailTo(tbSync.db.getAccountSetting(folders[f].account, "user")));
+                            calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
+                        } else {                      
+                            //force switch to found identity
+                            calendar.setProperty("imip.identity.key", key);
+                        }
                     }
                 }
+            } else {
+                    tbSync.errorlog("info", null, "Lightning was not loaded, creation of timezone objects has been skipped.");
             }
-        } else {
-                tbSync.errorlog("info", null, "Lightning was not loaded, creation of timezone objects has been skipped.");
+        } catch(e) {
+                    Components.utils.reportError(e);        
         }
-    } catch(e) {
-                Components.utils.reportError(e);        
-    }
-
     }),
 
 
@@ -162,6 +163,7 @@ var eas = {
      */
     unload: function (lightningIsAvail) {
         tbSync.dump("Unloading", "eas");
+        eas.overlayManager.stopObserving();        
     },
 
 
