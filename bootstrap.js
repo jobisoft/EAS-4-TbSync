@@ -15,11 +15,18 @@ let thisID = "";
 
 let onInitDoneObserver = {
     observe: Task.async (function* (aSubject, aTopic, aData) {        
-        //it is now safe to import tbsync.jsm
-        Components.utils.import("chrome://tbsync/content/tbsync.jsm");
+        let valid = false;
+        try {
+            Components.utils.import("chrome://tbsync/content/tbsync.jsm");
+            valid = tbSync.enabled;
+        } catch (e) {
+            //if this fails, tbSync is not loaded yet and we will get the notification later again
+        }
         
-        //load all providers of this provider add-on into TbSync (one at a time, obey order)
-        yield tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
+        //load this provider add-on into TbSync
+        if (valid) {
+            yield tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
+        }
     })
 }
 
