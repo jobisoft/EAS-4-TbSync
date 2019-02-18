@@ -77,9 +77,19 @@ var tbSyncAbEasCardWindow = {
             }
         }
 
+        //get current size
+        let currentWidth = window.outerWidth;
+        let currentHeight = window.outerHeight;
+        let newWidth;
+        let newHeight;
+
         if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xul") {
+            newWidth = 0;
+            newHeight = 460;
             window.RegisterSaveListener(tbSyncAbEasCardWindow.onSaveCard);        
         } else {            
+            newWidth = 0;
+            newHeight = 410;
             window.RegisterLoadListener(tbSyncAbEasCardWindow.onLoadCard);
             window.RegisterSaveListener(tbSyncAbEasCardWindow.onSaveCard);
 
@@ -87,6 +97,10 @@ var tbSyncAbEasCardWindow = {
             if (gEditCard) tbSyncAbEasCardWindow.onLoadCard(gEditCard.card, window.document);
         }
 
+        //adjust size if needed
+        if (currentWidth < newWidth || currentHeight < newHeight) {
+            window.resizeTo(Math.max(newWidth, currentWidth), Math.max(newHeight, currentHeight));
+        }        
     },
 
     onRemove: function (window) {

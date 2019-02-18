@@ -248,6 +248,15 @@ var eas = {
 
 
     /**
+     * Returns the overlay manager for this provider (if any).
+     */
+    getOverlayManager: function () {
+        return eas.overlayManager;
+    },
+
+
+
+    /**
      * Returns a list of sponsors, they will be sorted by the index
      */
     getSponsors: function () {
