@@ -616,43 +616,6 @@ var eas = {
 
 
     /**
-     * Is called if a card is loaded in the edit dialog to show/hide elements
-     *
-     * @param aDocument      [in] document obj of edit/new dialog
-     * @param aCard          [in] the card being loaded
-     */
-    onAbCardLoad: function (aDocument, aCard = null) {        
-        let elementsToHide = [];
-        let elementsToDisable = [];
-        
-        //hide stuff from gContactSync *grrrr* - I cannot hide all because he adds them via javascript :-(
-        elementsToHide.push(aDocument.getElementById("gContactSyncTab"));
-        
-        //store hide action in DOM
-        for (let i=0; i < elementsToHide.length; i++) {
-            if (elementsToHide[i]) {
-                elementsToHide[i].collapsed = true;
-                let classStr = elementsToHide[i].getAttribute("class");
-                let classArr = (classStr) ? classStr.split(" ") : [];
-                classArr.push("davHidden");
-                elementsToHide[i].setAttribute("class", classArr.join(" "));
-            }
-        }
-
-        //store disable action in DOM
-        for (let i=0; i < elementsToDisable.length; i++) {
-            if (elementsToDisable[i]) {
-                elementsToDisable[i].disabled = true;
-                let classStr = elementsToDisable[i].getAttribute("class");
-                let classArr = (classStr) ? classStr.split(" ") : [];
-                classArr.push("davDisabled");
-                elementsToDisable[i].setAttribute("class", classArr.join(" "));
-            }
-        }
-    },
-
-
-    /**
      * Is called if TbSync needs to synchronize an account.
      *
      * @param syncdata      [in] object that contains the account and maybe the folder which needs to worked on
