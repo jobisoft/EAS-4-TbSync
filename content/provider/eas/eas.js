@@ -87,9 +87,11 @@ var eas = {
     load: Task.async (function* (lightningIsAvail) {
         //dynamically load overlays from xpi
         eas.overlayManager = new OverlayManager({verbose: 0});
-        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
+        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abNewCardWindow.xul");
         yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
+        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
         yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
+        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookdetailsoverlay.xul");
         eas.overlayManager.startObserving();
         
         try {
@@ -243,15 +245,6 @@ var eas = {
      */
     getNiceProviderName: function () {
         return "Exchange ActiveSync";
-    },
-
-
-
-    /**
-     * Returns the overlay manager for this provider (if any).
-     */
-    getOverlayManager: function () {
-        return eas.overlayManager;
     },
 
 
@@ -566,61 +559,6 @@ var eas = {
         
         return galdata;
     }),
-
-
-
-    /**
-     * Is called if one or more cards have been selected in the addressbook, to update 
-     * field information in the card view pane
-     * 
-     * OPTIONAL, do not implement, if this provider is not adding any fields to the
-     * address book
-     *
-     * @param window       [in] window obj of address book
-     * @param aCard        [in] selected card
-     */
-    onAbResultsPaneSelectionChanged: function (window, aCard) {
-        let email3Box = window.document.getElementById("cvEmail3Box");
-        if (email3Box) {
-            let email3Value = aCard.getProperty("Email3Address","");
-            if (email3Value) {
-                email3Box.collapsed = false;
-                let email3Element = window.document.getElementById("cvEmail3");
-                window.HandleLink(email3Element, window.zSecondaryEmail, email3Value, email3Box, "mailto:" + email3Value);
-            }
-        }
-        
-        let phoneNumbers = {
-            easPhWork2: "Business2PhoneNumber",
-            easPhWorkFax: "BusinessFaxNumber",
-            easPhCompany: "CompanyMainPhone",
-            easPhAssistant: "AssistantPhoneNumber",
-            easPhHome2: "Home2PhoneNumber",
-            easPhCar: "CarPhoneNumber",
-            easPhRadio: "RadioPhoneNumber"
-        };
-        
-        let phoneFound = false;
-        for (let field in phoneNumbers) {
-            if (phoneNumbers.hasOwnProperty(field)) {
-                let element = window.document.getElementById(field);
-                if (element) {
-                    let value = aCard.getProperty(phoneNumbers[field],"");
-                    if (value) {
-                        element.collapsed = false;
-                        element.textContent = element.getAttribute("labelprefix") + " " + value;
-                        phoneFound = true;
-                    }
-                }
-            }
-        }
-
-        if (phoneFound) {
-            window.document.getElementById("cvbPhone").collapsed = false;
-            window.document.getElementById("cvhPhone").collapsed = false;
-        }
-        
-    },   
 
 
 
