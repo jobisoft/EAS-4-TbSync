@@ -4,3 +4,7 @@ treechildren::-moz-tree-image(DirCol, eas) {
   margin-inline-end: 2px;
   list-style-image: url("chrome://eas4tbsync/skin/eas16.png");
 }
+
+.abMenuItem[AddrBook="true"][TbSyncIcon="eas"] {
+  list-style-image: url("chrome://eas4tbsync/skin/eas16.png");
+}
