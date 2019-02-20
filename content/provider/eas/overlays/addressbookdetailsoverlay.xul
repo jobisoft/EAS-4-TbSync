@@ -8,7 +8,7 @@
     onremove="tbSyncEasAddressBookDetails.onRemove(window)"
     xmlns:html="http://www.w3.org/1999/xhtml">
 
-    <script type="application/javascript" src="chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.js" />
+    <script type="application/javascript" src="chrome://eas4tbsync/content/provider/eas/overlays/addressbookdetailsoverlay.js" />
 
     <description class="CardViewLink" id="cvEmail3Box" insertafter="cvEmail2Box">
         <html:a href="" id="cvEmail3" />
