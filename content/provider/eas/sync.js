@@ -840,7 +840,7 @@ wbxml.ctag();*/
         if (asversion == "2.5") {
             if (data.Body) item.setProperty("description", xmltools.checkString(data.Body));
         } else {
-            if (data.Body && data.Body.EstimatedDataSize > 0 && data.Body.Data) item.setProperty("description", xmltools.checkString(data.Body.Data)); //CLEAR??? DataSize>0 ?? TODO
+            if (data.Body && /* data.Body.EstimatedDataSize > 0  && */ data.Body.Data) item.setProperty("description", xmltools.checkString(data.Body.Data)); //EstimatedDataSize is optional
         }
     },
 
