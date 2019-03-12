@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://tbsync/skin/fix_dropdown_1534697.css" type="text/css"?>
 <!DOCTYPE window [
   <!ENTITY % tbsyncDTD SYSTEM "chrome://tbsync/locale/tbSync.dtd">
   %tbsyncDTD;
