@@ -9,6 +9,7 @@
  "use strict";
 
 Components.utils.import("chrome://tbsync/content/tbsync.jsm");
+Components.utils.import("resource://gre/modules/osfile.jsm");
 
 var tbSyncAbEasCardWindow = {
     
@@ -84,17 +85,23 @@ var tbSyncAbEasCardWindow = {
         let newHeight;
 
         if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xul") {
-            newWidth = 0;
-            newHeight = 460;
+            newWidth = 700;
+            newHeight = 480;
             window.RegisterSaveListener(tbSyncAbEasCardWindow.onSaveCard);        
         } else {            
-            newWidth = 0;
-            newHeight = 410;
+            newWidth = 700;
+            newHeight = 430;
             window.RegisterLoadListener(tbSyncAbEasCardWindow.onLoadCard);
             window.RegisterSaveListener(tbSyncAbEasCardWindow.onSaveCard);
 
             //if this window was open during inject, load the extra fields
             if (gEditCard) tbSyncAbEasCardWindow.onLoadCard(gEditCard.card, window.document);
+        }
+
+        //Mac needs extra space
+        if (OS.Constants.Sys.Name == "Darwin") {
+            newWidth += 70;
+            newHeight += 30;
         }
 
         //adjust size if needed
