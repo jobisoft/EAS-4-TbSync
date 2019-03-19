@@ -79,7 +79,6 @@ var tbSyncAbEasCardWindow = {
         }
 
         if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xul") {
-            window.sizeToContent(); 
             window.RegisterSaveListener(tbSyncAbEasCardWindow.onSaveCard);        
         } else {            
             window.RegisterLoadListener(tbSyncAbEasCardWindow.onLoadCard);
