@@ -61,7 +61,7 @@ function shutdown(data, reason) {
 
     //unload this provider add-on and all its loaded providers from TbSync
     try {
-        tbSync.unloadProviderAddon(data.id);
+        tbSync.unloadProvider("eas");
     } catch (e) {
         //if this fails, tbSync has been unloaded already but has unloaded this addon as well
     }
