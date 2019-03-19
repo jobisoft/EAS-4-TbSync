@@ -1,4 +1,5 @@
 <!ENTITY add.title "Добавить Exchange ActiveSync аккаунт для TbSync">
+<!ENTITY add.shortdescription "Информация об учетной записи">
 <!ENTITY add.ok "Добавить аккаунт">
 <!ENTITY add.name "Имя аккаунта:">
 <!ENTITY add.user "Имя пользователя (email адрес):">

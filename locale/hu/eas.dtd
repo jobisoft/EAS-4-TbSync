@@ -1,4 +1,5 @@
 <!ENTITY add.title "Exchange ActiveSync-fiók hozzáadása a Thunderbird-összehangoláshoz">
+<!ENTITY add.shortdescription "Fiók adatait">
 <!ENTITY add.ok "Fiók hozzáadása">
 <!ENTITY add.name "Felhasználónév:">
 <!ENTITY add.user "Felhasználónév (e-mail cím):">

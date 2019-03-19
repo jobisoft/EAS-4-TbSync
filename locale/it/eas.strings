@@ -4,10 +4,7 @@ newaccount.add_auto=Rileva automaticamente impostazioni e aggiungi account
 autodiscover.Querying=Rilevamento impostazioni in corso...
 autodiscover.Ok=Rilevamento automatico impostazioni completato con successo, è ora possibile verificare le impostazioni facoltative e stabilire la connessione per la sincronizzazione.
 autodiscover.NeedEmail=Il rilevamento automatico impostazioni richiede che venga specificato un indirizzo di posta elettronica valido come nome utente.
-
-autodiscover.Failed=Rilevamento automatico non riuscito per l'utente <##user##>.
-autodiscover.FailedUnknown=Le credenziali fornite sono errate o il proprio provider ActiveSync ha un problema temporaneo o non supporta il rilevamento automatico impostazioni.
-autodiscover.FailedSecurity=Sono stati segnalati anche i seguenti errori certificato, che *potrebbero* indicare un problema con il proprio provider ActiveSync:
+autodiscover.Failed=Rilevamento automatico non riuscito per l'utente <##user##>. Le credenziali fornite sono errate o il proprio provider ActiveSync ha un problema temporaneo o non supporta il rilevamento automatico impostazioni.
 
 deletefolder.notallowed=Annullare la sottoscrizione alla cartella "##replace.1##" prima di provare a eliminarla dal Cestino.
 deletefolder.confirm=ELIMINARE PERMANENTEMENTE la cartella "##replace.1##" dal Cestino?

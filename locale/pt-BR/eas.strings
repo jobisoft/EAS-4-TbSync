@@ -4,10 +4,7 @@ newaccount.add_auto=Configurações de descoberta automática e adicionar conta
 autodiscover.Querying=Procurando por configurações...
 autodiscover.Ok=Descoberta automática concluída com êxito, agora você pode verificar as configurações opcionais e estabelecer a conexão de sincronização.
 autodiscover.NeedEmail=A descoberta automática precisa de um endereço de email válido
-
-autodiscover.Failed=Descoberta automática para usuário <##user##> falhou.
-autodiscover.FailedUnknown=As credenciais fornecidas estavam erradas ou seu provedor do ActiveSync tem um problema temporário ou não oferece suporte à descoberta automática.
-autodiscover.FailedSecurity=Além disso, os seguintes erros de certificado foram relatados, o que *pode* indicar um problema com o provedor do ActiveSync:
+autodiscover.Failed=Descoberta automática para usuário <##user##> falhou. As credenciais fornecidas estavam erradas ou seu provedor do ActiveSync tem um problema temporário ou não oferece suporte à descoberta automática.
 
 deletefolder.notallowed=Por favor, cancele a subscrição da pasta "##replace.1##" antes de tentar limpá-lo do lixo.
 deletefolder.confirm=Você realmente deseja limpar permanentemente a pasta "##replace.1##" da lixeira?

@@ -1734,7 +1734,7 @@ var eas = {
 
         return u.split("//")[1]; //cut off protocol
     },
-    
+
     getServerConnectionViaAutodiscover : Task.async (function* (user, password, maxtimeout) {
         let urls = [];
         let parts = user.split("@");
@@ -1748,97 +1748,77 @@ var eas = {
         urls.push({"url":"https://"+parts[1]+"/autodiscover/autodiscover.xml", "user":user});
         urls.push({"url":"https://autodiscover."+parts[1]+"/Autodiscover/Autodiscover.xml", "user":user});
         urls.push({"url":"https://"+parts[1]+"/Autodiscover/Autodiscover.xml", "user":user});
-
+        
+        let requests = [];
+        for (let i=0; i< urls.length; i++) {
+            yield tbSync.sleep(200);
+            requests.push( tbSync.eas.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
+        }
+ 
         let responses = []; //array of objects {url, error, server}
-        let initialUrlArraySize = urls.length;
-
-        for (let i=0; i<initialUrlArraySize; i++) {
-            tbSync.dump("Querry EAS autodiscover URL ("+i+")", urls[i].url + " @ " + urls[i].user);
-            let timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-            let connection = {"url":urls[i].url, "user":urls[i].user};
-            timer.initWithCallback({notify : function () {tbSync.eas.getServerConnectionViaAutodiscoverRedirectWrapper(responses, urls, connection, password, maxtimeout)}}, 200*i, 0);
+        try {
+            responses = yield Promise.all(requests); 
+        } catch (e) {
+            responses.push(e); //this is actually a success, see return value of getServerConnectionViaAutodiscoverRedirectWrapper()
         }
-
-        //monitor responses and url size (can increase due to redirects)
-        let startDate = Date.now();
-        let result = null;
         
-        while ((Date.now()-startDate) < maxtimeout && result === null) {
-            yield tbSync.sleep(1000);
-            
-            let i = 0;
-            while (initialUrlArraySize < urls.length) {
-                tbSync.dump("Querry EAS autodiscover URL ("+initialUrlArraySize+")", urls[initialUrlArraySize].url + " @ " + urls[initialUrlArraySize].user);
-                let timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-                let connection = {"url":urls[initialUrlArraySize].url, "user":urls[initialUrlArraySize].user};
-                timer.initWithCallback({notify : function () {tbSync.eas.getServerConnectionViaAutodiscoverRedirectWrapper(responses, urls, connection, password, maxtimeout)}}, 200*i, 0);                
-                initialUrlArraySize++;
-                i++;
+        let result;
+        let log = [];        
+        for (let r=0; r < responses.length; r++) {
+            log.push("*  "+responses[r].url+" @ " + responses[r].user +" : " + (responses[r].server ? responses[r].server : responses[r].error));
+
+            if (responses[r].server) {
+                result = {"server": responses[r].server, "user": responses[r].user, "error": "", "errorcode": 200};
+                break;
             }
             
-            //also check, if one of our request succeded or failed hard, no need to wait for the others, return
-            for (let r=0; r<responses.length; r++) {
-                if (responses[r].server) result = {"server": responses[r].server, "user": responses[r].user, "error": "", "errorcode":200};
-                if (responses[r].error == 403 || responses[r].error == 401) result = {"server": "", "user": responses[r].user, "errorcode": responses[r].error, "error": tbSync.getLocalizedMessage("status." + responses[r].error, "eas")};
+            if (responses[r].error == 403 || responses[r].error == 401) {
+                //we could still find a valid server, so just store this state
+                result = {"server": "", "user": responses[r].user, "errorcode": responses[r].error, "error": tbSync.getLocalizedMessage("status." + responses[r].error, "eas")};
             }
-            
         } 
-
-        //log all responses and extract certerrors
-        let certerrors = [];
-        let log = [];
-        for (let r=0; r<responses.length; r++) {
-            log.push(" *  "+responses[r].url+" @ " + responses[r].user +" : " + (responses[r].server ? responses[r].server : responses[r].error));
-
-            //look for certificate errors, which might be usefull to the user in case of a general fail
-            if (responses[r].error) {
-                let security_error = responses[r].error.toString().split("::");
-                if (security_error.length == 2 && security_error[0] == "security") {
-                    certerrors.push(responses[r].url + "\n\t => " + security_error[1]);
-                }
-            }
-        }
-        tbSync.dump("EAS autodiscover results","\n" + log.join("\n"));
         
-        if (result === null) { 
-            let error = tbSync.getLocalizedMessage("autodiscover.FailedUnknown","eas");
-            //include certerrors
-            if (certerrors.length>0) error = error + "\n\n" + tbSync.getLocalizedMessage("autodiscover.FailedSecurity","eas") + "\n\n" + certerrors.join("\n");
-            result = {"server":"", "user":user, "error":error, "errorcode":503};
+        //this is only reached on fail, if no result defined yet, use general error
+        if (!result) { 
+            result = {"server": "", "user": user, "error": tbSync.getLocalizedMessage("autodiscover.Failed","eas").replace("##user##", user), "errorcode": 503};
         }
 
+        tbSync.errorlog("error", null, result.error, log.join("\n"));
         return result;        
     }),
        
-    getServerConnectionViaAutodiscoverRedirectWrapper : Task.async (function* (responses, urls, connection, password, maxtimeout) {        
+    getServerConnectionViaAutodiscoverRedirectWrapper : Task.async (function* (url, user, password, maxtimeout) {        
         //using HEAD to find URL redirects until response URL no longer changes 
         // * XHR should follow redirects transparently, but that does not always work, POST data could get lost, so we
         // * need to find the actual POST candidates (example: outlook.de accounts)
         let result = {};
         let method = "HEAD";
-            
+        let connection = { url, user };
+        
         do {            
             yield tbSync.sleep(200);
             result = yield tbSync.eas.getServerConnectionViaAutodiscoverRequest(method, connection, password, maxtimeout);
             method = "";
             
             if (result.error == "redirect found") {
-                //add this url to the list, if it is new
-                if (!urls.some(u => (u.url == result.url && u.user == result.user))) {
-                    urls.push({"url":result.url, "user":result.user});
-                    tbSync.dump("EAS autodiscover URL redirect",  "\n" + connection.url + " @ " + connection.user + " => \n" + result.url + " @ " + result.user);
-                }
-                return;
+                tbSync.dump("EAS autodiscover URL redirect",  "\n" + connection.url + " @ " + connection.user + " => \n" + result.url + " @ " + result.user);
+                connection.url = result.url;
+                connection.user = result.user;
+                method = "HEAD";
             } else if (result.error == "POST candidate found") {
                 method = "POST";
             }
 
-        } while (method == "POST");
-
-        if (responses && Array.isArray(responses)) responses.push(result);
+        } while (method);
+        
+        //invert reject and resolve, so we exit the promise group on success right away
+        if (result.server) throw result;
+        else return result;
     }),    
     
     getServerConnectionViaAutodiscoverRequest: function (method, connection, password, maxtimeout) {
+        tbSync.dump("Querry EAS autodiscover URL", connection.url + " @ " + connection.user);
+        
         return new Promise(function(resolve,reject) {
             
             let xml = '<?xml version="1.0" encoding="utf-8"?>\r\n';

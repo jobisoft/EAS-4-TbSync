@@ -4,10 +4,7 @@ newaccount.add_auto=Az önműködő felismerés beállításai és fiók hozzáa
 autodiscover.Querying=Beállítások keresése…
 autodiscover.Ok=Az önműködő felderítés sikeresen befejeződött, most ellenőrizheti az választható beállításokat és létrehozhatja az összehangolási kapcsolatot.
 autodiscover.NeedEmail=Az önműködő felismerésnek érvényes e-mail címnek kell lennie felhasználói névként.
-
-autodiscover.Failed=A felhasználó <##user##> önműködő felderítése sikertelen.
-autodiscover.FailedUnknown=Vagy a megadott hitelesítő adatok hibásak voltak, vagy az ActiveSync szolgáltató ideiglenes problémát okozott, vagy nem támogatja az önműködő felderítést.
-autodiscover.FailedSecurity=A következő tanúsítványhibákat is jelentették, amelyek *jelezhetik* az ActiveSync szolgáltatóval kapcsolatos problémát:
+autodiscover.Failed=A felhasználó <##user##> önműködő felderítése sikertelen. Vagy a megadott hitelesítő adatok hibásak voltak, vagy az ActiveSync szolgáltató ideiglenes problémát okozott, vagy nem támogatja az önműködő felderítést.
 
 deletefolder.notallowed=Kérjük, törölje le a(z) „##replace.1##” mappát, mielőtt megpróbálnánk kuka ürítése.
 deletefolder.confirm=Tényleg azt szeretné, hogy a(z) „##replace.1##” mappa véglegesen törölje a kukát?

@@ -1,4 +1,5 @@
 <!ENTITY add.title "Exchange ActiveSync Konto hinzufügen">
+<!ENTITY add.shortdescription "Kontoinformationen">
 <!ENTITY add.ok "Konto hinzufügen">
 <!ENTITY add.name "Kontoname:">
 <!ENTITY add.user "Benutzername (E-Mail Adresse):">

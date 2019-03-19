@@ -4,10 +4,7 @@ newaccount.add_auto=Einstellungen suchen und Konto hinzufügen
 autodiscover.Querying=Einstellungen werden gesucht ...
 autodiscover.Ok=Autodiscover war erfolgreich, Sie können nun die optionalen Einstellungen überprüfen und die Synchronisationsverbindung aktivieren.
 autodiscover.NeedEmail=Autodiscover benötigt eine gültige E-Mail Adresse als Benutzername.
-
-autodiscover.Failed=Autodiscover für den Benutzer <##user##> war nicht erfolgreich.
-autodiscover.FailedUnknown=Entweder war das Passwort nicht korrekt, Ihr ActiveSync Server hat ein temporäres Problem oder unterstützt kein Autodiscover.
-autodiscover.FailedSecurity=Folgende Zertifikatsfehler sind aufgetreten was *eventuell* auf ein Problem mit Ihrem ActiveSync Provider hindeuten kann:
+autodiscover.Failed=Autodiscover für den Benutzer <##user##> war nicht erfolgreich. Entweder war das Passwort nicht korrekt, Ihr ActiveSync Server hat ein temporäres Problem oder unterstützt kein Autodiscover.
 
 deletefolder.notallowed=Bitte beenden Sie zunächst das Abonement des Ordner "##replace.1##", bevor Sie diesen aus dem Papierkorb entfernen.
 deletefolder.confirm=Möchten Sie den Ordner "##replace.1##" wirklich ENDGÜLTIG aus dem Papierkorb ENTFERNEN?

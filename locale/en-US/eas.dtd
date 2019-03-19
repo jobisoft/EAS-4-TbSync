@@ -1,4 +1,5 @@
 <!ENTITY add.title "Adding an Exchange ActiveSync account to TbSync">
+<!ENTITY add.shortdescription "Account information">
 <!ENTITY add.ok "Add account">
 <!ENTITY add.name "Account name:">
 <!ENTITY add.user "User name (email address):">

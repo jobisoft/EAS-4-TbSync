@@ -1,21 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
+<!DOCTYPE window [
+  <!ENTITY % tbsyncDTD SYSTEM "chrome://tbsync/locale/tbSync.dtd">
+  %tbsyncDTD;
+  <!ENTITY % easDTD SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
+  %easDTD;
+]>
 
-<dialog
+<wizard
+    width="600"
+    height="500"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&add.title;"
-    buttons="cancel,extra1"
-    defaultButton="extra1"
-    buttonlabelextra1=""
+    id="tbsync.newaccount.wizard"
     onload="tbSyncEasNewAccount.onLoad();"
     onunload="tbSyncEasNewAccount.onUnload();"
     onclose="return tbSyncEasNewAccount.onClose()"
-    ondialogextra1="tbSyncEasNewAccount.onAdd();">
+    onwizardfinish="return tbSyncEasNewAccount.onFinish();"
+    onwizardcancel="return tbSyncEasNewAccount.onCancel()" >
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/manager/createAccount.js"/>
 
-    <vbox>
+    <wizardpage onFirstPage="true" label="&add.shortdescription;">
         <description style="width: 450px">&add.description;</description>
 
         <grid style="margin-top:1ex">
@@ -53,13 +59,32 @@
                     <textbox id="tbsync.newaccount.url" oninput="tbSyncEasNewAccount.onUserTextInput();" tooltiptext="&add.urldescription;"/>
                 </row>
 
-                <row style="height:40px; margin-top:1ex;margin-bottom:1ex;">
-                    <vbox pack="center"><label id='tbsync.newaccount.autodiscoverlabel' value="" /></vbox>
-                    <vbox pack="center"><label id='tbsync.newaccount.autodiscoverstatus' value="" /></vbox>
-                </row>
+                <!--row style="height:40px; margin-top:1ex;margin-bottom:1ex;">
+                    <vbox pack="center"></vbox>
+                    <vbox pack="center"></vbox>
+                </row-->
 
             </rows>
         </grid>
 
-    </vbox>
-</dialog>
+        <vbox flex="1">
+        </vbox>
+        <hbox id="tbsync.spinner">
+            <image src="chrome://tbsync/skin/spinner.gif" style="margin-left:1em" width="16" height="16"/>
+            <label id='tbsync.newaccount.autodiscoverstatus' value="" />
+        </hbox>
+       
+        <vbox id="tbsync.error" style="width: 450px;">
+            <description id="tbsync.error.message" flex="1" style="font-weight: bold;"></description>
+            <vbox>
+              <button 
+              id="tbsync.error.link" 
+              label="&manager.ShowErrorLog;"
+              oncommand="tbSync.openErrorLog();"/>
+            </vbox>
+        </vbox>    
+
+
+  </wizardpage>
+    
+</wizard>
