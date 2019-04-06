@@ -9,12 +9,11 @@
 //no need to create namespace, we are in a sandbox
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 
 let thisID = "";
 
 let onInitDoneObserver = {
-    observe: Task.async (function* (aSubject, aTopic, aData) {        
+    observe: async function (aSubject, aTopic, aData) {        
         let valid = false;
         try {
             Components.utils.import("chrome://tbsync/content/tbsync.jsm");
@@ -25,9 +24,9 @@ let onInitDoneObserver = {
         
         //load this provider add-on into TbSync
         if (valid) {
-            yield tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
+            await tbSync.loadProvider(thisID, "eas", "//eas4tbsync/content/provider/eas/eas.js");
         }
-    })
+    }
 }
 
 function install(data, reason) {

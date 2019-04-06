@@ -8,7 +8,6 @@
  
  "use strict";
 
-Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("chrome://tbsync/content/tbsync.jsm");
 
 var tbSyncEasNewAccount = {
@@ -71,7 +70,7 @@ var tbSyncEasNewAccount = {
         return false;
     },
 
-    validate: Task.async (function* () {
+    validate: async function () {
         let user = this.elementUser.value;
         let password = this.elementPass.value;
         let servertype = this.elementServertype.value;
@@ -104,7 +103,7 @@ var tbSyncEasNewAccount = {
             tbSyncEasNewAccount.startTime = Date.now();
             tbSyncEasNewAccount.updateAutodiscoverStatus();
 
-            let result = yield tbSync.eas.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
+            let result = await tbSync.eas.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
             updateTimer.cancel();
     
             if (result.server) {
@@ -143,7 +142,7 @@ var tbSyncEasNewAccount = {
             document.getElementById("tbsync.error.message").textContent = error;
             document.getElementById("tbsync.error").hidden = false;
         }            
-    }),
+    },
 
     updateAutodiscoverStatus: function () {
         let offset = Math.round(((Date.now()-tbSyncEasNewAccount.startTime)/1000));

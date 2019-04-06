@@ -21,28 +21,28 @@ eas.sync = {
     // MAIN FUNCTIONS TO SYNC AN EAS FOLDER
     // ---------------------------------------------------------------------------
 
-    start: Task.async (function* (syncdata)  {
+    start: async function (syncdata)  {
         //sync
         syncdata.done = 0;
         syncdata.todo = 0;
 
         if (tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "downloadonly") == "1") {		
-            yield eas.sync.revertLocalChanges (syncdata);
+            await eas.sync.revertLocalChanges (syncdata);
         }
 
-        yield eas.getItemEstimate (syncdata);
-        yield eas.sync.requestRemoteChanges (syncdata); 
+        await eas.getItemEstimate (syncdata);
+        await eas.sync.requestRemoteChanges (syncdata); 
 
         if (tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "downloadonly") != "1") {		
-            yield eas.sync.sendLocalChanges (syncdata);
+            await eas.sync.sendLocalChanges (syncdata);
         }
 
         //if everything was OK, we still throw, to get into catch
         throw eas.finishSync();
-    }),
+    },
     
 
-    requestRemoteChanges: Task.async (function* (syncdata)  {
+    requestRemoteChanges: async function (syncdata)  {
         syncdata.done = 0;
         do {
             tbSync.setSyncState("prepare.request.remotechanges", syncdata.account, syncdata.folderID);
@@ -83,7 +83,7 @@ eas.sync = {
 
             //SEND REQUEST
             tbSync.setSyncState("send.request.remotechanges", syncdata.account, syncdata.folderID);
-            let response = yield eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
+            let response = await eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
 
             //VALIDATE RESPONSE
             // get data from wbxml response, some servers send empty response if there are no changes, which is not an error
@@ -94,7 +94,7 @@ eas.sync = {
             eas.checkStatus(syncdata, wbxmlData,"Sync.Collections.Collection.Status");
 
             //PROCESS COMMANDS        
-            yield eas.sync.processCommands(wbxmlData, syncdata);
+            await eas.sync.processCommands(wbxmlData, syncdata);
 
             //Update count in UI
             tbSync.setSyncState("eval.response.remotechanges", syncdata.account, syncdata.folderID);
@@ -104,15 +104,15 @@ eas.sync = {
             
             if (!xmltools.hasWbxmlDataField(wbxmlData,"Sync.Collections.Collection.MoreAvailable")) {
                 //Feedback from users: They want to see the final count
-                yield tbSync.sleep(100, false);
+                await tbSync.sleep(100, false);
                 return;
             }
         } while (true);
                 
-    }),
+    },
 
 
-    sendLocalChanges: Task.async (function* (syncdata)  {        
+    sendLocalChanges: async function (syncdata)  {        
         let maxnumbertosend = tbSync.prefSettings.getIntPref("eas.maxitems");
 
         syncdata.done = 0;
@@ -154,7 +154,7 @@ eas.sync = {
                                 switch (changes[i].status) {
 
                                     case "added_by_user":
-                                        items = yield syncdata.targetObj.getItem(changes[i].id);
+                                        items = await syncdata.targetObj.getItem(changes[i].id);
                                         if (items.length > 0) {
                                             //filter out bad object types for this folder
                                             if (syncdata.type == eas.sync.getEasItemType(items[0])) {
@@ -225,7 +225,7 @@ wbxml.ctag();*/
                                         break;
                                     
                                     case "modified_by_user":
-                                        items = yield syncdata.targetObj.getItem(changes[i].id);
+                                        items = await syncdata.targetObj.getItem(changes[i].id);
                                         if (items.length > 0) {
                                             //filter out bad object types for this folder
                                             if (syncdata.type == eas.sync.getEasItemType(items[0])) {
@@ -270,7 +270,7 @@ wbxml.ctag();*/
 
                 //SEND REQUEST & VALIDATE RESPONSE
                 tbSync.setSyncState("send.request.localchanges", syncdata.account, syncdata.folderID);
-                let response = yield eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
+                let response = await eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
                 
                 tbSync.setSyncState("eval.response.localchanges", syncdata.account, syncdata.folderID);
 
@@ -293,7 +293,7 @@ wbxml.ctag();*/
                                 db.removeItemFromChangeLog(syncdata.targetId, sendItems[0].id);
                                 tbSync.errorlog("warning", syncdata, "ErrorOnDelete::"+sendItems[0].id);
                             } else {
-                                let foundItems = yield syncdata.targetObj.getItem(sendItems[0].id);                    
+                                let foundItems = await syncdata.targetObj.getItem(sendItems[0].id);                    
                                 if (foundItems.length > 0) {
                                     eas.sync.updateFailedItems(syncdata, errorcause, foundItems[0].id, foundItems[0].icalString);
                                 } else {
@@ -318,14 +318,14 @@ wbxml.ctag();*/
                         eas.checkStatus(syncdata, wbxmlData, "Sync.Collections.Collection.Status");
                 }        
                 
-                yield tbSync.sleep(10);
+                await tbSync.sleep(10);
 
                 if (errorcause == "") {
                     //PROCESS RESPONSE        
-                    yield eas.sync.processResponses(wbxmlData, syncdata, addedItems, changedItems);
+                    await eas.sync.processResponses(wbxmlData, syncdata, addedItems, changedItems);
                 
                     //PROCESS COMMANDS        
-                    yield eas.sync.processCommands(wbxmlData, syncdata);
+                    await eas.sync.processCommands(wbxmlData, syncdata);
 
                     //remove all items from changelog that did not fail
                     for (let a=0; a < changedItems.length; a++) {
@@ -350,12 +350,12 @@ wbxml.ctag();*/
             throw eas.finishSync("ServerRejectedSomeItems::" + syncdata.failedItems.length);                            
         }
         
-    }),
+    },
 
 
 
 
-    revertLocalChanges: Task.async (function* (syncdata)  {       
+    revertLocalChanges: async function (syncdata)  {       
         let maxnumbertosend = tbSync.prefSettings.getIntPref("eas.maxitems");
         syncdata.done = 0;
         syncdata.todo = db.getItemsFromChangeLog(syncdata.targetId, 0, "_by_user").length;
@@ -391,19 +391,19 @@ wbxml.ctag();*/
             for (let i=0; i<changes.length; i++) {
                 let items = null;
                 let ServerId = changes[i].id;
-                let foundItems = yield syncdata.targetObj.getItem(ServerId);
+                let foundItems = await syncdata.targetObj.getItem(ServerId);
 
                 switch (changes[i].status) {
                     case "added_by_user": //remove
                         if (foundItems.length > 0) {
                             db.addItemToChangeLog(syncdata.targetId, ServerId, "deleted_by_server"); //this changelog entry will be removed by the listener
-                            yield syncdata.targetObj.deleteItem(foundItems[0]);
+                            await syncdata.targetObj.deleteItem(foundItems[0]);
                         }
                     break;
                     
                     case "modified_by_user":
                         if (foundItems.length > 0) { //delete item so it can be replaced with a fresh copy, the changelog entry will be changed from modified to deleted
-                            yield syncdata.targetObj.deleteItem(foundItems[0]);
+                            await syncdata.targetObj.deleteItem(foundItems[0]);
                         }
                     case "deleted_by_user":
                         if (viaItemOperations) {
@@ -447,7 +447,7 @@ wbxml.ctag();*/
                 //SEND REQUEST & VALIDATE RESPONSE
                 try {
                     tbSync.setSyncState("send.request.revertlocalchanges", syncdata.account, syncdata.folderID);
-                    let response = yield eas.sendRequest(wbxml.getBytes(), (viaItemOperations) ? "ItemOperations" : "Sync", syncdata);
+                    let response = await eas.sendRequest(wbxml.getBytes(), (viaItemOperations) ? "ItemOperations" : "Sync", syncdata);
                         
                     tbSync.setSyncState("eval.response.revertlocalchanges", syncdata.account, syncdata.folderID);
 
@@ -463,19 +463,19 @@ wbxml.ctag();*/
                     //looking for additions
                     let add = xmltools.nodeAsArray(xmltools.getWbxmlDataField(wbxmlData, fetchPath));
                     for (let count = 0; count < add.length; count++) {
-                        yield tbSync.sleep(2);
+                        await tbSync.sleep(2);
 
                         let ServerId = add[count].ServerId;
                         let data = (viaItemOperations) ? add[count].Properties : add[count].ApplicationData;
                         
                         if (data && ServerId) {
-                            let foundItems = yield syncdata.targetObj.getItem(ServerId);
+                            let foundItems = await syncdata.targetObj.getItem(ServerId);
                             if (foundItems.length == 0) { //do NOT add, if an item with that ServerId was found
                                     let newItem = eas.sync[syncdata.type].createItem();
                                     try {
                                         eas.sync[syncdata.type].setThunderbirdItemFromWbxml(newItem, data, ServerId, syncdata);
                                         db.addItemToChangeLog(syncdata.targetId, ServerId, "added_by_server");
-                                        yield syncdata.targetObj.adoptItem(newItem);
+                                        await syncdata.targetObj.adoptItem(newItem);
                                     } catch (e) {
                                         xmltools.printXmlData(add[count], true); //include application data in log                  
                                         tbSync.errorlog("warning", syncdata, "BadItemSkipped::JavaScriptError", newItem.icalString);
@@ -501,7 +501,7 @@ wbxml.ctag();*/
                         viaItemOperations = false;
                         tbSync.errorlog("info", syncdata, "Server returned error during ItemOperations.Fetch, falling back to Sync.Fetch.");
                     } else {
-                        yield eas.sync.revertLocalChangesViaResync(syncdata);
+                        await eas.sync.revertLocalChangesViaResync(syncdata);
                         return;
                     }
                 }
@@ -514,9 +514,9 @@ wbxml.ctag();*/
         
         } while (true);
         
-    }),
+    },
 
-    revertLocalChangesViaResync: Task.async (function* (syncdata) {
+    revertLocalChangesViaResync: async function (syncdata) {
         tbSync.errorlog("info", syncdata, "Server does not support ItemOperations.Fetch and/or Sync.Fetch, must revert via resync.");
         let changes = db.getItemsFromChangeLog(syncdata.targetId, 0, "_by_user");
         syncdata.done = 0;
@@ -527,17 +527,17 @@ wbxml.ctag();*/
         for (let i=0; i<changes.length; i++) {
             let items = null;
             let ServerId = changes[i].id;
-            let foundItems = yield syncdata.targetObj.getItem(ServerId);
+            let foundItems = await syncdata.targetObj.getItem(ServerId);
             if (foundItems.length > 0) { //delete item with that ServerId
                 db.addItemToChangeLog(syncdata.targetId, ServerId, "deleted_by_server");
-                yield syncdata.targetObj.deleteItem(foundItems[0]);
+                await syncdata.targetObj.deleteItem(foundItems[0]);
             } else {
                 db.removeItemFromChangeLog(syncdata.targetId, ServerId);
             }
             syncdata.done++;
         }
         throw tbSync.eas.finishSync("RevertViaFolderResync", eas.flags.resyncFolder); //This will resync a fresh copy from the server
-    }),
+    },
 
 
 
@@ -546,7 +546,7 @@ wbxml.ctag();*/
     // SUB FUNCTIONS CALLED BY  MAIN FUNCTION
     // ---------------------------------------------------------------------------
     
-    processCommands:  Task.async (function* (wbxmlData, syncdata)  {
+    processCommands:  async function (wbxmlData, syncdata)  {
         //any commands for us to work on? If we reach this point, Sync.Collections.Collection is valid, 
         //no need to use the save getWbxmlDataField function
         if (wbxmlData.Sync.Collections.Collection.Commands) {
@@ -554,19 +554,19 @@ wbxml.ctag();*/
             //looking for additions
             let add = xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Commands.Add);
             for (let count = 0; count < add.length; count++) {
-                yield tbSync.sleep(2);
+                await tbSync.sleep(2);
 
                 let ServerId = add[count].ServerId;
                 let data = add[count].ApplicationData;
 
-                let foundItems = yield syncdata.targetObj.getItem(ServerId);
+                let foundItems = await syncdata.targetObj.getItem(ServerId);
                 if (foundItems.length == 0) {
                     //do NOT add, if an item with that ServerId was found
                     let newItem = eas.sync[syncdata.type].createItem();
                     try {
                         eas.sync[syncdata.type].setThunderbirdItemFromWbxml(newItem, data, ServerId, syncdata);
                         db.addItemToChangeLog(syncdata.targetId, ServerId, "added_by_server");
-                        yield syncdata.targetObj.adoptItem(newItem); //yield pcal.addItem(newItem); //We are not using the added item after is has been added, so we might be faster using adoptItem
+                        await syncdata.targetObj.adoptItem(newItem); //await pcal.addItem(newItem); //We are not using the added item after is has been added, so we might be faster using adoptItem
                     } catch (e) {
                         xmltools.printXmlData(add[count], true); //include application data in log                  
                         tbSync.errorlog("warning", syncdata, "BadItemSkipped::JavaScriptError", newItem.icalString);
@@ -583,13 +583,13 @@ wbxml.ctag();*/
             //inject custom change object for debug
             //upd = JSON.parse('[{"ServerId":"2tjoanTeS0CJ3QTsq5vdNQAAAAABDdrY6Gp03ktAid0E7Kub3TUAAAoZy4A1","ApplicationData":{"DtStamp":"20171109T142149Z"}}]');
             for (let count = 0; count < upd.length; count++) {
-                yield tbSync.sleep(2);
+                await tbSync.sleep(2);
 
                 let ServerId = upd[count].ServerId;
                 let data = upd[count].ApplicationData;
 
                 syncdata.done++;
-                let foundItems = yield syncdata.targetObj.getItem(ServerId);
+                let foundItems = await syncdata.targetObj.getItem(ServerId);
                 if (foundItems.length > 0) { //only update, if an item with that ServerId was found
                                         
                     let keys = Object.keys(data);
@@ -605,7 +605,7 @@ wbxml.ctag();*/
                         try {
                             eas.sync[syncdata.type].setThunderbirdItemFromWbxml(newItem, data, ServerId, syncdata);
                             db.addItemToChangeLog(syncdata.targetId, ServerId, "modified_by_server");
-                            yield syncdata.targetObj.modifyItem(newItem, foundItems[0]);
+                            await syncdata.targetObj.modifyItem(newItem, foundItems[0]);
                         } catch (e) {
                             tbSync.errorlog("warning", syncdata, "BadItemSkipped::JavaScriptError", newItem.icalString);
                             xmltools.printXmlData(upd[count], true);  //include application data in log                   
@@ -619,20 +619,20 @@ wbxml.ctag();*/
             //looking for deletes
             let del = xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Commands.Delete).concat(xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Commands.SoftDelete));
             for (let count = 0; count < del.length; count++) {
-                yield tbSync.sleep(2);
+                await tbSync.sleep(2);
 
                 let ServerId = del[count].ServerId;
 
-                let foundItems = yield syncdata.targetObj.getItem(ServerId);
+                let foundItems = await syncdata.targetObj.getItem(ServerId);
                 if (foundItems.length > 0) { //delete item with that ServerId
                     db.addItemToChangeLog(syncdata.targetId, ServerId, "deleted_by_server");
-                    yield syncdata.targetObj.deleteItem(foundItems[0]);
+                    await syncdata.targetObj.deleteItem(foundItems[0]);
                 }
                 syncdata.done++;
             }
         
         }
-    }),
+    },
 
 
     updateFailedItems: function (syncdata, cause, id, data) {                
@@ -646,7 +646,7 @@ wbxml.ctag();*/
     },
 
 
-    processResponses:  Task.async (function* (wbxmlData, syncdata, addedItems, changedItems)  {
+    processResponses: async function (wbxmlData, syncdata, addedItems, changedItems)  {
             //any responses for us to work on?  If we reach this point, Sync.Collections.Collection is valid, 
             //no need to use the save getWbxmlDataField function
             if (wbxmlData.Sync.Collections.Collection.Responses) {
@@ -654,13 +654,13 @@ wbxml.ctag();*/
                 //looking for additions (Add node contains, status, old ClientId and new ServerId)
                 let add = xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Responses.Add);
                 for (let count = 0; count < add.length; count++) {
-                    yield tbSync.sleep(2);
+                    await tbSync.sleep(2);
 
                     //get the true Thunderbird UID of this added item (we created a temp clientId during add)
                     add[count].ClientId = addedItems[add[count].ClientId];
 
                     //look for an item identfied by ClientId and update its id to the new id received from the server
-                    let foundItems = yield syncdata.targetObj.getItem(add[count].ClientId);                    
+                    let foundItems = await syncdata.targetObj.getItem(add[count].ClientId);                    
                     if (foundItems.length > 0) {
 
                         //Check status, stop sync if bad, allow soft fail
@@ -673,7 +673,7 @@ wbxml.ctag();*/
                             newItem.id = add[count].ServerId;
                             db.removeItemFromChangeLog(syncdata.targetId, add[count].ClientId);
                             db.addItemToChangeLog(syncdata.targetId, newItem.id, "modified_by_server");
-                            yield syncdata.targetObj.modifyItem(newItem, foundItems[0]);
+                            await syncdata.targetObj.modifyItem(newItem, foundItems[0]);
                             syncdata.done++;
                         }
 
@@ -683,7 +683,7 @@ wbxml.ctag();*/
                 //looking for modifications 
                 let upd = xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Responses.Change);
                 for (let count = 0; count < upd.length; count++) {
-                    let foundItems = yield syncdata.targetObj.getItem(upd[count].ServerId);                    
+                    let foundItems = await syncdata.targetObj.getItem(upd[count].ServerId);                    
                     if (foundItems.length > 0) {
 
                         //Check status, stop sync if bad, allow soft fail
@@ -707,7 +707,7 @@ wbxml.ctag();*/
                 }
                 
             }
-    }),
+    },
 
 
 

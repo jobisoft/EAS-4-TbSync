@@ -84,14 +84,14 @@ var eas = {
      *
      * @param lightningIsAvail       [in] indicate wheter lightning is installed/enabled
      */
-    load: Task.async (function* (lightningIsAvail) {
+    load: async function (lightningIsAvail) {
         //dynamically load overlays from xpi
         eas.overlayManager = new OverlayManager({verbose: 0});
-        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abNewCardWindow.xul");
-        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
-        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
-        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
-        yield eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookdetailsoverlay.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abNewCardWindow.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookoverlay.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/provider/eas/overlays/addressbookdetailsoverlay.xul");
         eas.overlayManager.startObserving();
         
         try {
@@ -113,7 +113,7 @@ var eas = {
                 }
                 
                 //get windows timezone data from CSV
-                let csvData = yield eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
+                let csvData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
                 for (let i = 0; i<csvData.length; i++) {
                     let lData = csvData[i].split(",");
                     if (lData.length<3) continue;
@@ -154,7 +154,7 @@ var eas = {
         } catch(e) {
                     Components.utils.reportError(e);        
         }
-    }),
+    },
 
 
 
@@ -487,7 +487,7 @@ var eas = {
      * @param caller        [in] "autocomplete" or "search"
     
      */
-    abServerSearch: Task.async (function* (account, currentQuery, caller)  {
+    abServerSearch: async function (account, currentQuery, caller)  {
         if (!tbSync.db.getAccountSetting(account, "allowedEasCommands").split(",").includes("Search")) {
             return null;
         }
@@ -517,7 +517,7 @@ var eas = {
         syncdata.syncstate = "SearchingGAL";
         
             
-        let response = yield eas.sendRequest(wbxml.getBytes(), "Search", syncdata);
+        let response = await eas.sendRequest(wbxml.getBytes(), "Search", syncdata);
         let wbxmlData = eas.getDataFromResponse(response);
         let galdata = [];
 
@@ -558,7 +558,7 @@ var eas = {
         }
         
         return galdata;
-    }),
+    },
 
 
 
@@ -570,7 +570,7 @@ var eas = {
      * @param job           [in] identifier about what is to be done, the standard job is "sync", you are free to add
      *                           custom jobs like "deletefolder" via your own accountSettings.xul
      */
-    start: Task.async (function* (syncdata, job)  {
+    start: async function (syncdata, job)  {
         let accountReSyncs = 0;
         
         do {
@@ -596,7 +596,7 @@ var eas = {
                 
                 //should we recheck options/commands? Always check, if we have no info about asversion!
                 if (tbSync.db.getAccountSetting(syncdata.account, "asversion", "") == "" || (Date.now() - tbSync.db.getAccountSetting(syncdata.account, "lastEasOptionsUpdate")) > 86400000 ) {
-                    yield eas.getServerOptions(syncdata);
+                    await eas.getServerOptions(syncdata);
                 }
                                 
                 //only update the actual used asversion, if we are currently not connected or it has not yet been set
@@ -624,25 +624,25 @@ var eas = {
                 
                 //do we need to get a new policy key?
                 if (tbSync.db.getAccountSetting(syncdata.account, "provision") == "1" && tbSync.db.getAccountSetting(syncdata.account, "policykey") == "0") {
-                    yield eas.getPolicykey(syncdata);
+                    await eas.getPolicykey(syncdata);
                 } 
                 
                 switch (job) {
                     case "sync":
                         //set device info
-                        yield eas.setDeviceInformation (syncdata);
+                        await eas.setDeviceInformation (syncdata);
                         //get all folders, which need to be synced
-                        yield eas.getPendingFolders(syncdata);
+                        await eas.getPendingFolders(syncdata);
                         //update folder list in GUI
                         Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncdata.account);
                         //sync all pending folders
-                        yield eas.syncPendingFolders(syncdata); //inside here we throw and catch FinischFolderSync
+                        await eas.syncPendingFolders(syncdata); //inside here we throw and catch FinischFolderSync
                         throw eas.finishSync();
                         break;
                         
                     case "deletefolder":
                         //TODO: foldersync first ???
-                        yield eas.deleteFolder(syncdata);
+                        await eas.deleteFolder(syncdata);
                         //update folder list in GUI
                         Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncdata.account);
                         throw eas.finishSync();
@@ -663,7 +663,7 @@ var eas = {
                     case eas.flags.abortWithServerError: 
                         //Could not connect to server. Can we rerun autodiscover? If not, fall through to abortWithError              
                         if (tbSync.db.getAccountSetting(syncdata.account, "servertype") == "auto") {
-                            let errorcode = yield eas.updateServerConnectionViaAutodiscover(syncdata);
+                            let errorcode = await eas.updateServerConnectionViaAutodiscover(syncdata);
                             switch (errorcode) {
                                 case 401:
                                 case 403: //failed to authenticate
@@ -695,7 +695,7 @@ var eas = {
 
         } while (true);
 
-    }),
+    },
 
 
 
@@ -705,7 +705,7 @@ var eas = {
     // * HELPER FUNCTIONS BEYOND THE API
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     
-    getPendingFolders: Task.async (function* (syncdata)  {
+    getPendingFolders: async function (syncdata)  {
         //this function sets all folders which ougth to be synced to pending, either a specific one (if folderID is set) or all avail
         if (syncdata.folderID != "") {
             //just set the specified folder to pending
@@ -723,7 +723,7 @@ var eas = {
             wbxml.ctag();
 
             tbSync.setSyncState("send.request.folders", syncdata.account); 
-            let response = yield eas.sendRequest(wbxml.getBytes(), "FolderSync", syncdata);
+            let response = await eas.sendRequest(wbxml.getBytes(), "FolderSync", syncdata);
 
             tbSync.setSyncState("eval.response.folders", syncdata.account); 
             let wbxmlData = eas.getDataFromResponse(response);
@@ -795,7 +795,7 @@ var eas = {
 
             tbSync.prepareFoldersForSync(syncdata.account);            
         }
-    }),
+    },
 
 
 
@@ -811,7 +811,7 @@ var eas = {
 
 
     //Process all folders with PENDING status
-    syncPendingFolders: Task.async (function* (syncdata)  {
+    syncPendingFolders: async function (syncdata)  {
         let folderReSyncs = 1;
         
         do {                
@@ -876,7 +876,7 @@ var eas = {
                 //get synckey if needed
                 syncdata.synckey = nextFolder.synckey;                
                 if (syncdata.synckey == "") {
-                    yield eas.getSynckey(syncdata);
+                    await eas.getSynckey(syncdata);
                 }
                 
                 //sync folder
@@ -889,10 +889,10 @@ var eas = {
                         syncdata.targetId = tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "target");
                         syncdata.addressbookObj = tbSync.getAddressBookObject(syncdata.targetId);
 
-                        //promisify addressbook, so it can be used together with yield
+                        //promisify addressbook, so it can be used together with await
                         syncdata.targetObj = eas.tools.promisifyAddressbook(syncdata.addressbookObj);
                         
-                        yield eas.sync.start(syncdata);   //using new tbsync contacts sync code
+                        await eas.sync.start(syncdata);   //using new tbsync contacts sync code
                         break;
 
                     case "Calendar":
@@ -900,14 +900,14 @@ var eas = {
                         syncdata.targetId = tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "target");
                         syncdata.calendarObj = cal.getCalendarManager().getCalendarById(syncdata.targetId);
                         
-                        //promisify calender, so it can be used together with yield
+                        //promisify calender, so it can be used together with await
                         syncdata.targetObj = cal.async.promisifyCalendar(syncdata.calendarObj.wrappedJSObject);
 
                         syncdata.calendarObj.startBatch();
                         //save current value of readOnly (or take it from the setting
                         calendarReadOnlyStatus = syncdata.calendarObj.getProperty("readOnly") || (tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "downloadonly") == "1");                       
                         syncdata.calendarObj.setProperty("readOnly", false);
-                        yield eas.sync.start(syncdata);
+                        await eas.sync.start(syncdata);
                         break;
                 }
 
@@ -952,12 +952,12 @@ var eas = {
 
         }
         while (true);
-    }),
+    },
 
 
 
     //WBXML FUNCTIONS
-    getPolicykey: Task.async (function* (syncdata)  {
+    getPolicykey: async function (syncdata)  {
         //build WBXML to request provision
         tbSync.setSyncState("prepare.request.provision", syncdata.account);
         let wbxml = wbxmltools.createWBXML();
@@ -972,7 +972,7 @@ var eas = {
 
         for (let loop=0; loop < 2; loop++) {
             tbSync.setSyncState("send.request.provision", syncdata.account);
-            let response = yield eas.sendRequest(wbxml.getBytes(), "Provision", syncdata);
+            let response = await eas.sendRequest(wbxml.getBytes(), "Provision", syncdata);
 
             tbSync.setSyncState("eval.response.provision", syncdata.account);
             let wbxmlData = eas.getDataFromResponse(response);
@@ -1026,9 +1026,9 @@ var eas = {
             
             //this wbxml will be used by Send at the top of this loop
         }
-    }),
+    },
 
-    getSynckey: Task.async (function* (syncdata) {
+    getSynckey: async function (syncdata) {
         tbSync.setSyncState("prepare.request.synckey", syncdata.account);
         //build WBXML to request a new syncKey
         let wbxml = tbSync.wbxmltools.createWBXML();
@@ -1043,7 +1043,7 @@ var eas = {
         wbxml.ctag();
         
         tbSync.setSyncState("send.request.synckey", syncdata.account);
-        let response = yield eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
+        let response = await eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
 
         tbSync.setSyncState("eval.response.synckey", syncdata.account);
         // get data from wbxml response
@@ -1052,9 +1052,9 @@ var eas = {
         eas.checkStatus(syncdata, wbxmlData,"Sync.Collections.Collection.Status");
         //update synckey
         eas.updateSynckey(syncdata, wbxmlData);
-    }),
+    },
 
-    getItemEstimate: Task.async (function* (syncdata)  {
+    getItemEstimate: async function (syncdata)  {
         syncdata.todo = -1;
         
         if (!tbSync.db.getAccountSetting(syncdata.account, "allowedEasCommands").split(",").includes("GetItemEstimate")) {
@@ -1094,7 +1094,7 @@ var eas = {
 
         //SEND REQUEST
         tbSync.setSyncState("send.request.estimate", syncdata.account, syncdata.folderID);
-        let response = yield eas.sendRequest(wbxml.getBytes(), "GetItemEstimate", syncdata, /* allowSoftFail */ true);
+        let response = await eas.sendRequest(wbxml.getBytes(), "GetItemEstimate", syncdata, /* allowSoftFail */ true);
 
         //VALIDATE RESPONSE
         tbSync.setSyncState("eval.response.estimate", syncdata.account, syncdata.folderID);
@@ -1109,9 +1109,9 @@ var eas = {
         if (status && status == "1") { //do not throw on error, with EAS v2.5 I get error 2 for tasks and calendars ???
             syncdata.todo = estimate;
         }
-    }),
+    },
 
-    getUserInfo: Task.async (function* (syncdata)  {
+    getUserInfo: async function (syncdata)  {
         if (!tbSync.db.getAccountSetting(syncdata.account, "allowedEasCommands").split(",").includes("Settings")) {
             return;
         }
@@ -1127,16 +1127,16 @@ var eas = {
         wbxml.ctag();
 
         tbSync.setSyncState("send.request.getuserinfo", syncdata.account);
-        let response = yield eas.sendRequest(wbxml.getBytes(), "Settings", syncdata);
+        let response = await eas.sendRequest(wbxml.getBytes(), "Settings", syncdata);
 
 
         tbSync.setSyncState("eval.response.getuserinfo", syncdata.account);
         let wbxmlData = eas.getDataFromResponse(response);
 
         eas.checkStatus(syncdata, wbxmlData,"Settings.Status");
-    }),
+    },
 
-    setDeviceInformation: Task.async (function* (syncdata)  {
+    setDeviceInformation: async function (syncdata)  {
         if (tbSync.db.getAccountSetting(syncdata.account, "asversion") == "2.5" || !tbSync.db.getAccountSetting(syncdata.account, "allowedEasCommands").split(",").includes("Settings")) {
             return;
         }
@@ -1157,15 +1157,15 @@ var eas = {
         wbxml.ctag();
 
         tbSync.setSyncState("send.request.setdeviceinfo", syncdata.account);
-        let response = yield eas.sendRequest(wbxml.getBytes(), "Settings", syncdata);
+        let response = await eas.sendRequest(wbxml.getBytes(), "Settings", syncdata);
 
         tbSync.setSyncState("eval.response.setdeviceinfo", syncdata.account);
         let wbxmlData = eas.getDataFromResponse(response);
 
         eas.checkStatus(syncdata, wbxmlData,"Settings.Status");
-    }),
+    },
 
-    deleteFolder: Task.async (function* (syncdata)  {
+    deleteFolder: async function (syncdata)  {
         if (syncdata.folderID == "") {
             throw eas.finishSync();
         } 
@@ -1186,7 +1186,7 @@ var eas = {
         wbxml.ctag();
 
         tbSync.setSyncState("send.request.deletefolder", syncdata.account);
-        let response = yield eas.sendRequest(wbxml.getBytes(), "FolderDelete", syncdata);
+        let response = await eas.sendRequest(wbxml.getBytes(), "FolderDelete", syncdata);
 
 
         tbSync.setSyncState("eval.response.deletefolder", syncdata.account);
@@ -1206,7 +1206,7 @@ var eas = {
         } else {
             throw eas.finishSync("wbxmlmissingfield::FolderDelete.SyncKey", eas.flags.abortWithError);
         }
-    }),
+    },
 
     finishSync: function (msg = "", type = null, details = "") {
         let e = new Error(); 
@@ -1707,13 +1707,13 @@ var eas = {
 
 
     // AUTODISCOVER        
-    updateServerConnectionViaAutodiscover: Task.async (function* (syncdata) {
+    updateServerConnectionViaAutodiscover: async function (syncdata) {
         tbSync.setSyncState("prepare.request.autodiscover", syncdata.account);
         let user = tbSync.db.getAccountSetting(syncdata.account, "user");
         let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
 
         tbSync.setSyncState("send.request.autodiscover", syncdata.account);
-        let result = yield tbSync.eas.getServerConnectionViaAutodiscover(user, password, 30*1000);
+        let result = await tbSync.eas.getServerConnectionViaAutodiscover(user, password, 30*1000);
 
         tbSync.setSyncState("eval.response.autodiscover", syncdata.account);
         if (result.errorcode == 200) {
@@ -1724,7 +1724,7 @@ var eas = {
         }
 
         return result.errorcode;
-    }),
+    },
     
     stripAutodiscoverUrl: function(url) {
         let u = url;
@@ -1735,7 +1735,7 @@ var eas = {
         return u.split("//")[1]; //cut off protocol
     },
 
-    getServerConnectionViaAutodiscover : Task.async (function* (user, password, maxtimeout) {
+    getServerConnectionViaAutodiscover : async function (user, password, maxtimeout) {
         let urls = [];
         let parts = user.split("@");
         
@@ -1751,13 +1751,13 @@ var eas = {
         
         let requests = [];
         for (let i=0; i< urls.length; i++) {
-            yield tbSync.sleep(200);
+            await tbSync.sleep(200);
             requests.push( tbSync.eas.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
         }
  
         let responses = []; //array of objects {url, error, server}
         try {
-            responses = yield Promise.all(requests); 
+            responses = await Promise.all(requests); 
         } catch (e) {
             responses.push(e); //this is actually a success, see return value of getServerConnectionViaAutodiscoverRedirectWrapper()
         }
@@ -1785,9 +1785,9 @@ var eas = {
 
         tbSync.errorlog("error", null, result.error, log.join("\n"));
         return result;        
-    }),
+    },
        
-    getServerConnectionViaAutodiscoverRedirectWrapper : Task.async (function* (url, user, password, maxtimeout) {        
+    getServerConnectionViaAutodiscoverRedirectWrapper : async function (url, user, password, maxtimeout) {        
         //using HEAD to find URL redirects until response URL no longer changes 
         // * XHR should follow redirects transparently, but that does not always work, POST data could get lost, so we
         // * need to find the actual POST candidates (example: outlook.de accounts)
@@ -1796,8 +1796,8 @@ var eas = {
         let connection = { url, user };
         
         do {            
-            yield tbSync.sleep(200);
-            result = yield tbSync.eas.getServerConnectionViaAutodiscoverRequest(method, connection, password, maxtimeout);
+            await tbSync.sleep(200);
+            result = await tbSync.eas.getServerConnectionViaAutodiscoverRequest(method, connection, password, maxtimeout);
             method = "";
             
             if (result.error == "redirect found") {
@@ -1814,7 +1814,7 @@ var eas = {
         //invert reject and resolve, so we exit the promise group on success right away
         if (result.server) throw result;
         else return result;
-    }),    
+    },    
     
     getServerConnectionViaAutodiscoverRequest: function (method, connection, password, maxtimeout) {
         tbSync.dump("Querry EAS autodiscover URL", connection.url + " @ " + connection.user);
