@@ -43,8 +43,7 @@ var tbSyncAbEasCardWindow = {
         }
         
         if (abURI) {
-            let abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
-            let ab = abManager.getDirectory(abURI);
+            let ab = MailServices.ab.getDirectory(abURI);
             if (ab.isMailList) {
                 let parts = abURI.split("/");
                 parts.pop();
