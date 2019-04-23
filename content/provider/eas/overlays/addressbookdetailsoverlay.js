@@ -13,27 +13,9 @@ Components.utils.import("chrome://tbsync/content/tbsync.jsm");
 var tbSyncEasAddressBookDetails = {
     
     onBeforeInject: function (window) {
-        let cardProvider = "";
-        
-        try {
-            let aParentDirURI = window.GetSelectedDirectory();
-            let selectedBook = MailServices.ab.getDirectory(aParentDirURI);
-            if (selectedBook.isMailList) {
-                aParentDirURI = aParentDirURI.substring(0, aParentDirURI.lastIndexOf("/"));
-            }
+        //we inject always now and let onAbResultSelectionChanged handle our custom display
+        return true;
 
-            if (aParentDirURI) {
-                let folders = tbSync.db.findFoldersWithSetting("target", aParentDirURI);
-                if (folders.length == 1) {
-                    cardProvider = tbSync.db.getAccountSetting(folders[0].account, "provider");
-                }
-            }
-        } catch (e) {
-            //if the window / gDirTree is not yet avail 
-        }
-        
-        //returning false will prevent injection
-        return (cardProvider == "eas");
     },
 
     onInject: function (window) {
@@ -53,14 +35,22 @@ var tbSyncEasAddressBookDetails = {
         let cards = window.GetSelectedAbCards();
         if (cards.length == 1) {
             let aCard = cards[0];
-            
+
+            //function to get correct uri of current card for global book as well for mailLists
+            let abUri = tbSync.eas.tools.getSelectedUri(window.GetSelectedDirectory(), aCard);
+            let show = (MailServices.ab.getDirectory(abUri).getStringValue("tbSyncProvider", "") == "eas");
+        
             let email3Box = window.document.getElementById("cvEmail3Box");
             if (email3Box) {
-                let email3Value = aCard.getProperty("Email3Address","");
-                if (email3Value) {
-                email3Box.collapsed = false;
-                let email3Element = window.document.getElementById("cvEmail3");
-                window.HandleLink(email3Element, window.zSecondaryEmail, email3Value, email3Box, "mailto:" + email3Value);
+                if (show) {
+                    let email3Value = aCard.getProperty("Email3Address","");
+                    if (email3Value) {
+                        email3Box.collapsed = false;
+                        let email3Element = window.document.getElementById("cvEmail3");
+                        window.HandleLink(email3Element, window.zSecondaryEmail, email3Value, email3Box, "mailto:" + email3Value);
+                    }
+                } else {
+                        email3Box.collapsed = true;                    
                 }
             }
             
@@ -77,15 +67,19 @@ var tbSyncEasAddressBookDetails = {
             let phoneFound = false;
             for (let field in phoneNumbers) {
                 if (phoneNumbers.hasOwnProperty(field)) {
-                let element = window.document.getElementById(field);
-                if (element) {
-                    let value = aCard.getProperty(phoneNumbers[field],"");
-                    if (value) {
-                    element.collapsed = false;
-                    element.textContent = element.getAttribute("labelprefix") + " " + value;
-                    phoneFound = true;
+                    let element = window.document.getElementById(field);
+                    if (element) {
+                        if (show) {
+                            let value = aCard.getProperty(phoneNumbers[field],"");
+                            if (value) {
+                                element.collapsed = false;
+                                element.textContent = element.getAttribute("labelprefix") + " " + value;
+                                phoneFound = true;
+                            }
+                        } else {
+                            element.collapsed = true;                            
+                        }
                     }
-                }
                 }
             }
 

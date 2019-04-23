@@ -14,43 +14,18 @@ Components.utils.import("resource://gre/modules/osfile.jsm");
 var tbSyncAbEasCardWindow = {
     
     onBeforeInject: function (window) {
-        let cardProvider = "";
         let aParentDirURI  = "";
-        
+
         if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xul") {
+            //get provider via uri from drop down
             aParentDirURI = window.document.getElementById("abPopup").value;
         } else {
-            aParentDirURI = tbSyncAbEasCardWindow.getSelectedAbFromArgument(window.arguments[0]);
-        }
-
-        if (aParentDirURI) {
-            let folders = tbSync.db.findFoldersWithSetting("target", aParentDirURI);
-            if (folders.length == 1) {
-                cardProvider = tbSync.db.getAccountSetting(folders[0].account, "provider");
-            }
+            //function to get correct uri of current card for global book as well for mailLists
+            aParentDirURI = tbSync.eas.tools.getSelectedUri(window.arguments[0].abURI, window.arguments[0].card);
         }
         
         //returning false will prevent injection
-        return (cardProvider == "eas");
-    },
-
-    getSelectedAbFromArgument: function (arg) {
-        let abURI = "";
-        if (arg.hasOwnProperty("abURI")) {
-            abURI = arg.abURI;
-        } else if (arg.hasOwnProperty("selectedAB")) {
-            abURI = arg.selectedAB;
-        }
-        
-        if (abURI) {
-            let ab = MailServices.ab.getDirectory(abURI);
-            if (ab.isMailList) {
-                let parts = abURI.split("/");
-                parts.pop();
-                return parts.join("/");
-            }
-        }
-        return abURI;
+        return (MailServices.ab.getDirectory(aParentDirURI).getStringValue("tbSyncProvider", "") == "eas");
     },
 
 
