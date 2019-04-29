@@ -936,7 +936,7 @@ var eas = {
                             eas.onResetTarget(syncdata.account, syncdata.folderID);
                         } else {
                             //takeTargetOffline will backup the current folder and on next run, a fresh copy 
-                            //of the folder will be synced down - the folder itself is NOT deleted
+                            //of the folder will be synced down - the folder itself is NOT deleted (4th arg is false)
                             tbSync.errorlog("info", syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
                             tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
                         }
@@ -1654,6 +1654,7 @@ var eas = {
                 {
                     let folders = tbSync.db.getFolders(syncdata.account);
                     for (let f in folders) {
+                        //the folder itself is NOT deleted (4th arg is false)
                         tbSync.takeTargetOffline("eas", folders[f], "[forced account resync]", false);
                         tbSync.db.setFolderSetting(folders[f].account, folders[f].folderID, "cached", "1");
                     }		    
