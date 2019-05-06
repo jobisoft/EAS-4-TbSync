@@ -1260,7 +1260,13 @@ var eas = {
             if (xml) {
                 //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
                 //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
-                tbSync.dump("XML: " + what, "\n" + xml);
+                //if userdatalevel is 3 or greater print everything, otherwise exclude application data
+                if (tbSync.prefSettings.getIntPref("log.userdatalevel")<3) {
+                    let rx = new RegExp("<ApplicationData[\\d\\D]*?\/ApplicationData>", "g");
+                    tbSync.dump("XML: " + what, "\n" + xml.replace(rx, ""));
+                } else {
+                    tbSync.dump("XML: " + what, "\n" + xml);
+                }
             } else {
                 tbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
             }
