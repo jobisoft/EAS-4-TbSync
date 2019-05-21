@@ -641,7 +641,7 @@ wbxml.ctag();*/
             //the extra parameter true will re-add the item to the end of the changelog
             db.removeItemFromChangeLog(syncdata.targetId, id, true);                        
             syncdata.failedItems.push(id);            
-            tbSync.errorlog("info", syncdata, "BadItemSkipped::" + tbSync.getLocalizedMessage("status." + cause ,"eas"), "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response + "\n\nElement:\n" + data);
+            tbSync.errorlog("info", syncdata, "BadItemSkipped::" + tbSync.getString("status." + cause ,"eas"), "\n\nRequest:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response + "\n\nElement:\n" + data);
         }
     },
 

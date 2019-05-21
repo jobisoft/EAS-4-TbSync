@@ -18,7 +18,7 @@ var eas = {
         // special treatment for configuration label, which is a permanent setting and will not change by switching modes
         let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
         if (configlabel) {
-            configlabel.setAttribute("value", tbSync.getLocalizedMessage("config.custom", "eas"));
+            configlabel.setAttribute("value", tbSync.getString("config.custom", "eas"));
         }
 
         //for some unknown reason, my OverlayManager cannot create menulists, so I need to do that
@@ -1781,13 +1781,13 @@ var eas = {
             
             if (responses[r].error == 403 || responses[r].error == 401) {
                 //we could still find a valid server, so just store this state
-                result = {"server": "", "user": responses[r].user, "errorcode": responses[r].error, "error": tbSync.getLocalizedMessage("status." + responses[r].error, "eas")};
+                result = {"server": "", "user": responses[r].user, "errorcode": responses[r].error, "error": tbSync.getString("status." + responses[r].error, "eas")};
             }
         } 
         
         //this is only reached on fail, if no result defined yet, use general error
         if (!result) { 
-            result = {"server": "", "user": user, "error": tbSync.getLocalizedMessage("autodiscover.Failed","eas").replace("##user##", user), "errorcode": 503};
+            result = {"server": "", "user": user, "error": tbSync.getString("autodiscover.Failed","eas").replace("##user##", user), "errorcode": 503};
         }
 
         tbSync.errorlog("error", null, result.error, log.join("\n"));
@@ -1944,7 +1944,7 @@ var eas = {
                 //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
                 if (tbSync.eas.parentIsTrash(folder.account, folder.parentID) && tbSync.db.getAccountSetting(folder.account, "allowedEasCommands").split(",").includes("FolderDelete")) {// folder in recycle bin
                     hideContextMenuDelete = false;
-                    document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getLocalizedMessage("deletefolder.menuentry::" + folder.name, "eas");
+                    document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folder.name, "eas");
                 }                
             }
 
@@ -1997,7 +1997,7 @@ var eas = {
             rowData.statusCode = folder.status;
             rowData.statusMsg = tbSync.getSyncStatusMsg(folder, syncdata, "eas");
 
-            if (tbSync.eas.parentIsTrash(folder.account, folder.parentID)) rowData.name = tbSync.getLocalizedMessage("recyclebin", "eas") + " | " + rowData.name;
+            if (tbSync.eas.parentIsTrash(folder.account, folder.parentID)) rowData.name = tbSync.getString("recyclebin", "eas") + " | " + rowData.name;
 
             return rowData;
         },
@@ -2011,8 +2011,8 @@ var eas = {
         getHeader: function () {
             return [
                 {style: "font-weight:bold;", label: "", width: "93"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.resource"), width:"150"},
-                {style: "font-weight:bold;", label: tbSync.getLocalizedMessage("manager.status"), flex :"1"},
+                {style: "font-weight:bold;", label: tbSync.getString("manager.resource"), width:"150"},
+                {style: "font-weight:bold;", label: tbSync.getString("manager.status"), flex :"1"},
             ]
         },
 
@@ -2080,14 +2080,14 @@ var eas = {
                 let menuitem1 = document.createElement("menuitem");
                 menuitem1.setAttribute("value", "1");
                 menuitem1.setAttribute("class", "menuitem-iconic");
-                menuitem1.setAttribute("label", tbSync.getLocalizedMessage("acl.readonly", "eas"));
+                menuitem1.setAttribute("label", tbSync.getString("acl.readonly", "eas"));
                 menuitem1.setAttribute("image", "chrome://tbsync/skin/acl_ro2.png");
                 menuitem1.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
 
                 let menuitem2 = document.createElement("menuitem");
                 menuitem2.setAttribute("value", "0");
                 menuitem2.setAttribute("class", "menuitem-iconic");
-                menuitem2.setAttribute("label", tbSync.getLocalizedMessage("acl.readwrite", "eas"));
+                menuitem2.setAttribute("label", tbSync.getString("acl.readwrite", "eas"));
                 menuitem2.setAttribute("image", "chrome://tbsync/skin/acl_rw2.png");
                 menuitem2.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
 
@@ -2235,8 +2235,8 @@ var eas = {
                 //only trashed folders can be purged (for example O365 does not show deleted folders but also does not allow to purge them)
                 if (!tbSync.eas.parentIsTrash(account, folder.parentID)) return;
                 
-                if (folder.selected == "1") document.defaultView.alert(tbSync.getLocalizedMessage("deletefolder.notallowed::" + folder.name, "eas"));
-                else if (document.defaultView.confirm(tbSync.getLocalizedMessage("deletefolder.confirm::" + folder.name, "eas"))) {
+                if (folder.selected == "1") document.defaultView.alert(tbSync.getString("deletefolder.notallowed::" + folder.name, "eas"));
+                else if (document.defaultView.confirm(tbSync.getString("deletefolder.confirm::" + folder.name, "eas"))) {
                 tbSync.syncAccount("deletefolder", account, fID);
                 } 
             }            
