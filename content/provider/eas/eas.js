@@ -37,69 +37,6 @@ var eas = {
         tbSync.setLoginInfo(host4PasswordManager, "TbSync", accountdata.user, newPassword);
     },
 
-
-
-
-
-
-    /**
-     * Return object which contains all possible fields of a row in the accounts database with the default value if not yet stored in the database.
-     */
-    getDefaultAccountEntries: function () {
-        let row = {
-            "account" : "",
-            "accountname": "",
-            "provider": "eas",
-            "policykey" : "0", 
-            "foldersynckey" : "0",
-            "lastsynctime" : "0", 
-            "status" : "disabled",
-            "deviceId" : tbSync.eas.getNewDeviceId(),
-            "asversionselected" : "auto",
-            "asversion" : "",
-            "host" : "",
-            "user" : "",
-            "servertype" : "",
-            "seperator" : "10",
-            "https" : "1",
-            "provision" : "0",
-            "birthday" : "0",
-            "displayoverride" : "0", 
-            "autosync" : "0",
-            "horde" : "0",
-            "lastEasOptionsUpdate":"0",
-            "allowedEasVersions": "",
-            "allowedEasCommands": "",
-            "useragent": tbSync.prefSettings.getCharPref("eas.clientID.useragent"),
-            "devicetype": tbSync.prefSettings.getCharPref("eas.clientID.type"),
-            "galautocomplete": "1", 
-            }; 
-        return row;
-    },
-
-
-    /**
-     * Return object which contains all possible fields of a row in the folder database with the default value if not yet stored in the database.
-     */
-    getDefaultFolderEntries: function (account) {
-        let folder = {
-            "account" : account,
-            "folderID" : "",
-            "name" : "",
-            "type" : "",
-            "synckey" : "",
-            "target" : "",
-            "targetName" : "",
-            "targetColor" : "",
-            "selected" : "",
-            "lastsynctime" : "",
-            "status" : "",
-            "parentID" : "",
-            "useChangeLog" : "1", //log changes into changelog
-            "downloadonly" : "0",
-            };
-        return folder;
-    },
     
 
 
@@ -136,42 +73,6 @@ var eas = {
     },
 
 
-
-    /**
-     * Is called everytime an account of this provider is enabled in the manager UI, set/reset database fields as needed.
-     *
-     * @param account       [in] account which is being enabled
-     */
-    onEnableAccount: function (account) {
-        db.resetAccountSetting(account, "policykey");
-        db.resetAccountSetting(account, "foldersynckey");
-        db.resetAccountSetting(account, "lastEasOptionsUpdate");
-        db.resetAccountSetting(account, "lastsynctime");
-    },
-
-
-
-    /**
-     * Is called everytime an account of this provider is disabled in the manager UI, set/reset database fields as needed and
-     * remove/backup all sync targets of this account.
-     *
-     * @param account       [in] account which is being disabled
-     */
-    onDisableAccount: function (account) {
-    },
-
-
-
-    /**
-     * Is called everytime an new target is created, intended to set a clean sync status.
-     *
-     * @param account       [in] account the new target belongs to
-     * @param folderID       [in] folder the new target belongs to
-     */
-    onResetTarget: function (account, folderID) {
-        db.resetFolderSetting(account, folderID, "synckey");
-        db.resetFolderSetting(account, folderID, "lastsynctime");
-    },
     
 
 
@@ -1948,30 +1849,7 @@ var eas = {
         },
 
 
-        /**
-         * Return the icon used in the folderlist to represent the different folder types 
-         * Not part of API, only called by getRow
-         *
-         * @param rowData       [in] rowData object
-         */
-        getTypeImage: function (rowData) {
-            let src = ""; 
-            switch (rowData.type) {
-                case "9": 
-                case "14": 
-                    src = "contacts16.png";
-                    break;
-                case "8":
-                case "13":
-                    src = "calendar16.png";
-                    break;
-                case "7":
-                case "15":
-                    src = "todo16.png";
-                    break;
-            }
-            return "chrome://tbsync/skin/" + src;
-        },    
+  
 
 
 
@@ -2022,8 +1900,3 @@ var eas = {
     
 };
     
-tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/tools.js");
-tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/sync.js");
-tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/tasksync.js");
-tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/calendarsync.js");
-tbSync.includeJS("chrome://eas4tbsync/content/provider/eas/contactsync.js");
