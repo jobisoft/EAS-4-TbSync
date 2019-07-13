@@ -7,5 +7,3 @@ REM file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 del EAS-4-TbSync.xpi
 "C:\Program Files\7-Zip\7zG.exe" a -tzip EAS-4-TbSync.xpi content _locales skin chrome.manifest manifest.json CONTRIBUTORS.md LICENSE README.md bootstrap.js
-
-
