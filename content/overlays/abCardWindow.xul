@@ -8,7 +8,7 @@
     onremove="tbSyncAbEasCardWindow.onRemove(window)"
     xmlns:html="http://www.w3.org/1999/xhtml">
 
-    <script type="application/javascript" src="chrome://eas4tbsync/content/provider/eas/overlays/abCardWindow.js" />
+    <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/abCardWindow.js" />
 
     <hbox id="MiddleNameContainer" align="center" insertafter="NameField1Container" >
         <spacer flex="1" />

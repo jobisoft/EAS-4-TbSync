@@ -7,7 +7,7 @@
 	onremove="tbSyncEasAbNewCardWindow.onRemove(window)"
 	xmlns:html="http://www.w3.org/1999/xhtml">
 	
-   <script type="application/javascript" src="chrome://eas4tbsync/content/provider/eas/overlays/abNewCardWindow.js" />
+   <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/abNewCardWindow.js" />
 
 </overlay>
 
