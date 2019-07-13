@@ -11,10 +11,8 @@
 // Every object in here will be loaded into tbSync.providers.<providername>.
 const eas = tbSync.providers.eas;
 
-/**
- * Implementation the TbSync interfaces for external provider extensions.
- */
-    
+eas.prefs = Services.prefs.getBranch("extensions.eas4tbsync.");
+
 //use flags instead of strings to avoid errors due to spelling errors
 eas.flags = Object.freeze({
     allowEmptyResponse: true, 
@@ -30,6 +28,11 @@ eas.cachedTimezoneData = null;
 eas.defaultTimezoneInfo = null;
 eas.defaultTimezone = null;
 eas.utcTimezone = null;
+
+
+/**
+ * Implementation the TbSync interfaces for external provider extensions.
+ */    
     
 /* TODO: 
  - convert account properties to native types (int, bool)
@@ -56,6 +59,9 @@ var base = {
 
         eas.openWindows = {};
         
+        // Create a basic error info (no accountname or foldername, just the provider)
+        let errorInfo = new tbSync.ErrorInfo("eas");
+        
         try {
             if (tbSync.lightning.isAvailable() && 1==2) {
                 
@@ -63,15 +69,15 @@ var base = {
                 eas.defaultTimezone = (cal.dtz && cal.dtz.defaultTimezone) ? cal.dtz.defaultTimezone : cal.calendarDefaultTimezone();
                 eas.utcTimezone = (cal.dtz && cal.dtz.UTC) ? cal.dtz.UTC : cal.UTC();
                 if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
-                    tbSync.errorlog("info", null, "Default timezone has been found.");
+                    tbSync.errorlog.add("info", errorInfo, "Default timezone has been found.");                    
                 } else {
-                    tbSync.errorlog("info", null, "Default timezone is not defined, using UTC!");
+                    tbSync.errorlog.add("info", errorInfo, "Default timezone is not defined, using UTC!");
                     eas.defaultTimezone = eas.utcTimezone;
                 }
 
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
                 if (!eas.defaultTimezoneInfo) {
-                    tbSync.errorlog("info", null, "Could not create defaultTimezoneInfo");
+                    tbSync.errorlog.add("info", errorInfo, "Could not create defaultTimezoneInfo");
                 }
                 
                 //get windows timezone data from CSV
@@ -111,7 +117,7 @@ var base = {
                     }
                 }
             } else {
-                    tbSync.errorlog("info", null, "Lightning was not loaded, creation of timezone objects has been skipped.");
+                    tbSync.errorlog.add("info", errorInfo, "Lightning was not loaded, creation of timezone objects has been skipped.");
             }
         } catch(e) {
                     Components.utils.reportError(e);        
@@ -226,7 +232,7 @@ var base = {
         let row = {
             "policykey" : "0", 
             "foldersynckey" : "0",
-            "deviceId" : tbSync.eas.getNewDeviceId(),
+            "deviceId" : eas.tools.getNewDeviceId(),
             "asversionselected" : "auto",
             "asversion" : "",
             "host" : "",
@@ -241,8 +247,8 @@ var base = {
             "lastEasOptionsUpdate":"0",
             "allowedEasVersions": "",
             "allowedEasCommands": "",
-            "useragent": tbSync.prefSettings.getCharPref("eas.clientID.useragent"),
-            "devicetype": tbSync.prefSettings.getCharPref("eas.clientID.type"),
+            "useragent": eas.prefs.getCharPref("clientID.useragent"),
+            "devicetype": eas.prefs.getCharPref("clientID.type"),
             "galautocomplete": "1", 
             }; 
         return row;
@@ -670,10 +676,12 @@ var standardFolderList = {
     },
 }
 
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/wbxmltools.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/auth.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/network.js", this, "UTF-8");
+//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/wbxmltools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/xmltools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tools.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/sync.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tasksync.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/calendarsync.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/contactsync.js", this, "UTF-8");
+//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/sync.js", this, "UTF-8");
+//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tasksync.js", this, "UTF-8");
+//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/calendarsync.js", this, "UTF-8");
+//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/contactsync.js", this, "UTF-8");

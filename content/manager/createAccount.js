@@ -8,7 +8,9 @@
  
  "use strict";
 
-Components.utils.import("chrome://tbsync/content/tbsync.jsm");
+var { tbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+
+const eas = tbSync.providers.eas;
 
 var tbSyncEasNewAccount = {
 
@@ -21,12 +23,16 @@ var tbSyncEasNewAccount = {
         return !this.validating;
     },
 
-    onCancel: function () {
+    onCancel: function (event) {
         //disallow closing of wizard while validating
-        return !this.validating;
+        if (this.validating) {
+            event.preventDefault();
+        }
     },
 
     onLoad: function () {
+        this.providerData = window.arguments[0];
+
         this.elementName = document.getElementById('tbsync.newaccount.name');
         this.elementUser = document.getElementById('tbsync.newaccount.user');
         this.elementUrl = document.getElementById('tbsync.newaccount.url');
@@ -42,6 +48,9 @@ var tbSyncEasNewAccount = {
 
         document.getElementById('tbsync.newaccount.url.box').style.visibility =  (this.elementServertype.value != "custom") ? "hidden" : "visible";
         document.getElementById("tbsync.newaccount.name").focus();
+
+        document.addEventListener("wizardfinish", tbSyncEasNewAccount.onFinish.bind(this));
+        document.addEventListener("wizardcancel", tbSyncEasNewAccount.onCancel.bind(this));
     },
 
     onUnload: function () {
@@ -62,12 +71,12 @@ var tbSyncEasNewAccount = {
         this.onUserTextInput();
     },
 
-    onFinish: function () {
+    onFinish: function (event) {
         if (document.documentElement.getButton("finish").disabled == false) {
             //initiate validation of server connection
             this.validate();
         }
-        return false;
+        event.preventDefault();
     },
 
     validate: async function () {
@@ -103,7 +112,7 @@ var tbSyncEasNewAccount = {
             tbSyncEasNewAccount.startTime = Date.now();
             tbSyncEasNewAccount.updateAutodiscoverStatus();
 
-            let result = await tbSync.eas.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
+            let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
             updateTimer.cancel();
     
             if (result.server) {
@@ -152,23 +161,20 @@ var tbSyncEasNewAccount = {
     },
 
     addAccount (user, password, servertype, accountname, url) {
-        let newAccountEntry = tbSync.eas.getDefaultAccountEntries();
-        newAccountEntry.accountname = accountname;
+        let newAccountEntry = this.providerData.getDefaultAccountEntries();
         newAccountEntry.user = user;
         newAccountEntry.servertype = servertype;
 
         if (url) {
             //if no protocoll is given, prepend "https://"
             if (url.substring(0,4) != "http" || url.indexOf("://") == -1) url = "https://" + url.split("://").join("/");
-            newAccountEntry.host = tbSync.eas.stripAutodiscoverUrl(url);
+            newAccountEntry.host = eas.network.stripAutodiscoverUrl(url);
             newAccountEntry.https = (url.substring(0,5) == "https") ? "1" : "0";
-            //also update password in PasswordManager (only works if url is present)
-            tbSync.eas.setPassword (newAccountEntry, password);
         }
 
-        //create a new EAS account and pass its id to updateAccountsList, which will select it
-        //the onSelect event of the List will load the selected account
-        window.opener.tbSyncAccounts.updateAccountsList(tbSync.db.addAccount(newAccountEntry));
+        // Add the new account.
+        let newAccountData = this.providerData.addAccount(accountname, newAccountEntry);
+        eas.auth.updateLoginData(newAccountData, user, password);
 
         window.close();
     }
