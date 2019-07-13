@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "Az Exchange ActiveSync szolgáltató"
+  },
+  "extensionDescription": {
+    "message": "Az Exchange ActiveSync-fiókok összehangolás támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync) (névjegyzék, feladatok és naptárak)."
+  }
+}

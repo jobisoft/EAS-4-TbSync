@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "Provedor Exchange ActiveSync"
+  },
+  "extensionDescription": {
+    "message": "Adiciona suporte para sincronizar contas do Exchange ActiveSync (contatos, tarefas e calendários) para o TbSync."
+  }
+}
