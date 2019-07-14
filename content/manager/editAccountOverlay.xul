@@ -82,7 +82,7 @@
                 <vbox class="showIfConnected">
                     <hbox>
                         <vbox pack="center"><image src="chrome://tbsync/skin/info16.png" /></vbox>
-                        <description flex="1">manager.lockedsettings.description;</description>
+                        <description flex="1">&manager.lockedsettings.description;</description>
                     </hbox>
                 </vbox>
 
