@@ -420,6 +420,12 @@ var base = {
                     syncData.accountData.setAccountProperty("asversion", asversionselected);
                 }
             }
+            
+            //do we need to get a new policy key?
+            if (syncData.accountData.getAccountProperty("provision") == "1" && syncData.accountData.getAccountProperty("policykey") == "0") {
+                await eas.network.getPolicykey(syncData);
+            }
+            
         } catch (e) {
             if (e.name == "eas4tbsync") {
                 return e.statusData;
@@ -729,7 +735,7 @@ var standardFolderList = {
 }
 
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/network.js", this, "UTF-8");
-//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/wbxmltools.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/wbxmltools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/xmltools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/sync.js", this, "UTF-8");

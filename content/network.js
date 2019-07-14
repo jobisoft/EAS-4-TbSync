@@ -46,7 +46,263 @@ var network = {
       return connection;
   },  
 
-  getServerOptions: function (syncData) {        
+sendRequest: function (wbxml, command, syncData, allowSoftFail = false) {
+        let msg = "Sending data <" + syncData.getSyncState().split("||")[0] + "> for " + syncData.accountData.getAccountProperty("accountname");
+        if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("name") + ")";
+        syncData.request = eas.network.getRawXML(wbxml, msg);
+        syncData.response = "";
+
+        let connection = eas.network.getAuthData(syncData.accountData);
+        let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
+        let deviceType = syncData.accountData.getAccountProperty("devicetype");
+        let deviceId = syncData.accountData.getAccountProperty("deviceId");
+
+        tbSync.dump("Sending (EAS v"+syncData.accountData.getAccountProperty("asversion") +")", "POST " + connection.host + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
+        
+        return new Promise(function(resolve,reject) {
+            // Create request handler - API changed with TB60 to new XMKHttpRequest()
+            syncData.req = new XMLHttpRequest();
+            syncData.req.mozBackgroundRequest = true;
+            syncData.req.open("POST", connection.host + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
+            syncData.req.overrideMimeType("text/plain");
+            syncData.req.setRequestHeader("User-Agent", userAgent);
+            syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
+            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(connection.user + ':' + connection.password));
+            if (syncData.accountData.getAccountProperty("asversion") == "2.5") {
+                syncData.req.setRequestHeader("MS-ASProtocolVersion", "2.5");
+            } else {
+                syncData.req.setRequestHeader("MS-ASProtocolVersion", "14.0");
+            }
+            syncData.req.setRequestHeader("Content-Length", wbxml.length);
+            if (syncData.accountData.getAccountProperty("provision") == "1") {
+                syncData.req.setRequestHeader("X-MS-PolicyKey", syncData.accountData.getAccountProperty("policykey"));
+                tbSync.dump("PolicyKey used", syncData.accountData.getAccountProperty("policykey"));
+            }
+
+            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
+
+            syncData.req.ontimeout = function () {
+                if (allowSoftFail) {
+                    resolve("");
+                } else {
+                    reject(eas.sync.finishSync("timeout", eas.flags.abortWithError));
+                }
+            };
+
+            syncData.req.onerror = function () {
+                if (allowSoftFail) {
+                    resolve("");
+                } else {
+                    let error = tbSync.createTCPErrorFromFailedXHR(syncData.req);
+                    if (!error) {
+                        reject(eas.sync.finishSync("networkerror", eas.flags.abortWithServerError));
+                    } else {
+                        reject(eas.sync.finishSync(error, eas.flags.abortWithServerError));
+                    }
+                }
+            };
+
+            syncData.req.onload = function() {
+                let response = syncData.req.responseText;
+                switch(syncData.req.status) {
+
+                    case 200: //OK
+                        let msg = "Receiving data <" + syncData.getSyncState().split("||")[0] + "> for " + syncData.accountData.getAccountProperty("accountname");
+                        if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("name") + ")";
+                        syncData.response = eas.network.getRawXML(response, msg);
+
+                        //What to do on error? IS this an error? Yes!
+                        if (!allowSoftFail && response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
+                            tbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + syncData.req.status + ", ready state = " + syncData.req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
+                            reject(eas.sync.finishSync("invalid"));
+                        } else {
+                            resolve(response);
+                        }
+                        break;
+
+                    case 401: // AuthError
+                    case 403: // Forbiddden (some servers send forbidden on AuthError, like Freenet)
+                        reject(eas.sync.finishSync("401", eas.flags.abortWithError));
+                        break;
+
+                    case 449: // Request for new provision (enable it if needed)
+                        //enable provision
+                        syncData.accountData.setAccountProperty("provision","1");
+                        syncData.accountData.resetAccountProperty("policykey");
+                        reject(eas.sync.finishSync(syncData.req.status, eas.flags.resyncAccount));
+                        break;
+
+                    case 451: // Redirect - update host and login manager 
+                        let header = syncData.req.getResponseHeader("X-MS-Location");
+                        let newHost = header.slice(header.indexOf("://") + 3, header.indexOf("/M"));
+                        let connection = eas.network.getAuthData(syncData.accountData);
+
+                        tbSync.dump("redirect (451)", "header: " + header + ", oldHost: " + connection.host + ", newHost: " + newHost);
+
+                        connection.host = newHost;
+                        reject(eas.sync.finishSync(syncData.req.status, eas.flags.resyncAccount));
+                        break;
+                        
+                    default:
+                        if (allowSoftFail) {
+                            resolve("");
+                        } else {
+                            reject(eas.sync.finishSync("httperror::" + syncData.req.status, eas.flags.abortWithError));
+                        }
+                }
+            };
+
+            syncData.req.send(wbxml);
+            
+        });
+    },
+
+
+
+
+    // RESPONSE EVALUATION
+    
+    getRawXML : function (wbxml, what) {
+        let rawxml = eas.wbxmltools.convert2xml(wbxml);
+        let xml = null;
+        if (rawxml)  {
+            xml = rawxml.split('><').join('>\n<');
+        }
+        
+        //include xml in log, if userdatalevel 2 or greater
+        if ((tbSync.prefs.getBoolPref("log.toconsole") || tbSync.prefs.getBoolPref("log.tofile")) && tbSync.prefs.getIntPref("log.userdatalevel")>1) {
+
+            //log raw wbxml if userdatalevel is 3 or greater
+            if (tbSync.prefs.getIntPref("log.userdatalevel")>2) {
+                let charcodes = [];
+                for (let i=0; i< wbxml.length; i++) charcodes.push(wbxml.charCodeAt(i).toString(16));
+                let bytestring = charcodes.join(" ");
+                tbSync.dump("WBXML: " + what, "\n" + bytestring);
+            }
+
+            if (xml) {
+                //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
+                //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
+                //if userdatalevel is 3 or greater print everything, otherwise exclude application data
+                if (tbSync.prefs.getIntPref("log.userdatalevel")<3) {
+                    let rx = new RegExp("<ApplicationData[\\d\\D]*?\/ApplicationData>", "g");
+                    tbSync.dump("XML: " + what, "\n" + xml.replace(rx, ""));
+                } else {
+                    tbSync.dump("XML: " + what, "\n" + xml);
+                }
+            } else {
+                tbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
+            }
+        }
+    
+    return xml;
+    },
+    
+    //returns false on parse error and null on empty response (if allowed)
+    getDataFromResponse: function (wbxml, allowEmptyResponse = !eas.flags.allowEmptyResponse) {        
+        //check for empty wbxml
+        if (wbxml.length === 0) {
+            if (allowEmptyResponse) return null;
+            else throw eas.sync.finishSync("empty-response");
+        }
+
+        //convert to save xml (all special chars in user data encoded by encodeURIComponent) and check for parse errors
+        let xml = eas.wbxmltools.convert2xml(wbxml);
+        if (xml === false) {
+            throw eas.sync.finishSync("wbxml-parse-error");
+        }
+        
+        //retrieve data and check for empty data (all returned data fields are already decoded by decodeURIComponent)
+        let wbxmlData = eas.xmltools.getDataFromXMLString(xml);
+        if (wbxmlData === null) {
+            if (allowEmptyResponse) return null;
+            else throw eas.sync.finishSync("response-contains-no-data");
+        }
+        
+        //debug
+        eas.xmltools.printXmlData(wbxmlData, false); //do not include ApplicationData in log
+        return wbxmlData;
+    },  
+  
+  
+    
+    // WBXML DATA EXTRACTION FROM RESPONSE
+    
+    getPolicykey: async function (syncData)  {
+        //build WBXML to request provision
+       syncData.setSyncState("prepare.request.provision");
+        let wbxml = eas.wbxmltools.createWBXML();
+        wbxml.switchpage("Provision");
+        wbxml.otag("Provision");
+            wbxml.otag("Policies");
+                wbxml.otag("Policy");
+                    wbxml.atag("PolicyType", (syncData.accountData.getAccountProperty("asversion") == "2.5") ? "MS-WAP-Provisioning-XML" : "MS-EAS-Provisioning-WBXML" );
+                wbxml.ctag();
+            wbxml.ctag();
+        wbxml.ctag();
+
+        for (let loop=0; loop < 2; loop++) {
+           syncData.setSyncState("send.request.provision");
+            let response = await eas.network.sendRequest(wbxml.getBytes(), "Provision", syncData);
+
+            syncData.setSyncState("eval.response.provision");
+            let wbxmlData = eas.network.getDataFromResponse(response);
+            let policyStatus = eas.xmltools.getWbxmlDataField(wbxmlData, "Provision.Policies.Policy.Status");
+            let provisionStatus = eas.xmltools.getWbxmlDataField(wbxmlData, "Provision.Status");
+            if (provisionStatus === false) {
+                throw eas.sync.finishSync("wbxmlmissingfield::Provision.Status", eas.flags.abortWithError);
+            } else if (provisionStatus != "1") {
+                //dump policy status as well
+                if (policyStatus) tbSync.dump("PolicyKey","Received policy status: " + policyStatus);
+                throw eas.sync.finishSync("provision::" + provisionStatus, eas.flags.abortWithError);
+            }
+
+            //reaching this point: provision status was ok
+            let policykey = eas.xmltools.getWbxmlDataField(wbxmlData,"Provision.Policies.Policy.PolicyKey");
+            switch (policyStatus) {
+                case false:
+                    throw eas.sync.finishSync("wbxmlmissingfield::Provision.Policies.Policy.Status", eas.flags.abortWithError);
+
+                case "2":
+                    //server does not have a policy for this device: disable provisioning
+                    syncData.accountData.setAccountProperty("provision","0")
+                    syncData.accountData.resetAccountProperty("policykey");
+                    throw eas.sync.finishSync("NoPolicyForThisDevice", eas.flags.resyncAccount);
+
+                case "1":
+                    if (policykey === false) {
+                        throw eas.sync.finishSync("wbxmlmissingfield::Provision.Policies.Policy.PolicyKey", eas.flags.abortWithError);
+                    } 
+                    tbSync.dump("PolicyKey","Received policykey (" + loop + "): " + policykey);
+                    syncData.accountData.setAccountProperty("policykey", policykey);
+                    break;
+
+                default:
+                    throw eas.sync.finishSync("policy." + policyStatus, eas.flags.abortWithError);
+            }
+
+            //build WBXML to acknowledge provision
+           syncData.setSyncState("prepare.request.provision");
+            wbxml = eas.wbxmltools.createWBXML();
+            wbxml.switchpage("Provision");
+            wbxml.otag("Provision");
+                wbxml.otag("Policies");
+                    wbxml.otag("Policy");
+                        wbxml.atag("PolicyType",(syncData.accountData.getAccountProperty("asversion") == "2.5") ? "MS-WAP-Provisioning-XML" : "MS-EAS-Provisioning-WBXML" );
+                        wbxml.atag("PolicyKey", policykey);
+                        wbxml.atag("Status", "1");
+                    wbxml.ctag();
+                wbxml.ctag();
+            wbxml.ctag();
+            
+            //this wbxml will be used by Send at the top of this loop
+        }
+    },
+
+
+
+    
+    getServerOptions: function (syncData) {        
         syncData.setSyncState("prepare.request.options");
         let authData = eas.network.getAuthData(syncData.accountData);
 
