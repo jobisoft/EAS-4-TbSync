@@ -37,7 +37,7 @@ var tools = {
 
     //gets the synclimit a.k.a. filtertype from pref settings, and checks if valid
     getFilterType: function () {
-        let filterType = tbSync.prefSettings.getIntPref("eas.synclimit").toString();
+        let filterType = eas.prefs.getIntPref("synclimit").toString();
         return (["0","4","5","6","7"].includes(filterType)) ? filterType : Services.prefs.getDefaultBranch("extensions.tbsync.").getIntPref("eas.synclimit").toString();
     },
     

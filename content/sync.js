@@ -59,7 +59,7 @@ eas.sync = {
                         wbxml.atag("CollectionId", syncdata.folderID);
                         wbxml.atag("DeletesAsMoves");
                         wbxml.atag("GetChanges");
-                        wbxml.atag("WindowSize",  tbSync.prefSettings.getIntPref("eas.maxitems").toString());
+                        wbxml.atag("WindowSize",  eas.prefs.getIntPref("maxitems").toString());
 
                         if (tbSync.db.getAccountSetting(syncdata.account, "asversion") != "2.5") {
                             wbxml.otag("Options");
@@ -113,7 +113,7 @@ eas.sync = {
 
 
     sendLocalChanges: async function (syncdata)  {        
-        let maxnumbertosend = tbSync.prefSettings.getIntPref("eas.maxitems");
+        let maxnumbertosend = eas.prefs.getIntPref("maxitems");
 
         syncdata.done = 0;
         syncdata.todo = db.getItemsFromChangeLog(syncdata.targetId, 0, "_by_user").length;
@@ -356,7 +356,7 @@ wbxml.ctag();*/
 
 
     revertLocalChanges: async function (syncdata)  {       
-        let maxnumbertosend = tbSync.prefSettings.getIntPref("eas.maxitems");
+        let maxnumbertosend = eas.prefs.getIntPref("maxitems");
         syncdata.done = 0;
         syncdata.todo = db.getItemsFromChangeLog(syncdata.targetId, 0, "_by_user").length;
         if (syncdata.todo == 0) {

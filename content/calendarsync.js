@@ -39,7 +39,7 @@ eas.sync.Calendar = {
             } else {
                 //load timezone struct into EAS TimeZone object
                 easTZ.easTimeZone64 = data.TimeZone;
-                if (tbSync.prefSettings.getIntPref("log.userdatalevel")>2) tbSync.dump("Recieve TZ", item.title + easTZ.toString());
+                if (tbSync.prefs.getIntPref("log.userdatalevel")>2) tbSync.dump("Recieve TZ", item.title + easTZ.toString());
                 stdOffset = easTZ.utcOffset;
                 dstOffset = easTZ.daylightBias + easTZ.utcOffset;
             }
@@ -237,7 +237,7 @@ eas.sync.Calendar = {
             }
             
             wbxml.atag("TimeZone", easTZ.easTimeZone64);
-             if (tbSync.prefSettings.getIntPref("log.userdatalevel")>2) tbSync.dump("Send TZ", item.title + easTZ.toString());
+             if (tbSync.prefs.getIntPref("log.userdatalevel")>2) tbSync.dump("Send TZ", item.title + easTZ.toString());
         }
         
         //AllDayEvent (for simplicity, we always send a value)
