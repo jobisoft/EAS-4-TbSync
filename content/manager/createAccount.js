@@ -174,7 +174,7 @@ var tbSyncEasNewAccount = {
 
         // Add the new account.
         let newAccountData = this.providerData.addAccount(accountname, newAccountEntry);
-        eas.auth.updateLoginData(newAccountData, user, password);
+        eas.network.getAuthData(newAccountData).updateLoginData(user, password);
 
         window.close();
     }

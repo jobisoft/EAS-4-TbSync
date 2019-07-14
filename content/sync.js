@@ -15,7 +15,26 @@
 
 // https://msdn.microsoft.com/en-us/library/dd299454(v=exchg.80).aspx
 
-eas.sync = {
+var sync = {
+
+    finishSync: function (msg = "", type = null, details = "") {
+        let e = new Error(); 
+        e.name = "eas4tbsync";
+        e.message = tbSync.StatusData.WARNING + ": " + msg.toString() + " (" + details.toString() + ")";
+        e.failed = (msg != "");
+        
+        if (e.failed) {
+            e.statusData = new tbSync.StatusData(tbSync.StatusData.WARNING, msg.toString(), details.toString());
+        } else {
+            e.statusData = new tbSync.StatusData(tbSync.StatusData.SUCCESS, msg.toString());
+        }
+        
+        return e; 
+    },    
+    
+};
+
+var oldsync = {
 
     // ---------------------------------------------------------------------------
     // MAIN FUNCTIONS TO SYNC AN EAS FOLDER

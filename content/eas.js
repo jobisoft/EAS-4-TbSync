@@ -378,7 +378,7 @@ var base = {
      * return timeout in milliseconds
      */
     getConnectionTimeout: function (syncData) {
-        return eas.sync.prefSettings.getIntPref("timeout");
+        return eas.prefs.getIntPref("timeout");
     },
     
     /**
@@ -391,8 +391,46 @@ var base = {
     syncFolderList: async function (syncData) {
         // update folders avail on server and handle added, removed and renamed
         // folders
-        return new tbSync.StatusData(tbSync.StatusData.SUCCESS, "Juhu");
-        //return await eas.sync.folderList(syncData);
+
+        try {
+            //should we recheck options/commands? Always check, if we have no info about asversion!
+            if (syncData.accountData.getAccountProperty("asversion", "") == "" || (Date.now() - syncData.accountData.getAccountProperty("lastEasOptionsUpdate")) > 86400000 ) {
+                await eas.network.getServerOptions(syncData);
+            }
+                            
+            //only update the actual used asversion, if we are currently not connected or it has not yet been set
+            if (syncData.accountData.getAccountProperty("asversion", "") == "" || !syncData.accountData.isConnected()) {
+                //eval the currently in the UI selected EAS version
+                let asversionselected = syncData.accountData.getAccountProperty("asversionselected");
+                let allowedVersionsString = syncData.accountData.getAccountProperty("allowedEasVersions").trim();
+                let allowedVersionsArray = allowedVersionsString.split(",");
+
+                if (asversionselected == "auto") {
+                    if (allowedVersionsArray.includes("14.0")) syncData.accountData.setAccountProperty("asversion", "14.0");
+                    else if (allowedVersionsArray.includes("2.5")) syncData.accountData.setAccountProperty("asversion", "2.5");
+                    else if (allowedVersionsString == "") {
+                        throw eas.sync.finishSync("InvalidServerOptions", eas.flags.abortWithError);
+                    } else {
+                        throw eas.sync.finishSync("nosupportedeasversion::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
+                    }
+                } else if (allowedVersionsString != "" && !allowedVersionsArray.includes(asversionselected)) {
+                    throw eas.sync.finishSync("notsupportedeasversion::"+asversionselected+"::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
+                } else {
+                    //just use the value set by the user
+                    syncData.accountData.setAccountProperty("asversion", asversionselected);
+                }
+            }
+        } catch (e) {
+            if (e.name == "eas4tbsync") {
+                return e.statusData;
+            } else {
+                Components.utils.reportError(e);
+                return new tbSync.StatusData(tbSync.StatusData.WARNING, "JavaScriptError", e.message + "\n\n" + e.stack);
+            }
+        }
+        // we fall through, if there was no error
+        return new tbSync.StatusData();
+
     },
     
     /**
@@ -573,8 +611,9 @@ var calendar = {
      */
     createCalendar: function(newname, folderData) {
         let calManager = tbSync.lightning.cal.getCalendarManager();
-        let password = eas.auth.getPassword(folderData.accountData);
-        let username = eas.auth.getUsername(folderData.accountData);
+        let authData = eas.network.getAuthData(folderData.accountData);
+        let password = authData.password;
+        let username =  authData.user;
       
         let caltype = folderData.getFolderProperty("type");
 
@@ -689,12 +728,11 @@ var standardFolderList = {
     },
 }
 
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/auth.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/network.js", this, "UTF-8");
 //Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/wbxmltools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/xmltools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tools.js", this, "UTF-8");
-//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/sync.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/sync.js", this, "UTF-8");
 //Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tasksync.js", this, "UTF-8");
 //Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/calendarsync.js", this, "UTF-8");
 //Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/contactsync.js", this, "UTF-8");

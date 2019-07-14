@@ -272,39 +272,7 @@ var eas = {
                     throw eas.finishSync("nouserhost", eas.flags.abortWithError);
                 }
                 
-                //should we recheck options/commands? Always check, if we have no info about asversion!
-                if (tbSync.db.getAccountSetting(syncdata.account, "asversion", "") == "" || (Date.now() - tbSync.db.getAccountSetting(syncdata.account, "lastEasOptionsUpdate")) > 86400000 ) {
-                    await eas.getServerOptions(syncdata);
-                }
-                                
-                //only update the actual used asversion, if we are currently not connected or it has not yet been set
-                if (tbSync.db.getAccountSetting(syncdata.account, "asversion", "") == "" || !tbSync.isConnected(syncdata.account)) {
-                    //eval the currently in the UI selected EAS version
-                    let asversionselected = tbSync.db.getAccountSetting(syncdata.account, "asversionselected");
-                    let allowedVersionsString = tbSync.db.getAccountSetting(syncdata.account, "allowedEasVersions").trim();
-                    let allowedVersionsArray = allowedVersionsString.split(",");
 
-                    if (asversionselected == "auto") {
-                        if (allowedVersionsArray.includes("14.0")) tbSync.db.setAccountSetting(syncdata.account, "asversion", "14.0");
-                        else if (allowedVersionsArray.includes("2.5")) tbSync.db.setAccountSetting(syncdata.account, "asversion", "2.5");
-                        else if (allowedVersionsString == "") {
-                            throw eas.finishSync("InvalidServerOptions", eas.flags.abortWithError);
-                        } else {
-                            throw eas.finishSync("nosupportedeasversion::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
-                        }
-                    } else if (allowedVersionsString != "" && !allowedVersionsArray.includes(asversionselected)) {
-                        throw eas.finishSync("notsupportedeasversion::"+asversionselected+"::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
-                    } else {
-                        //just use the value set by the user
-                        tbSync.db.setAccountSetting(syncdata.account, "asversion", asversionselected);
-                    }
-                }
-                
-                //do we need to get a new policy key?
-                if (tbSync.db.getAccountSetting(syncdata.account, "provision") == "1" && tbSync.db.getAccountSetting(syncdata.account, "policykey") == "0") {
-                    await eas.getPolicykey(syncdata);
-                } 
-                
                 switch (job) {
                     case "sync":
                         //set device info
@@ -886,14 +854,7 @@ var eas = {
         }
     },
 
-    finishSync: function (msg = "", type = null, details = "") {
-        let e = new Error(); 
-        e.type = type ? type : eas.flags.syncNextFolder;
-        e.message = msg;
-        e.details = details
-        e.failed = (msg != "");
-        return e; 
-    },    
+
     
     updateSynckey: function (syncdata, wbxmlData) {
         let synckey = xmltools.getWbxmlDataField(wbxmlData,"Sync.Collections.Collection.SyncKey");
@@ -943,21 +904,7 @@ var eas = {
     return xml;
     },
  
-    getConnection: function(account) {
-        let connection = {
-            protocol: (tbSync.db.getAccountSetting(account, "https") == "1") ? "https://" : "http://",
-            set host(newHost) { tbSync.db.setAccountSetting(account, "host", newHost); },
-            get host() { 
-                let h = this.protocol + tbSync.db.getAccountSetting(account, "host"); 
-                while (h.endsWith("/")) { h = h.slice(0,-1); }
 
-                if (h.endsWith("Microsoft-Server-ActiveSync")) return h;
-                return h + "/Microsoft-Server-ActiveSync"; 
-            },
-            user: tbSync.db.getAccountSetting(account, "user"),
-        };
-        return connection;
-    },    
 
     parentIsTrash: function (account, parentID) {
         if (parentID == "0") return false;
@@ -1065,70 +1012,7 @@ var eas = {
             "daylightBias: "+ this.daylightBias].join("\n"); }
     },
 
-    getServerOptions: function (syncdata) {        
-        tbSync.setSyncState("prepare.request.options", syncdata.account);
-        let connection = tbSync.eas.getConnection(syncdata.account);
-        let password = tbSync.eas.getPassword(tbSync.db.getAccount(syncdata.account));
-
-        let userAgent = tbSync.db.getAccountSetting(syncdata.account, "useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
-        tbSync.dump("Sending", "OPTIONS " + connection.host);
-        
-        return new Promise(function(resolve,reject) {
-            // Create request handler - API changed with TB60 to new XMKHttpRequest()
-            syncdata.req = new XMLHttpRequest();
-            syncdata.req.mozBackgroundRequest = true;
-            syncdata.req.open("OPTIONS", connection.host, true);
-            syncdata.req.overrideMimeType("text/plain");
-            syncdata.req.setRequestHeader("User-Agent", userAgent);
-            syncdata.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(connection.user + ':' + password));
-            syncdata.req.timeout = tbSync.prefSettings.getIntPref("timeout");
-
-            syncdata.req.ontimeout = function () {
-                resolve();
-            };
-
-            syncdata.req.onerror = function () {
-                resolve();
-            };
-
-            syncdata.req.onload = function() {
-                tbSync.setSyncState("eval.request.options", syncdata.account);
-                let responseData = {};
-
-                switch(syncdata.req.status) {
-                    case 401: // AuthError
-                            reject(eas.finishSync("401", eas.flags.abortWithError));
-                        break;
-
-                    case 200:
-                            responseData["MS-ASProtocolVersions"] =  syncdata.req.getResponseHeader("MS-ASProtocolVersions");
-                            responseData["MS-ASProtocolCommands"] =  syncdata.req.getResponseHeader("MS-ASProtocolCommands");                        
-
-                            tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
-                            "responseText: " + syncdata.req.responseText + "\n" +
-                            "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
-                            "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
-
-                            if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
-                                tbSync.db.setAccountSetting(syncdata.account, "allowedEasCommands", responseData["MS-ASProtocolCommands"]);
-                                tbSync.db.setAccountSetting(syncdata.account, "allowedEasVersions", responseData["MS-ASProtocolVersions"]);
-                                tbSync.db.setAccountSetting(syncdata.account, "lastEasOptionsUpdate", Date.now());
-                            }
-                            resolve();
-                        break;
-
-                    default:
-                            resolve();
-                        break;
-
-                }
-            };
-            
-            tbSync.setSyncState("send.request.options", syncdata.account);
-            syncdata.req.send();
-            
-        });
-    },
+    
 
     sendRequest: function (wbxml, command, syncdata, allowSoftFail = false) {
         let msg = "Sending data <" + syncdata.syncstate.split("||")[0] + "> for " + tbSync.db.getAccountSetting(syncdata.account, "accountname");

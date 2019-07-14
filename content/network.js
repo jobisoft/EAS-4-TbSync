@@ -8,23 +8,128 @@
  
  "use strict";
 
-var network = {
+var network = {  
     
+  getAuthData: function(accountData) {
+      let connection = {
+          get protocol() { 
+            return (accountData.getAccountProperty("https") == "1") ? "https://" : "http://" 
+          },
+          
+          set host(newHost) {
+            accountData.setAccountProperty("host", newHost); 
+          },
+          
+          get host() { 
+              let h = this.protocol + accountData.getAccountProperty("host"); 
+              while (h.endsWith("/")) { h = h.slice(0,-1); }
+
+              if (h.endsWith("Microsoft-Server-ActiveSync")) return h;
+              return h + "/Microsoft-Server-ActiveSync"; 
+          },
+          
+          get user() {
+            return accountData.getAccountProperty("user");
+          },
+          
+          get password() {
+            return tbSync.passwordManager.getLoginInfo(this.host, "TbSync/EAS", this.user);
+          },
+          
+          updateLoginData: function(newUsername, newPassword) {
+            let oldUsername = this.user;
+            tbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
+            // Also update the username of this account. Add dedicated username setter?
+            accountData.setAccountProperty("user", newUsername);
+          },          
+      };
+      return connection;
+  },  
+
+  getServerOptions: function (syncData) {        
+        syncData.setSyncState("prepare.request.options");
+        let authData = eas.network.getAuthData(syncData.accountData);
+
+        let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
+        tbSync.dump("Sending", "OPTIONS " + authData.host);
+        
+        return new Promise(function(resolve,reject) {
+            // Create request handler - API changed with TB60 to new XMKHttpRequest()
+            syncData.req = new XMLHttpRequest();
+            syncData.req.mozBackgroundRequest = true;
+            syncData.req.open("OPTIONS", authData.host, true);
+            syncData.req.overrideMimeType("text/plain");
+            syncData.req.setRequestHeader("User-Agent", userAgent);
+            console.log("user : " + authData.user);
+            console.log("password : " + authData.password);
+            
+            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
+            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
+
+            syncData.req.ontimeout = function () {
+                resolve();
+            };
+
+            syncData.req.onerror = function () {
+                resolve();
+            };
+
+            syncData.req.onload = function() {
+                syncData.setSyncState("eval.request.options");
+                let responseData = {};
+
+                switch(syncData.req.status) {
+                    case 401: // AuthError
+                            reject(eas.sync.finishSync("401", eas.flags.abortWithError));
+                        break;
+
+                    case 200:
+                            responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
+                            responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
+
+                            tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
+                            "responseText: " + syncData.req.responseText + "\n" +
+                            "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
+                            "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
+
+                            if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
+                                syncData.accountData.setAccountProperty("allowedEasCommands", responseData["MS-ASProtocolCommands"]);
+                                syncData.accountData.setAccountProperty("allowedEasVersions", responseData["MS-ASProtocolVersions"]);
+                                syncData.accountData.setAccountProperty("lastEasOptionsUpdate", Date.now());
+                            }
+                            resolve();
+                        break;
+
+                    default:
+                            resolve();
+                        break;
+
+                }
+            };
+            
+            syncData.setSyncState("send.request.options");
+            syncData.req.send();
+            
+        });
+    },
+
+
+
+
     // AUTODISCOVER        
-    updateServerConnectionViaAutodiscover: async function (syncdata) {
-        tbSync.setSyncState("prepare.request.autodiscover", syncdata.account);
-        let user = tbSync.db.getAccountSetting(syncdata.account, "user");
-        let password = eas.auth.getPassword(tbSync.db.getAccount(syncdata.account));
+    updateServerConnectionViaAutodiscover: async function (syncData) {
+        syncData.setSyncState("prepare.request.autodiscover");
+        let authData = eas.network.getAuthData(syncData.accountData);
 
-        tbSync.setSyncState("send.request.autodiscover", syncdata.account);
-        let result = await eas.network.getServerConnectionViaAutodiscover(user, password, 30*1000);
+        syncData.setSyncState("send.request.autodiscover");
+        let result = await eas.network.getServerConnectionViaAutodiscover(authData.user, authData.password, 30*1000);
 
-        tbSync.setSyncState("eval.response.autodiscover", syncdata.account);
+        syncData.setSyncState("eval.response.autodiscover");
         if (result.errorcode == 200) {
             //update account
-            tbSync.db.setAccountSetting(syncdata.account, "host", eas.stripAutodiscoverUrl(result.server)); 
-            tbSync.db.setAccountSetting(syncdata.account, "user", result.user);
-            tbSync.db.setAccountSetting(syncdata.account, "https", (result.server.substring(0,5) == "https") ? "1" : "0");
+            syncData.accountData.setAccountProperty("host", eas.network.stripAutodiscoverUrl(result.server)); 
+            syncData.accountData.setAccountProperty("user", result.user);
+            syncData.accountData.setAccountProperty("https", (result.server.substring(0,5) == "https") ? "1" : "0");
         }
 
         return result.errorcode;
