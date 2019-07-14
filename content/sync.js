@@ -104,7 +104,7 @@ eas.sync = {
             
             if (!xmltools.hasWbxmlDataField(wbxmlData,"Sync.Collections.Collection.MoreAvailable")) {
                 //Feedback from users: They want to see the final count
-                await tbSync.sleep(100, false);
+                await tbSync.tools.sleep(100, false);
                 return;
             }
         } while (true);
@@ -318,7 +318,7 @@ wbxml.ctag();*/
                         eas.checkStatus(syncdata, wbxmlData, "Sync.Collections.Collection.Status");
                 }        
                 
-                await tbSync.sleep(10);
+                await tbSync.tools.sleep(10);
 
                 if (errorcause == "") {
                     //PROCESS RESPONSE        
@@ -463,7 +463,7 @@ wbxml.ctag();*/
                     //looking for additions
                     let add = xmltools.nodeAsArray(xmltools.getWbxmlDataField(wbxmlData, fetchPath));
                     for (let count = 0; count < add.length; count++) {
-                        await tbSync.sleep(2);
+                        await tbSync.tools.sleep(2);
 
                         let ServerId = add[count].ServerId;
                         let data = (viaItemOperations) ? add[count].Properties : add[count].ApplicationData;
@@ -554,7 +554,7 @@ wbxml.ctag();*/
             //looking for additions
             let add = xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Commands.Add);
             for (let count = 0; count < add.length; count++) {
-                await tbSync.sleep(2);
+                await tbSync.tools.sleep(2);
 
                 let ServerId = add[count].ServerId;
                 let data = add[count].ApplicationData;
@@ -583,7 +583,7 @@ wbxml.ctag();*/
             //inject custom change object for debug
             //upd = JSON.parse('[{"ServerId":"2tjoanTeS0CJ3QTsq5vdNQAAAAABDdrY6Gp03ktAid0E7Kub3TUAAAoZy4A1","ApplicationData":{"DtStamp":"20171109T142149Z"}}]');
             for (let count = 0; count < upd.length; count++) {
-                await tbSync.sleep(2);
+                await tbSync.tools.sleep(2);
 
                 let ServerId = upd[count].ServerId;
                 let data = upd[count].ApplicationData;
@@ -619,7 +619,7 @@ wbxml.ctag();*/
             //looking for deletes
             let del = xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Commands.Delete).concat(xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Commands.SoftDelete));
             for (let count = 0; count < del.length; count++) {
-                await tbSync.sleep(2);
+                await tbSync.tools.sleep(2);
 
                 let ServerId = del[count].ServerId;
 
@@ -654,7 +654,7 @@ wbxml.ctag();*/
                 //looking for additions (Add node contains, status, old ClientId and new ServerId)
                 let add = xmltools.nodeAsArray(wbxmlData.Sync.Collections.Collection.Responses.Add);
                 for (let count = 0; count < add.length; count++) {
-                    await tbSync.sleep(2);
+                    await tbSync.tools.sleep(2);
 
                     //get the true Thunderbird UID of this added item (we created a temp clientId during add)
                     add[count].ClientId = addedItems[add[count].ClientId];
