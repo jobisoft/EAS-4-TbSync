@@ -10,43 +10,144 @@
 
 var network = {  
     
-  getAuthData: function(accountData) {
-      let connection = {
-          get protocol() { 
-            return (accountData.getAccountProperty("https") == "1") ? "https://" : "http://" 
-          },
-          
-          set host(newHost) {
-            accountData.setAccountProperty("host", newHost); 
-          },
-          
-          get host() { 
-              let h = this.protocol + accountData.getAccountProperty("host"); 
-              while (h.endsWith("/")) { h = h.slice(0,-1); }
+    getAuthData: function(accountData) {
+        let connection = {
+            get protocol() { 
+                return (accountData.getAccountProperty("https") == "1") ? "https://" : "http://" 
+            },
 
-              if (h.endsWith("Microsoft-Server-ActiveSync")) return h;
-              return h + "/Microsoft-Server-ActiveSync"; 
-          },
-          
-          get user() {
-            return accountData.getAccountProperty("user");
-          },
-          
-          get password() {
-            return tbSync.passwordManager.getLoginInfo(this.host, "TbSync/EAS", this.user);
-          },
-          
-          updateLoginData: function(newUsername, newPassword) {
-            let oldUsername = this.user;
-            tbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
-            // Also update the username of this account. Add dedicated username setter?
-            accountData.setAccountProperty("user", newUsername);
-          },          
-      };
-      return connection;
-  },  
+            set host(newHost) {
+                accountData.setAccountProperty("host", newHost); 
+            },
 
-sendRequest: function (wbxml, command, syncData, allowSoftFail = false) {
+            get host() { 
+                let h = this.protocol + accountData.getAccountProperty("host"); 
+                while (h.endsWith("/")) { h = h.slice(0,-1); }
+
+                if (h.endsWith("Microsoft-Server-ActiveSync")) return h;
+                return h + "/Microsoft-Server-ActiveSync"; 
+            },
+
+            get user() {
+                return accountData.getAccountProperty("user");
+            },
+
+            get password() {
+                return tbSync.passwordManager.getLoginInfo(this.host, "TbSync/EAS", this.user);
+            },
+
+            updateLoginData: function(newUsername, newPassword) {
+                let oldUsername = this.user;
+                tbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
+                // Also update the username of this account. Add dedicated username setter?
+                accountData.setAccountProperty("user", newUsername);
+            },          
+        };
+        return connection;
+    },  
+
+
+
+
+
+    getServerOptions: function (syncData) {        
+        syncData.setSyncState("prepare.request.options");
+        let authData = eas.network.getAuthData(syncData.accountData);
+
+        let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
+        tbSync.dump("Sending", "OPTIONS " + authData.host);
+        
+        return new Promise(function(resolve,reject) {
+            // Create request handler - API changed with TB60 to new XMKHttpRequest()
+            syncData.req = new XMLHttpRequest();
+            syncData.req.mozBackgroundRequest = true;
+            syncData.req.open("OPTIONS", authData.host, true);
+            syncData.req.overrideMimeType("text/plain");
+            syncData.req.setRequestHeader("User-Agent", userAgent);            
+            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
+            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
+
+            syncData.req.ontimeout = function () {
+                resolve();
+            };
+
+            syncData.req.onerror = function () {
+                resolve();
+            };
+
+            syncData.req.onload = function() {
+                syncData.setSyncState("eval.request.options");
+                let responseData = {};
+
+                switch(syncData.req.status) {
+                    case 401: // AuthError
+                            reject(eas.sync.finishSync("401", eas.flags.abortWithError));
+                        break;
+
+                    case 200:
+                            responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
+                            responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
+
+                            tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
+                            "responseText: " + syncData.req.responseText + "\n" +
+                            "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
+                            "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
+
+                            if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
+                                syncData.accountData.setAccountProperty("allowedEasCommands", responseData["MS-ASProtocolCommands"]);
+                                syncData.accountData.setAccountProperty("allowedEasVersions", responseData["MS-ASProtocolVersions"]);
+                                syncData.accountData.setAccountProperty("lastEasOptionsUpdate", Date.now());
+                            }
+                            resolve();
+                        break;
+
+                    default:
+                            resolve();
+                        break;
+
+                }
+            };
+            
+            syncData.setSyncState("send.request.options");
+            syncData.req.send();
+            
+        });
+    },
+
+    setDeviceInformation: async function (syncData)  {
+        if (syncData.accountData.getAccountProperty("asversion") == "2.5" || !syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("Settings")) {
+            return;
+        }
+            
+        syncData.setSyncState("prepare.request.setdeviceinfo");
+
+        let wbxml = wbxmltools.createWBXML();
+        wbxml.switchpage("Settings");
+        wbxml.otag("Settings");
+            wbxml.otag("DeviceInformation");
+                wbxml.otag("Set");
+                    wbxml.atag("Model", "Computer");
+                    wbxml.atag("FriendlyName", "TbSync on Device " + syncData.accountData.getAccountProperty("deviceId").substring(4));
+                    wbxml.atag("OS", OS.Constants.Sys.Name);
+                    wbxml.atag("UserAgent", syncData.accountData.getAccountProperty("useragent"));
+                wbxml.ctag();
+            wbxml.ctag();
+        wbxml.ctag();
+
+        syncData.setSyncState("send.request.setdeviceinfo");
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "Settings", syncData);
+
+        syncData.setSyncState("eval.response.setdeviceinfo");
+        let wbxmlData = eas.network.getDataFromResponse(response);
+
+        eas.network.checkStatus(syncData, wbxmlData,"Settings.Status");
+    },
+    
+
+
+
+
+    sendRequest: function (wbxml, command, syncData, allowSoftFail = false) {
         let msg = "Sending data <" + syncData.getSyncState().split("||")[0] + "> for " + syncData.accountData.getAccountProperty("accountname");
         if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("name") + ")";
         syncData.request = eas.network.getRawXML(wbxml, msg);
@@ -224,8 +325,118 @@ sendRequest: function (wbxml, command, syncData, allowSoftFail = false) {
         return wbxmlData;
     },  
   
-  
+  checkStatus : function (syncData, wbxmlData, path, rootpath="", allowSoftFail = false) {
+        //path is relative to wbxmlData
+        //rootpath is the absolute path and must be specified, if wbxml is not the root node and thus path is not the rootpath	    
+        let status = eas.xmltools.getWbxmlDataField(wbxmlData,path);
+        let fullpath = (rootpath=="") ? path : rootpath;
+        let elements = fullpath.split(".");
+        let type = elements[0];
+
+        //check if fallback to main class status: the answer could just be a "Sync.Status" instead of a "Sync.Collections.Collections.Status"
+        if (status === false) {
+            let mainStatus = eas.xmltools.getWbxmlDataField(wbxmlData, type + "." + elements[elements.length-1]);
+            if (mainStatus === false) {
+                //both possible status fields are missing, abort
+                throw eas.sync.finishSync("wbxmlmissingfield::" + fullpath, null, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+            } else {
+                //the alternative status could be extracted
+                status = mainStatus;
+                fullpath = type + "." + elements[elements.length-1];
+            }
+        }
+
+        //check if all is fine (not bad)
+        if (status == "1") {
+            return "";
+        }
+
+        tbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
+
+        //handle errrors based on type
+        let statusType = type+"."+status;
+        switch (statusType) {
+            case "Sync.3": /*
+                        MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
+                        since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
+                        */
+                throw eas.sync.finishSync(statusType, eas.flags.resyncFolder, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+            
+            case "Sync.4": //Malformed request
+            case "Sync.5": //Temporary server issues or invalid item
+            case "Sync.6": //Invalid item
+            case "Sync.8": //Object not found
+                if (allowSoftFail) return statusType;
+                throw eas.sync.finishSync(statusType, null, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+
+            case "Sync.7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
+            case "Sync.9": //User account could be out of disk space, also send if no write permission (TODO)
+                return "";
+
+            case "FolderDelete.3": // special system folder - fatal error
+            case "FolderDelete.6": // error on server
+                throw eas.sync.finishSync(statusType, null, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+
+            case "FolderDelete.4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
+            case "FolderDelete.9": // invalid synchronization key - resync
+            case "FolderSync.9": // invalid synchronization key - resync
+            case "Sync.12": // folder hierarchy changed
+                {
+                    let folders = tbSync.db.getFolders(syncData.account);
+                    for (let f in folders) {
+                        //the folder itself is NOT deleted (4th arg is false)
+                        tbSync.takeTargetOffline("eas", folders[f], "[forced account resync]", false);
+                        tbSync.db.setFolderSetting(folders[f].account, folders[f].folderID, "cached", "1");
+                    }		    
+                    //folder is no longer there, unset current folder
+                    syncData.folderID = "";
+                    //reset account
+                    eas.onEnableAccount(syncData.account);
+                    throw eas.sync.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                }
+        }
+        
+        //handle global error (https://msdn.microsoft.com/en-us/library/ee218647(v=exchg.80).aspx)
+        let descriptions = {};
+        switch(status) {
+            case "101": //invalid content
+            case "102": //invalid wbxml
+            case "103": //invalid xml
+                throw eas.sync.finishSync("global." + status, eas.flags.abortWithError, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+            
+            case "109": descriptions["109"]="DeviceTypeMissingOrInvalid";
+            case "112": descriptions["112"]="ActiveDirectoryAccessDenied";
+            case "126": descriptions["126"]="UserDisabledForSync";
+            case "127": descriptions["127"]="UserOnNewMailboxCannotSync";
+            case "128": descriptions["128"]="UserOnLegacyMailboxCannotSync";
+            case "129": descriptions["129"]="DeviceIsBlockedForThisUser";
+            case "130": descriptions["120"]="AccessDenied";
+            case "131": descriptions["131"]="AccountDisabled";
+                throw eas.sync.finishSync("global.clientdenied"+ "::" + status + "::" + descriptions[status], eas.flags.abortWithError);
+
+            case "110": //server error - resync
+                throw eas.sync.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+
+            case "141": // The device is not provisionable
+            case "142": // DeviceNotProvisioned
+            case "143": // PolicyRefresh
+            case "144": // InvalidPolicyKey
+                //enable provision
+                syncData.accountData.setAccountProperty("provision","1");
+                syncData.accountData.resetAccountProperty("policykey");
+                throw eas.sync.finishSync(statusType, eas.flags.resyncAccount);
+            
+            default:
+                if (allowSoftFail) return statusType;
+                throw eas.sync.finishSync(statusType, eas.flags.abortWithError, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+
+        }		
+    },
     
+
+
+
+
     // WBXML DATA EXTRACTION FROM RESPONSE
     
     getPolicykey: async function (syncData)  {
@@ -301,75 +512,10 @@ sendRequest: function (wbxml, command, syncData, allowSoftFail = false) {
 
 
 
+
     
-    getServerOptions: function (syncData) {        
-        syncData.setSyncState("prepare.request.options");
-        let authData = eas.network.getAuthData(syncData.accountData);
-
-        let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
-        tbSync.dump("Sending", "OPTIONS " + authData.host);
-        
-        return new Promise(function(resolve,reject) {
-            // Create request handler - API changed with TB60 to new XMKHttpRequest()
-            syncData.req = new XMLHttpRequest();
-            syncData.req.mozBackgroundRequest = true;
-            syncData.req.open("OPTIONS", authData.host, true);
-            syncData.req.overrideMimeType("text/plain");
-            syncData.req.setRequestHeader("User-Agent", userAgent);            
-            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
-            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
-
-            syncData.req.ontimeout = function () {
-                resolve();
-            };
-
-            syncData.req.onerror = function () {
-                resolve();
-            };
-
-            syncData.req.onload = function() {
-                syncData.setSyncState("eval.request.options");
-                let responseData = {};
-
-                switch(syncData.req.status) {
-                    case 401: // AuthError
-                            reject(eas.sync.finishSync("401", eas.flags.abortWithError));
-                        break;
-
-                    case 200:
-                            responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
-                            responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
-
-                            tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
-                            "responseText: " + syncData.req.responseText + "\n" +
-                            "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
-                            "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
-
-                            if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
-                                syncData.accountData.setAccountProperty("allowedEasCommands", responseData["MS-ASProtocolCommands"]);
-                                syncData.accountData.setAccountProperty("allowedEasVersions", responseData["MS-ASProtocolVersions"]);
-                                syncData.accountData.setAccountProperty("lastEasOptionsUpdate", Date.now());
-                            }
-                            resolve();
-                        break;
-
-                    default:
-                            resolve();
-                        break;
-
-                }
-            };
-            
-            syncData.setSyncState("send.request.options");
-            syncData.req.send();
-            
-        });
-    },
-
-
-
-
-    // AUTODISCOVER        
+    // AUTODISCOVER
+    
     updateServerConnectionViaAutodiscover: async function (syncData) {
         syncData.setSyncState("prepare.request.autodiscover");
         let authData = eas.network.getAuthData(syncData.accountData);
@@ -575,6 +721,5 @@ sendRequest: function (wbxml, command, syncData, allowSoftFail = false) {
             else  req.send(xml);
             
         });
-    },    
-
+    }
 }

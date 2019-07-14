@@ -426,6 +426,9 @@ var base = {
                 await eas.network.getPolicykey(syncData);
             }
             
+            //set device info
+            await eas.network.setDeviceInformation (syncData);
+            
         } catch (e) {
             if (e.name == "eas4tbsync") {
                 return e.statusData;

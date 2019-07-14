@@ -174,7 +174,7 @@ var eas = {
             return null;
         }
         
-        let wbxml = wbxmltools.createWBXML();
+        let wbxml = eas.wbxmltools.createWBXML();
         wbxml.switchpage("Search");
         wbxml.otag("Search");
             wbxml.otag("Store");
@@ -189,18 +189,18 @@ var eas = {
             wbxml.ctag();
         wbxml.ctag();
 
-        let syncdata = {};
-        syncdata.account = account;
-        syncdata.folderID = "";
-        syncdata.syncstate = "SearchingGAL";
+        let syncData = {};
+        syncData.account = account;
+        syncData.folderID = "";
+        syncData.syncstate = "SearchingGAL";
         
             
-        let response = await eas.sendRequest(wbxml.getBytes(), "Search", syncdata);
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "Search", syncData);
         let wbxmlData = eas.getDataFromResponse(response);
         let galdata = [];
 
         if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
-            let results = xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
+            let results = eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
             let accountname = tbSync.db.getAccountSetting(account, "accountname");
         
             for (let count = 0; count < results.length; count++) {
@@ -243,59 +243,58 @@ var eas = {
     /**
      * Is called if TbSync needs to synchronize an account.
      *
-     * @param syncdata      [in] object that contains the account and maybe the folder which needs to worked on
+     * @param syncData      [in] object that contains the account and maybe the folder which needs to worked on
      *                           you are free to add more fields to this object which you need (persistent) during sync
      * @param job           [in] identifier about what is to be done, the standard job is "sync", you are free to add
      *                           custom jobs like "deletefolder" via your own accountSettings.xul
      */
-    start: async function (syncdata, job)  {
+    start: async function (syncData, job)  {
         let accountReSyncs = 0;
         
         do {
             try {
                 accountReSyncs++;
-                syncdata.todo = 0;
-                syncdata.done = 0;
+                syncData.todo = 0;
+                syncData.done = 0;
 
                 if (accountReSyncs > 3) {
-                    throw eas.finishSync("resync-loop", eas.flags.abortWithError);
+                    throw eas.sync.finishSync("resync-loop", eas.flags.abortWithError);
                 }
 
                 // check if enabled
-                if (!tbSync.isEnabled(syncdata.account)) {
-                    throw eas.finishSync("disabled", eas.flags.abortWithError);
+                if (!tbSync.isEnabled(syncData.account)) {
+                    throw eas.sync.finishSync("disabled", eas.flags.abortWithError);
                 }
 
                 // check if connection has data
-                let connection = tbSync.eas.getConnection(syncdata.account);
+                let connection = eas.network.getAuthData(syncData);
                 if (connection.host == "" || connection.user == "") {
-                    throw eas.finishSync("nouserhost", eas.flags.abortWithError);
+                    throw eas.sync.finishSync("nouserhost", eas.flags.abortWithError);
                 }
                 
 
                 switch (job) {
                     case "sync":
-                        //set device info
-                        await eas.setDeviceInformation (syncdata);
+
                         //get all folders, which need to be synced
-                        await eas.getPendingFolders(syncdata);
+                        await eas.getPendingFolders(syncData);
                         //update folder list in GUI
-                        Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncdata.account);
+                        Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncData.account);
                         //sync all pending folders
-                        await eas.syncPendingFolders(syncdata); //inside here we throw and catch FinischFolderSync
-                        throw eas.finishSync();
+                        await eas.syncPendingFolders(syncData); //inside here we throw and catch FinischFolderSync
+                        throw eas.sync.finishSync();
                         break;
                         
                     case "deletefolder":
                         //TODO: foldersync first ???
-                        await eas.deleteFolder(syncdata);
+                        await eas.deleteFolder(syncData);
                         //update folder list in GUI
-                        Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncdata.account);
-                        throw eas.finishSync();
+                        Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncData.account);
+                        throw eas.sync.finishSync();
                         break;
                         
                     default:
-                        throw eas.finishSync("unknown", eas.flags.abortWithError);
+                        throw eas.sync.finishSync("unknown", eas.flags.abortWithError);
 
                 }
 
@@ -303,21 +302,21 @@ var eas = {
                     
                 switch (report.type) {
                     case eas.flags.resyncAccount:
-                        tbSync.errorlog("info", syncdata, "Forced Account Resync", report.message);                        
+                        tbSync.errorlog("info", syncData, "Forced Account Resync", report.message);                        
                         continue;
 
                     case eas.flags.abortWithServerError: 
                         //Could not connect to server. Can we rerun autodiscover? If not, fall through to abortWithError              
-                        if (tbSync.db.getAccountSetting(syncdata.account, "servertype") == "auto") {
-                            let errorcode = await eas.updateServerConnectionViaAutodiscover(syncdata);
+                        if (syncData.accountData.getAccountProperty("servertype") == "auto") {
+                            let errorcode = await eas.updateServerConnectionViaAutodiscover(syncData);
                             switch (errorcode) {
                                 case 401:
                                 case 403: //failed to authenticate
                                     report.message = "401"
-                                    tbSync.finishAccountSync(syncdata, report);
+                                    tbSync.finishAccountSync(syncData, report);
                                     return;                            
                                 case 200: //server and/or user was updated, retry
-                                    Services.obs.notifyObservers(null, "tbsync.updateAccountSettingsGui", syncdata.account);
+                                    Services.obs.notifyObservers(null, "tbsync.updateAccountSettingsGui", syncData.account);
                                     continue;
                                 default: //autodiscover failed, fall through to abortWithError
                             }                        
@@ -326,13 +325,13 @@ var eas = {
                     case eas.flags.abortWithError: //fatal error, finish account sync
                     case eas.flags.syncNextFolder: //no more folders left, finish account sync
                     case eas.flags.resyncFolder: //should not happen here, just in case
-                        tbSync.finishAccountSync(syncdata, report);
+                        tbSync.finishAccountSync(syncData, report);
                         return;
 
                     default:
                         //there was some other error
                         report.type = "JavaScriptError";
-                        tbSync.finishAccountSync(syncdata, report);
+                        tbSync.finishAccountSync(syncData, report);
                         Components.utils.reportError(report);
                         return;
                 }
@@ -351,36 +350,36 @@ var eas = {
     // * HELPER FUNCTIONS BEYOND THE API
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     
-    getPendingFolders: async function (syncdata)  {
+    getPendingFolders: async function (syncData)  {
         //this function sets all folders which ougth to be synced to pending, either a specific one (if folderID is set) or all avail
-        if (syncdata.folderID != "") {
+        if (syncData.folderID != "") {
             //just set the specified folder to pending
-            tbSync.db.setFolderSetting(syncdata.account, syncdata.folderID, "status", "pending");
+            tbSync.db.setFolderSetting(syncData.account, syncData.folderID, "status", "pending");
         } else {
             //scan all folders and set the enabled ones to pending
-            tbSync.setSyncState("prepare.request.folders", syncdata.account); 
-            let foldersynckey = tbSync.db.getAccountSetting(syncdata.account, "foldersynckey");
+           syncData.setSyncState("prepare.request.folders", syncData.account); 
+            let foldersynckey = syncData.accountData.getAccountProperty("foldersynckey");
 
             //build WBXML to request foldersync
-            let wbxml = wbxmltools.createWBXML();
+            let wbxml = eas.wbxmltools.createWBXML();
             wbxml.switchpage("FolderHierarchy");
             wbxml.otag("FolderSync");
                 wbxml.atag("SyncKey", foldersynckey);
             wbxml.ctag();
 
-            tbSync.setSyncState("send.request.folders", syncdata.account); 
-            let response = await eas.sendRequest(wbxml.getBytes(), "FolderSync", syncdata);
+           syncData.setSyncState("send.request.folders", syncData.account); 
+            let response = await eas.network.sendRequest(wbxml.getBytes(), "FolderSync", syncData);
 
-            tbSync.setSyncState("eval.response.folders", syncdata.account); 
+           syncData.setSyncState("eval.response.folders", syncData.account); 
             let wbxmlData = eas.getDataFromResponse(response);
 
-            eas.checkStatus(syncdata, wbxmlData,"FolderSync.Status");
+            eas.network.checkStatus(syncData, wbxmlData,"FolderSync.Status");
 
-            let synckey = xmltools.getWbxmlDataField(wbxmlData,"FolderSync.SyncKey");
+            let synckey = eas.xmltools.getWbxmlDataField(wbxmlData,"FolderSync.SyncKey");
             if (synckey) {
-                tbSync.db.setAccountSetting(syncdata.account, "foldersynckey", synckey);
+                syncData.accountData.setAccountProperty("foldersynckey", synckey);
             } else {
-                throw eas.finishSync("wbxmlmissingfield::FolderSync.SyncKey", eas.flags.abortWithError);
+                throw eas.sync.finishSync("wbxmlmissingfield::FolderSync.SyncKey", eas.flags.abortWithError);
             }
             
             //if we reach this point, wbxmlData contains FolderSync node, so the next if will not fail with an javascript error, 
@@ -389,13 +388,13 @@ var eas = {
             //are there any changes in folder hierarchy
             if (wbxmlData.FolderSync.Changes) {
                 //looking for additions
-                let add = xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Add);
+                let add = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Add);
                 for (let count = 0; count < add.length; count++) {
                     //only add allowed folder types to DB
                     if (!["9","14","8","13","7","15","4"].includes(add[count].Type)) 
                         continue;
 
-                    let existingFolder = tbSync.db.getFolder(syncdata.account, add[count].ServerId);
+                    let existingFolder = tbSync.db.getFolder(syncData.account, add[count].ServerId);
                     if (existingFolder !== null && existingFolder.cached == "0") {
                         //there was an error at the server, he has send us an ADD for a folder we alreay have, treat as update
                         tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "name", add[count].DisplayName);
@@ -411,15 +410,15 @@ var eas = {
                         newFolder.parentID = add[count].ParentId;
 
                         //if there is a cached version of this folderID, addFolder will merge all persistent settings - all other settings not defined here will be set to their defaults
-                        tbSync.db.addFolder(syncdata.account, newFolder);
+                        tbSync.db.addFolder(syncData.account, newFolder);
                     }
                 }
                 
                 //looking for updates
-                let update = xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Update);
+                let update = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Update);
                 for (let count = 0; count < update.length; count++) {
                     //get a reference
-                    let folder = tbSync.db.getFolder(syncdata.account, update[count].ServerId);
+                    let folder = tbSync.db.getFolder(syncData.account, update[count].ServerId);
                     if (folder !== null) {
                         //update folder
                         tbSync.db.setFolderSetting(folder.account, folder.folderID, "name", update[count].DisplayName);
@@ -429,17 +428,17 @@ var eas = {
                 }
 
                 //looking for deletes
-                let del = xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Delete);
+                let del = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Delete);
                 for (let count = 0; count < del.length; count++) {
 
-                    let folder = tbSync.db.getFolder(syncdata.account, del[count].ServerId);
+                    let folder = tbSync.db.getFolder(syncData.account, del[count].ServerId);
                     if (folder !== null) {
                         tbSync.takeTargetOffline("eas", folder, "[deleted from server]");
                     }
                 }
             }
 
-            tbSync.prepareFoldersForSync(syncdata.account);            
+            tbSync.prepareFoldersForSync(syncData.account);            
         }
     },
 
@@ -457,12 +456,12 @@ var eas = {
 
 
     //Process all folders with PENDING status
-    syncPendingFolders: async function (syncdata)  {
+    syncPendingFolders: async function (syncData)  {
         let folderReSyncs = 1;
         
         do {                
             //any pending folders left?
-            let nextFolder = eas.getNextPendingFolder(syncdata.account);
+            let nextFolder = eas.getNextPendingFolder(syncData.account);
             if (nextFolder === null) {
                 //all folders of this account have been synced
                 return;
@@ -474,123 +473,123 @@ var eas = {
             try {
                 
                 //resync loop control
-                if (syncdata.folderID == nextFolder.folderID) folderReSyncs++;
+                if (syncData.folderID == nextFolder.folderID) folderReSyncs++;
                 else folderReSyncs = 1;
-                syncdata.folderID = nextFolder.folderID;;
+                syncData.folderID = nextFolder.folderID;;
 
                 if (folderReSyncs > 3) {
-                    throw eas.finishSync("resync-loop");
+                    throw eas.sync.finishSync("resync-loop");
                 }
 
-                //get syncdata type, which is also used in WBXML for the CLASS element
-                syncdata.type = null;
+                //get syncData type, which is also used in WBXML for the CLASS element
+                syncData.type = null;
                 switch (eas.getThunderbirdFolderType(nextFolder.type)) {
                     case "tb-contact": 
-                        syncdata.type = "Contacts";
+                        syncData.type = "Contacts";
                         // check SyncTarget
-                        if (!tbSync.checkAddressbook(syncdata.account, syncdata.folderID)) {
-                            throw eas.finishSync("notargets");
+                        if (!tbSync.checkAddressbook(syncData.account, syncData.folderID)) {
+                            throw eas.sync.finishSync("notargets");
                         }
                         break;
                         
                     case "tb-event":
-                        if (syncdata.type === null) syncdata.type = "Calendar";
+                        if (syncData.type === null) syncData.type = "Calendar";
                     case "tb-todo":
-                        if (syncdata.type === null) syncdata.type = "Tasks";
+                        if (syncData.type === null) syncData.type = "Tasks";
 
                         // skip if lightning is not installed
                         if (tbSync.lightningIsAvailable() == false) {
-                            throw eas.finishSync("nolightning");
+                            throw eas.sync.finishSync("nolightning");
                         }
                         
                         // check SyncTarget
-                        if (!tbSync.checkCalender(syncdata.account, syncdata.folderID)) {
-                            throw eas.finishSync("notargets");
+                        if (!tbSync.checkCalender(syncData.account, syncData.folderID)) {
+                            throw eas.sync.finishSync("notargets");
                         }                        
                         break;
                         
                     default:
-                        throw eas.finishSync("skipped");
+                        throw eas.sync.finishSync("skipped");
                 };
 
 
 
 
 
-                tbSync.setSyncState("preparing", syncdata.account, syncdata.folderID);
+               syncData.setSyncState("preparing", syncData.account, syncData.folderID);
                 
                 //get synckey if needed
-                syncdata.synckey = nextFolder.synckey;                
-                if (syncdata.synckey == "") {
-                    await eas.getSynckey(syncdata);
+                syncData.synckey = nextFolder.synckey;                
+                if (syncData.synckey == "") {
+                    await eas.getSynckey(syncData);
                 }
                 
                 //sync folder
-                syncdata.timeOfLastSync = tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "lastsynctime") / 1000;
-                syncdata.timeOfThisSync = (Date.now() / 1000) - 1;
+                syncData.timeOfLastSync = tbSync.db.getFolderSetting(syncData.account, syncData.folderID, "lastsynctime") / 1000;
+                syncData.timeOfThisSync = (Date.now() / 1000) - 1;
                 
-                switch (syncdata.type) {
+                switch (syncData.type) {
                     case "Contacts": 
                         //get sync target of this addressbook
-                        syncdata.targetId = tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "target");
-                        syncdata.addressbookObj = tbSync.getAddressBookObject(syncdata.targetId);
+                        syncData.targetId = tbSync.db.getFolderSetting(syncData.account, syncData.folderID, "target");
+                        syncData.addressbookObj = tbSync.getAddressBookObject(syncData.targetId);
 
                         //promisify addressbook, so it can be used together with await
-                        syncdata.targetObj = eas.tools.promisifyAddressbook(syncdata.addressbookObj);
+                        syncData.targetObj = eas.tools.promisifyAddressbook(syncData.addressbookObj);
                         
-                        await eas.sync.start(syncdata);   //using new tbsync contacts sync code
+                        await eas.sync.start(syncData);   //using new tbsync contacts sync code
                         break;
 
                     case "Calendar":
                     case "Tasks": 
-                        syncdata.targetId = tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "target");
-                        syncdata.calendarObj = cal.getCalendarManager().getCalendarById(syncdata.targetId);
+                        syncData.targetId = tbSync.db.getFolderSetting(syncData.account, syncData.folderID, "target");
+                        syncData.calendarObj = cal.getCalendarManager().getCalendarById(syncData.targetId);
                         
                         //promisify calender, so it can be used together with await
-                        syncdata.targetObj = cal.async.promisifyCalendar(syncdata.calendarObj.wrappedJSObject);
+                        syncData.targetObj = cal.async.promisifyCalendar(syncData.calendarObj.wrappedJSObject);
 
-                        syncdata.calendarObj.startBatch();
+                        syncData.calendarObj.startBatch();
                         //save current value of readOnly (or take it from the setting
-                        calendarReadOnlyStatus = syncdata.calendarObj.getProperty("readOnly") || (tbSync.db.getFolderSetting(syncdata.account, syncdata.folderID, "downloadonly") == "1");                       
-                        syncdata.calendarObj.setProperty("readOnly", false);
-                        await eas.sync.start(syncdata);
+                        calendarReadOnlyStatus = syncData.calendarObj.getProperty("readOnly") || (tbSync.db.getFolderSetting(syncData.account, syncData.folderID, "downloadonly") == "1");                       
+                        syncData.calendarObj.setProperty("readOnly", false);
+                        await eas.sync.start(syncData);
                         break;
                 }
 
             } catch (report) { 
                 
                 if (calendarReadOnlyStatus !== null) { //null, true, false
-                    syncdata.calendarObj.setProperty("readOnly", calendarReadOnlyStatus);
-                    syncdata.calendarObj.endBatch();
+                    syncData.calendarObj.setProperty("readOnly", calendarReadOnlyStatus);
+                    syncData.calendarObj.endBatch();
                 }
                 
                 switch (report.type) {
                     case eas.flags.abortWithError:  //if there was a fatal error during folder sync, re-throw error to finish account sync (with error)
                     case eas.flags.abortWithServerError:
                     case eas.flags.resyncAccount:   //if the entire account needs to be resynced, finish this folder and re-throw account (re)sync request                                                    
-                        tbSync.finishFolderSync(syncdata, report);
+                        tbSync.finishFolderSync(syncData, report);
                         throw report;
                         break;
 
                     case eas.flags.syncNextFolder:
-                        tbSync.finishFolderSync(syncdata, report);
+                        tbSync.finishFolderSync(syncData, report);
                         break;
                                             
                     case eas.flags.resyncFolder:
                         if (report.message == "RevertViaFolderResync") {
                             //the user requested to throw away local modifications, no need to backup, just invalidate the synckey
-                            eas.onResetTarget(syncdata.account, syncdata.folderID);
+                            eas.onResetTarget(syncData.account, syncData.folderID);
                         } else {
                             //takeTargetOffline will backup the current folder and on next run, a fresh copy 
                             //of the folder will be synced down - the folder itself is NOT deleted (4th arg is false)
-                            tbSync.errorlog("info", syncdata, "Forced Folder Resync", report.message + "\n\n" + report.details);
-                            tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncdata.account, syncdata.folderID), "[forced folder resync]", false);
+                            tbSync.errorlog("info", syncData, "Forced Folder Resync", report.message + "\n\n" + report.details);
+                            tbSync.takeTargetOffline("eas", tbSync.db.getFolder(syncData.account, syncData.folderID), "[forced folder resync]", false);
                         }
                         continue;
                     
                     default:
                         report.type = "JavaScriptError";
-                        tbSync.finishFolderSync(syncdata, report);
+                        tbSync.finishFolderSync(syncData, report);
                         //this is a fatal error, re-throw error to finish account sync
                         throw report;
                 }
@@ -605,63 +604,63 @@ var eas = {
     //WBXML FUNCTIONS
  
 
-    getSynckey: async function (syncdata) {
-        tbSync.setSyncState("prepare.request.synckey", syncdata.account);
+    getSynckey: async function (syncData) {
+       syncData.setSyncState("prepare.request.synckey", syncData.account);
         //build WBXML to request a new syncKey
-        let wbxml = tbSync.wbxmltools.createWBXML();
+        let wbxml = eas.wbxmltools.createWBXML();
         wbxml.otag("Sync");
             wbxml.otag("Collections");
                 wbxml.otag("Collection");
-                    if (tbSync.db.getAccountSetting(syncdata.account, "asversion") == "2.5") wbxml.atag("Class", syncdata.type);
+                    if (syncData.accountData.getAccountProperty("asversion") == "2.5") wbxml.atag("Class", syncData.type);
                     wbxml.atag("SyncKey","0");
-                    wbxml.atag("CollectionId",syncdata.folderID);
+                    wbxml.atag("CollectionId",syncData.folderID);
                 wbxml.ctag();
             wbxml.ctag();
         wbxml.ctag();
         
-        tbSync.setSyncState("send.request.synckey", syncdata.account);
-        let response = await eas.sendRequest(wbxml.getBytes(), "Sync", syncdata);
+       syncData.setSyncState("send.request.synckey", syncData.account);
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "Sync", syncData);
 
-        tbSync.setSyncState("eval.response.synckey", syncdata.account);
+       syncData.setSyncState("eval.response.synckey", syncData.account);
         // get data from wbxml response
         let wbxmlData = eas.getDataFromResponse(response);
         //check status
-        eas.checkStatus(syncdata, wbxmlData,"Sync.Collections.Collection.Status");
+        eas.network.checkStatus(syncData, wbxmlData,"Sync.Collections.Collection.Status");
         //update synckey
-        eas.updateSynckey(syncdata, wbxmlData);
+        eas.updateSynckey(syncData, wbxmlData);
     },
 
-    getItemEstimate: async function (syncdata)  {
-        syncdata.todo = -1;
+    getItemEstimate: async function (syncData)  {
+        syncData.todo = -1;
         
-        if (!tbSync.db.getAccountSetting(syncdata.account, "allowedEasCommands").split(",").includes("GetItemEstimate")) {
+        if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("GetItemEstimate")) {
             return; //do not throw, this is optional
         }
         
-        tbSync.setSyncState("prepare.request.estimate", syncdata.account, syncdata.folderID);
+       syncData.setSyncState("prepare.request.estimate", syncData.account, syncData.folderID);
         
         // BUILD WBXML
-        let wbxml = tbSync.wbxmltools.createWBXML();
+        let wbxml = eas.wbxmltools.createWBXML();
         wbxml.switchpage("GetItemEstimate");
         wbxml.otag("GetItemEstimate");
             wbxml.otag("Collections");
                 wbxml.otag("Collection");
-                    if (tbSync.db.getAccountSetting(syncdata.account, "asversion") == "2.5") { //got order for 2.5 directly from Microsoft support
-                        wbxml.atag("Class", syncdata.type); //only 2.5
-                        wbxml.atag("CollectionId", syncdata.folderID);
+                    if (syncData.accountData.getAccountProperty("asversion") == "2.5") { //got order for 2.5 directly from Microsoft support
+                        wbxml.atag("Class", syncData.type); //only 2.5
+                        wbxml.atag("CollectionId", syncData.folderID);
                         wbxml.switchpage("AirSync");
                         wbxml.atag("FilterType", eas.tools.getFilterType());
-                        wbxml.atag("SyncKey", syncdata.synckey);
+                        wbxml.atag("SyncKey", syncData.synckey);
                         wbxml.switchpage("GetItemEstimate");
                     } else { //14.0
                         wbxml.switchpage("AirSync");
-                        wbxml.atag("SyncKey", syncdata.synckey);
+                        wbxml.atag("SyncKey", syncData.synckey);
                         wbxml.switchpage("GetItemEstimate");
-                        wbxml.atag("CollectionId", syncdata.folderID);
+                        wbxml.atag("CollectionId", syncData.folderID);
                         wbxml.switchpage("AirSync");
                         wbxml.otag("Options");
-                            if (syncdata.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
-                            wbxml.atag("Class", syncdata.type);
+                            if (syncData.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
+                            wbxml.atag("Class", syncData.type);
                         wbxml.ctag();
                         wbxml.switchpage("GetItemEstimate");
                     }
@@ -670,32 +669,32 @@ var eas = {
         wbxml.ctag();
 
         //SEND REQUEST
-        tbSync.setSyncState("send.request.estimate", syncdata.account, syncdata.folderID);
-        let response = await eas.sendRequest(wbxml.getBytes(), "GetItemEstimate", syncdata, /* allowSoftFail */ true);
+       syncData.setSyncState("send.request.estimate", syncData.account, syncData.folderID);
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "GetItemEstimate", syncData, /* allowSoftFail */ true);
 
         //VALIDATE RESPONSE
-        tbSync.setSyncState("eval.response.estimate", syncdata.account, syncdata.folderID);
+       syncData.setSyncState("eval.response.estimate", syncData.account, syncData.folderID);
 
         // get data from wbxml response, some servers send empty response if there are no changes, which is not an error
         let wbxmlData = eas.getDataFromResponse(response, eas.flags.allowEmptyResponse);
         if (wbxmlData === null) return;
 
-        let status = xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Status");
-        let estimate = xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Collection.Estimate");
+        let status = eas.xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Status");
+        let estimate = eas.xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Collection.Estimate");
 
         if (status && status == "1") { //do not throw on error, with EAS v2.5 I get error 2 for tasks and calendars ???
-            syncdata.todo = estimate;
+            syncData.todo = estimate;
         }
     },
 
-    getUserInfo: async function (syncdata)  {
-        if (!tbSync.db.getAccountSetting(syncdata.account, "allowedEasCommands").split(",").includes("Settings")) {
+    getUserInfo: async function (syncData)  {
+        if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("Settings")) {
             return;
         }
 
-        tbSync.setSyncState("prepare.request.getuserinfo", syncdata.account);
+       syncData.setSyncState("prepare.request.getuserinfo", syncData.account);
 
-        let wbxml = wbxmltools.createWBXML();
+        let wbxml = eas.wbxmltools.createWBXML();
         wbxml.switchpage("Settings");
         wbxml.otag("Settings");
             wbxml.otag("UserInformation");
@@ -703,98 +702,71 @@ var eas = {
             wbxml.ctag();
         wbxml.ctag();
 
-        tbSync.setSyncState("send.request.getuserinfo", syncdata.account);
-        let response = await eas.sendRequest(wbxml.getBytes(), "Settings", syncdata);
+       syncData.setSyncState("send.request.getuserinfo", syncData.account);
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "Settings", syncData);
 
 
-        tbSync.setSyncState("eval.response.getuserinfo", syncdata.account);
+       syncData.setSyncState("eval.response.getuserinfo", syncData.account);
         let wbxmlData = eas.getDataFromResponse(response);
 
-        eas.checkStatus(syncdata, wbxmlData,"Settings.Status");
+        eas.network.checkStatus(syncData, wbxmlData,"Settings.Status");
     },
 
-    setDeviceInformation: async function (syncdata)  {
-        if (tbSync.db.getAccountSetting(syncdata.account, "asversion") == "2.5" || !tbSync.db.getAccountSetting(syncdata.account, "allowedEasCommands").split(",").includes("Settings")) {
-            return;
-        }
-            
-        tbSync.setSyncState("prepare.request.setdeviceinfo", syncdata.account);
 
-        let wbxml = wbxmltools.createWBXML();
-        wbxml.switchpage("Settings");
-        wbxml.otag("Settings");
-            wbxml.otag("DeviceInformation");
-                wbxml.otag("Set");
-                    wbxml.atag("Model", "Computer");
-                    wbxml.atag("FriendlyName", "TbSync on Device " + tbSync.db.getAccountSetting(syncdata.account, "deviceId").substring(4));
-                    wbxml.atag("OS", OS.Constants.Sys.Name);
-                    wbxml.atag("UserAgent", tbSync.db.getAccountSetting(syncdata.account, "useragent"));
-                wbxml.ctag();
-            wbxml.ctag();
-        wbxml.ctag();
 
-        tbSync.setSyncState("send.request.setdeviceinfo", syncdata.account);
-        let response = await eas.sendRequest(wbxml.getBytes(), "Settings", syncdata);
-
-        tbSync.setSyncState("eval.response.setdeviceinfo", syncdata.account);
-        let wbxmlData = eas.getDataFromResponse(response);
-
-        eas.checkStatus(syncdata, wbxmlData,"Settings.Status");
-    },
-
-    deleteFolder: async function (syncdata)  {
-        if (syncdata.folderID == "") {
-            throw eas.finishSync();
+    deleteFolder: async function (syncData)  {
+        if (syncData.folderID == "") {
+            throw eas.sync.finishSync();
         } 
         
-        if (!tbSync.db.getAccountSetting(syncdata.account, "allowedEasCommands").split(",").includes("FolderDelete")) {
-            throw eas.finishSync("notsupported::FolderDelete", eas.flags.abortWithError);
+        if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
+            throw eas.sync.finishSync("notsupported::FolderDelete", eas.flags.abortWithError);
         }
 
-        tbSync.setSyncState("prepare.request.deletefolder", syncdata.account);
-        let foldersynckey = tbSync.db.getAccountSetting(syncdata.account, "foldersynckey");
+       syncData.setSyncState("prepare.request.deletefolder", syncData.account);
+        let foldersynckey = syncData.accountData.getAccountProperty("foldersynckey");
 
         //request foldersync
-        let wbxml = wbxmltools.createWBXML();
+        let wbxml = eas.wbxmltools.createWBXML();
         wbxml.switchpage("FolderHierarchy");
         wbxml.otag("FolderDelete");
             wbxml.atag("SyncKey", foldersynckey);
-            wbxml.atag("ServerId", syncdata.folderID);
+            wbxml.atag("ServerId", syncData.folderID);
         wbxml.ctag();
 
-        tbSync.setSyncState("send.request.deletefolder", syncdata.account);
-        let response = await eas.sendRequest(wbxml.getBytes(), "FolderDelete", syncdata);
+       syncData.setSyncState("send.request.deletefolder", syncData.account);
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "FolderDelete", syncData);
 
 
-        tbSync.setSyncState("eval.response.deletefolder", syncdata.account);
+       syncData.setSyncState("eval.response.deletefolder", syncData.account);
         let wbxmlData = eas.getDataFromResponse(response);
 
-        eas.checkStatus(syncdata, wbxmlData,"FolderDelete.Status");
+        eas.network.checkStatus(syncData, wbxmlData,"FolderDelete.Status");
 
-        let synckey = xmltools.getWbxmlDataField(wbxmlData,"FolderDelete.SyncKey");
+        let synckey = eas.xmltools.getWbxmlDataField(wbxmlData,"FolderDelete.SyncKey");
         if (synckey) {
-            tbSync.db.setAccountSetting(syncdata.account, "foldersynckey", synckey);
+            syncData.accountData.setAccountProperty("foldersynckey", synckey);
             //this folder is not synced, no target to take care of, just remove the folder
-            tbSync.db.deleteFolder(syncdata.account, syncdata.folderID);
-            syncdata.folderID = "";
+            tbSync.db.deleteFolder(syncData.account, syncData.folderID);
+            syncData.folderID = "";
             //update manager gui / folder list
-            Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncdata.account);
-            throw eas.finishSync();
+            Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncData.account);
+            throw eas.sync.finishSync();
         } else {
-            throw eas.finishSync("wbxmlmissingfield::FolderDelete.SyncKey", eas.flags.abortWithError);
+            throw eas.sync.finishSync("wbxmlmissingfield::FolderDelete.SyncKey", eas.flags.abortWithError);
         }
     },
 
 
     
-    updateSynckey: function (syncdata, wbxmlData) {
-        let synckey = xmltools.getWbxmlDataField(wbxmlData,"Sync.Collections.Collection.SyncKey");
+    updateSynckey: function (syncData, wbxmlData) {
+        let synckey = eas.xmltools.getWbxmlDataField(wbxmlData,"Sync.Collections.Collection.SyncKey");
 
         if (synckey) {
-            syncdata.synckey = synckey;
-            db.setFolderSetting(syncdata.account, syncdata.folderID, "synckey", synckey);
+            syncData.synckey = synckey;
+            db.setFolderSetting(syncData.account, syncData.folderID, "synckey", synckey);
         } else {
-            throw eas.finishSync("wbxmlmissingfield::Sync.Collections.Collection.SyncKey", eas.flags.abortWithError);
+            throw eas.sync.finishSync("wbxmlmissingfield::Sync.Collections.Collection.SyncKey", eas.flags.abortWithError);
         }
     },
 
@@ -915,113 +887,7 @@ var eas = {
 
 
     
-    checkStatus : function (syncdata, wbxmlData, path, rootpath="", allowSoftFail = false) {
-        //path is relative to wbxmlData
-        //rootpath is the absolute path and must be specified, if wbxml is not the root node and thus path is not the rootpath	    
-        let status = xmltools.getWbxmlDataField(wbxmlData,path);
-        let fullpath = (rootpath=="") ? path : rootpath;
-        let elements = fullpath.split(".");
-        let type = elements[0];
-
-        //check if fallback to main class status: the answer could just be a "Sync.Status" instead of a "Sync.Collections.Collections.Status"
-        if (status === false) {
-            let mainStatus = xmltools.getWbxmlDataField(wbxmlData, type + "." + elements[elements.length-1]);
-            if (mainStatus === false) {
-                //both possible status fields are missing, abort
-                throw eas.finishSync("wbxmlmissingfield::" + fullpath, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-            } else {
-                //the alternative status could be extracted
-                status = mainStatus;
-                fullpath = type + "." + elements[elements.length-1];
-            }
-        }
-
-        //check if all is fine (not bad)
-        if (status == "1") {
-            return "";
-        }
-
-        tbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
-
-        //handle errrors based on type
-        let statusType = type+"."+status;
-        switch (statusType) {
-            case "Sync.3": /*
-                        MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
-                        since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
-                        */
-                throw eas.finishSync(statusType, eas.flags.resyncFolder, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-            
-            case "Sync.4": //Malformed request
-            case "Sync.5": //Temporary server issues or invalid item
-            case "Sync.6": //Invalid item
-            case "Sync.8": //Object not found
-                if (allowSoftFail) return statusType;
-                throw eas.finishSync(statusType, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-
-            case "Sync.7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
-            case "Sync.9": //User account could be out of disk space, also send if no write permission (TODO)
-                return "";
-
-            case "FolderDelete.3": // special system folder - fatal error
-            case "FolderDelete.6": // error on server
-                throw eas.finishSync(statusType, null, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-
-            case "FolderDelete.4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
-            case "FolderDelete.9": // invalid synchronization key - resync
-            case "FolderSync.9": // invalid synchronization key - resync
-            case "Sync.12": // folder hierarchy changed
-                {
-                    let folders = tbSync.db.getFolders(syncdata.account);
-                    for (let f in folders) {
-                        //the folder itself is NOT deleted (4th arg is false)
-                        tbSync.takeTargetOffline("eas", folders[f], "[forced account resync]", false);
-                        tbSync.db.setFolderSetting(folders[f].account, folders[f].folderID, "cached", "1");
-                    }		    
-                    //folder is no longer there, unset current folder
-                    syncdata.folderID = "";
-                    //reset account
-                    tbSync.eas.onEnableAccount(syncdata.account);
-                    throw eas.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-                }
-        }
-        
-        //handle global error (https://msdn.microsoft.com/en-us/library/ee218647(v=exchg.80).aspx)
-        let descriptions = {};
-        switch(status) {
-            case "101": //invalid content
-            case "102": //invalid wbxml
-            case "103": //invalid xml
-                throw eas.finishSync("global." + status, eas.flags.abortWithError, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-            
-            case "109": descriptions["109"]="DeviceTypeMissingOrInvalid";
-            case "112": descriptions["112"]="ActiveDirectoryAccessDenied";
-            case "126": descriptions["126"]="UserDisabledForSync";
-            case "127": descriptions["127"]="UserOnNewMailboxCannotSync";
-            case "128": descriptions["128"]="UserOnLegacyMailboxCannotSync";
-            case "129": descriptions["129"]="DeviceIsBlockedForThisUser";
-            case "130": descriptions["120"]="AccessDenied";
-            case "131": descriptions["131"]="AccountDisabled";
-                throw eas.finishSync("global.clientdenied"+ "::" + status + "::" + descriptions[status], eas.flags.abortWithError);
-
-            case "110": //server error - resync
-                throw eas.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-
-            case "141": // The device is not provisionable
-            case "142": // DeviceNotProvisioned
-            case "143": // PolicyRefresh
-            case "144": // InvalidPolicyKey
-                //enable provision
-                tbSync.db.setAccountSetting(syncdata.account, "provision","1");
-                tbSync.db.resetAccountSetting(syncdata.account, "policykey");
-                throw eas.finishSync(statusType, eas.flags.resyncAccount);
-            
-            default:
-                if (allowSoftFail) return statusType;
-                throw eas.finishSync(statusType, eas.flags.abortWithError, "Request:\n" + syncdata.request + "\n\nResponse:\n" + syncdata.response);
-
-        }		
-    },
+    
 
 
     
@@ -1044,7 +910,7 @@ var eas = {
 
             if (folder !== null) {
                 //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
-                if (tbSync.eas.parentIsTrash(folder.account, folder.parentID) && tbSync.db.getAccountSetting(folder.account, "allowedEasCommands").split(",").includes("FolderDelete")) {// folder in recycle bin
+                if (eas.parentIsTrash(folder.account, folder.parentID) && tbSync.db.getAccountSetting(folder.account, "allowedEasCommands").split(",").includes("FolderDelete")) {// folder in recycle bin
                     hideContextMenuDelete = false;
                     document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folder.name, "eas");
                 }                
@@ -1066,10 +932,10 @@ var eas = {
             let folderData = [];
             let folders = tbSync.db.getFolders(account);
             let allowedTypesOrder = ["9","14","8","13","7","15"];
-            let folderIDs = Object.keys(folders).filter(f => allowedTypesOrder.includes(folders[f].type)).sort((a, b) => (tbSync.eas.folderList.getIdChain(allowedTypesOrder, account, a).localeCompare(tbSync.eas.folderList.getIdChain(allowedTypesOrder, account, b))));
+            let folderIDs = Object.keys(folders).filter(f => allowedTypesOrder.includes(folders[f].type)).sort((a, b) => (eas.folderList.getIdChain(allowedTypesOrder, account, a).localeCompare(eas.folderList.getIdChain(allowedTypesOrder, account, b))));
             
             for (let i=0; i < folderIDs.length; i++) {
-                folderData.push(tbSync.eas.folderList.getRowData(folders[folderIDs[i]]));
+                folderData.push(eas.folderList.getRowData(folders[folderIDs[i]]));
             }
             return folderData;
         },
@@ -1081,14 +947,14 @@ var eas = {
          * in the folderlist. The content of the folderRowData object is free to choose, it
          * will be passed back to getRow() and updateRow()
          *
-         * Use tbSync.getSyncStatusMsg(folder, syncdata, provider) to get a nice looking 
+         * Use tbSync.getSyncStatusMsg(folder, syncData, provider) to get a nice looking 
          * status message, including sync progress (if folder is synced)
          *
          * @param folder         [in] folder databasse object of requested folder
-         * @param syncdata       [in] optional syncdata obj send by updateRow(),
+         * @param syncData       [in] optional syncData obj send by updateRow(),
          *                            needed to check if the folder is currently synced
          */
-        getRowData: function (folder, syncdata = null) {
+        getRowData: function (folder, syncData = null) {
             let rowData = {};
             rowData.account = folder.account;
             rowData.folderID = folder.folderID;
@@ -1097,9 +963,9 @@ var eas = {
             rowData.name = folder.name;
             rowData.downloadonly = folder.downloadonly;
             rowData.statusCode = folder.status;
-            rowData.statusMsg = tbSync.getSyncStatusMsg(folder, syncdata, "eas");
+            rowData.statusMsg = tbSync.getSyncStatusMsg(folder, syncData, "eas");
 
-            if (tbSync.eas.parentIsTrash(folder.account, folder.parentID)) rowData.name = tbSync.getString("recyclebin", "eas") + " | " + rowData.name;
+            if (eas.parentIsTrash(folder.account, folder.parentID)) rowData.name = tbSync.getString("recyclebin", "eas") + " | " + rowData.name;
 
             return rowData;
         },
@@ -1167,7 +1033,7 @@ var eas = {
 
             //icon
             let itemType = document.createElement("image");
-            itemType.setAttribute("src", tbSync.eas.folderList.getTypeImage(rowData));
+            itemType.setAttribute("src", eas.folderList.getTypeImage(rowData));
             itemType.setAttribute("style", "margin: 0px 9px 0px 3px;");
 
             //read/write access             
@@ -1184,14 +1050,14 @@ var eas = {
                 menuitem1.setAttribute("class", "menuitem-iconic");
                 menuitem1.setAttribute("label", tbSync.getString("acl.readonly", "eas"));
                 menuitem1.setAttribute("image", "chrome://tbsync/skin/acl_ro2.png");
-                menuitem1.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
+                menuitem1.addEventListener("command", eas.folderList.updateReadOnly);
 
                 let menuitem2 = document.createElement("menuitem");
                 menuitem2.setAttribute("value", "0");
                 menuitem2.setAttribute("class", "menuitem-iconic");
                 menuitem2.setAttribute("label", tbSync.getString("acl.readwrite", "eas"));
                 menuitem2.setAttribute("image", "chrome://tbsync/skin/acl_rw2.png");
-                menuitem2.addEventListener("command", tbSync.eas.folderList.updateReadOnly);
+                menuitem2.addEventListener("command", eas.folderList.updateReadOnly);
 
                 menupopup.appendChild(menuitem2);
                 menupopup.appendChild(menuitem1);
@@ -1312,7 +1178,7 @@ var eas = {
                 let folder = tbSync.db.getFolder(account, fID, true);
 
                 //only trashed folders can be purged (for example O365 does not show deleted folders but also does not allow to purge them)
-                if (!tbSync.eas.parentIsTrash(account, folder.parentID)) return;
+                if (!eas.parentIsTrash(account, folder.parentID)) return;
                 
                 if (folder.selected == "1") document.defaultView.alert(tbSync.getString("deletefolder.notallowed::" + folder.name, "eas"));
                 else if (document.defaultView.confirm(tbSync.getString("deletefolder.confirm::" + folder.name, "eas"))) {
