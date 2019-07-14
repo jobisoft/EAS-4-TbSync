@@ -207,6 +207,11 @@ var base = {
     
     /**
      * Returns URL of the new account window.
+     *
+     * The URL will be opened via openDialog() and the tbSync.ProviderData of this
+     * provider will be passed as first argument. It can be accessed via:
+     *
+     *    providerData = window.arguments[0];
      */
     getCreateAccountWindowUrl: function () {
         return "chrome://eas4tbsync/content/manager/createAccount.xul";
@@ -216,6 +221,14 @@ var base = {
     /**
      * Returns overlay XUL URL of the edit account dialog
      * (chrome://tbsync/content/manager/editAccount.xul)
+     *
+     * This overlay must (!) implement:
+     *
+     *    tbSyncEditAccountOverlay.onload(window, accountData)
+     *
+     * which is called each time an account of this provider is viewed/selected
+     * in the manager and provides the tbSync.AccountData of the corresponding
+     * account.
      */
     getEditAccountOverlayUrl: function () {
         return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";

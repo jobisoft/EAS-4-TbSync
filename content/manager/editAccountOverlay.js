@@ -10,30 +10,32 @@
 
 const eas = tbSync.providers.eas;
 
-var tbSyncEasEditAccount = {
+var tbSyncEditAccountOverlay = {
 
-    stripHost: function (document, account) {
-        let host = document.getElementById('tbsync.AccountPropertys.pref.host').value;
-        if (host.indexOf("https://") == 0) {
-            host = host.replace("https://","");
-            document.getElementById('tbsync.AccountPropertys.pref.https').checked = true;
-            tbSync.db.setAccountProperty(account, "https", "1");
-        } else if (host.indexOf("http://") == 0) {
-            host = host.replace("http://","");
-            document.getElementById('tbsync.AccountPropertys.pref.https').checked = false;
-            tbSync.db.setAccountProperty(account, "https", "0");
-        }
+    onload: function (window, accountData) {
+        this.accountData = accountData;
         
-        while (host.endsWith("/")) { host = host.slice(0,-1); }        
-        document.getElementById('tbsync.AccountPropertys.pref.host').value = host
-        tbSync.db.setAccountProperty(account, "host", host);
-    },
-
-    onload: function (window, accountID) {
         // special treatment for configuration label, which is a permanent setting and will not change by switching modes
         let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
         if (configlabel) {
             configlabel.setAttribute("value", tbSync.getString("config.custom", "eas"));
         }
     },
+
+    stripHost: function (document) {
+        let host = document.getElementById('tbsync.AccountPropertys.pref.host').value;
+        if (host.indexOf("https://") == 0) {
+            host = host.replace("https://","");
+            document.getElementById('tbsync.AccountPropertys.pref.https').checked = true;
+            this.accountData.setAccountProperty("https", "1");
+        } else if (host.indexOf("http://") == 0) {
+            host = host.replace("http://","");
+            document.getElementById('tbsync.AccountPropertys.pref.https').checked = false;
+           this.accountData.setAccountProperty("https", "0");
+        }
+        
+        while (host.endsWith("/")) { host = host.slice(0,-1); }        
+        document.getElementById('tbsync.AccountPropertys.pref.host').value = host
+       this.accountData.setAccountProperty("host", host);
+    }
 };
