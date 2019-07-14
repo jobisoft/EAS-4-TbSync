@@ -59,10 +59,7 @@ var network = {
             syncData.req.mozBackgroundRequest = true;
             syncData.req.open("OPTIONS", authData.host, true);
             syncData.req.overrideMimeType("text/plain");
-            syncData.req.setRequestHeader("User-Agent", userAgent);
-            console.log("user : " + authData.user);
-            console.log("password : " + authData.password);
-            
+            syncData.req.setRequestHeader("User-Agent", userAgent);            
             syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
             syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
 
