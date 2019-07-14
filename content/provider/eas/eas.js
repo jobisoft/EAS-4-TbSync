@@ -38,41 +38,6 @@ var eas = {
     },
 
     
-
-
-    /**
-     * Returns an array of folder settings, that should survive disable and re-enable
-     */
-    getPersistentFolderSettings: function () {
-        return ["targetName", "targetColor", "downloadonly"];
-    },
-
-
-
-    /**
-     * Return the thunderbird type (tb-contact, tb-event, tb-todo) for a given folder type of this provider. A provider could have multiple 
-     * type definitions for a single thunderbird type (default calendar, shared address book, etc), this maps all possible provider types to
-     * one of the three thunderbird types.
-     *
-     * @param type       [in] provider folder type
-     */
-    getThunderbirdFolderType: function(type) {
-        switch (type) {
-            case "9": 
-            case "14": 
-                return "tb-contact";
-            case "8":
-            case "13":
-                return "tb-event";
-            case "7":
-            case "15":
-                return "tb-todo";
-            default:
-                return "unknown ("+type + ")";
-        };
-    },
-
-
     
 
 
@@ -196,7 +161,7 @@ var eas = {
         
             
         let response = await eas.network.sendRequest(wbxml.getBytes(), "Search", syncData);
-        let wbxmlData = eas.getDataFromResponse(response);
+        let wbxmlData = eas.network.getDataFromResponse(response);
         let galdata = [];
 
         if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
@@ -350,97 +315,7 @@ var eas = {
     // * HELPER FUNCTIONS BEYOND THE API
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     
-    getPendingFolders: async function (syncData)  {
-        //this function sets all folders which ougth to be synced to pending, either a specific one (if folderID is set) or all avail
-        if (syncData.folderID != "") {
-            //just set the specified folder to pending
-            tbSync.db.setFolderSetting(syncData.account, syncData.folderID, "status", "pending");
-        } else {
-            //scan all folders and set the enabled ones to pending
-           syncData.setSyncState("prepare.request.folders", syncData.account); 
-            let foldersynckey = syncData.accountData.getAccountProperty("foldersynckey");
-
-            //build WBXML to request foldersync
-            let wbxml = eas.wbxmltools.createWBXML();
-            wbxml.switchpage("FolderHierarchy");
-            wbxml.otag("FolderSync");
-                wbxml.atag("SyncKey", foldersynckey);
-            wbxml.ctag();
-
-           syncData.setSyncState("send.request.folders", syncData.account); 
-            let response = await eas.network.sendRequest(wbxml.getBytes(), "FolderSync", syncData);
-
-           syncData.setSyncState("eval.response.folders", syncData.account); 
-            let wbxmlData = eas.getDataFromResponse(response);
-
-            eas.network.checkStatus(syncData, wbxmlData,"FolderSync.Status");
-
-            let synckey = eas.xmltools.getWbxmlDataField(wbxmlData,"FolderSync.SyncKey");
-            if (synckey) {
-                syncData.accountData.setAccountProperty("foldersynckey", synckey);
-            } else {
-                throw eas.sync.finishSync("wbxmlmissingfield::FolderSync.SyncKey", eas.flags.abortWithError);
-            }
-            
-            //if we reach this point, wbxmlData contains FolderSync node, so the next if will not fail with an javascript error, 
-            //no need to use save getWbxmlDataField function
-            
-            //are there any changes in folder hierarchy
-            if (wbxmlData.FolderSync.Changes) {
-                //looking for additions
-                let add = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Add);
-                for (let count = 0; count < add.length; count++) {
-                    //only add allowed folder types to DB
-                    if (!["9","14","8","13","7","15","4"].includes(add[count].Type)) 
-                        continue;
-
-                    let existingFolder = tbSync.db.getFolder(syncData.account, add[count].ServerId);
-                    if (existingFolder !== null && existingFolder.cached == "0") {
-                        //there was an error at the server, he has send us an ADD for a folder we alreay have, treat as update
-                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "name", add[count].DisplayName);
-                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "type", add[count].Type);
-                        tbSync.db.setFolderSetting(existingFolder.account, existingFolder.folderID, "parentID", add[count].ParentId);
-                    } else {
-                        //create folder obj for new  folder settings
-                        let newFolder = {};
-
-                        newFolder.folderID = add[count].ServerId;
-                        newFolder.name = add[count].DisplayName;
-                        newFolder.type = add[count].Type;
-                        newFolder.parentID = add[count].ParentId;
-
-                        //if there is a cached version of this folderID, addFolder will merge all persistent settings - all other settings not defined here will be set to their defaults
-                        tbSync.db.addFolder(syncData.account, newFolder);
-                    }
-                }
-                
-                //looking for updates
-                let update = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Update);
-                for (let count = 0; count < update.length; count++) {
-                    //get a reference
-                    let folder = tbSync.db.getFolder(syncData.account, update[count].ServerId);
-                    if (folder !== null) {
-                        //update folder
-                        tbSync.db.setFolderSetting(folder.account, folder.folderID, "name", update[count].DisplayName);
-                        tbSync.db.setFolderSetting(folder.account, folder.folderID, "type", update[count].Type);
-                        tbSync.db.setFolderSetting(folder.account, folder.folderID, "parentID", update[count].ParentId);
-                    }
-                }
-
-                //looking for deletes
-                let del = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Delete);
-                for (let count = 0; count < del.length; count++) {
-
-                    let folder = tbSync.db.getFolder(syncData.account, del[count].ServerId);
-                    if (folder !== null) {
-                        tbSync.takeTargetOffline("eas", folder, "[deleted from server]");
-                    }
-                }
-            }
-
-            tbSync.prepareFoldersForSync(syncData.account);            
-        }
-    },
+   
 
 
 
@@ -623,7 +498,7 @@ var eas = {
 
        syncData.setSyncState("eval.response.synckey", syncData.account);
         // get data from wbxml response
-        let wbxmlData = eas.getDataFromResponse(response);
+        let wbxmlData = eas.network.getDataFromResponse(response);
         //check status
         eas.network.checkStatus(syncData, wbxmlData,"Sync.Collections.Collection.Status");
         //update synckey
@@ -676,7 +551,7 @@ var eas = {
        syncData.setSyncState("eval.response.estimate", syncData.account, syncData.folderID);
 
         // get data from wbxml response, some servers send empty response if there are no changes, which is not an error
-        let wbxmlData = eas.getDataFromResponse(response, eas.flags.allowEmptyResponse);
+        let wbxmlData = eas.network.getDataFromResponse(response, eas.flags.allowEmptyResponse);
         if (wbxmlData === null) return;
 
         let status = eas.xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Status");
@@ -707,7 +582,7 @@ var eas = {
 
 
        syncData.setSyncState("eval.response.getuserinfo", syncData.account);
-        let wbxmlData = eas.getDataFromResponse(response);
+        let wbxmlData = eas.network.getDataFromResponse(response);
 
         eas.network.checkStatus(syncData, wbxmlData,"Settings.Status");
     },
@@ -739,7 +614,7 @@ var eas = {
 
 
        syncData.setSyncState("eval.response.deletefolder", syncData.account);
-        let wbxmlData = eas.getDataFromResponse(response);
+        let wbxmlData = eas.network.getDataFromResponse(response);
 
         eas.network.checkStatus(syncData, wbxmlData,"FolderDelete.Status");
 
