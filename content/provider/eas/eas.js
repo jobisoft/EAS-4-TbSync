@@ -11,36 +11,6 @@
 
 var eas = {
 
-
-
-
-    /**
-     * Called to get passwords of accounts of this provider
-     *
-     * @param accountdata       [in] account data structure
-     */
-    getPassword: function (accountdata) {
-        let host4PasswordManager = tbSync.getHost4PasswordManager(accountdata.provider, accountdata.host);
-        return tbSync.getLoginInfo(host4PasswordManager, "TbSync", accountdata.user);
-    },
-
-
-
-    /**
-     * Called to set passwords of accounts of this provider
-     *
-     * @param accountdata       [in] account data structure
-     * @param newPassword       [in] new password
-     */
-    setPassword: function (accountdata, newPassword) {
-        let host4PasswordManager = tbSync.getHost4PasswordManager(accountdata.provider, accountdata.host);
-        tbSync.setLoginInfo(host4PasswordManager, "TbSync", accountdata.user, newPassword);
-    },
-
-    
-    
-
-
     /**
      * Is called if TbSync needs to create a new thunderbird address book associated with an account of this provider.
      *
@@ -589,48 +559,6 @@ var eas = {
 
 
 
-    deleteFolder: async function (syncData)  {
-        if (syncData.folderID == "") {
-            throw eas.sync.finishSync();
-        } 
-        
-        if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
-            throw eas.sync.finishSync("notsupported::FolderDelete", eas.flags.abortWithError);
-        }
-
-       syncData.setSyncState("prepare.request.deletefolder", syncData.account);
-        let foldersynckey = syncData.accountData.getAccountProperty("foldersynckey");
-
-        //request foldersync
-        let wbxml = eas.wbxmltools.createWBXML();
-        wbxml.switchpage("FolderHierarchy");
-        wbxml.otag("FolderDelete");
-            wbxml.atag("SyncKey", foldersynckey);
-            wbxml.atag("ServerId", syncData.folderID);
-        wbxml.ctag();
-
-       syncData.setSyncState("send.request.deletefolder", syncData.account);
-        let response = await eas.network.sendRequest(wbxml.getBytes(), "FolderDelete", syncData);
-
-
-       syncData.setSyncState("eval.response.deletefolder", syncData.account);
-        let wbxmlData = eas.network.getDataFromResponse(response);
-
-        eas.network.checkStatus(syncData, wbxmlData,"FolderDelete.Status");
-
-        let synckey = eas.xmltools.getWbxmlDataField(wbxmlData,"FolderDelete.SyncKey");
-        if (synckey) {
-            syncData.accountData.setAccountProperty("foldersynckey", synckey);
-            //this folder is not synced, no target to take care of, just remove the folder
-            tbSync.db.deleteFolder(syncData.account, syncData.folderID);
-            syncData.folderID = "";
-            //update manager gui / folder list
-            Services.obs.notifyObservers(null, "tbsync.updateFolderList", syncData.account);
-            throw eas.sync.finishSync();
-        } else {
-            throw eas.sync.finishSync("wbxmlmissingfield::FolderDelete.SyncKey", eas.flags.abortWithError);
-        }
-    },
 
 
     
@@ -801,38 +729,6 @@ var eas = {
                 break;
             }
         },
-
-        /**
-
-  
-
-
-
-
-
-
-
-        //BEYOND API
-
-        //Custom stuff, outside of interface, invoked by own functions in overlayed accountSettings.xul
-
-        
-        deleteFolder: function(document, account) {
-            let folderList = document.getElementById("tbsync.accountsettings.folderlist");
-            if (folderList.selectedItem !== null && !folderList.disabled) {
-                let fID =  folderList.selectedItem.value;
-                let folder = tbSync.db.getFolder(account, fID, true);
-
-                //only trashed folders can be purged (for example O365 does not show deleted folders but also does not allow to purge them)
-                if (!eas.parentIsTrash(account, folder.parentID)) return;
-                
-                if (folder.selected == "1") document.defaultView.alert(tbSync.getString("deletefolder.notallowed::" + folder.name, "eas"));
-                else if (document.defaultView.confirm(tbSync.getString("deletefolder.confirm::" + folder.name, "eas"))) {
-                tbSync.syncAccount("deletefolder", account, fID);
-                } 
-            }            
-        },
     }
-    
 };
     

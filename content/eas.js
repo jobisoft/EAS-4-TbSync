@@ -424,7 +424,7 @@ var base = {
      */
     syncFolderList: async function (syncData, syncJob) {
         try {
-            await eas.sync.folderlist(syncData);
+            await eas.sync.folderList(syncData);
         } catch (e) {
             if (e.name == "eas4tbsync") {
                 return e.statusData;

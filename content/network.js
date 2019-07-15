@@ -50,98 +50,8 @@ var network = {
 
 
 
-    getServerOptions: function (syncData) {        
-        syncData.setSyncState("prepare.request.options");
-        let authData = eas.network.getAuthData(syncData.accountData);
 
-        let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
-        tbSync.dump("Sending", "OPTIONS " + authData.host);
-        
-        return new Promise(function(resolve,reject) {
-            // Create request handler - API changed with TB60 to new XMKHttpRequest()
-            syncData.req = new XMLHttpRequest();
-            syncData.req.mozBackgroundRequest = true;
-            syncData.req.open("OPTIONS", authData.host, true);
-            syncData.req.overrideMimeType("text/plain");
-            syncData.req.setRequestHeader("User-Agent", userAgent);            
-            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
-            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
 
-            syncData.req.ontimeout = function () {
-                resolve();
-            };
-
-            syncData.req.onerror = function () {
-                resolve();
-            };
-
-            syncData.req.onload = function() {
-                syncData.setSyncState("eval.request.options");
-                let responseData = {};
-
-                switch(syncData.req.status) {
-                    case 401: // AuthError
-                            reject(eas.sync.finishSync("401", eas.flags.abortWithError));
-                        break;
-
-                    case 200:
-                            responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
-                            responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
-
-                            tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
-                            "responseText: " + syncData.req.responseText + "\n" +
-                            "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
-                            "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
-
-                            if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
-                                syncData.accountData.setAccountProperty("allowedEasCommands", responseData["MS-ASProtocolCommands"]);
-                                syncData.accountData.setAccountProperty("allowedEasVersions", responseData["MS-ASProtocolVersions"]);
-                                syncData.accountData.setAccountProperty("lastEasOptionsUpdate", Date.now());
-                            }
-                            resolve();
-                        break;
-
-                    default:
-                            resolve();
-                        break;
-
-                }
-            };
-            
-            syncData.setSyncState("send.request.options");
-            syncData.req.send();
-            
-        });
-    },
-
-    setDeviceInformation: async function (syncData)  {
-        if (syncData.accountData.getAccountProperty("asversion") == "2.5" || !syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("Settings")) {
-            return;
-        }
-            
-        syncData.setSyncState("prepare.request.setdeviceinfo");
-
-        let wbxml = wbxmltools.createWBXML();
-        wbxml.switchpage("Settings");
-        wbxml.otag("Settings");
-            wbxml.otag("DeviceInformation");
-                wbxml.otag("Set");
-                    wbxml.atag("Model", "Computer");
-                    wbxml.atag("FriendlyName", "TbSync on Device " + syncData.accountData.getAccountProperty("deviceId").substring(4));
-                    wbxml.atag("OS", OS.Constants.Sys.Name);
-                    wbxml.atag("UserAgent", syncData.accountData.getAccountProperty("useragent"));
-                wbxml.ctag();
-            wbxml.ctag();
-        wbxml.ctag();
-
-        syncData.setSyncState("send.request.setdeviceinfo");
-        let response = await eas.network.sendRequest(wbxml.getBytes(), "Settings", syncData);
-
-        syncData.setSyncState("eval.response.setdeviceinfo");
-        let wbxmlData = eas.network.getDataFromResponse(response);
-
-        eas.network.checkStatus(syncData, wbxmlData,"Settings.Status");
-    },
 
 
 
@@ -299,6 +209,12 @@ var network = {
 
 
 
+
+
+
+
+
+
     // RESPONSE EVALUATION
     
     getRawXML : function (wbxml, what) {
@@ -363,7 +279,19 @@ var network = {
         return wbxmlData;
     },  
   
-  checkStatus : function (syncData, wbxmlData, path, rootpath="", allowSoftFail = false) {
+    updateSynckey: function (syncData, wbxmlData) {
+        let synckey = eas.xmltools.getWbxmlDataField(wbxmlData,"Sync.Collections.Collection.SyncKey");
+
+        if (synckey) {
+            // This COULD be a cause of problems... 
+            syncData.synckey = synckey;
+            syncData.currentFolderData.setFolderProperty("synckey", synckey);
+        } else {
+            throw eas.sync.finishSync("wbxmlmissingfield::Sync.Collections.Collection.SyncKey", eas.flags.abortWithError);
+        }
+    },
+
+    checkStatus : function (syncData, wbxmlData, path, rootpath="", allowSoftFail = false) {
         //path is relative to wbxmlData
         //rootpath is the absolute path and must be specified, if wbxml is not the root node and thus path is not the rootpath	    
         let status = eas.xmltools.getWbxmlDataField(wbxmlData,path);
@@ -475,8 +403,42 @@ var network = {
 
 
 
-    // WBXML DATA EXTRACTION FROM RESPONSE
+
+
+
+
+
+    // WBXML COMM STUFF
     
+    setDeviceInformation: async function (syncData)  {
+        if (syncData.accountData.getAccountProperty("asversion") == "2.5" || !syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("Settings")) {
+            return;
+        }
+            
+        syncData.setSyncState("prepare.request.setdeviceinfo");
+
+        let wbxml = wbxmltools.createWBXML();
+        wbxml.switchpage("Settings");
+        wbxml.otag("Settings");
+            wbxml.otag("DeviceInformation");
+                wbxml.otag("Set");
+                    wbxml.atag("Model", "Computer");
+                    wbxml.atag("FriendlyName", "TbSync on Device " + syncData.accountData.getAccountProperty("deviceId").substring(4));
+                    wbxml.atag("OS", OS.Constants.Sys.Name);
+                    wbxml.atag("UserAgent", syncData.accountData.getAccountProperty("useragent"));
+                wbxml.ctag();
+            wbxml.ctag();
+        wbxml.ctag();
+
+        syncData.setSyncState("send.request.setdeviceinfo");
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "Settings", syncData);
+
+        syncData.setSyncState("eval.response.setdeviceinfo");
+        let wbxmlData = eas.network.getDataFromResponse(response);
+
+        eas.network.checkStatus(syncData, wbxmlData,"Settings.Status");
+    },
+
     getPolicykey: async function (syncData)  {
         //build WBXML to request provision
        syncData.setSyncState("prepare.request.provision");
@@ -548,10 +510,198 @@ var network = {
         }
     },
 
+    getSynckey: async function (syncData) {
+        syncData.setSyncState("prepare.request.synckey");
+        //build WBXML to request a new syncKey
+        let wbxml = eas.wbxmltools.createWBXML();
+        wbxml.otag("Sync");
+            wbxml.otag("Collections");
+                wbxml.otag("Collection");
+                    if (syncData.accountData.getAccountProperty("asversion") == "2.5") wbxml.atag("Class", syncData.type);
+                    wbxml.atag("SyncKey","0");
+                    wbxml.atag("CollectionId",syncData.folderID);
+                wbxml.ctag();
+            wbxml.ctag();
+        wbxml.ctag();
+        
+        syncData.setSyncState("send.request.synckey");
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "Sync", syncData);
+
+        syncData.setSyncState("eval.response.synckey");
+        // get data from wbxml response
+        let wbxmlData = eas.network.getDataFromResponse(response);
+        //check status
+        eas.network.checkStatus(syncData, wbxmlData,"Sync.Collections.Collection.Status");
+        //update synckey
+        eas.network.updateSynckey(syncData, wbxmlData);
+    },
+
+    getItemEstimate: async function (syncData)  {
+        syncData.todo = -1;
+        
+        if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("GetItemEstimate")) {
+            return; //do not throw, this is optional
+        }
+        
+        syncData.setSyncState("prepare.request.estimate");
+        
+        // BUILD WBXML
+        let wbxml = eas.wbxmltools.createWBXML();
+        wbxml.switchpage("GetItemEstimate");
+        wbxml.otag("GetItemEstimate");
+            wbxml.otag("Collections");
+                wbxml.otag("Collection");
+                    if (syncData.accountData.getAccountProperty("asversion") == "2.5") { //got this order for 2.5 directly from Microsoft support
+                        wbxml.atag("Class", syncData.type); //only 2.5
+                        wbxml.atag("CollectionId", syncData.folderID);
+                        wbxml.switchpage("AirSync");
+                        wbxml.atag("FilterType", eas.tools.getFilterType());
+                        wbxml.atag("SyncKey", syncData.synckey);
+                        wbxml.switchpage("GetItemEstimate");
+                    } else { //14.0
+                        wbxml.switchpage("AirSync");
+                        wbxml.atag("SyncKey", syncData.synckey);
+                        wbxml.switchpage("GetItemEstimate");
+                        wbxml.atag("CollectionId", syncData.folderID);
+                        wbxml.switchpage("AirSync");
+                        wbxml.otag("Options");
+                            if (syncData.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
+                            wbxml.atag("Class", syncData.type);
+                        wbxml.ctag();
+                        wbxml.switchpage("GetItemEstimate");
+                    }
+                wbxml.ctag();
+            wbxml.ctag();
+        wbxml.ctag();
+
+        //SEND REQUEST
+        syncData.setSyncState("send.request.estimate");
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "GetItemEstimate", syncData, /* allowSoftFail */ true);
+
+        //VALIDATE RESPONSE
+        syncData.setSyncState("eval.response.estimate");
+
+        // get data from wbxml response, some servers send empty response if there are no changes, which is not an error
+        let wbxmlData = eas.network.getDataFromResponse(response, eas.flags.allowEmptyResponse);
+        if (wbxmlData === null) return;
+
+        let status = eas.xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Status");
+        let estimate = eas.xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Collection.Estimate");
+
+        if (status && status == "1") { //do not throw on error, with EAS v2.5 I get error 2 for tasks and calendars ???
+            syncData.todo = estimate;
+        }
+    },
+
+    getUserInfo: async function (syncData)  {
+        if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("Settings")) {
+            return;
+        }
+
+        syncData.setSyncState("prepare.request.getuserinfo");
+
+        let wbxml = eas.wbxmltools.createWBXML();
+        wbxml.switchpage("Settings");
+        wbxml.otag("Settings");
+            wbxml.otag("UserInformation");
+                wbxml.atag("Get");
+            wbxml.ctag();
+        wbxml.ctag();
+
+        syncData.setSyncState("send.request.getuserinfo");
+        let response = await eas.network.sendRequest(wbxml.getBytes(), "Settings", syncData);
+
+
+        syncData.setSyncState("eval.response.getuserinfo");
+        let wbxmlData = eas.network.getDataFromResponse(response);
+
+        eas.network.checkStatus(syncData, wbxmlData,"Settings.Status");
+    },
 
 
 
     
+
+
+
+
+
+
+    // OPTIONS
+
+    getServerOptions: function (syncData) {        
+        syncData.setSyncState("prepare.request.options");
+        let authData = eas.network.getAuthData(syncData.accountData);
+
+        let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
+        tbSync.dump("Sending", "OPTIONS " + authData.host);
+        
+        return new Promise(function(resolve,reject) {
+            // Create request handler - API changed with TB60 to new XMKHttpRequest()
+            syncData.req = new XMLHttpRequest();
+            syncData.req.mozBackgroundRequest = true;
+            syncData.req.open("OPTIONS", authData.host, true);
+            syncData.req.overrideMimeType("text/plain");
+            syncData.req.setRequestHeader("User-Agent", userAgent);            
+            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
+            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
+
+            syncData.req.ontimeout = function () {
+                resolve();
+            };
+
+            syncData.req.onerror = function () {
+                resolve();
+            };
+
+            syncData.req.onload = function() {
+                syncData.setSyncState("eval.request.options");
+                let responseData = {};
+
+                switch(syncData.req.status) {
+                    case 401: // AuthError
+                            reject(eas.sync.finishSync("401", eas.flags.abortWithError));
+                        break;
+
+                    case 200:
+                            responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
+                            responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
+
+                            tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
+                            "responseText: " + syncData.req.responseText + "\n" +
+                            "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
+                            "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
+
+                            if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
+                                syncData.accountData.setAccountProperty("allowedEasCommands", responseData["MS-ASProtocolCommands"]);
+                                syncData.accountData.setAccountProperty("allowedEasVersions", responseData["MS-ASProtocolVersions"]);
+                                syncData.accountData.setAccountProperty("lastEasOptionsUpdate", Date.now());
+                            }
+                            resolve();
+                        break;
+
+                    default:
+                            resolve();
+                        break;
+
+                }
+            };
+            
+            syncData.setSyncState("send.request.options");
+            syncData.req.send();
+            
+        });
+    },
+
+
+
+
+
+
+
+
+
+
     // AUTODISCOVER
     
     updateServerConnectionViaAutodiscover: async function (syncData) {
