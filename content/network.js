@@ -142,8 +142,6 @@ var network = {
 
         eas.network.checkStatus(syncData, wbxmlData,"Settings.Status");
     },
-    
-
 
 
 

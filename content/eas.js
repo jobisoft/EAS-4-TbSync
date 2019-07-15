@@ -423,149 +423,8 @@ var base = {
      * return StatusData
      */
     syncFolderList: async function (syncData, syncJob) {
-        // update folders avail on server and handle added, removed and renamed
-        // folders
-
         try {
-            //should we recheck options/commands? Always check, if we have no info about asversion!
-            if (syncData.accountData.getAccountProperty("asversion", "") == "" || (Date.now() - syncData.accountData.getAccountProperty("lastEasOptionsUpdate")) > 86400000 ) {
-                await eas.network.getServerOptions(syncData);
-            }
-                            
-            //only update the actual used asversion, if we are currently not connected or it has not yet been set
-            if (syncData.accountData.getAccountProperty("asversion", "") == "" || !syncData.accountData.isConnected()) {
-                //eval the currently in the UI selected EAS version
-                let asversionselected = syncData.accountData.getAccountProperty("asversionselected");
-                let allowedVersionsString = syncData.accountData.getAccountProperty("allowedEasVersions").trim();
-                let allowedVersionsArray = allowedVersionsString.split(",");
-
-                if (asversionselected == "auto") {
-                    if (allowedVersionsArray.includes("14.0")) syncData.accountData.setAccountProperty("asversion", "14.0");
-                    else if (allowedVersionsArray.includes("2.5")) syncData.accountData.setAccountProperty("asversion", "2.5");
-                    else if (allowedVersionsString == "") {
-                        throw eas.sync.finishSync("InvalidServerOptions", eas.flags.abortWithError);
-                    } else {
-                        throw eas.sync.finishSync("nosupportedeasversion::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
-                    }
-                } else if (allowedVersionsString != "" && !allowedVersionsArray.includes(asversionselected)) {
-                    throw eas.sync.finishSync("notsupportedeasversion::"+asversionselected+"::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
-                } else {
-                    //just use the value set by the user
-                    syncData.accountData.setAccountProperty("asversion", asversionselected);
-                }
-            }
-            
-            //do we need to get a new policy key?
-            if (syncData.accountData.getAccountProperty("provision") == "1" && syncData.accountData.getAccountProperty("policykey") == "0") {
-                await eas.network.getPolicykey(syncData);
-            }
-            
-            //set device info
-            await eas.network.setDeviceInformation (syncData);
-
-            //scan all remote folders and set the enabled ones to pending
-            syncData.setSyncState("prepare.request.folders"); 
-            let foldersynckey = syncData.accountData.getAccountProperty("foldersynckey");
-
-            //build WBXML to request foldersync
-            let wbxml = eas.wbxmltools.createWBXML();
-            wbxml.switchpage("FolderHierarchy");
-            wbxml.otag("FolderSync");
-                wbxml.atag("SyncKey", foldersynckey);
-            wbxml.ctag();
-
-            syncData.setSyncState("send.request.folders"); 
-            let response = await eas.network.sendRequest(wbxml.getBytes(), "FolderSync", syncData);
-
-            syncData.setSyncState("eval.response.folders"); 
-            let wbxmlData = eas.network.getDataFromResponse(response);
-            eas.network.checkStatus(syncData, wbxmlData,"FolderSync.Status");
-
-            let synckey = eas.xmltools.getWbxmlDataField(wbxmlData,"FolderSync.SyncKey");
-            if (synckey) {
-                syncData.accountData.setAccountProperty("foldersynckey", synckey);
-            } else {
-                throw eas.sync.finishSync("wbxmlmissingfield::FolderSync.SyncKey", eas.flags.abortWithError);
-            }
-            
-            //if we reach this point, wbxmlData contains FolderSync node, so the next "if" will not fail with an javascript error, 
-            //no need to use save getWbxmlDataField function
-            
-            //are there any changes in folder hierarchy
-            if (wbxmlData.FolderSync.Changes) {
-                //looking for additions
-                let add = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Add);
-                for (let count = 0; count < add.length; count++) {
-                    //only add allowed folder types to DB (include trash(4), so we can find trashed folders
-                    if (!["9","14","8","13","7","15", "4"].includes(add[count].Type))
-                        continue;
-
-                    let existingFolder = syncData.accountData.getFolder("serverID", add[count].ServerId);
-                    if (existingFolder) {
-                        //server has send us an ADD for a folder we alreay have, treat as update
-                        existingFolder.setFolderProperty("name", add[count].DisplayName);
-                        existingFolder.setFolderProperty("type", add[count].Type);
-                        existingFolder.setFolderProperty("parentID", add[count].ParentId);
-                    } else {
-                        //create folder obj for new  folder settings
-                        let newFolder = syncData.accountData.createNewFolder();
-                        switch (add[count].Type) {
-                            case "9": //contact
-                            case "14": 
-                                newFolder.setFolderProperty("targetType", "addressbook");
-                                break;
-                            case "8": //event
-                            case "13":
-                                newFolder.setFolderProperty("targetType", "calendar");
-                                break;
-                            case "7": //todo
-                            case "15":
-                                newFolder.setFolderProperty("targetType", "calendar");
-                                break;
-                            default:
-                                newFolder.setFolderProperty("targetType", "none");
-                                break;
-                            
-                        }
-                        
-                        newFolder.setFolderProperty("serverID", add[count].ServerId);
-                        newFolder.setFolderProperty("name", add[count].DisplayName);
-                        newFolder.setFolderProperty("type", add[count].Type);
-                        newFolder.setFolderProperty("parentID", add[count].ParentId);
-
-                        //do we have a cached folder?
-                        let cachedFolderData = syncData.accountData.getFolderFromCache("serverID",  add[count].ServerId);
-                        if (cachedFolderData) {
-                            // copy fields from cache which we want to re-use
-                            newFolder.setFolderProperty("targetColor", cachedFolderData.getFolderProperty("targetColor"));
-                            newFolder.setFolderProperty("targetName", cachedFolderData.getFolderProperty("targetName"));
-                            newFolder.setFolderProperty("downloadonly", cachedFolderData.getFolderProperty("downloadonly"));
-                        }
-                    }
-                }
-                
-                //looking for updates
-                let update = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Update);
-                for (let count = 0; count < update.length; count++) {
-                    let existingFolder = syncData.accountData.getFolder("serverID", update[count].ServerId);
-                    if (existingFolder) {
-                        //update folder
-                        existingFolder.setFolderProperty("name", update[count].DisplayName);
-                        existingFolder.setFolderProperty("type", update[count].Type);
-                        existingFolder.setFolderProperty("parentID", update[count].ParentId);
-                    }
-                }
-
-                //looking for deletes
-                let del = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Delete);
-                for (let count = 0; count < del.length; count++) {
-                    let existingFolder = syncData.accountData.getFolder("serverID", del[count].ServerId);
-                    if (existingFolder) {
-                        existingFolder.targetData.decoupleTarget("[deleted on server]", /* cache em */ true);
-                    }
-                }
-            }
-            
+            await eas.sync.folderlist(syncData);
         } catch (e) {
             if (e.name == "eas4tbsync") {
                 return e.statusData;
@@ -574,9 +433,9 @@ var base = {
                 return new tbSync.StatusData(tbSync.StatusData.WARNING, "JavaScriptError", e.message + "\n\n" + e.stack);
             }
         }
-        // we fall through, if there was no error
-        return new tbSync.StatusData();
 
+        // Fall through, if there was no error.
+        return new tbSync.StatusData();        
     },
     
     /**
@@ -590,9 +449,25 @@ var base = {
      * return StatusData
      */
     syncFolder: async function (syncData, syncJob) {
-        //process a single folder
-        return new tbSync.StatusData(tbSync.StatusData.SUCCESS, "Haha");
-        //return await eas.sync.folder(syncData);
+        try {
+            switch (syncJob) {
+                case "deletefolder":
+                    await eas.sync.deleteFolder(syncData);
+                    break;
+                default:
+                   //await eas.sync.folder(syncData);
+            }
+        } catch (e) {
+            if (e.name == "eas4tbsync") {
+                return e.statusData;
+            } else {
+                Components.utils.reportError(e);
+                return new tbSync.StatusData(tbSync.StatusData.WARNING, "JavaScriptError", e.message + "\n\n" + e.stack);
+            }
+        }
+
+        // Fall through, if there was no error.
+        return new tbSync.StatusData();   
     },    
 }
 
