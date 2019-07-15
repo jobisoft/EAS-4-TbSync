@@ -834,7 +834,8 @@ var calendar = {
 var standardFolderList = {
     /**
      * Is called before the context menu of the folderlist is shown, allows to
-     * show/hide custom menu options based on selected folder.
+     * show/hide custom menu options based on selected folder. During an active
+     * sync, folderData will be null.
      *
      * @param window        [in] window object of the account settings window
      * @param folderData    [in] FolderData of the selected folder
