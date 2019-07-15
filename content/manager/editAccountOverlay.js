@@ -49,7 +49,7 @@ var tbSyncEditAccountOverlay = {
             
             if (folderData.getFolderProperty("selected")) window.alert(tbSync.getString("deletefolder.notallowed::" + folderData.getFolderProperty("name"), "eas"));
             else if (window.confirm(tbSync.getString("deletefolder.confirm::" + folderData.getFolderProperty("name"), "eas"))) {
-            //tbSync.syncAccount("deletefolder", account, fID);
+                folderData.accountData.sync({syncList: false, syncFolders: [folderData], syncJob: "deletefolder"});
             } 
         }            
     }    
