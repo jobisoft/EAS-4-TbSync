@@ -145,8 +145,45 @@ var network = {
 
 
 
-    sendRequest: function (wbxml, command, syncData, allowSoftFail = false) {
-        let msg = "Sending data <" + syncData.getSyncState().split("||")[0] + "> for " + syncData.accountData.getAccountProperty("accountname");
+    sendRequest: async function (wbxml, command, syncData, allowSoftFail = false) {
+        let rv;
+        const MAX_RETRY = 5;
+        
+        for (let i=0; i <= MAX_RETRY; i++) {
+            rv = await this.sendRequestPromise(wbxml, command, syncData, allowSoftFail);
+
+            if (rv.passwordPrompt) {
+                // If this is the final retry, abort.
+                if (i < MAX_RETRY) {
+                    let authData = eas.network.getAuthData(syncData.accountData);
+                    let promptData = {
+                        windowID: "auth:" + syncData.accountData.accountID,
+                        accountname: syncData.accountData.getAccountProperty("accountname"),
+                        usernameLocked: syncData.accountData.isConnected(),
+                        username: authData.user
+                    }
+                    
+                    let syncState = syncData.getSyncState(); 
+                    syncData.setSyncState("passwordprompt");
+                    let credentials = await tbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                    if (credentials) {
+                        // Update login data and try again.
+                        authData.updateLoginData(credentials.username, credentials.password);
+                        syncData.setSyncState(syncState);
+                        continue;
+                    }
+                }
+                throw rv.error;
+            }
+            
+            // No errors? No need to run again.
+            break;
+        }
+        return rv;
+    },
+
+    sendRequestPromise: function (wbxml, command, syncData, allowSoftFail = false) {
+        let msg = "Sending data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
         if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("name") + ")";
         syncData.request = eas.network.getRawXML(wbxml, msg);
         syncData.response = "";
@@ -206,7 +243,7 @@ var network = {
                 switch(syncData.req.status) {
 
                     case 200: //OK
-                        let msg = "Receiving data <" + syncData.getSyncState().split("||")[0] + "> for " + syncData.accountData.getAccountProperty("accountname");
+                        let msg = "Receiving data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
                         if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("name") + ")";
                         syncData.response = eas.network.getRawXML(response, msg);
 
@@ -221,7 +258,10 @@ var network = {
 
                     case 401: // AuthError
                     case 403: // Forbiddden (some servers send forbidden on AuthError, like Freenet)
-                        reject(eas.sync.finishSync("401", eas.flags.abortWithError));
+                        let rv = {};
+                        rv.error = eas.sync.finishSync("401", eas.flags.abortWithError);
+                        rv.passwordPrompt = true;
+                        resolve(rv);
                         break;
 
                     case 449: // Request for new provision (enable it if needed)
