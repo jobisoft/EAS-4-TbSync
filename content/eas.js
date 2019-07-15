@@ -812,8 +812,19 @@ var calendar = {
 }
 
 
-// This provider is using the standardFolderList (instead of this it could also
-// implement the full folderList object).
+/**
+ * This provider is using the standardFolderList (instead of this it could also
+ * implement the full folderList object).
+ *
+ * The DOM of the folderlist can be accessed by
+ * 
+ *    let list = document.getElementById("tbsync.accountsettings.folderlist");
+ * 
+ * and the folderData of each entry is attached to each row:
+ * 
+ *    let folderData = folderList.selectedItem.folderData;
+ *
+ */
 var standardFolderList = {
     /**
      * Is called before the context menu of the folderlist is shown, allows to
