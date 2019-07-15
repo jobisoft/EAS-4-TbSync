@@ -278,7 +278,7 @@ var base = {
             "type" : "",
             "synckey" : "",
             "targetColor" : "",
-            "parentID" : "",
+            "parentID" : "0",
             "serverID" : "", //former folderID
             };
         return folder;
@@ -352,19 +352,50 @@ var base = {
      *                                 sorted folder should be returned
      */
     getSortedFolders: function (accountData) {
-        let folders = accountData.getAllFolders();
-
-/*            let folderData = [];
-            let folders = tbSync.db.getFolders(account);
-            let allowedTypesOrder = ["9","14","8","13","7","15"];
-            let folderIDs = Object.keys(folders).filter(f => allowedTypesOrder.includes(folders[f].type)).sort((a, b) => (tbSync.eas.folderList.getIdChain(allowedTypesOrder, account, a).localeCompare(tbSync.eas.folderList.getIdChain(allowedTypesOrder, account, b))));
-            
-            for (let i=0; i < folderIDs.length; i++) {
-                folderData.push(tbSync.eas.folderList.getRowData(folders[folderIDs[i]]));
-            }
-            return folderData; */
+        let allowedTypesOrder = ["9","14","8","13","7","15"];
         
-        return folders;
+        function getIdChain (aServerID) {
+            let serverID = aServerID;
+            let chain = [];
+            let folder;
+            let rootType = "";
+            
+            // create sort string so that child folders are directly below their parent folders
+            do { 
+                folder = accountData.getFolder("serverID", serverID);
+                if (folder) {
+                    chain.unshift(folder.getFolderProperty("name"));
+                    serverID = folder.getFolderProperty("parentID");
+                    rootType = folder.getFolderProperty("type");
+                }
+            } while (folder && serverID != "0")
+            
+            // different folder types are grouped and trashed folders at the end
+            let pos = allowedTypesOrder.indexOf(rootType);
+            chain.unshift(pos == -1 ? "ZZZ" : pos.toString().padStart(3,"0"));
+                        
+            return chain.join(".");
+        };
+        
+        let toBeSorted = [];
+        let folders = accountData.getAllFolders();
+        for (let f of folders) {
+            if (!allowedTypesOrder.includes(f.getFolderProperty("type"))) {
+                continue;
+            }
+            toBeSorted.push({"key": getIdChain(f.getFolderProperty("serverID")), "folder": f});
+        }
+        
+        //sort
+        toBeSorted.sort(function(a,b) {
+            return  a.key > b.key;
+        });
+
+        let sortedFolders = [];
+        for (let sortObj of toBeSorted) {
+            sortedFolders.push(sortObj.folder);
+        }
+        return sortedFolders;        
     },
 
 
@@ -462,8 +493,8 @@ var base = {
                 //looking for additions
                 let add = eas.xmltools.nodeAsArray(wbxmlData.FolderSync.Changes.Add);
                 for (let count = 0; count < add.length; count++) {
-                    //only add allowed folder types to DB
-                    if (!["9","14","8","13","7","15"].includes(add[count].Type)) //4 ?
+                    //only add allowed folder types to DB (include trash(4), so we can find trashed folders
+                    if (!["9","14","8","13","7","15", "4"].includes(add[count].Type))
                         continue;
 
                     let existingFolder = syncData.accountData.getFolder("serverID", add[count].ServerId);
@@ -488,6 +519,10 @@ var base = {
                             case "15":
                                 newFolder.setFolderProperty("targetType", "calendar");
                                 break;
+                            default:
+                                newFolder.setFolderProperty("targetType", "none");
+                                break;
+                            
                         }
                         
                         newFolder.setFolderProperty("serverID", add[count].ServerId);
@@ -788,6 +823,15 @@ var standardFolderList = {
      * @param folderData         [in] FolderData of the selected folder
      */
     onContextMenuShowing: function (document, folderData) {
+        let hideContextMenuDelete = true;
+        if (folderData !== null) {
+            //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
+            if (eas.tools.parentIsTrash(folderData) && folderData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
+                hideContextMenuDelete = false;
+                document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("name"), "eas");
+            }                
+        }
+        document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
     },
 
     /**
@@ -833,17 +877,10 @@ var standardFolderList = {
         };
     },
     
+    //if no attributes returned, bot shown
     getAttributesRwAcl: function (folderData) {
-        let acl = parseInt(folderData.getFolderProperty("acl"));
-        let acls = [];
-        if (acl & 0x2) acls.push(tbSync.getString("acl.modify", "eas"));
-        if (acl & 0x4) acls.push(tbSync.getString("acl.add", "eas"));
-        if (acl & 0x8) acls.push(tbSync.getString("acl.delete", "eas"));
-        if (acls.length == 0)  acls.push(tbSync.getString("acl.none", "eas"));
-
         return {
-            label: tbSync.getString("acl.readwrite::"+acls.join(", "), "eas"),
-            disabled: (acl & 0x7) != 0x7,
+            label: tbSync.getString("acl.readwrite", "eas"),
         }             
     },
 }
