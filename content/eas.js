@@ -819,19 +819,19 @@ var standardFolderList = {
      * Is called before the context menu of the folderlist is shown, allows to
      * show/hide custom menu options based on selected folder.
      *
-     * @param document       [in] document object of the account settings window
-     * @param folderData         [in] FolderData of the selected folder
+     * @param window        [in] window object of the account settings window
+     * @param folderData    [in] FolderData of the selected folder
      */
-    onContextMenuShowing: function (document, folderData) {
+    onContextMenuShowing: function (window, folderData) {
         let hideContextMenuDelete = true;
         if (folderData !== null) {
             //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
             if (eas.tools.parentIsTrash(folderData) && folderData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
                 hideContextMenuDelete = false;
-                document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("name"), "eas");
+                window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("name"), "eas");
             }                
         }
-        document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
+        window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
     },
 
     /**
