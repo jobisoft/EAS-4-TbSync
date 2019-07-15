@@ -815,6 +815,18 @@ var standardFolderList = {
         return "chrome://tbsync/skin/" + src;
     },
     
+    /**
+     * Return the name of the folder shown in the folderlist.
+     *
+     * @param folderData         [in] FolderData of the selected folder
+     */ 
+    getFolderDisplayName: function (folderData) {
+        let folderName = folderData.getFolderProperty("name");
+        if (eas.tools.parentIsTrash(folderData)) folderName = tbSync.getString("recyclebin", "eas") + " | " + folderName;
+        return folderName;
+    },
+    
+    //if no attributes returned, bot shown (both)
     getAttributesRoAcl: function (folderData) {
         return {
             label: tbSync.getString("acl.readonly", "eas"),

@@ -647,14 +647,6 @@ var eas = {
 
         
 
- 
-
-
-    parentIsTrash: function (account, parentID) {
-        if (parentID == "0") return false;
-        if (tbSync.db.getFolder(account, parentID) && tbSync.db.getFolder(account, parentID).type == "4") return true;
-        return false;
-    },
     
     TimeZoneDataStructure : class {
         constructor() {

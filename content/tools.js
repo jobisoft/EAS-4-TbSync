@@ -10,6 +10,16 @@
 
 var tools = {
 
+    parentIsTrash: function (folderData) {
+        let parentID = folderData.getFolderProperty("parentID");
+        if (parentID == "0") return false;
+        
+        let parentFolder = folderData.accountData.getFolder("serverID", parentID);
+        if (parentFolder && parentFolder.getFolderProperty("type") == "4") return true;
+        
+        return false;
+    },
+
     getNewDeviceId: function () {
         //taken from https://jsfiddle.net/briguy37/2MVFd/
         let d = new Date().getTime();
