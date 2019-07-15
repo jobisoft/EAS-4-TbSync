@@ -37,5 +37,20 @@ var tbSyncEditAccountOverlay = {
         while (host.endsWith("/")) { host = host.slice(0,-1); }        
         document.getElementById('tbsync.AccountPropertys.pref.host').value = host
        this.accountData.setAccountProperty("host", host);
-    }
+    },
+    
+    deleteFolder: function() {
+        let folderList = document.getElementById("tbsync.accountsettings.folderlist");
+        if (folderList.selectedItem !== null && !folderList.disabled) {
+            let folderData = folderList.selectedItem.folderData;
+
+            //only trashed folders can be purged (for example O365 does not show deleted folders but also does not allow to purge them)
+            if (!eas.tools.parentIsTrash(folderData)) return;
+            
+            if (folderData.getFolderProperty("selected")) window.alert(tbSync.getString("deletefolder.notallowed::" + folderData.getFolderProperty("name"), "eas"));
+            else if (window.confirm(tbSync.getString("deletefolder.confirm::" + folderData.getFolderProperty("name"), "eas"))) {
+            //tbSync.syncAccount("deletefolder", account, fID);
+            } 
+        }            
+    }    
 };

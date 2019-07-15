@@ -13,13 +13,13 @@
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/manager/editAccountOverlay.js"/>
 
-    <!--menuitem 
+    <menuitem 
         id="TbSync.eas.FolderListContextMenuDelete" 
         label="&pref.ShowTrashedFolders;" 
         class="menuitem-iconic"
         image="chrome://tbsync/skin/trash16.png"
         appendto="tbsync.accountsettings.FolderListContextMenu"
-        oncommand="tbSync.eas.folderList.deleteFolder(document, tbSyncAccountSettings.account);"/-->
+        oncommand="tbSyncEditAccountOverlay.deleteFolder();"/>
     
     <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
     <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />
