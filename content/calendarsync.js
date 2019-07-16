@@ -20,7 +20,7 @@ eas.sync.Calendar = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (item, data, id, syncdata) {
         
-        let asversion = tbSync.db.getAccountSetting(syncdata.account, "asversion");
+        let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
         let easTZ = new eas.tools.TimeZoneDataStructure();
 
@@ -100,7 +100,7 @@ eas.sync.Calendar = {
                     let attendee = cal.createAttendee();
 
                     //is this attendee the local EAS user?
-                    let isSelf = (att[i].Email == tbSync.db.getAccountSetting(syncdata.account, "user"));
+                    let isSelf = (att[i].Email == syncdata.accountData.getAccountProperty("user"));
                     
                     attendee["id"] = cal.email.prependMailTo(att[i].Email);
                     attendee["commonName"] = att[i].Name;
@@ -192,7 +192,7 @@ eas.sync.Calendar = {
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
     getWbxmlFromThunderbirdItem: function (item, syncdata, isException = false) {
-        let asversion = tbSync.db.getAccountSetting(syncdata.account, "asversion");
+        let asversion = syncdata.accountData.getAccountProperty("asversion");
         let wbxml = tbSync.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
         let nowDate = new Date();
 
@@ -321,7 +321,7 @@ eas.sync.Calendar = {
                 //get owner information
                 let isReceived = false;
                 if (item.hasProperty("X-EAS-MEETINGSTATUS")) isReceived = item.getProperty("X-EAS-MEETINGSTATUS") & 0x2;
-                else isReceived = (item.organizer && item.organizer.id && cal.email.removeMailTo(item.organizer.id) != tbSync.db.getAccountSetting(syncdata.account, "user"));
+                else isReceived = (item.organizer && item.organizer.id && cal.email.removeMailTo(item.organizer.id) != syncdata.accountData.getAccountProperty("user"));
 
                 //either 1,3,5 or 7
                 if (item.hasProperty("STATUS") && item.getProperty("STATUS") == "CANCELLED") {

@@ -519,7 +519,7 @@ var network = {
                 wbxml.otag("Collection");
                     if (syncData.accountData.getAccountProperty("asversion") == "2.5") wbxml.atag("Class", syncData.type);
                     wbxml.atag("SyncKey","0");
-                    wbxml.atag("CollectionId",syncData.folderID);
+                    wbxml.atag("CollectionId", syncData.currentFolderData.getFolderProperty("serverID"));
                 wbxml.ctag();
             wbxml.ctag();
         wbxml.ctag();
@@ -553,7 +553,7 @@ var network = {
                 wbxml.otag("Collection");
                     if (syncData.accountData.getAccountProperty("asversion") == "2.5") { //got this order for 2.5 directly from Microsoft support
                         wbxml.atag("Class", syncData.type); //only 2.5
-                        wbxml.atag("CollectionId", syncData.folderID);
+                        wbxml.atag("CollectionId", syncData.currentFolderData.getFolderProperty("serverID"));
                         wbxml.switchpage("AirSync");
                         wbxml.atag("FilterType", eas.tools.getFilterType());
                         wbxml.atag("SyncKey", syncData.synckey);
@@ -562,7 +562,7 @@ var network = {
                         wbxml.switchpage("AirSync");
                         wbxml.atag("SyncKey", syncData.synckey);
                         wbxml.switchpage("GetItemEstimate");
-                        wbxml.atag("CollectionId", syncData.folderID);
+                        wbxml.atag("CollectionId", syncData.currentFolderData.getFolderProperty("serverID"));
                         wbxml.switchpage("AirSync");
                         wbxml.otag("Options");
                             if (syncData.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());

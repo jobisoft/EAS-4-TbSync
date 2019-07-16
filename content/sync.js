@@ -1077,9 +1077,9 @@ wbxml.ctag();*/
 
     setItemRecurrence: function (item, syncData, data) {
         if (data.Recurrence) {
-            item.recurrenceInfo = cal.createRecurrenceInfo();
+            item.recurrenceInfo = tbSync.lightning.cal.createRecurrenceInfo();
             item.recurrenceInfo.item = item;
-            let recRule = cal.createRecurrenceRule();
+            let recRule = tbSync.lightning.cal.createRecurrenceRule();
             switch (data.Recurrence.Type) {
             case "0":
                 recRule.type = "DAILY";
@@ -1159,7 +1159,7 @@ wbxml.ctag();*/
                 // Exception could be an object or an array of objects
                 let exceptions = [].concat(data.Exceptions.Exception);
                 for (let exception of exceptions) {
-                    let dateTime = cal.createDateTime(exception.ExceptionStartTime);
+                    let dateTime = tbSync.lightning.cal.createDateTime(exception.ExceptionStartTime);
                     if (data.AllDayEvent == "1") {
                         dateTime.isDate = true;
                         // Pass to replacement event unless overriden

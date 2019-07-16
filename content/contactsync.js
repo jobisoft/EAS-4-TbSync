@@ -124,7 +124,7 @@ eas.sync.Contacts = {
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (item, data, id, syncdata) {
-        let asversion = tbSync.db.getAccountSetting(syncdata.account, "asversion");
+        let asversion = syncdata.accountData.getAccountProperty("asversion");
 
         item.card.setProperty("TBSYNCID", id);
 
@@ -184,7 +184,7 @@ eas.sync.Contacts = {
 
         //take care of multiline address fields
         let streets = [];
-        let seperator = String.fromCharCode(tbSync.db.getAccountSetting(syncdata.account,"seperator")); // options are 44 (,) or 10 (\n)
+        let seperator = String.fromCharCode(syncdata.accountData.getAccountProperty("seperator")); // options are 44 (,) or 10 (\n)
         streets.push(["HomeAddressStreet", "HomeAddress", "HomeAddress2"]); //EAS, TB1, TB2
         streets.push(["BusinessAddressStreet", "WorkAddress", "WorkAddress2"]);
         streets.push(["OtherAddressStreet", "OtherAddress", "OtherAddress2"]);
@@ -205,7 +205,7 @@ eas.sync.Contacts = {
 
         //take care of photo
         if (data.Picture) {
-            tbSync.addphoto(id + '.jpg', syncdata.targetId, item.card, xmltools.nodeAsArray(data.Picture)[0]); //Kerio sends Picture as container
+            tbSync.addphoto(id + '.jpg', syncdata.target.UID, item.card, xmltools.nodeAsArray(data.Picture)[0]); //Kerio sends Picture as container
         }
         
 
@@ -239,7 +239,7 @@ eas.sync.Contacts = {
 
 
         //further manipulations
-        if (tbSync.db.getAccountSetting(syncdata.account, "displayoverride") == "1") {
+        if (syncdata.accountData.getAccountProperty("displayoverride") == "1") {
            item.card.setProperty("DisplayName", item.card.getProperty("FirstName", "") + " " + item.card.getProperty("LastName", ""));
 
             if (item.card.getProperty("DisplayName", "" ) == " " )
@@ -260,7 +260,7 @@ eas.sync.Contacts = {
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
     getWbxmlFromThunderbirdItem: function (item, syncdata, isException = false) {
-        let asversion = tbSync.db.getAccountSetting(syncdata.account, "asversion");
+        let asversion = syncdata.accountData.getAccountProperty("asversion");
         let wbxml = tbSync.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
         let nowDate = new Date();
 
@@ -293,7 +293,7 @@ eas.sync.Contacts = {
 
         //take care of multiline address fields
         let streets = [];
-        let seperator = String.fromCharCode(tbSync.db.getAccountSetting(syncdata.account,"seperator")); // options are 44 (,) or 10 (\n)
+        let seperator = String.fromCharCode(syncdata.accountData.getAccountProperty("seperator")); // options are 44 (,) or 10 (\n)
         streets.push(["HomeAddressStreet", "HomeAddress", "HomeAddress2"]); //EAS, TB1, TB2
         streets.push(["BusinessAddressStreet", "WorkAddress", "WorkAddress2"]);
         streets.push(["OtherAddressStreet", "OtherAddress", "OtherAddress2"]);        

@@ -618,10 +618,10 @@ var calendar = {
         newCalendar.id = tbSync.lightning.cal.getUUID();
         newCalendar.name = newname;
 
-        newCalendar.setProperty("color", folderData.getFolderSetting("targetColor"));
+        newCalendar.setProperty("color", folderData.getFolderProperty("targetColor"));
         newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
         newCalendar.setProperty("calendar-main-in-composite",true);
-        newCalendar.setProperty("readOnly", folderData.getFolderSetting("downloadonly") == "1");
+        newCalendar.setProperty("readOnly", folderData.getFolderProperty("downloadonly") == "1");
         calManager.registerCalendar(newCalendar);
 
         let authData = eas.network.getAuthData(folderData.accountData);
