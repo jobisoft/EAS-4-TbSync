@@ -49,6 +49,12 @@ var base = {
      * Called during load of external provider extension to init provider.
      */
     load: async function () {
+        eas.defaultTimezone = null;
+        eas.utcTimezone = null;
+        eas.defaultTimezoneInfo = null;
+        eas.windowsTimezoneMap = {};
+        eas.openWindows = {};
+
         eas.overlayManager = new OverlayManager({verbose: 0});
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abNewCardWindow.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
@@ -56,18 +62,16 @@ var base = {
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookoverlay.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xul");
         eas.overlayManager.startObserving();
-
-        eas.openWindows = {};
-        
-        // Create a basic error info (no accountname or foldername, just the provider)
-        let errorInfo = new tbSync.ErrorInfo("eas");
-        
+                
         try {
-            if (tbSync.lightning.isAvailable() && 1==2) {
+            // Create a basic error info (no accountname or foldername, just the provider)
+            let errorInfo = new tbSync.ErrorInfo("eas");
+            
+            if (tbSync.lightning.isAvailable()) {
                 
                 //get timezone info of default timezone (old cal. without dtz are depricated)
-                eas.defaultTimezone = (cal.dtz && cal.dtz.defaultTimezone) ? cal.dtz.defaultTimezone : cal.calendarDefaultTimezone();
-                eas.utcTimezone = (cal.dtz && cal.dtz.UTC) ? cal.dtz.UTC : cal.UTC();
+                eas.defaultTimezone = (tbSync.lightning.cal.dtz && tbSync.lightning.cal.dtz.defaultTimezone) ? tbSync.lightning.cal.dtz.defaultTimezone : tbSync.lightning.cal.calendarDefaultTimezone();
+                eas.utcTimezone = (tbSync.lightning.cal.dtz && tbSync.lightning.cal.dtz.UTC) ? tbSync.lightning.cal.dtz.UTC : tbSync.lightning.cal.UTC();
                 if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
                     tbSync.errorlog.add("info", errorInfo, "Default timezone has been found.");                    
                 } else {
@@ -100,15 +104,19 @@ var base = {
                 // - A) find email identity and accociate (which sets organizer to that user identity)
                 // - B) overwrite default organizer with current best guess
                 //TODO: Do this after email accounts changed, not only on restart? 
-                let folders = tbSync.db.findFoldersWithSetting(["selected","type"], ["1","8,13"], "provider", "eas");
-                for (let f=0; f < folders.length; f++) {
-                    let calendar = cal.getCalendarManager().getCalendarById(folders[f].target);
+                let providerData = new tbSync.ProviderData("eas");
+                let folders = providerData.getAllFolders({"selected": true, "type": ["8","13"]});
+                for (let folder of folders) {
+                    console.log("INITZ CHECK: " + folder.getFolderProperty("name"));
+                    let calendar = tbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
                     if (calendar && calendar.getProperty("imip.identity.key") == "") {
                         //is there an email identity for this eas account?
-                        let key = tbSync.getIdentityKey(tbSync.db.getAccountSetting(folders[f].account, "user"));
+                        let authData = eas.network.getAuthData(folder);
+
+                        let key = eas.tools.getIdentityKey(authData.user);
                         if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?
                             //set transient calendar organizer settings based on current best guess and 
-                            calendar.setProperty("organizerId", cal.email.prependMailTo(tbSync.db.getAccountSetting(folders[f].account, "user")));
+                            calendar.setProperty("organizerId", tbSync.lightning.cal.email.prependMailTo(authData.user));
                             calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
                         } else {                      
                             //force switch to found identity
@@ -120,7 +128,7 @@ var base = {
                     tbSync.errorlog.add("info", errorInfo, "Lightning was not loaded, creation of timezone objects has been skipped.");
             }
         } catch(e) {
-                    Components.utils.reportError(e);        
+            Components.utils.reportError(e);        
         }        
     },
 
@@ -208,10 +216,8 @@ var base = {
     /**
      * Returns URL of the new account window.
      *
-     * The URL will be opened via openDialog() and the tbSync.ProviderData of this
-     * provider will be passed as first argument. It can be accessed via:
-     *
-     *    providerData = window.arguments[0];
+     * The URL will be opened via openDialog(), when the user wants to create a
+     * new account of this provider.
      */
     getCreateAccountWindowUrl: function () {
         return "chrome://eas4tbsync/content/manager/createAccount.xul";
@@ -455,7 +461,7 @@ var base = {
                     await eas.sync.deleteFolder(syncData);
                     break;
                 default:
-                   //await eas.sync.folder(syncData);
+                   await eas.sync.singleFolder(syncData);
             }
         } catch (e) {
             if (e.name == "eas4tbsync") {
@@ -475,13 +481,16 @@ var base = {
 // implement the addressbook object.
 var addressbook = {
 
-    // define a card property, which should be used for the changelog
+    // make this an array and allow to specify multiple IDs which will all be generated automatically (X-DAV-HREF / X-DAV-UID) and the
+    // first one is used for changelog
+    
+    // define an item property, which should be used for the changelog
     // basically your primary key for the abItem properties
     // UID will be used, if nothing specified
-    primaryKeyField: "X-DAV-HREF",
+    primaryKeyField: "X-EAS-UID",
     
     generatePrimaryKey: function (folderData) {
-         return folderData.getFolderProperty("href") + tbSync.generateUUID() + ".vcf";
+         return tbSync.generateUUID();
     },
     
     // enable or disable changelog
@@ -505,10 +514,7 @@ var addressbook = {
 
             case "addrbook-contact-created":
             {
-                //Services.console.logStringMessage("["+ aTopic + "] Created new X-DAV-UID for Card <"+ abCardItem.getProperty("DisplayName")+">");
-                abCardItem.setProperty("X-DAV-UID", tbSync.generateUUID());
-                // the card is tagged with "_by_user" so it will not be changed to "_by_server" by the following modify
-                abCardItem.abDirectory.modify(abCardItem);
+                //Services.console.logStringMessage("["+ aTopic + "] "+ abCardItem.getProperty("DisplayName")+">");
                 break;
             }
         }
@@ -527,9 +533,7 @@ var addressbook = {
                 break;
             
             case "addrbook-list-created": 
-                //Services.console.logStringMessage("["+ aTopic + "] Created new X-DAV-UID for List <"+abListItem.getProperty("ListName")+">");
-                abListItem.setProperty("X-DAV-UID", tbSync.generateUUID());
-                // custom props of lists get updated directly, no need to call .modify()            
+                //Services.console.logStringMessage("["+ aTopic + "] ListName: "+abListItem.getProperty("ListName")+">");
                 break;
         }
     },
@@ -544,18 +548,12 @@ var addressbook = {
      * return the new directory
      */
     createAddressBook: function (newname, folderData) {
-        // this is the standard target, should it not be created it like this?
-        let dirPrefId = MailServices.ab.newAddressBook(newname, "", 2);
+        let dirPrefId = MailServices.ab.newAddressBook(newname, "", 2);  /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
         let directory = MailServices.ab.getDirectoryFromId(dirPrefId);
 
         if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
-            let serviceprovider = folderData.accountData.getAccountProperty("serviceprovider");
-            let icon = "custom";
-            if (eas.sync.serviceproviders.hasOwnProperty(serviceprovider)) {
-                icon = eas.sync.serviceproviders[serviceprovider].icon;
-            }
-            directory.setStringValue("tbSyncIcon", "dav" + icon);
-            return directory;
+            directory.setStringValue("tbSyncIcon", "eas");
+            return directory;		
         }
         return null;
     },    
@@ -567,46 +565,32 @@ var addressbook = {
 // implement the calendar object.
 var calendar = {
     
-    // define a card property, which should be used for the changelog
+    // define an item property, which should be used for the changelog
     // basically your primary key for the abItem properties
     // UID will be used, if nothing specified
-    //primaryKeyField: "",
+    primaryKeyField: "X-EAS-UID",
+    
+    generatePrimaryKey: function (folderData) {
+         return tbSync.generateUUID();
+    },
     
     // enable or disable changelog
-    //logUserChanges: false,
+    logUserChanges: true,
 
     // The calendarObserver::onCalendarReregistered needs to know, which field
     // of the folder is used to store the full url of a calendar, to be able to
     // find calendars, which could be connected to other accounts.
-    calendarUrlField: "url",
+    calendarUrlField: "url", //rename to calendarUrlFolderProperty
     
     calendarObserver: function (aTopic, folderData, aCalendar, aPropertyName, aPropertyValue, aOldPropertyValue) {
         switch (aTopic) {
             case "onCalendarPropertyChanged":
-            {
-                switch (aPropertyName) {
-                    case "color":
-                        if (aOldPropertyValue.toString().toUpperCase() != aPropertyValue.toString().toUpperCase()) {
-                            //prepare connection data
-                            let connection = new eas.network.ConnectionData(folderData);
-                            //update color on server
-                            eas.network.sendRequest("<d:propertyupdate "+eas.tools.xmlns(["d","apple"])+"><d:set><d:prop><apple:calendar-color>"+(aPropertyValue + "FFFFFFFF").slice(0,9)+"</apple:calendar-color></d:prop></d:set></d:propertyupdate>", folderData.getFolderProperty("href"), "PROPPATCH", connection);
-                        }
-                        break;
-                }
-            }
-            break;
+                //Services.console.logStringMessage("["+ aTopic + "] " + aCalendar.name + " : " + aPropertyName);
+                break;
 
             case "onCalendarReregistered": 
-            {
-                folderData.setFolderProperty("selected", true);
-                folderData.setFolderProperty("status", tbSync.StatusData.SUCCESS);
-                //add target to re-take control
-                folderData.setFolderProperty("target", aCalendar.id);
-                //update settings window, if open
-                Services.obs.notifyObservers(null, "tbsync.observer.manager.updateSyncstate", folderData.accountID);
-            }
-            break;
+                //Services.console.logStringMessage("["+ aTopic + "] " + aCalendar.name);
+                break;
             
             case "onCalendarDeleted":
             case "onCalendarPropertyDeleted":
@@ -635,59 +619,34 @@ var calendar = {
      */
     createCalendar: function(newname, folderData) {
         let calManager = tbSync.lightning.cal.getCalendarManager();
+        //Alternative calendar, which uses calTbSyncCalendar
+        //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
+
+        //Create the new standard calendar with a unique name
+        let newCalendar = calManager.createCalendar("storage", Services.io.newURI("moz-storage-calendar://"));
+        newCalendar.id = tbSync.lightning.cal.getUUID();
+        newCalendar.name = newname;
+
+        newCalendar.setProperty("color", folderData.getFolderSetting("targetColor"));
+        newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
+        newCalendar.setProperty("calendar-main-in-composite",true);
+        newCalendar.setProperty("readOnly", folderData.getFolderSetting("downloadonly") == "1");
+        calManager.registerCalendar(newCalendar);
+
         let authData = eas.network.getAuthData(folderData.accountData);
-        let password = authData.password;
-        let username =  authData.user;
-      
-        let caltype = folderData.getFolderProperty("type");
-
-        let baseUrl = "";
-        if (caltype != "ics") {
-            baseUrl =  "http" + (folderData.accountData.getAccountProperty("https") ? "s" : "") + "://" + folderData.getFolderProperty("fqdn");
-        }
-
-        let url = eas.tools.parseUri(baseUrl + folderData.getFolderProperty("href"));        
-        folderData.setFolderProperty("url", url.spec);
-
-        //check if that calendar already exists
-        let cals = calManager.getCalendars({});
-        let newCalendar = null;
-        let found = false;
-        for (let calendar of calManager.getCalendars({})) {
-            if (calendar.uri.spec == url.spec) {
-                newCalendar = calendar;
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            newCalendar = calManager.createCalendar(caltype, url); //caldav or ics
-            newCalendar.id = tbSync.lightning.cal.getUUID();
-            newCalendar.name = newname;
-
-            newCalendar.setProperty("username", username);
-            newCalendar.setProperty("color", folderData.getFolderProperty("targetColor"));
-            newCalendar.setProperty("calendar-main-in-composite", true);
-            newCalendar.setProperty("cache.enabled", folderData.accountData.getAccountProperty("useCalendarCache"));
+        
+        //is there an email identity we can associate this calendar to? 
+        //getIdentityKey returns "" if none found, which removes any association
+        let key = eas.tools.getIdentityKey(authData.user);
+        newCalendar.setProperty("fallbackOrganizerName", newCalendar.getProperty("organizerCN"));
+        newCalendar.setProperty("imip.identity.key", key);
+        if (key === "") {
+            //there is no matching email identity - use current default value as best guess and remove association
+            //use current best guess 
+            newCalendar.setProperty("organizerCN", newCalendar.getProperty("fallbackOrganizerName"));
+            newCalendar.setProperty("organizerId", tbSync.lightning.cal.email.prependMailTo(authData.user));
         }
         
-        if (folderData.getFolderProperty("downloadonly")) newCalendar.setProperty("readOnly", true);
-
-        // ICS urls do not need a password
-        if (caltype != "ics") {
-            tbSync.dump("Searching CalDAV authRealm for", url.host);
-            let realm = (eas.network.listOfRealms.hasOwnProperty(url.host)) ? eas.network.listOfRealms[url.host] : "";
-            if (realm !== "") {
-                tbSync.dump("Found CalDAV authRealm",  realm);
-                //manually create a lightning style entry in the password manager
-                tbSync.passwordManager.updateLoginInfo(url.prePath, realm, /* old */ username, /* new */ username, password);
-            }
-        }
-
-        if (!found) {
-            calManager.registerCalendar(newCalendar);
-        }
         return newCalendar;
     },
 }

@@ -22,7 +22,7 @@ eas.sync.Calendar = {
         
         let asversion = tbSync.db.getAccountSetting(syncdata.account, "asversion");
         item.id = id;
-        let easTZ = new eas.TimeZoneDataStructure();
+        let easTZ = new eas.tools.TimeZoneDataStructure();
 
         eas.sync.setItemSubject(item, syncdata, data);
         eas.sync.setItemLocation(item, syncdata, data);
@@ -205,7 +205,7 @@ eas.sync.Calendar = {
         
         //timezone
         if (!isException) {
-            let easTZ = new eas.TimeZoneDataStructure();
+            let easTZ = new eas.tools.TimeZoneDataStructure();
 
             //if there is no end and no start (or both are floating) use default timezone info
             let tzInfo = null;

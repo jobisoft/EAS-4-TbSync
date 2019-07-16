@@ -10,6 +10,16 @@
 
 var tools = {
 
+    getIdentityKey: function (email) {
+        let acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+        let accounts = acctMgr.accounts;
+        for (let a = 0; a < accounts.length; a++) {
+            let account = accounts.queryElementAt(a, Components.interfaces.nsIMsgAccount);
+            if (account.defaultIdentity && account.defaultIdentity.email == email) return account.defaultIdentity.key;
+        }
+        return "";
+    },
+
     parentIsTrash: function (folderData) {
         let parentID = folderData.getFolderProperty("parentID");
         if (parentID == "0") return false;
@@ -55,7 +65,7 @@ var tools = {
     fetchFile: function (aURL, returnType = "Array") {
         return new Promise((resolve, reject) => {
             let uri = Services.io.newURI(aURL);
-            let channel = Services.io.newChannelFromURI2(uri,
+            let channel = Services.io.newChannelFromURI(uri,
                                  null,
                                  Services.scriptSecurityManager.getSystemPrincipal(),
                                  null,
@@ -81,7 +91,119 @@ var tools = {
             });
         });
     },
+
+
+
+
+
+
+
+
     
+    
+    // TIMEZONE STUFF
+    
+    TimeZoneDataStructure : class {
+        constructor() {
+            this.buf = new DataView(new ArrayBuffer(172));
+        }
+        
+/*		
+        Buffer structure:
+            @000    utcOffset (4x8bit as 1xLONG)
+
+            @004     standardName (64x8bit as 32xWCHAR)
+            @068     standardDate (16x8 as 1xSYSTEMTIME)
+            @084     standardBias (4x8bit as 1xLONG)
+
+            @088     daylightName (64x8bit as 32xWCHAR)
+            @152    daylightDate (16x8 as 1xSTRUCT)
+            @168    daylightBias (4x8bit as 1xLONG)
+*/
+        
+        set easTimeZone64 (b64) {
+            //clear buffer
+            for (let i=0; i<172; i++) this.buf.setUint8(i, 0);
+            //load content into buffer
+            let content = (b64 == "") ? "" : atob(b64);
+            for (let i=0; i<content.length; i++) this.buf.setUint8(i, content.charCodeAt(i));
+        }
+        
+        get easTimeZone64 () {
+            let content = "";
+            for (let i=0; i<172; i++) content += String.fromCharCode(this.buf.getUint8(i));
+            return (btoa(content));
+        }
+        
+        getstr (byteoffset) {
+            let str = "";
+            //walk thru the buffer in 32 steps of 16bit (wchars)
+            for (let i=0;i<32;i++) {
+                let cc = this.buf.getUint16(byteoffset+i*2, true);
+                if (cc == 0) break;
+                str += String.fromCharCode(cc);
+            }
+            return str;
+        }
+
+        setstr (byteoffset, str) {
+            //clear first
+            for (let i=0;i<32;i++) this.buf.setUint16(byteoffset+i*2, 0);
+            //walk thru the buffer in steps of 16bit (wchars)
+            for (let i=0;i<str.length && i<32; i++) this.buf.setUint16(byteoffset+i*2, str.charCodeAt(i), true);
+        }
+        
+        getsystemtime (buf, offset) {
+            let systemtime = {
+                get wYear () { return buf.getUint16(offset + 0, true); },
+                get wMonth () { return buf.getUint16(offset + 2, true); },
+                get wDayOfWeek () { return buf.getUint16(offset + 4, true); },
+                get wDay () { return buf.getUint16(offset + 6, true); },
+                get wHour () { return buf.getUint16(offset + 8, true); },
+                get wMinute () { return buf.getUint16(offset + 10, true); },
+                get wSecond () { return buf.getUint16(offset + 12, true); },
+                get wMilliseconds () { return buf.getUint16(offset + 14, true); },
+                toString() { return [this.wYear, this.wMonth, this.wDay].join("-") + ", " + this.wDayOfWeek + ", " + [this.wHour,this.wMinute,this.wSecond].join(":") + "." + this.wMilliseconds},
+
+                set wYear (v) { buf.setUint16(offset + 0, v, true); },
+                set wMonth (v) { buf.setUint16(offset + 2, v, true); },
+                set wDayOfWeek (v) { buf.setUint16(offset + 4, v, true); },
+                set wDay (v) { buf.setUint16(offset + 6, v, true); },
+                set wHour (v) { buf.setUint16(offset + 8, v, true); },
+                set wMinute (v) { buf.setUint16(offset + 10, v, true); },
+                set wSecond (v) { buf.setUint16(offset + 12, v, true); },
+                set wMilliseconds (v) { buf.setUint16(offset + 14, v, true); },
+                };
+            return systemtime;
+        }
+        
+        get standardDate () {return this.getsystemtime (this.buf, 68); }
+        get daylightDate () {return this.getsystemtime (this.buf, 152); }
+            
+        get utcOffset () { return this.buf.getInt32(0, true); }
+        set utcOffset (v) { this.buf.setInt32(0, v, true); }
+
+        get standardBias () { return this.buf.getInt32(84, true); }
+        set standardBias (v) { this.buf.setInt32(84, v, true); }
+        get daylightBias () { return this.buf.getInt32(168, true); }
+        set daylightBias (v) { this.buf.setInt32(168, v, true); }
+        
+        get standardName () {return this.getstr(4); }
+        set standardName (v) {return this.setstr(4, v); }
+        get daylightName () {return this.getstr(88); }
+        set daylightName (v) {return this.setstr(88, v); }
+        
+        toString () { return ["", 
+            "utcOffset: "+ this.utcOffset,
+            "standardName: "+ this.standardName,
+            "standardDate: "+ this.standardDate.toString(),
+            "standardBias: "+ this.standardBias,
+            "daylightName: "+ this.daylightName,
+            "daylightDate: "+ this.daylightDate.toString(),
+            "daylightBias: "+ this.daylightBias].join("\n"); }
+    },
+
+
     //Date has a toISOString method, which returns the Date obj as extended ISO 8601,
     //however EAS MS-ASCAL uses compact/basic ISO 8601,
     dateToBasicISOString : function (date) {
@@ -102,6 +224,7 @@ var tools = {
             'Z';
     },
 
+
     //Save replacement for cal.createDateTime, which accepts compact/basic and also extended ISO 8601, 
     //cal.createDateTime only supports compact/basic
     createDateTime: function(str) {
@@ -111,8 +234,9 @@ var tools = {
             let tempDate = new Date(str);
             datestring = eas.tools.dateToBasicISOString(tempDate);
         }
-        return cal.createDateTime(datestring);
+        return tbSync.lightning.cal.createDateTime(datestring);
     },    
+
 
     // Convert TB date to UTC and return it as  basic or extended ISO 8601  String
     getIsoUtcString: function(origdate, requireExtendedISO = false, fakeUTC = false) {
@@ -144,16 +268,12 @@ var tools = {
             return UTC.icalString;
         }
     },
-    
-
-
-
 
 
     //guess the IANA timezone (used by TB) based on the current offset (standard or daylight)
     guessTimezoneByCurrentOffset: function(curOffset, utcDateTime) {
         //if we only now the current offset and the current date, we need to actually try each TZ.
-        let tzService = cal.getTimezoneService();
+        let tzService = tbSync.lightning.cal.getTimezoneService();
 
         //first try default tz
         let test = utcDateTime.getInTimezone(eas.defaultTimezoneInfo.timezone);
@@ -178,6 +298,7 @@ var tools = {
         return eas.defaultTimezoneInfo.timezone;
     },
 
+
   //guess the IANA timezone (used by TB) based on stdandard offset, daylight offset and standard name
     guessTimezoneByStdDstOffset: function(stdOffset, dstOffset, stdName = "") {
                     
@@ -193,7 +314,7 @@ var tools = {
                 eas.cachedTimezoneData.stdOffset = {};
                 eas.cachedTimezoneData.bothOffsets = {};                    
                     
-                let tzService = cal.getTimezoneService();
+                let tzService = tbSync.lightning.cal.getTimezoneService();
 
                 //cache timezones data from internal IANA data
                 let enumerator = tzService.timezoneIds;
@@ -273,7 +394,8 @@ var tools = {
             tbSync.dump("Timezone could not be matched via offsets (std:" + stdOffset +", dst:" + dstOffset + "), using default timezone", eas.defaultTimezoneInfo.std.id);
             return eas.defaultTimezoneInfo.timezone;
     },
-    
+
+
     //extract standard and daylight timezone data
     getTimezoneInfo: function (timezone) {        
         let tzInfo = {};
@@ -286,6 +408,7 @@ var tools = {
         tzInfo.timezone = timezone;
         return tzInfo;
     },
+
 
      //get timezone info for standard/daylight
     getTimezoneInfoObject: function (timezone, standardOrDaylight) {       
@@ -301,8 +424,8 @@ var tools = {
         }
                 
         //we could parse the icalstring by ourself, but I wanted to use ICAL.parse - TODO try catch
-        let info = ICAL.parse("BEGIN:VCALENDAR\r\n" + timezone.icalComponent.toString() + "\r\nEND:VCALENDAR");
-        let comp = new ICAL.Component(info);
+        let info = tbSync.lightning.ICAL.parse("BEGIN:VCALENDAR\r\n" + timezone.icalComponent.toString() + "\r\nEND:VCALENDAR");
+        let comp = new tbSync.lightning.ICAL.Component(info);
         let vtimezone =comp.getFirstSubcomponent("vtimezone");
         let id = vtimezone.getFirstPropertyValue("tzid").toString();
         let zone = vtimezone.getFirstSubcomponent(standardOrDaylight);
@@ -380,13 +503,18 @@ var tools = {
         }
         return null;
     },
-    
 
 
 
 
-    
-    
+
+
+
+
+
+
+    // ADDRESSBOOK STUFF
+
     promisifyAddressbook: function (addressbook) {
     /* 
         Return obj with identical interface to promisifyCalendar. But we currently do not need a promise. 

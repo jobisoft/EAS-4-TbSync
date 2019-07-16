@@ -31,7 +31,7 @@ var tbSyncEasNewAccount = {
     },
 
     onLoad: function () {
-        this.providerData = window.arguments[0];
+        this.providerData = new tbSync.ProviderData("eas");
 
         this.elementName = document.getElementById('tbsync.newaccount.name');
         this.elementUser = document.getElementById('tbsync.newaccount.user');
