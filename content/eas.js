@@ -105,7 +105,7 @@ var base = {
                 // - B) overwrite default organizer with current best guess
                 //TODO: Do this after email accounts changed, not only on restart? 
                 let providerData = new tbSync.ProviderData("eas");
-                let folders = providerData.getAllFolders({"selected": true, "type": ["8","13"]});
+                let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
                 for (let folder of folders) {
                     console.log("INITZ CHECK: " + folder.getFolderProperty("name"));
                     let calendar = tbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
@@ -576,20 +576,11 @@ var calendar = {
     
     // enable or disable changelog
     logUserChanges: true,
-
-    // The calendarObserver::onCalendarReregistered needs to know, which field
-    // of the folder is used to store the full url of a calendar, to be able to
-    // find calendars, which could be connected to other accounts.
-    calendarUrlField: "url", //rename to calendarUrlFolderProperty
     
     calendarObserver: function (aTopic, folderData, aCalendar, aPropertyName, aPropertyValue, aOldPropertyValue) {
         switch (aTopic) {
             case "onCalendarPropertyChanged":
                 //Services.console.logStringMessage("["+ aTopic + "] " + aCalendar.name + " : " + aPropertyName);
-                break;
-
-            case "onCalendarReregistered": 
-                //Services.console.logStringMessage("["+ aTopic + "] " + aCalendar.name);
                 break;
             
             case "onCalendarDeleted":
