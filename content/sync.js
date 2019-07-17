@@ -1028,7 +1028,7 @@ wbxml.ctag();*/
     },
 
     getEasItemType(aItem) {
-        if (aItem instanceof tbSync.addressbook.AbCard) {
+        if (aItem instanceof tbSync.addressbook.AbItem) {
             return "Contacts";
         } else if (aItem instanceof tbSync.lightning.TbItem) {
             return aItem.isTodo ? "Tasks" : "Calendar";
