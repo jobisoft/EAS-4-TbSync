@@ -47,8 +47,8 @@ var tbSyncEditAccountOverlay = {
             //only trashed folders can be purged (for example O365 does not show deleted folders but also does not allow to purge them)
             if (!eas.tools.parentIsTrash(folderData)) return;
             
-            if (folderData.getFolderProperty("selected")) window.alert(tbSync.getString("deletefolder.notallowed::" + folderData.getFolderProperty("name"), "eas"));
-            else if (window.confirm(tbSync.getString("deletefolder.confirm::" + folderData.getFolderProperty("name"), "eas"))) {
+            if (folderData.getFolderProperty("selected")) window.alert(tbSync.getString("deletefolder.notallowed::" + folderData.getFolderProperty("foldername"), "eas"));
+            else if (window.confirm(tbSync.getString("deletefolder.confirm::" + folderData.getFolderProperty("foldername"), "eas"))) {
                 folderData.accountData.sync({syncList: false, syncFolders: [folderData], syncJob: "deletefolder"});
             } 
         }            

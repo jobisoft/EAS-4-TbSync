@@ -94,7 +94,7 @@ var network = {
 
     sendRequestPromise: function (wbxml, command, syncData, allowSoftFail = false) {
         let msg = "Sending data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
-        if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("name") + ")";
+        if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("foldername") + ")";
         syncData.request = eas.network.getRawXML(wbxml, msg);
         syncData.response = "";
 
@@ -154,7 +154,7 @@ var network = {
 
                     case 200: //OK
                         let msg = "Receiving data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
-                        if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("name") + ")";
+                        if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("foldername") + ")";
                         syncData.response = eas.network.getRawXML(response, msg);
 
                         //What to do on error? IS this an error? Yes!

@@ -111,7 +111,7 @@ var sync = {
                 let existingFolder = syncData.accountData.getFolder("serverID", add[count].ServerId);
                 if (existingFolder) {
                     //server has send us an ADD for a folder we alreay have, treat as update
-                    existingFolder.setFolderProperty("name", add[count].DisplayName);
+                    existingFolder.setFolderProperty("foldername", add[count].DisplayName);
                     existingFolder.setFolderProperty("type", add[count].Type);
                     existingFolder.setFolderProperty("parentID", add[count].ParentId);
                 } else {
@@ -137,7 +137,7 @@ var sync = {
                     }
                     
                     newFolder.setFolderProperty("serverID", add[count].ServerId);
-                    newFolder.setFolderProperty("name", add[count].DisplayName);
+                    newFolder.setFolderProperty("foldername", add[count].DisplayName);
                     newFolder.setFolderProperty("type", add[count].Type);
                     newFolder.setFolderProperty("parentID", add[count].ParentId);
 
@@ -158,7 +158,7 @@ var sync = {
                 let existingFolder = syncData.accountData.getFolder("serverID", update[count].ServerId);
                 if (existingFolder) {
                     //update folder
-                    existingFolder.setFolderProperty("name", update[count].DisplayName);
+                    existingFolder.setFolderProperty("foldername", update[count].DisplayName);
                     existingFolder.setFolderProperty("type", update[count].Type);
                     existingFolder.setFolderProperty("parentID", update[count].ParentId);
                 }

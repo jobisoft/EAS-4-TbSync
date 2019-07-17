@@ -36,11 +36,6 @@ eas.utcTimezone = null;
     
 /* TODO: 
  - convert account properties to native types (int, bool)
-- getAttributesRoAcl
-- getAttributesRwAcl
-- getSortedFolders
-            if (tbSync.lightning.isAvailable()) {
-
 */
 
 
@@ -107,7 +102,6 @@ var base = {
                 let providerData = new tbSync.ProviderData("eas");
                 let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
                 for (let folder of folders) {
-                    console.log("INITZ CHECK: " + folder.getFolderProperty("name"));
                     let calendar = tbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
                     if (calendar && calendar.getProperty("imip.identity.key") == "") {
                         //is there an email identity for this eas account?
@@ -370,7 +364,7 @@ var base = {
             do { 
                 folder = accountData.getFolder("serverID", serverID);
                 if (folder) {
-                    chain.unshift(folder.getFolderProperty("name"));
+                    chain.unshift(folder.getFolderProperty("foldername"));
                     serverID = folder.getFolderProperty("parentID");
                     rootType = folder.getFolderProperty("type");
                 }
@@ -487,7 +481,7 @@ var addressbook = {
     // define an item property, which should be used for the changelog
     // basically your primary key for the abItem properties
     // UID will be used, if nothing specified
-    primaryKeyField: "X-EAS-UID",
+    primaryKeyField: "X-EAS-SERVERID",
     
     generatePrimaryKey: function (folderData) {
          return tbSync.generateUUID();
@@ -500,7 +494,7 @@ var addressbook = {
         switch (aTopic) {
             case "addrbook-removed":
             case "addrbook-updated":
-                //Services.console.logStringMessage("["+ aTopic + "] " + folderData.getFolderProperty("name"));
+                //Services.console.logStringMessage("["+ aTopic + "] " + folderData.getFolderProperty("foldername"));
                 break;
         }
     },
@@ -565,14 +559,10 @@ var addressbook = {
 // implement the calendar object.
 var calendar = {
     
-    // define an item property, which should be used for the changelog
-    // basically your primary key for the abItem properties
-    // UID will be used, if nothing specified
-    primaryKeyField: "X-EAS-UID",
-    
-    generatePrimaryKey: function (folderData) {
-         return tbSync.generateUUID();
-    },
+    // The calendar target does not support a custom primaryKeyField, because
+    // the lightning implementation only allows to search for items via UID.
+    // Like the addressbook target, the calendar target item element has a
+    // primaryKey getter/setter which - however - only works on the UID.
     
     // enable or disable changelog
     logUserChanges: true,
@@ -671,7 +661,7 @@ var standardFolderList = {
             //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
             if (eas.tools.parentIsTrash(folderData) && folderData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
                 hideContextMenuDelete = false;
-                window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("name"), "eas");
+                window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("foldername"), "eas");
             }                
         }
         window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
@@ -708,7 +698,7 @@ var standardFolderList = {
      * @param folderData         [in] FolderData of the selected folder
      */ 
     getFolderDisplayName: function (folderData) {
-        let folderName = folderData.getFolderProperty("name");
+        let folderName = folderData.getFolderProperty("foldername");
         if (eas.tools.parentIsTrash(folderData)) folderName = tbSync.getString("recyclebin", "eas") + " | " + folderName;
         return folderName;
     },
@@ -733,6 +723,6 @@ Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/wbxmltools.js",
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/xmltools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tools.js", this, "UTF-8");
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/sync.js", this, "UTF-8");
-//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tasksync.js", this, "UTF-8");
-//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/calendarsync.js", this, "UTF-8");
-//Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/contactsync.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/contactsync.js", this.sync, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tasksync.js", this.sync, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/calendarsync.js", this.sync, "UTF-8");
