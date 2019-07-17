@@ -267,10 +267,8 @@ var sync = {
                 //sync folder
                 syncData.timeOfLastSync = syncData.currentFolderData.getFolderProperty( "lastsynctime") / 1000;
                 syncData.timeOfThisSync = (Date.now() / 1000) - 1;
-                console.log("syncData.type: " + syncData.type)
                 switch (syncData.type) {
                     case "Contacts": 
-                        console.log("CONTACT SYNC!")
                         await eas.sync.easFolder(syncData);
                         break;
 

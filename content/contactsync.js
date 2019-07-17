@@ -193,7 +193,7 @@ var Contacts = {
 
         //take care of photo
         if (data.Picture) {
-            abItem.addPhoto(id + '.jpg', syncdata.target.UID, eas.xmltools.nodeAsArray(data.Picture)[0]); //Kerio sends Picture as container
+            abItem.addPhoto(id + '.jpg', eas.xmltools.nodeAsArray(data.Picture)[0]); //Kerio sends Picture as container
         }
         
 
