@@ -10,22 +10,23 @@
 
 var network = {  
     
+    getEasURL: function(accountData) {
+        let protocol = (accountData.getAccountProperty("https") == "1") ? "https://" : "http://";
+        let h = protocol + accountData.getAccountProperty("host"); 
+        while (h.endsWith("/")) { h = h.slice(0,-1); }
+
+        if (h.endsWith("Microsoft-Server-ActiveSync")) return h;
+        return h + "/Microsoft-Server-ActiveSync"; 
+    },
+    
     getAuthData: function(accountData) {
-        let connection = {
-            get protocol() { 
-                return (accountData.getAccountProperty("https") == "1") ? "https://" : "http://" 
-            },
-
-            set host(newHost) {
-                accountData.setAccountProperty("host", newHost); 
-            },
-
+        let authData = {
+            // This is the host for the password manager, which could be different from
+            // the actual host property of the account. For EAS we want to couple the password
+            // with the ACCOUNT and not any sort of url, which could change via autodiscover
+            // at any time.
             get host() { 
-                let h = this.protocol + accountData.getAccountProperty("host"); 
-                while (h.endsWith("/")) { h = h.slice(0,-1); }
-
-                if (h.endsWith("Microsoft-Server-ActiveSync")) return h;
-                return h + "/Microsoft-Server-ActiveSync"; 
+                return "tbsync.accountid." + accountData.accountID;
             },
 
             get user() {
@@ -43,7 +44,7 @@ var network = {
                 accountData.setAccountProperty("user", newUsername);
             },          
         };
-        return connection;
+        return authData;
     },  
 
 
@@ -56,40 +57,81 @@ var network = {
 
 
     sendRequest: async function (wbxml, command, syncData, allowSoftFail = false) {
-        let rv;
-        const MAX_RETRY = 5;
+        let ALLOWED_RETRIES = {
+            PasswordPrompt : 3,
+            NetworkError : 1,
+        }
         
-        for (let i=0; i <= MAX_RETRY; i++) {
-            rv = await this.sendRequestPromise(wbxml, command, syncData, allowSoftFail);
+        let rv = {};
+        for (;;) {
 
-            if (rv.passwordPrompt) {
-                // If this is the final retry, abort.
-                if (i < MAX_RETRY) {
-                    let authData = eas.network.getAuthData(syncData.accountData);
-                    let promptData = {
-                        windowID: "auth:" + syncData.accountData.accountID,
-                        accountname: syncData.accountData.getAccountProperty("accountname"),
-                        usernameLocked: syncData.accountData.isConnected(),
-                        username: authData.user
-                    }
+            if (rv.errorType) {                
+                let retry = false;
+                
+                if (ALLOWED_RETRIES[rv.errorType] > 0) {
+                    ALLOWED_RETRIES[rv.errorType]--;
                     
-                    let syncState = syncData.getSyncState(); 
-                    syncData.setSyncState("passwordprompt");
-                    let credentials = await tbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
-                    if (credentials) {
-                        // Update login data and try again.
-                        authData.updateLoginData(credentials.username, credentials.password);
-                        syncData.setSyncState(syncState);
-                        continue;
+                    switch (rv.errorType) {
+                        
+                        case "PasswordPrompt": 
+                        {
+                            let authData = eas.network.getAuthData(syncData.accountData);
+                            let promptData = {
+                                windowID: "auth:" + syncData.accountData.accountID,
+                                accountname: syncData.accountData.getAccountProperty("accountname"),
+                                usernameLocked: syncData.accountData.isConnected(),
+                                username: authData.user
+                            }
+                            
+                            let syncState = syncData.getSyncState(); 
+                            syncData.setSyncState("passwordprompt");
+                            let credentials = await tbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                            if (credentials) {
+                                // Update login data and try again.
+                                authData.updateLoginData(credentials.username, credentials.password);
+                                syncData.setSyncState(syncState);
+                                retry = true;
+                            }
+                        }
+                        break;
+                        
+                        case "NetworkError":
+                        {
+                            // Could not connect to server. Can we rerun autodiscover?       
+                            if (syncData.accountData.getAccountProperty( "servertype") == "auto") {
+                                let errorcode = await eas.network.updateServerConnectionViaAutodiscover(syncData);
+                                console.log("ERR: " + errorcode);
+                                if (errorcode == 200) {                       
+                                    // autodiscover succeeded, retry with new data
+                                    retry = true;                            
+                                } else if (errorcode == 401) {
+                                    // manipulate rv to run password prompt
+                                    ALLOWED_RETRIES[rv.errorType]++;
+                                    rv.errorType = "PasswordPrompt";
+                                    rv.errorObj = eas.sync.finishSync("401", eas.flags.abortWithError);
+                                    continue; // with the next loop, skip connection to the server
+                                }
+                            }
+                        }
+                        break;
+                        
                     }
-                }
-                throw rv.error;
+                } 
+                
+                if (!retry) throw rv.errorObj;
             }
             
-            // No errors? No need to run again.
-            break;
-        }
-        return rv;
+            rv = await this.sendRequestPromise(wbxml, command, syncData, allowSoftFail);
+            
+            if (rv.errorType) {
+                // make sure, there is a valid ALLOWED_RETRIES setting for the returned error
+                if (rv.errorType && !ALLOWED_RETRIES.hasOwnProperty(rv.errorType)) {
+                    ALLOWED_RETRIES[rv.errorType] = 1;
+                }
+            } else {
+                return rv;
+            }
+        }        
     },
 
     sendRequestPromise: function (wbxml, command, syncData, allowSoftFail = false) {
@@ -103,13 +145,13 @@ var network = {
         let deviceType = syncData.accountData.getAccountProperty("devicetype");
         let deviceId = syncData.accountData.getAccountProperty("deviceId");
 
-        tbSync.dump("Sending (EAS v"+syncData.accountData.getAccountProperty("asversion") +")", "POST " + connection.host + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
+        tbSync.dump("Sending (EAS v"+syncData.accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
         
         return new Promise(function(resolve,reject) {
             // Create request handler - API changed with TB60 to new XMKHttpRequest()
             syncData.req = new XMLHttpRequest();
             syncData.req.mozBackgroundRequest = true;
-            syncData.req.open("POST", connection.host + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
+            syncData.req.open("POST", eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
             syncData.req.overrideMimeType("text/plain");
             syncData.req.setRequestHeader("User-Agent", userAgent);
             syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
@@ -139,12 +181,11 @@ var network = {
                 if (allowSoftFail) {
                     resolve("");
                 } else {
-                    let error = tbSync.createTCPErrorFromFailedXHR(syncData.req);
-                    if (!error) {
-                        reject(eas.sync.finishSync("networkerror", eas.flags.abortWithServerError));
-                    } else {
-                        reject(eas.sync.finishSync(error, eas.flags.abortWithServerError));
-                    }
+                    let error = tbSync.network.createTCPErrorFromFailedXHR(syncData.req) || "networkerror";
+                    let rv = {};
+                    rv.errorObj = eas.sync.finishSync(error, eas.flags.abortWithServerError);
+                    rv.errorType = "NetworkError";
+                    resolve(rv);
                 }
             };
 
@@ -169,8 +210,8 @@ var network = {
                     case 401: // AuthError
                     case 403: // Forbiddden (some servers send forbidden on AuthError, like Freenet)
                         let rv = {};
-                        rv.error = eas.sync.finishSync("401", eas.flags.abortWithError);
-                        rv.passwordPrompt = true;
+                        rv.errorObj = eas.sync.finishSync("401", eas.flags.abortWithError);
+                        rv.errorType = "PasswordPrompt";
                         resolve(rv);
                         break;
 
@@ -184,11 +225,10 @@ var network = {
                     case 451: // Redirect - update host and login manager 
                         let header = syncData.req.getResponseHeader("X-MS-Location");
                         let newHost = header.slice(header.indexOf("://") + 3, header.indexOf("/M"));
-                        let connection = eas.network.getAuthData(syncData.accountData);
 
-                        tbSync.dump("redirect (451)", "header: " + header + ", oldHost: " + connection.host + ", newHost: " + newHost);
+                        tbSync.dump("redirect (451)", "header: " + header + ", oldHost: " +syncData.accountData.getAccountProperty("host") + ", newHost: " + newHost);
 
-                        connection.host = newHost;
+                        syncData.accountData.setAccountProperty("host", newHost);
                         reject(eas.sync.finishSync(syncData.req.status, eas.flags.resyncAccount));
                         break;
                         
@@ -634,13 +674,13 @@ var network = {
         let authData = eas.network.getAuthData(syncData.accountData);
 
         let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
-        tbSync.dump("Sending", "OPTIONS " + authData.host);
+        tbSync.dump("Sending", "OPTIONS " + eas.network.getEasURL(syncData.accountData));
         
         return new Promise(function(resolve,reject) {
             // Create request handler - API changed with TB60 to new XMKHttpRequest()
             syncData.req = new XMLHttpRequest();
             syncData.req.mozBackgroundRequest = true;
-            syncData.req.open("OPTIONS", authData.host, true);
+            syncData.req.open("OPTIONS", eas.network.getEasURL(syncData.accountData), true);
             syncData.req.overrideMimeType("text/plain");
             syncData.req.setRequestHeader("User-Agent", userAgent);            
             syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
