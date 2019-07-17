@@ -269,12 +269,11 @@ var base = {
      */
     getDefaultFolderEntries: function () {
         let folder = {
-            //"useChangeLog" : "1", //log changes into changelog
             "type" : "",
             "synckey" : "",
             "targetColor" : "",
             "parentID" : "0",
-            "serverID" : "", //former folderID
+            "serverID" : "",
             };
         return folder;
     },
@@ -469,12 +468,9 @@ var base = {
 // This provider is using the standard "addressbook" targetType, so it must
 // implement the addressbook object.
 var addressbook = {
-
-    // make this an array and allow to specify multiple IDs which will all be generated automatically (X-DAV-HREF / X-DAV-UID) and the
-    // first one is used for changelog
     
     // define an item property, which should be used for the changelog
-    // basically your primary key for the abItem properties
+    // basically your primary key for an abItem
     // UID will be used, if nothing specified
     primaryKeyField: "X-EAS-SERVERID",
     
@@ -698,7 +694,7 @@ var standardFolderList = {
         return folderName;
     },
     
-    //if no attributes returned, bot shown (both)
+    //if no attributes returned, not shown (both)
     getAttributesRoAcl: function (folderData) {
         return {
             label: tbSync.getString("acl.readonly", "eas"),
