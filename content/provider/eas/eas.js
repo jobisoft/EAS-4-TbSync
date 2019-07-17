@@ -97,27 +97,3 @@ var eas = {
         
         return galdata;
     },
-
-
-
-    /**
-     * Is called if TbSync needs to synchronize an account.
-     *
-     * @param syncData      [in] object that contains the account and maybe the folder which needs to worked on
-     *                           you are free to add more fields to this object which you need (persistent) during sync
-     * @param job           [in] identifier about what is to be done, the standard job is "sync", you are free to add
-     *                           custom jobs like "deletefolder" via your own accountSettings.xul
-     */
-    start: async function (syncData, job)  {
-        let accountReSyncs = 0;
-        
-        do {
-            try {
-                accountReSyncs++;
-
-                if (accountReSyncs > 3) {
-                    throw eas.sync.finishSync("resync-loop", eas.flags.abortWithError);
-                }
-
-              
-    },
