@@ -537,7 +537,7 @@ var network = {
     },
 
     getItemEstimate: async function (syncData)  {
-        syncData.todo = -1;
+        syncData.progressData.reset();
         
         if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("GetItemEstimate")) {
             return; //do not throw, this is optional
@@ -589,7 +589,7 @@ var network = {
         let estimate = eas.xmltools.getWbxmlDataField(wbxmlData, "GetItemEstimate.Response.Collection.Estimate");
 
         if (status && status == "1") { //do not throw on error, with EAS v2.5 I get error 2 for tasks and calendars ???
-            syncData.todo = estimate;
+            syncData.progressData.reset(0, estimate);
         }
     },
 

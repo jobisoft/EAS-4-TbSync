@@ -8,17 +8,14 @@
  
  "use strict";
 
-eas.sync.Tasks = {
-
-    createItem : function () {
-        return cal.createTodo();
-    },
-
+var Tasks = {
 
     // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
-    setThunderbirdItemFromWbxml: function (item, data, id, syncdata) {
+    setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
+        let item = tbItem.nativeItem;
+
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
 
@@ -100,9 +97,11 @@ eas.sync.Tasks = {
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
-    getWbxmlFromThunderbirdItem: function (item, syncdata) {
+    getWbxmlFromThunderbirdItem: function (tbItem, syncdata) {
+        let item = tbItem.nativeItem;
+
         let asversion = syncdata.accountData.getAccountProperty("asversion");
-        let wbxml = tbSync.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
+        let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
 
         //Order of tags taken from: https://msdn.microsoft.com/en-us/library/dn338924(v=exchg.80).aspx
         

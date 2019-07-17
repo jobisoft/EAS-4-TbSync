@@ -114,8 +114,6 @@ var eas = {
         do {
             try {
                 accountReSyncs++;
-                syncData.todo = 0;
-                syncData.done = 0;
 
                 if (accountReSyncs > 3) {
                     throw eas.sync.finishSync("resync-loop", eas.flags.abortWithError);

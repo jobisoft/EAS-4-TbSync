@@ -8,17 +8,14 @@
  
  "use strict";
 
-eas.sync.Calendar = {
-
-    createItem : function () {
-        return cal.createEvent();
-    },
-
+var Calendar = {
 
     // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
-    setThunderbirdItemFromWbxml: function (item, data, id, syncdata) {
+    setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
+        
+        let item = tbItem.nativetem;
         
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
@@ -85,7 +82,7 @@ eas.sync.Calendar = {
 
         if (data.ResponseType) {
             //store original EAS value 
-            item.setProperty("X-EAS-ResponseType", xmltools.checkString(data.ResponseType, "0")); //some server send empty ResponseType ???
+            item.setProperty("X-EAS-ResponseType", eas.xmltools.checkString(data.ResponseType, "0")); //some server send empty ResponseType ???
         }
 
         //Attendees - remove all Attendees and re-add the ones from XML
@@ -173,7 +170,7 @@ eas.sync.Calendar = {
             else item.deleteProperty("STATUS");
             
             //we can also use the R information, to update our fallbackOrganizerName
-            if (!R && data.OrganizerName) syncdata.calendarObj.setProperty("fallbackOrganizerName", data.OrganizerName);            
+            if (!R && data.OrganizerName) syncdata.target.calendar.setProperty("fallbackOrganizerName", data.OrganizerName);            
         }
 
         //TODO: attachements (needs EAS 16.0!)
@@ -191,9 +188,11 @@ eas.sync.Calendar = {
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
-    getWbxmlFromThunderbirdItem: function (item, syncdata, isException = false) {
+    getWbxmlFromThunderbirdItem: function (tbItem, syncdata, isException = false) {
+        let item = tbItem.nativeItem;
+
         let asversion = syncdata.accountData.getAccountProperty("asversion");
-        let wbxml = tbSync.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
+        let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
         let nowDate = new Date();
 
         /*

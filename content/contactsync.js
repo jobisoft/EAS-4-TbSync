@@ -8,22 +8,10 @@
  
  "use strict";
 
-eas.sync.Contacts = {
+const eas = tbSync.providers.eas;
 
-    createItem : function (card = null) {
-        let item = {
-            get id() {return this.card.getProperty("TBSYNCID", "")},
-            set id(newId) {this.card.setProperty("TBSYNCID", newId)},
-            get icalString() {return this.card.displayName + " (" + this.card.firstName + ", " + this.card.lastName + ") <"+this.card.primaryEmail+">" },
-            clone: function () { return this; } //no real clone
-        };
-        
-        //actually add the card
-        item.card = card ? card : Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance(Components.interfaces.nsIAbCard);
-                    
-        return item;
-    },
-    
+var Contacts = {
+   
     //these functions handle categories compatible to the Category Manager add-on, which is compatible to lots of other sync tools (sogo, carddav-sync, roundcube)
     categoriesFromString: function (catString) {
         let catsArray = [];
@@ -123,10 +111,10 @@ eas.sync.Contacts = {
     // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
-    setThunderbirdItemFromWbxml: function (item, data, id, syncdata) {
+    setThunderbirdItemFromWbxml: function (abItem, data, id, syncdata) {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
 
-        item.card.setProperty("TBSYNCID", id);
+        abItem.primaryKey = id;
 
         //loop over all known TB properties which map 1-to-1 (two EAS sets Contacts and Contacts2)
         for (let set=0; set < 2; set++) {
@@ -135,7 +123,7 @@ eas.sync.Contacts = {
             for (let p=0; p < properties.length; p++) {            
                 let TB_property = properties[p];
                 let EAS_property = (set == 0) ? this.map_TB_properties_to_EAS_properties[TB_property] : this.map_TB_properties_to_EAS_properties2[TB_property];            
-                let value = xmltools.checkString(data[EAS_property]);
+                let value = eas.xmltools.checkString(data[EAS_property]);
                 
                 //is this property part of the send data?
                 if (value) {
@@ -153,10 +141,10 @@ eas.sync.Contacts = {
                             break;
                     }
                     
-                    item.card.setProperty(TB_property, value);
+                    abItem.setProperty(TB_property, value);
                 } else {
                     //clear
-                    item.card.deleteProperty(TB_property);
+                    abItem.deleteProperty(TB_property);
                 }
             }
         }
@@ -166,18 +154,18 @@ eas.sync.Contacts = {
         dates.push(["Birthday", "BirthDay", "BirthMonth", "BirthYear"]); //EAS, TB1, TB2, TB3
         dates.push(["Anniversary", "AnniversaryDay", "AnniversaryMonth", "AnniversaryYear"]);        
         for (let p=0; p < dates.length; p++) {
-            let value = xmltools.checkString(data[dates[p][0]]);
+            let value = eas.xmltools.checkString(data[dates[p][0]]);
             if (value == "") {
                 //clear
-                item.card.deleteProperty(dates[p][1]);
-                item.card.deleteProperty(dates[p][2]);
-                item.card.deleteProperty(dates[p][3]);
+                abItem.deleteProperty(dates[p][1]);
+                abItem.deleteProperty(dates[p][2]);
+                abItem.deleteProperty(dates[p][3]);
             } else {
                 //set
                 let dateObj = new Date(value);
-                item.card.setProperty(dates[p][3], dateObj.getFullYear().toString());
-                item.card.setProperty(dates[p][2], (dateObj.getMonth()+1).toString());
-                item.card.setProperty(dates[p][1], dateObj.getDate().toString());
+                abItem.setProperty(dates[p][3], dateObj.getFullYear().toString());
+                abItem.setProperty(dates[p][2], (dateObj.getMonth()+1).toString());
+                abItem.setProperty(dates[p][1], dateObj.getDate().toString());
             }
         }
 
@@ -189,32 +177,32 @@ eas.sync.Contacts = {
         streets.push(["BusinessAddressStreet", "WorkAddress", "WorkAddress2"]);
         streets.push(["OtherAddressStreet", "OtherAddress", "OtherAddress2"]);
         for (let p=0; p < streets.length; p++) {
-            let value = xmltools.checkString(data[streets[p][0]]);
+            let value = eas.xmltools.checkString(data[streets[p][0]]);
             if (value == "") {
                 //clear
-                item.card.deleteProperty(streets[p][1]);
-                item.card.deleteProperty(streets[p][2]);
+                abItem.deleteProperty(streets[p][1]);
+                abItem.deleteProperty(streets[p][2]);
             } else {
                 //set
                 let lines = value.split(seperator);
-                item.card.setProperty(streets[p][1], lines.shift());
-                item.card.setProperty(streets[p][2], lines.join(seperator));
+                abItem.setProperty(streets[p][1], lines.shift());
+                abItem.setProperty(streets[p][2], lines.join(seperator));
             }
         }
 
 
         //take care of photo
         if (data.Picture) {
-            tbSync.addphoto(id + '.jpg', syncdata.target.UID, item.card, xmltools.nodeAsArray(data.Picture)[0]); //Kerio sends Picture as container
+            abItem.addPhoto(id + '.jpg', syncdata.target.UID, eas.xmltools.nodeAsArray(data.Picture)[0]); //Kerio sends Picture as container
         }
         
 
         //take care of notes
         if (asversion == "2.5") {
-            item.card.setProperty("Notes", xmltools.checkString(data.Body));
+            abItem.setProperty("Notes", eas.xmltools.checkString(data.Body));
         } else {
-            if (data.Body && data.Body.Data) item.card.setProperty("Notes", xmltools.checkString(data.Body.Data));
-            else item.card.setProperty("Notes", "");
+            if (data.Body && data.Body.Data) abItem.setProperty("Notes", eas.xmltools.checkString(data.Body.Data));
+            else abItem.setProperty("Notes", "");
         }
 
 
@@ -228,22 +216,22 @@ eas.sync.Contacts = {
                 if (Array.isArray(data[containers[c][0]][containers[c][1]])) cats = data[containers[c][0]][containers[c][1]];
                 else cats.push(data[containers[c][0]][containers[c][1]]);
                 
-                item.card.setProperty(containers[c][0], this.categoriesToString(cats));
+                abItem.setProperty(containers[c][0], this.categoriesToString(cats));
             }
         }
 
         //take care of unmapable EAS option (Contact)
         for (let i=0; i < this.unused_EAS_properties.length; i++) {
-            if (data[this.unused_EAS_properties[i]]) item.card.setProperty("EAS-" + this.unused_EAS_properties[i], data[this.unused_EAS_properties[i]]);
+            if (data[this.unused_EAS_properties[i]]) abItem.setProperty("EAS-" + this.unused_EAS_properties[i], data[this.unused_EAS_properties[i]]);
         }
 
 
         //further manipulations
         if (syncdata.accountData.getAccountProperty("displayoverride") == "1") {
-           item.card.setProperty("DisplayName", item.card.getProperty("FirstName", "") + " " + item.card.getProperty("LastName", ""));
+           abItem.setProperty("DisplayName", abItem.getProperty("FirstName", "") + " " + abItem.getProperty("LastName", ""));
 
-            if (item.card.getProperty("DisplayName", "" ) == " " )
-                item.card.setProperty("DisplayName", item.card.getProperty("Company", item.card.getProperty("PrimaryEmail", "")));
+            if (abItem.getProperty("DisplayName", "" ) == " " )
+                abItem.setProperty("DisplayName", abItem.getProperty("Company", abItem.getProperty("PrimaryEmail", "")));
         }
         
     },
@@ -259,9 +247,9 @@ eas.sync.Contacts = {
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
-    getWbxmlFromThunderbirdItem: function (item, syncdata, isException = false) {
+    getWbxmlFromThunderbirdItem: function (abItem, syncdata, isException = false) {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
-        let wbxml = tbSync.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
+        let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
         let nowDate = new Date();
 
 
@@ -269,7 +257,7 @@ eas.sync.Contacts = {
         for (let p=0; p < this.TB_properties.length; p++) {            
             let TB_property = this.TB_properties[p];
             let EAS_property = this.map_TB_properties_to_EAS_properties[TB_property];            
-            let value = item.card.getProperty(TB_property,"");
+            let value = abItem.getProperty(TB_property,"");
             if (value) wbxml.atag(EAS_property, value);
         }
 
@@ -279,9 +267,9 @@ eas.sync.Contacts = {
         dates.push(["Birthday", "BirthDay", "BirthMonth", "BirthYear"]);
         dates.push(["Anniversary", "AnniversaryDay", "AnniversaryMonth", "AnniversaryYear"]);        
         for (let p=0; p < dates.length; p++) {
-            let year = item.card.getProperty(dates[p][3], "");
-            let month = item.card.getProperty(dates[p][2], "");
-            let day = item.card.getProperty(dates[p][1], "");
+            let year = abItem.getProperty(dates[p][3], "");
+            let month = abItem.getProperty(dates[p][2], "");
+            let day = abItem.getProperty(dates[p][1], "");
             if (year && month && day) {
                 //set
                 if (month.length<2) month="0"+month;
@@ -299,8 +287,8 @@ eas.sync.Contacts = {
         streets.push(["OtherAddressStreet", "OtherAddress", "OtherAddress2"]);        
         for (let p=0; p < streets.length; p++) {
             let values = [];
-            let s1 = item.card.getProperty(streets[p][1], "");
-            let s2 = item.card.getProperty(streets[p][2], "");
+            let s1 = abItem.getProperty(streets[p][1], "");
+            let s2 = abItem.getProperty(streets[p][2], "");
             if (s1) values.push(s1);
             if (s2) values.push(s2);
             if (values.length>0) wbxml.atag(streets[p][0], values.join(seperator));            
@@ -308,14 +296,14 @@ eas.sync.Contacts = {
 
 
         //take care of photo
-        if (item.card.getProperty("PhotoType", "") == "file") {
-            wbxml.atag("Picture", tbSync.getphoto(item.card));                    
+        if (abItem.getProperty("PhotoType", "") == "file") {
+            wbxml.atag("Picture", abItem.getPhoto());                    
         }
         
         
         //take care of unmapable EAS option
         for (let i=0; i < this.unused_EAS_properties.length; i++) {
-            let value = item.card.getProperty("EAS-" + this.unused_EAS_properties[i], "");
+            let value = abItem.getProperty("EAS-" + this.unused_EAS_properties[i], "");
             if (value) wbxml.atag(this.unused_EAS_properties[i], value);
         }
 
@@ -325,7 +313,7 @@ eas.sync.Contacts = {
         containers.push(["Categories", "Category"]);
         containers.push(["Children", "Child"]);
         for (let c=0; c < containers.length; c++) {
-            let cats = item.card.getProperty(containers[c][0], "");
+            let cats = abItem.getProperty(containers[c][0], "");
             if (cats) {
                 let catsArray = this.categoriesFromString(cats);
                 wbxml.otag(containers[c][0]);
@@ -335,7 +323,7 @@ eas.sync.Contacts = {
         }
 
         //take care of notes - SWITCHING TO AirSyncBase (if 2.5, we still need Contact group here!)
-        let description = item.card.getProperty("Notes", "");
+        let description = abItem.getProperty("Notes", "");
         if (asversion == "2.5") {
             wbxml.atag("Body", description);
         } else {
@@ -355,7 +343,7 @@ eas.sync.Contacts = {
         for (let p=0; p < this.TB_properties2.length; p++) {            
             let TB_property = this.TB_properties2[p];
             let EAS_property = this.map_TB_properties_to_EAS_properties2[TB_property];
-            let value = item.card.getProperty(TB_property,"");
+            let value = abItem.getProperty(TB_property,"");
             if (value) wbxml.atag(EAS_property, value);
         }
 
@@ -365,5 +353,5 @@ eas.sync.Contacts = {
     
 }
 
-eas.sync.Contacts.TB_properties = Object.keys(eas.sync.Contacts.map_TB_properties_to_EAS_properties);
-eas.sync.Contacts.TB_properties2 = Object.keys(eas.sync.Contacts.map_TB_properties_to_EAS_properties2);
+Contacts.TB_properties = Object.keys(Contacts.map_TB_properties_to_EAS_properties);
+Contacts.TB_properties2 = Object.keys(Contacts.map_TB_properties_to_EAS_properties2);
