@@ -108,7 +108,7 @@ var network = {
                                     // manipulate rv to run password prompt
                                     ALLOWED_RETRIES[rv.errorType]++;
                                     rv.errorType = "PasswordPrompt";
-                                    rv.errorObj = eas.sync.finishSync("401", eas.flags.abortWithError);
+                                    rv.errorObj = eas.sync.finish("error", "401");
                                     continue; // with the next loop, skip connection to the server
                                 }
                             }
@@ -173,7 +173,7 @@ var network = {
                 if (allowSoftFail) {
                     resolve("");
                 } else {
-                    reject(eas.sync.finishSync("timeout", eas.flags.abortWithError));
+                    reject(eas.sync.finish("error", "timeout"));
                 }
             };
 
@@ -183,7 +183,7 @@ var network = {
                 } else {
                     let error = tbSync.network.createTCPErrorFromFailedXHR(syncData.req) || "networkerror";
                     let rv = {};
-                    rv.errorObj = eas.sync.finishSync(error, eas.flags.abortWithServerError);
+                    rv.errorObj = eas.sync.finish("error", error);
                     rv.errorType = "NetworkError";
                     resolve(rv);
                 }
@@ -201,7 +201,7 @@ var network = {
                         //What to do on error? IS this an error? Yes!
                         if (!allowSoftFail && response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
                             tbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + syncData.req.status + ", ready state = " + syncData.req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
-                            reject(eas.sync.finishSync("invalid"));
+                            reject(eas.sync.finish("warning", "invalid"));
                         } else {
                             resolve(response);
                         }
@@ -210,7 +210,7 @@ var network = {
                     case 401: // AuthError
                     case 403: // Forbiddden (some servers send forbidden on AuthError, like Freenet)
                         let rv = {};
-                        rv.errorObj = eas.sync.finishSync("401", eas.flags.abortWithError);
+                        rv.errorObj = eas.sync.finish("error", "401");
                         rv.errorType = "PasswordPrompt";
                         resolve(rv);
                         break;
@@ -219,7 +219,7 @@ var network = {
                         //enable provision
                         syncData.accountData.setAccountProperty("provision","1");
                         syncData.accountData.resetAccountProperty("policykey");
-                        reject(eas.sync.finishSync(syncData.req.status, eas.flags.resyncAccount));
+                        reject(eas.sync.finish("rerun", syncData.req.status));
                         break;
 
                     case 451: // Redirect - update host and login manager 
@@ -229,14 +229,14 @@ var network = {
                         tbSync.dump("redirect (451)", "header: " + header + ", oldHost: " +syncData.accountData.getAccountProperty("host") + ", newHost: " + newHost);
 
                         syncData.accountData.setAccountProperty("host", newHost);
-                        reject(eas.sync.finishSync(syncData.req.status, eas.flags.resyncAccount));
+                        reject(eas.sync.finish("rerun", syncData.req.status));
                         break;
                         
                     default:
                         if (allowSoftFail) {
                             resolve("");
                         } else {
-                            reject(eas.sync.finishSync("httperror::" + syncData.req.status, eas.flags.abortWithError));
+                            reject(eas.sync.finish("error", "httperror::" + syncData.req.status));
                         }
                 }
             };
@@ -298,20 +298,20 @@ var network = {
         //check for empty wbxml
         if (wbxml.length === 0) {
             if (allowEmptyResponse) return null;
-            else throw eas.sync.finishSync("empty-response");
+            else throw eas.sync.finish("warning", "empty-response");
         }
 
         //convert to save xml (all special chars in user data encoded by encodeURIComponent) and check for parse errors
         let xml = eas.wbxmltools.convert2xml(wbxml);
         if (xml === false) {
-            throw eas.sync.finishSync("wbxml-parse-error");
+            throw eas.sync.finish("warning", "wbxml-parse-error");
         }
         
         //retrieve data and check for empty data (all returned data fields are already decoded by decodeURIComponent)
         let wbxmlData = eas.xmltools.getDataFromXMLString(xml);
         if (wbxmlData === null) {
             if (allowEmptyResponse) return null;
-            else throw eas.sync.finishSync("response-contains-no-data");
+            else throw eas.sync.finish("warning", "response-contains-no-data");
         }
         
         //debug
@@ -327,7 +327,7 @@ var network = {
             syncData.synckey = synckey;
             syncData.currentFolderData.setFolderProperty("synckey", synckey);
         } else {
-            throw eas.sync.finishSync("wbxmlmissingfield::Sync.Collections.Collection.SyncKey", eas.flags.abortWithError);
+            throw eas.sync.finish("error", "wbxmlmissingfield::Sync.Collections.Collection.SyncKey");
         }
     },
 
@@ -344,7 +344,7 @@ var network = {
             let mainStatus = eas.xmltools.getWbxmlDataField(wbxmlData, type + "." + elements[elements.length-1]);
             if (mainStatus === false) {
                 //both possible status fields are missing, abort
-                throw eas.sync.finishSync("wbxmlmissingfield::" + fullpath, null, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                throw eas.sync.finish("warning", "wbxmlmissingfield::" + fullpath, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
             } else {
                 //the alternative status could be extracted
                 status = mainStatus;
@@ -366,14 +366,16 @@ var network = {
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
-                throw eas.sync.finishSync(statusType, eas.flags.resyncFolder, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                tbSync.errorlog.add("warning", syncData.errorInfo, "Forced Folder Resync", "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                syncData.currentFolderData.remove();
+                throw eas.sync.finish("resyncFolder", statusType);
             
             case "Sync.4": //Malformed request
             case "Sync.5": //Temporary server issues or invalid item
             case "Sync.6": //Invalid item
             case "Sync.8": //Object not found
                 if (allowSoftFail) return statusType;
-                throw eas.sync.finishSync(statusType, null, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                throw eas.sync.finish("warning", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
 
             case "Sync.7": //The client has changed an item for which the conflict policy indicates that the server's changes take precedence.
             case "Sync.9": //User account could be out of disk space, also send if no write permission (TODO)
@@ -381,24 +383,20 @@ var network = {
 
             case "FolderDelete.3": // special system folder - fatal error
             case "FolderDelete.6": // error on server
-                throw eas.sync.finishSync(statusType, null, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                throw eas.sync.finish("warning", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
 
             case "FolderDelete.4": // folder does not exist - resync ( we allow delete only if folder is not subscribed )
             case "FolderDelete.9": // invalid synchronization key - resync
             case "FolderSync.9": // invalid synchronization key - resync
             case "Sync.12": // folder hierarchy changed
                 {
-                    let folders = tbSync.db.getFolders(syncData.account);
-                    for (let f in folders) {
-                        //the folder itself is NOT deleted (4th arg is false)
-                        tbSync.takeTargetOffline("eas", folders[f], "[forced account resync]", false);
-                        tbSync.db.setFolderSetting(folders[f].account, folders[f].folderID, "cached", "1");
+                    let folders = syncData.accountData.getFolders();
+                    for (let folder of folders) {
+                        folder.remove();
                     }		    
-                    //folder is no longer there, unset current folder
-                    syncData.folderID = "";
-                    //reset account
-                    eas.onEnableAccount(syncData.account);
-                    throw eas.sync.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                    // reset account
+                    eas.onEnableAccount(syncData.accountData);
+                    throw eas.sync.finish("rerun", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 }
         }
         
@@ -408,7 +406,7 @@ var network = {
             case "101": //invalid content
             case "102": //invalid wbxml
             case "103": //invalid xml
-                throw eas.sync.finishSync("global." + status, eas.flags.abortWithError, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                throw eas.sync.finish("error", "global." + status, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
             
             case "109": descriptions["109"]="DeviceTypeMissingOrInvalid";
             case "112": descriptions["112"]="ActiveDirectoryAccessDenied";
@@ -418,11 +416,19 @@ var network = {
             case "129": descriptions["129"]="DeviceIsBlockedForThisUser";
             case "130": descriptions["120"]="AccessDenied";
             case "131": descriptions["131"]="AccountDisabled";
-                throw eas.sync.finishSync("global.clientdenied"+ "::" + status + "::" + descriptions[status], eas.flags.abortWithError);
+                throw eas.sync.finish("error", "global.clientdenied"+ "::" + status + "::" + descriptions[status]);
 
             case "110": //server error - resync
-                throw eas.sync.finishSync(statusType, eas.flags.resyncAccount, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
-
+                {
+                    let folders = syncData.accountData.getFolders();
+                    for (let folder of folders) {
+                        folder.remove();
+                    }		    
+                    // reset account
+                    eas.onEnableAccount(syncData.accountData);
+                    throw eas.sync.finish("rerun", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                }
+                
             case "141": // The device is not provisionable
             case "142": // DeviceNotProvisioned
             case "143": // PolicyRefresh
@@ -430,11 +436,11 @@ var network = {
                 //enable provision
                 syncData.accountData.setAccountProperty("provision","1");
                 syncData.accountData.resetAccountProperty("policykey");
-                throw eas.sync.finishSync(statusType, eas.flags.resyncAccount);
+                throw eas.sync.finish("rerun", statusType);
             
             default:
                 if (allowSoftFail) return statusType;
-                throw eas.sync.finishSync(statusType, eas.flags.abortWithError, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                throw eas.sync.finish("error", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
 
         }		
     },
@@ -501,35 +507,35 @@ var network = {
             let policyStatus = eas.xmltools.getWbxmlDataField(wbxmlData, "Provision.Policies.Policy.Status");
             let provisionStatus = eas.xmltools.getWbxmlDataField(wbxmlData, "Provision.Status");
             if (provisionStatus === false) {
-                throw eas.sync.finishSync("wbxmlmissingfield::Provision.Status", eas.flags.abortWithError);
+                throw eas.sync.finish("error", "wbxmlmissingfield::Provision.Status");
             } else if (provisionStatus != "1") {
                 //dump policy status as well
                 if (policyStatus) tbSync.dump("PolicyKey","Received policy status: " + policyStatus);
-                throw eas.sync.finishSync("provision::" + provisionStatus, eas.flags.abortWithError);
+                throw eas.sync.finish("error", "provision::" + provisionStatus);
             }
 
             //reaching this point: provision status was ok
             let policykey = eas.xmltools.getWbxmlDataField(wbxmlData,"Provision.Policies.Policy.PolicyKey");
             switch (policyStatus) {
                 case false:
-                    throw eas.sync.finishSync("wbxmlmissingfield::Provision.Policies.Policy.Status", eas.flags.abortWithError);
+                    throw eas.sync.finish("error", "wbxmlmissingfield::Provision.Policies.Policy.Status");
 
                 case "2":
                     //server does not have a policy for this device: disable provisioning
                     syncData.accountData.setAccountProperty("provision","0")
                     syncData.accountData.resetAccountProperty("policykey");
-                    throw eas.sync.finishSync("NoPolicyForThisDevice", eas.flags.resyncAccount);
+                    throw eas.sync.finish("rerun", "NoPolicyForThisDevice");
 
                 case "1":
                     if (policykey === false) {
-                        throw eas.sync.finishSync("wbxmlmissingfield::Provision.Policies.Policy.PolicyKey", eas.flags.abortWithError);
+                        throw eas.sync.finish("error", "wbxmlmissingfield::Provision.Policies.Policy.PolicyKey");
                     } 
                     tbSync.dump("PolicyKey","Received policykey (" + loop + "): " + policykey);
                     syncData.accountData.setAccountProperty("policykey", policykey);
                     break;
 
                 default:
-                    throw eas.sync.finishSync("policy." + policyStatus, eas.flags.abortWithError);
+                    throw eas.sync.finish("error", "policy." + policyStatus);
             }
 
             //build WBXML to acknowledge provision
@@ -700,7 +706,7 @@ var network = {
 
                 switch(syncData.req.status) {
                     case 401: // AuthError
-                            reject(eas.sync.finishSync("401", eas.flags.abortWithError));
+                            reject(eas.sync.finish("error", "401"));
                         break;
 
                     case 200:

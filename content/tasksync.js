@@ -15,7 +15,8 @@ var Tasks = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
         let item = tbItem.nativeItem;
-
+        let cal = tbSync.lightning.cal;
+        
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
 

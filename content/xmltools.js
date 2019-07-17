@@ -78,19 +78,19 @@ var xmltools = {
             //however, domparser does not throw an error, it returns an error document
             //https://developer.mozilla.org/de/docs/Web/API/DOMParser
             //just in case
-            throw eas.finishSync("mailformed-xml", eas.flags.abortWithError);
+            throw eas.finish("error", "mailformed-xml");
         }
 
         //check if xml is error document
         if (xml.documentElement.nodeName == "parsererror") {
             tbSync.dump("BAD XML", "The above XML and WBXML could not be parsed correctly, something is wrong.");
-            throw eas.finishSync("mailformed-xml", eas.flags.abortWithError);
+            throw eas.finish("error", "mailformed-xml");
         }
 
         try {
             data = this.getDataFromXML(xml);
         } catch (e) {
-            throw eas.finishSync("mailformed-data", eas.flags.abortWithError);
+            throw eas.finish("error", "mailformed-data");
         }
         
         return data;

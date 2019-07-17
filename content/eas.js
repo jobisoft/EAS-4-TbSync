@@ -16,11 +16,6 @@ eas.prefs = Services.prefs.getBranch("extensions.eas4tbsync.");
 //use flags instead of strings to avoid errors due to spelling errors
 eas.flags = Object.freeze({
     allowEmptyResponse: true, 
-    syncNextFolder: "syncNextFolder",
-    resyncFolder: "resyncFolder", //will take down target and do a fresh sync
-    resyncAccount: "resyncAccount", //will loop once more, but will not do any special actions
-    abortWithError: "abortWithError",
-    abortWithServerError: "abortWithServerError",
 });
 
 eas.windowsTimezoneMap = {};

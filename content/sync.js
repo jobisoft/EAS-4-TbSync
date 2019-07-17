@@ -17,18 +17,48 @@
 
 var sync = {
 
-    finishSync: function (msg = "", type = null, details = "") {
-        let e = new Error(); 
-        e.name = "eas4tbsync";
-        e.message = tbSync.StatusData.WARNING + ": " + msg.toString() + " (" + details.toString() + ")";
-        e.failed = (msg != "");
+    
         
-        if (e.failed) {
-            e.statusData = new tbSync.StatusData(tbSync.StatusData.WARNING, msg.toString(), details.toString());
-        } else {
-            e.statusData = new tbSync.StatusData(tbSync.StatusData.SUCCESS, msg.toString());
+    finish: function (aStatus = "", msg = "", details = "") {
+        let status = tbSync.StatusData.SUCCESS
+        switch (aStatus) {
+            // custom status types
+            case "resyncFolder":
+                status = aStatus;
+                break;
+            
+            case "":
+            case "ok":
+                status = tbSync.StatusData.SUCCESS;
+                break;
+            
+            case "info":
+                status = tbSync.StatusData.INFO;
+                break;
+            
+            case "rerun":
+                status = tbSync.StatusData.RERUN;
+                break;
+            
+            case "warning":
+                status = tbSync.StatusData.WARNING;
+                break;
+            
+            case "error":
+                status = tbSync.StatusData.ERROR;
+                break;
+
+            default:
+                console.log("TbSync/EAS: Unknown status <"+aStatus+">");
+                status = tbSync.StatusData.ERROR;
+                break;
         }
         
+        let e = new Error(); 
+        e.name = "eas4tbsync";
+        e.message = status.toUpperCase() + ": " + msg.toString() + " (" + details.toString() + ")";
+        e.failed = (status != tbSync.StatusData.SUCCESS);
+        e.statusData = new tbSync.StatusData(status, msg.toString(), details.toString());        
         return e; 
     }, 
 
@@ -51,12 +81,12 @@ var sync = {
                 if (allowedVersionsArray.includes("14.0")) syncData.accountData.setAccountProperty("asversion", "14.0");
                 else if (allowedVersionsArray.includes("2.5")) syncData.accountData.setAccountProperty("asversion", "2.5");
                 else if (allowedVersionsString == "") {
-                    throw eas.sync.finishSync("InvalidServerOptions", eas.flags.abortWithError);
+                    throw eas.sync.finish("error", "InvalidServerOptions");
                 } else {
-                    throw eas.sync.finishSync("nosupportedeasversion::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
+                    throw eas.sync.finish("error", "nosupportedeasversion::"+allowedVersionsArray.join(", "));
                 }
             } else if (allowedVersionsString != "" && !allowedVersionsArray.includes(asversionselected)) {
-                throw eas.sync.finishSync("notsupportedeasversion::"+asversionselected+"::"+allowedVersionsArray.join(", "), eas.flags.abortWithError);
+                throw eas.sync.finish("error", "notsupportedeasversion::"+asversionselected+"::"+allowedVersionsArray.join(", "));
             } else {
                 //just use the value set by the user
                 syncData.accountData.setAccountProperty("asversion", asversionselected);
@@ -71,7 +101,6 @@ var sync = {
         //set device info
         await eas.network.setDeviceInformation (syncData);
 
-        //scan all remote folders and set the enabled ones to pending
         syncData.setSyncState("prepare.request.folders"); 
         let foldersynckey = syncData.accountData.getAccountProperty("foldersynckey");
 
@@ -93,7 +122,7 @@ var sync = {
         if (synckey) {
             syncData.accountData.setAccountProperty("foldersynckey", synckey);
         } else {
-            throw eas.sync.finishSync("wbxmlmissingfield::FolderSync.SyncKey", eas.flags.abortWithError);
+            throw eas.sync.finish("error", "wbxmlmissingfield::FolderSync.SyncKey");
         }
         
         //if we reach this point, wbxmlData contains FolderSync node, so the next "if" will not fail with an javascript error, 
@@ -185,7 +214,7 @@ var sync = {
         }
         
         if (!syncData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
-            throw eas.sync.finishSync("notsupported::FolderDelete", eas.flags.abortWithError);
+            throw eas.sync.finish("error", "notsupported::FolderDelete");
         }
 
         syncData.setSyncState("prepare.request.deletefolder");
@@ -212,7 +241,7 @@ var sync = {
             syncData.accountData.setAccountProperty("foldersynckey", synckey);
             syncData.currentFolderData.remove();
         } else {
-            throw eas.sync.finishSync("wbxmlmissingfield::FolderDelete.SyncKey", eas.flags.abortWithError);
+            throw eas.sync.finish("error", "wbxmlmissingfield::FolderDelete.SyncKey");
         }
     },
 
@@ -221,68 +250,94 @@ var sync = {
 
 
     singleFolder: async function (syncData)  {
-        let folderReSyncs = 1;
+        let folderReSyncs = 0;
         
         do {                
-                if (folderReSyncs > 3) {
-                    throw eas.sync.finishSync("resync-loop");
-                }
+            let rerun = false;
+        
+            folderReSyncs++;
+            if (folderReSyncs > 2) {
+                throw eas.sync.finish("warning", "resync-loop");
+            }
 
-                // add target to syncData (getTarget() will throw "nolightning" if lightning missing)
-                try {
-                    // accessing the target for the first time will check if it is avail and if not will create it (if possible)
-                    syncData.target = syncData.currentFolderData.targetData.getTarget();
-                } catch (e) {
-                    throw eas.sync.finishSync(e.message);
-                }
+            // add target to syncData (getTarget() will throw "nolightning" if lightning missing)
+            try {
+                // accessing the target for the first time will check if it is avail and if not will create it (if possible)
+                syncData.target = syncData.currentFolderData.targetData.getTarget();
+            } catch (e) {
+                throw eas.sync.finish("warning", e.message);
+            }
 
-                //get syncData type, which is also used in WBXML for the CLASS element
-                syncData.type = null;
-                switch (syncData.currentFolderData.getFolderProperty("type")) {
-                    case "9": //contact
-                    case "14": 
-                        syncData.type = "Contacts";
-                        break;
-                    case "8": //event
-                    case "13":
-                        syncData.type = "Calendar";
-                        break;
-                    case "7": //todo
-                    case "15":
-                        syncData.type = "Tasks";
-                        break;
-                    default:
-                         throw eas.sync.finishSync("skipped");
-                        break;
-                }
+            //get syncData type, which is also used in WBXML for the CLASS element
+            syncData.type = null;
+            switch (syncData.currentFolderData.getFolderProperty("type")) {
+                case "9": //contact
+                case "14": 
+                    syncData.type = "Contacts";
+                    break;
+                case "8": //event
+                case "13":
+                    syncData.type = "Calendar";
+                    break;
+                case "7": //todo
+                case "15":
+                    syncData.type = "Tasks";
+                    break;
+                default:
+                     throw eas.sync.finish("info", "skipped");
+                    break;
+            }
 
-                syncData.setSyncState("preparing");
-                
-                //get synckey if needed
-                syncData.synckey = syncData.currentFolderData.getFolderProperty("synckey");                
-                if (syncData.synckey == "") {
-                    await eas.network.getSynckey(syncData);
-                }
-                
-                //sync folder
-                syncData.timeOfLastSync = syncData.currentFolderData.getFolderProperty( "lastsynctime") / 1000;
-                syncData.timeOfThisSync = (Date.now() / 1000) - 1;
+            syncData.setSyncState("preparing");
+            
+            //get synckey if needed
+            syncData.synckey = syncData.currentFolderData.getFolderProperty("synckey");                
+            if (syncData.synckey == "") {
+                await eas.network.getSynckey(syncData);
+            }
+            
+            //sync folder
+            syncData.timeOfLastSync = syncData.currentFolderData.getFolderProperty( "lastsynctime") / 1000;
+            syncData.timeOfThisSync = (Date.now() / 1000) - 1;
+            
+            let lightningBatch = false;
+            let lightningReadOnly = "";
+            let error = null;
+            
+            try {
                 switch (syncData.type) {
                     case "Contacts": 
                         await eas.sync.easFolder(syncData);
                         break;
 
                     case "Calendar":
-                    case "Tasks":                     
-                        //syncData.target.calendar.startBatch();
+                    case "Tasks":                            
                         //save current value of readOnly (or take it from the setting)
-                        //calendarReadOnlyStatus = syncData.target.calendar.getProperty("readOnly") || (syncData.currentFolderData.getFolderProperty( "downloadonly") == "1");                       
-                        //syncData.target.calendar.setProperty("readOnly", false);
-                        //await eas.sync.easFolder(syncData);
+                        lightningReadOnly = syncData.target.calendar.getProperty("readOnly") || (syncData.currentFolderData.getFolderProperty( "downloadonly") == "1");                       
+                        syncData.target.calendar.setProperty("readOnly", false);
+                        
+                        lightningBatch = true;
+                        syncData.target.calendar.startBatch();
+
+                        await eas.sync.easFolder(syncData);
                         break;
                 }
-                break;
-
+            } catch (report) {
+                //Filter out custom status types, which must be handled here and may not be passed on (because unknown to the outside)
+                if (report.name == "eas4tbsync" && report.statusData.type == "resyncFolder") {
+                    rerun = true;
+                }  else {
+                    error = report;
+                }
+            }
+            
+            if (lightningBatch) {
+                syncData.target.calendar.endBatch();
+                syncData.target.calendar.setProperty("readOnly", lightningReadOnly);
+            }
+            
+            if (error) throw error;
+            if (!rerun) break;
         }
         while (true);
     },
@@ -618,7 +673,7 @@ wbxml.ctag();*/
         
         //was there an error?
         if (syncData.failedItems.length > 0) {
-            throw eas.finishSync("ServerRejectedSomeItems::" + syncData.failedItems.length);                            
+            throw eas.finish("warning", "ServerRejectedSomeItems::" + syncData.failedItems.length);                            
         }
         
     },
@@ -795,15 +850,18 @@ wbxml.ctag();*/
         for (let i=0; i<changes.length; i++) {
             let item = null;
             let ServerId = changes[i].id;
+            syncData.target.removeItemFromChangeLog(ServerId);
             let foundItem = await syncData.target.getItem(ServerId);
             if (foundItem) { //delete item with that ServerId
                 await syncData.target.deleteItem(foundItem);
-            } else {
-                syncData.target.removeItemFromChangeLog(ServerId);
             }
             syncData.progressData.inc();
         }
-        throw tbSync.eas.finishSync("RevertViaFolderResync", eas.flags.resyncFolder); //This will resync a fresh copy from the server
+        
+        //This will resync all missing items fresh from the server
+        tbSync.errorlog.add("info", syncData.errorInfo, "RevertViaFolderResync");
+        eas.onResetTarget(syncData.currentFolderData);
+        throw tbSync.eas.finish("resyncFolder", "RevertViaFolderResync"); 
     },
 
 
@@ -1014,16 +1072,16 @@ wbxml.ctag();*/
             let easPropValue = eas.xmltools.checkString(data[easProp]);
             item.setProperty("X-EAS-" + easProp, easPropValue);
             //map EAS value to TB value  (use setCalItemProperty if there is one option which can unset/delete the property)
-            tbSync.setCalItemProperty(item, tbProp, eas.sync.MAP_EAS2TB[easProp][easPropValue]);
+            eas.tools.setCalItemProperty(item, tbProp, eas.sync.MAP_EAS2TB[easProp][easPropValue]);
         }
     },
 
     mapThunderbirdPropertyToEas: function (tbProp, easProp, item) {
-        if (item.hasProperty("X-EAS-" + easProp) && tbSync.getCalItemProperty(item, tbProp) == eas.sync.MAP_EAS2TB[easProp][item.getProperty("X-EAS-" + easProp)]) {
+        if (item.hasProperty("X-EAS-" + easProp) && eas.tools.getCalItemProperty(item, tbProp) == eas.sync.MAP_EAS2TB[easProp][item.getProperty("X-EAS-" + easProp)]) {
             //we can use our stored EAS value, because it still maps to the current TB value
             return item.getProperty("X-EAS-" + easProp);
         } else {
-            return eas.sync.MAP_TB2EAS[tbProp][tbSync.getCalItemProperty(item, tbProp)]; 
+            return eas.sync.MAP_TB2EAS[tbProp][eas.tools.getCalItemProperty(item, tbProp)]; 
         }
     },
 

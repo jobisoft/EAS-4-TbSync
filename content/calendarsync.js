@@ -15,7 +15,8 @@ var Calendar = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
         
-        let item = tbItem.nativetem;
+        let item = tbItem.nativeItem;
+        let cal = tbSync.lightning.cal;
         
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
@@ -92,7 +93,7 @@ var Calendar = {
             if (Array.isArray(data.Attendees.Attendee)) att = data.Attendees.Attendee;
             else att.push(data.Attendees.Attendee);
             for (let i = 0; i < att.length; i++) {
-                if (att[i].Email && tbSync.isString(att[i].Email) && att[i].Name) { //req.
+                if (att[i].Email && eas.tools.isString(att[i].Email) && att[i].Name) { //req.
 
                     let attendee = cal.createAttendee();
 
@@ -140,7 +141,7 @@ var Calendar = {
             }
         }
         
-        if (data.OrganizerName && data.OrganizerEmail && tbSync.isString(data.OrganizerEmail)) {
+        if (data.OrganizerName && data.OrganizerEmail && eas.tools.isString(data.OrganizerEmail)) {
             //Organizer
             let organizer = cal.createAttendee();
             organizer.id = cal.email.prependMailTo(data.OrganizerEmail);

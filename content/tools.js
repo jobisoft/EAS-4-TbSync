@@ -10,6 +10,20 @@
 
 var tools = {
 
+    setCalItemProperty: function (item, prop, value) {
+        if (value == "unset") item.deleteProperty(prop);
+        else item.setProperty(prop, value);
+    },
+    
+    getCalItemProperty: function (item, prop) {
+        if (item.hasProperty(prop)) return item.getProperty(prop);
+        else return "unset";
+    },
+
+    isString: function (s) {
+        return (typeof s == 'string' || s instanceof String);
+    },
+
     getIdentityKey: function (email) {
         let acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
         let accounts = acctMgr.accounts;
