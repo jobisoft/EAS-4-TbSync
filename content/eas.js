@@ -717,11 +717,11 @@ var standardFolderList = {
     },
 }
 
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/network.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/wbxmltools.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/xmltools.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tools.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/sync.js", this, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/contactsync.js", this.sync, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/tasksync.js", this.sync, "UTF-8");
-Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/calendarsync.js", this.sync, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/network.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/wbxmltools.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/xmltools.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/tools.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/sync.js", this, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/contactsync.js", this.sync, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/tasksync.js", this.sync, "UTF-8");
+Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/calendarsync.js", this.sync, "UTF-8");
