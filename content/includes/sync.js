@@ -1285,7 +1285,7 @@ wbxml.ctag();*/
                     }
                     else {
                         let replacement = item.recurrenceInfo.getOccurrenceFor(dateTime);
-                        eas.sync.Calendar.setThunderbirdItemFromWbxml(replacement, exception, replacement.id, syncData);
+                        eas.sync[syncData.type].setThunderbirdItemFromWbxml(replacement, exception, replacement.id, syncData);
                         // Reminders should carry over from parent, but setThunderbirdItemFromWbxml clears all alarms
                         if (!exception.Reminder && item.getAlarms({}).length) {
                             replacement.addAlarm(item.getAlarms({})[0]);

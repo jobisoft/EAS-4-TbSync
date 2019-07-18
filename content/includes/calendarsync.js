@@ -8,6 +8,9 @@
  
  "use strict";
 
+const cal = tbSync.lightning.cal;
+const ICAL = tbSync.lightning.ICAL;
+
 var Calendar = {
 
     // --------------------------------------------------------------------------- //
@@ -15,8 +18,7 @@ var Calendar = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
         
-        let item = tbItem.nativeItem;
-        let cal = tbSync.lightning.cal;
+        let item = tbItem instanceof tbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
         
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
