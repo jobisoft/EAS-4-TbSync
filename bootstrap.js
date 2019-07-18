@@ -24,7 +24,7 @@ let onInitDoneObserver = {
         
         //load this provider add-on into TbSync
         if (valid) {
-            await tbSync.providers.loadProvider(thisID, "eas", "chrome://eas4tbsync/content/eas.js");
+            await tbSync.providers.loadProvider(thisID, "eas", "chrome://eas4tbsync/content/provider.js");
         }
     }
 }
