@@ -131,18 +131,24 @@ var tbSyncAbServerSearch = {
   clearServerSearchResults: function (window) {
     let selectedDirectoryURI = window.GetSelectedDirectory();
     if (selectedDirectoryURI == "moz-abdirectory://?") return; //global search not yet(?) supported
-    
-    let addressbook = MailServices.ab.getDirectory(selectedDirectoryURI);
-    if (addressbook) {
+    if (selectedDirectoryURI) {
+      let addressbook = MailServices.ab.getDirectory(selectedDirectoryURI);
+      let folders = tbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
+      if (folders.length != 1) return;
+      
+      let accountData = new tbSync.AccountData(folders[0].accountID);
+      let folderData = new tbSync.FolderData(accountData, folders[0].folderID);
+      let abDirectory = new tbSync.addressbook.AbDirectory(addressbook, folderData);    
+
       try {
         let oldresults = addressbook.getCardsFromProperty("X-Server-Searchresult", "TbSync/EAS", true);
-        let cardsToDelete = Components.classes["@mozilla.org/array;1"].createInstance(Components.interfaces.nsIMutableArray);
         while (oldresults.hasMoreElements()) {
-          cardsToDelete.appendElement(oldresults.getNext(), false);
+          let card = new tbSync.addressbook.AbItem(abDirectory, oldresults.getNext().QueryInterface(Components.interfaces.nsIAbCard));
+          abDirectory.deleteItem(card);
         }
-        addressbook.deleteCards(cardsToDelete);
       } catch (e) {
         //if  getCardsFromProperty is not implemented, do nothing
+        Components.utils.reportError(e);
       }
     }
   },
@@ -158,7 +164,10 @@ var tbSyncAbServerSearch = {
       let query = searchbox.value;        
 
       let accountData = new tbSync.AccountData(folders[0].accountID);
+      let folderData = new tbSync.FolderData(accountData, folders[0].folderID);
+      let abDirectory = new tbSync.addressbook.AbDirectory(addressbook, folderData);
       let accountname = accountData.getAccountProperty("accountname");
+      
       if (true) { // we may want to disable this
 
         if (query.length<3) {
@@ -181,14 +190,14 @@ var tbSyncAbServerSearch = {
               tbSyncAbServerSearch.clearServerSearchResults(window);
 
               for (let result of results) {
-                let newItem = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance(Components.interfaces.nsIAbCard);
+                let newItem = abDirectory.createNewCard();
                 for (var prop in result) {
                   if (result.hasOwnProperty(prop)) {
                     newItem.setProperty(prop, result[prop]);
                   }
                 }
                 newItem.setProperty("X-Server-Searchresult", "TbSync/EAS");
-                addressbook.addCard(newItem);
+                abDirectory.addItem(newItem);
               }   
               window.onEnterInSearchBar();
               if (this._serverSearchNextQuery == "") this._serverSearchBusy = false;
