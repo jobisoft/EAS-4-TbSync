@@ -22,10 +22,6 @@ var sync = {
     finish: function (aStatus = "", msg = "", details = "") {
         let status = tbSync.StatusData.SUCCESS
         switch (aStatus) {
-            // custom status types
-            case "resyncFolder":
-                status = aStatus;
-                break;
             
             case "":
             case "ok":
@@ -36,8 +32,12 @@ var sync = {
                 status = tbSync.StatusData.INFO;
                 break;
             
-            case "rerun":
-                status = tbSync.StatusData.RERUN;
+            case "resyncAccount":
+                status = tbSync.StatusData.ACCOUNT_RERUN;
+                break;
+
+            case "resyncFolder":
+                status = tbSync.StatusData.FOLDER_RERUN;
                 break;
             
             case "warning":
@@ -57,7 +57,6 @@ var sync = {
         let e = new Error(); 
         e.name = "eas4tbsync";
         e.message = status.toUpperCase() + ": " + msg.toString() + " (" + details.toString() + ")";
-        e.failed = (status != tbSync.StatusData.SUCCESS);
         e.statusData = new tbSync.StatusData(status, msg.toString(), details.toString());        
         return e; 
     }, 
@@ -250,96 +249,79 @@ var sync = {
 
 
     singleFolder: async function (syncData)  {
-        let folderReSyncs = 0;
-        
-        do {                
-            let rerun = false;
-        
-            folderReSyncs++;
-            if (folderReSyncs > 2) {
-                throw eas.sync.finish("warning", "resync-loop");
-            }
-
-            // add target to syncData (getTarget() will throw "nolightning" if lightning missing)
-            try {
-                // accessing the target for the first time will check if it is avail and if not will create it (if possible)
-                syncData.target = syncData.currentFolderData.targetData.getTarget();
-            } catch (e) {
-                throw eas.sync.finish("warning", e.message);
-            }
-
-            //get syncData type, which is also used in WBXML for the CLASS element
-            syncData.type = null;
-            switch (syncData.currentFolderData.getFolderProperty("type")) {
-                case "9": //contact
-                case "14": 
-                    syncData.type = "Contacts";
-                    break;
-                case "8": //event
-                case "13":
-                    syncData.type = "Calendar";
-                    break;
-                case "7": //todo
-                case "15":
-                    syncData.type = "Tasks";
-                    break;
-                default:
-                     throw eas.sync.finish("info", "skipped");
-                    break;
-            }
-
-            syncData.setSyncState("preparing");
-            
-            //get synckey if needed
-            syncData.synckey = syncData.currentFolderData.getFolderProperty("synckey");                
-            if (syncData.synckey == "") {
-                await eas.network.getSynckey(syncData);
-            }
-            
-            //sync folder
-            syncData.timeOfLastSync = syncData.currentFolderData.getFolderProperty( "lastsynctime") / 1000;
-            syncData.timeOfThisSync = (Date.now() / 1000) - 1;
-            
-            let lightningBatch = false;
-            let lightningReadOnly = "";
-            let error = null;
-            
-            try {
-                switch (syncData.type) {
-                    case "Contacts": 
-                        await eas.sync.easFolder(syncData);
-                        break;
-
-                    case "Calendar":
-                    case "Tasks":                            
-                        //save current value of readOnly (or take it from the setting)
-                        lightningReadOnly = syncData.target.calendar.getProperty("readOnly") || (syncData.currentFolderData.getFolderProperty( "downloadonly") == "1");                       
-                        syncData.target.calendar.setProperty("readOnly", false);
-                        
-                        lightningBatch = true;
-                        syncData.target.calendar.startBatch();
-
-                        await eas.sync.easFolder(syncData);
-                        break;
-                }
-            } catch (report) {
-                //Filter out custom status types, which must be handled here and may not be passed on (because unknown to the outside)
-                if (report.name == "eas4tbsync" && report.statusData.type == "resyncFolder") {
-                    rerun = true;
-                }  else {
-                    error = report;
-                }
-            }
-            
-            if (lightningBatch) {
-                syncData.target.calendar.endBatch();
-                syncData.target.calendar.setProperty("readOnly", lightningReadOnly);
-            }
-            
-            if (error) throw error;
-            if (!rerun) break;
+        // add target to syncData (getTarget() will throw "nolightning" if lightning missing)
+        try {
+            // accessing the target for the first time will check if it is avail and if not will create it (if possible)
+            syncData.target = syncData.currentFolderData.targetData.getTarget();
+        } catch (e) {
+            throw eas.sync.finish("warning", e.message);
         }
-        while (true);
+        
+        //get syncData type, which is also used in WBXML for the CLASS element
+        syncData.type = null;
+        switch (syncData.currentFolderData.getFolderProperty("type")) {
+            case "9": //contact
+            case "14": 
+                syncData.type = "Contacts";
+                break;
+            case "8": //event
+            case "13":
+                syncData.type = "Calendar";
+                break;
+            case "7": //todo
+            case "15":
+                syncData.type = "Tasks";
+                break;
+            default:
+                 throw eas.sync.finish("info", "skipped");
+                break;
+        }
+
+        syncData.setSyncState("preparing");
+        
+        //get synckey if needed
+        syncData.synckey = syncData.currentFolderData.getFolderProperty("synckey");                
+        if (syncData.synckey == "") {
+            await eas.network.getSynckey(syncData);
+        }
+        
+        //sync folder
+        syncData.timeOfLastSync = syncData.currentFolderData.getFolderProperty( "lastsynctime") / 1000;
+        syncData.timeOfThisSync = (Date.now() / 1000) - 1;
+        
+        let lightningBatch = false;
+        let lightningReadOnly = "";
+        let error = null;
+        
+        // We ned to intercept any throw error, because lightning needs a few operations after sync finished
+        try {
+            switch (syncData.type) {
+                case "Contacts": 
+                    await eas.sync.easFolder(syncData);
+                    break;
+
+                case "Calendar":
+                case "Tasks":                            
+                    //save current value of readOnly (or take it from the setting)
+                    lightningReadOnly = syncData.target.calendar.getProperty("readOnly") || (syncData.currentFolderData.getFolderProperty( "downloadonly") == "1");                       
+                    syncData.target.calendar.setProperty("readOnly", false);
+                    
+                    lightningBatch = true;
+                    syncData.target.calendar.startBatch();
+
+                    await eas.sync.easFolder(syncData);
+                    break;
+            }
+        } catch (report) {
+            error = report;
+        }
+        
+        if (lightningBatch) {
+            syncData.target.calendar.endBatch();
+            syncData.target.calendar.setProperty("readOnly", lightningReadOnly);
+        }
+        
+        if (error) throw error;
     },
 
 

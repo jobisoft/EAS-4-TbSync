@@ -219,7 +219,7 @@ var network = {
                         //enable provision
                         syncData.accountData.setAccountProperty("provision","1");
                         syncData.accountData.resetAccountProperty("policykey");
-                        reject(eas.sync.finish("rerun", syncData.req.status));
+                        reject(eas.sync.finish("resyncAccount", syncData.req.status));
                         break;
 
                     case 451: // Redirect - update host and login manager 
@@ -229,7 +229,7 @@ var network = {
                         tbSync.dump("redirect (451)", "header: " + header + ", oldHost: " +syncData.accountData.getAccountProperty("host") + ", newHost: " + newHost);
 
                         syncData.accountData.setAccountProperty("host", newHost);
-                        reject(eas.sync.finish("rerun", syncData.req.status));
+                        reject(eas.sync.finish("resyncAccount", syncData.req.status));
                         break;
                         
                     default:
@@ -396,7 +396,7 @@ var network = {
                     }		    
                     // reset account
                     eas.onEnableAccount(syncData.accountData);
-                    throw eas.sync.finish("rerun", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                    throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 }
         }
         
@@ -426,7 +426,7 @@ var network = {
                     }		    
                     // reset account
                     eas.onEnableAccount(syncData.accountData);
-                    throw eas.sync.finish("rerun", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                    throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 }
                 
             case "141": // The device is not provisionable
@@ -436,7 +436,7 @@ var network = {
                 //enable provision
                 syncData.accountData.setAccountProperty("provision","1");
                 syncData.accountData.resetAccountProperty("policykey");
-                throw eas.sync.finish("rerun", statusType);
+                throw eas.sync.finish("resyncAccount", statusType);
             
             default:
                 if (allowSoftFail) return statusType;
@@ -524,7 +524,7 @@ var network = {
                     //server does not have a policy for this device: disable provisioning
                     syncData.accountData.setAccountProperty("provision","0")
                     syncData.accountData.resetAccountProperty("policykey");
-                    throw eas.sync.finish("rerun", "NoPolicyForThisDevice");
+                    throw eas.sync.finish("resyncAccount", "NoPolicyForThisDevice");
 
                 case "1":
                     if (policykey === false) {
