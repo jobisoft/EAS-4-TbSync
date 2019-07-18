@@ -318,20 +318,48 @@ var base = {
 
 
     /**
-     * Is called if TbSync needs to find contacts in the global address list (GAL / directory) of an account associated with this provider.
-     * It is used for autocompletion while typing something into the address field of the message composer and for the address book search,
-     * if something is typed into the search field of the Thunderbird address book.
+     * Implement this method, if the provider should autocomplete emails from
+     * an additional source (a company directory or a global address list).
+     * Results returned by this method will be used for autocompletion while
+     * typing something into the address field of the message composer.
      *
-     * DO NOT IMPLEMENT AT ALL, IF NOT SUPPORTED
+     * If this provider does not support this kind of lookup, it is berrer
+     * to not implement this method instead of returning an empty array.
      *
      * TbSync will execute this only for queries longer than 3 chars.
      *
-     * @param accountID       [in] id of the account which should be searched
+     * @param accountData   [in] AccountData of the account which should be
+     *                           searched
      * @param currentQuery  [in] search query
-     * @param caller        [in] "autocomplete" or "search" //TODO
+     *
+     * Return arrary of email entries like "Name <email>" or just plain emails.
      */
-    abServerSearch: async function (accountID, currentQuery, caller)  {
-        return null;
+    abAutoComplete: async function (accountData, currentQuery)  {
+        if (!accountData.getAccountProperty("allowedEasCommands").split(",").includes("Search")) {
+            return null;
+        }
+
+        if (accountData.getAccountProperty("galautocomplete") != "1") {
+            return null;
+        }
+            
+        let response = await eas.network.getSearchResults(accountData, currentQuery);
+        let wbxmlData = eas.network.getDataFromResponse(response);
+        let data = [];
+
+        if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
+            let results = eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
+            let accountname = accountData.getAccountProperty("accountname");
+        
+            for (let count = 0; count < results.length; count++) {
+                if (results[count].Properties) {
+                    //tbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
+                    data.push(results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">");
+                }
+            }
+        }
+        
+        return data;
     },
 
 
@@ -397,11 +425,11 @@ var base = {
      * a countdown to the connection timeout, while waiting for an answer from
      * the server. Only syncstates which start with "send." will trigger this.
      *
-     * @param syncData      [in] SyncData
+     * @param accountData      [in] AccountData
      *
      * return timeout in milliseconds
      */
-    getConnectionTimeout: function (syncData) {
+    getConnectionTimeout: function (accountData) {
         return eas.prefs.getIntPref("timeout");
     },
     

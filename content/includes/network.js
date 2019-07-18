@@ -137,7 +137,7 @@ var network = {
     sendRequestPromise: function (wbxml, command, syncData, allowSoftFail = false) {
         let msg = "Sending data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
         if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("foldername") + ")";
-        syncData.request = eas.network.getRawXML(wbxml, msg);
+        syncData.request = eas.network.logXML(wbxml, msg);
         syncData.response = "";
 
         let connection = eas.network.getAuthData(syncData.accountData);
@@ -167,7 +167,7 @@ var network = {
                 tbSync.dump("PolicyKey used", syncData.accountData.getAccountProperty("policykey"));
             }
 
-            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
+            syncData.req.timeout = eas.base.getConnectionTimeout();
 
             syncData.req.ontimeout = function () {
                 if (allowSoftFail) {
@@ -196,7 +196,7 @@ var network = {
                     case 200: //OK
                         let msg = "Receiving data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
                         if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("foldername") + ")";
-                        syncData.response = eas.network.getRawXML(response, msg);
+                        syncData.response = eas.network.logXML(response, msg);
 
                         //What to do on error? IS this an error? Yes!
                         if (!allowSoftFail && response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
@@ -257,7 +257,7 @@ var network = {
 
     // RESPONSE EVALUATION
     
-    getRawXML : function (wbxml, what) {
+    logXML : function (wbxml, what) {
         let rawxml = eas.wbxmltools.convert2xml(wbxml);
         let xml = null;
         if (rawxml)  {
@@ -673,7 +673,110 @@ var network = {
 
 
 
-    // OPTIONS
+    // SEARCH
+
+    getSearchResults: async function (accountData, currentQuery) {
+
+        let _wbxml = eas.wbxmltools.createWBXML();
+        _wbxml.switchpage("Search");
+        _wbxml.otag("Search");
+            _wbxml.otag("Store");
+                _wbxml.atag("Name", "GAL");
+                _wbxml.atag("Query", currentQuery);
+                _wbxml.otag("Options");
+                    _wbxml.atag("Range", "0-99"); //Z-Push needs a Range
+                    //Not valid for GAL: https://msdn.microsoft.com/en-us/library/gg675461(v=exchg.80).aspx
+                    //_wbxml.atag("DeepTraversal");
+                    //_wbxml.atag("RebuildResults");
+                _wbxml.ctag();
+            _wbxml.ctag();
+        _wbxml.ctag();
+
+        let wbxml = _wbxml.getBytes();
+        
+        eas.network.logXML(wbxml, "Send (GAL Search)");
+        let command = "Search";
+        
+        let authData = eas.network.getAuthData(accountData);
+        let userAgent = accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
+        let deviceType = accountData.getAccountProperty("devicetype");
+        let deviceId = accountData.getAccountProperty("deviceId");
+
+        tbSync.dump("Sending (EAS v" + accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
+        
+        try {
+            let response = await new Promise(function(resolve, reject) {
+                // Create request handler - API changed with TB60 to new XMKHttpRequest()
+                let req = new XMLHttpRequest();
+                req.mozBackgroundRequest = true;
+                req.open("POST", eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
+                req.overrideMimeType("text/plain");
+                req.setRequestHeader("User-Agent", userAgent);
+                req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
+                req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
+                if (accountData.getAccountProperty("asversion") == "2.5") {
+                    req.setRequestHeader("MS-ASProtocolVersion", "2.5");
+                } else {
+                    req.setRequestHeader("MS-ASProtocolVersion", "14.0");
+                }
+                req.setRequestHeader("Content-Length", wbxml.length);
+                if (accountData.getAccountProperty("provision") == "1") {
+                    req.setRequestHeader("X-MS-PolicyKey", accountData.getAccountProperty("policykey"));
+                    tbSync.dump("PolicyKey used", accountData.getAccountProperty("policykey"));
+                }
+
+                req.timeout = eas.base.getConnectionTimeout();
+
+                req.ontimeout = function () {
+                    reject("GAL Search timeout");
+                };
+
+                req.onerror = function () {
+                    reject("GAL Search Error");
+                };
+
+                req.onload = function() {
+                    let response = req.responseText;
+                    
+                    switch(req.status) {
+
+                        case 200: //OK
+                            eas.network.logXML(response, "Received (GAL Search");
+
+                            //What to do on error? IS this an error? Yes!
+                            if (response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
+                                tbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + req.status + ", ready state = " + req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
+                                reject("GAL Search Response Invalid");
+                            } else {
+                                resolve(response);
+                            }
+                            break;
+                          
+                        default:
+                            reject("GAL Search Failed: " + req.status);
+                    }
+                };
+
+                req.send(wbxml);
+                
+            });
+            return response;
+        } catch (e) {
+            Components.utils.reportError(e);
+            return;
+        }
+    },
+
+
+
+
+
+
+
+
+
+
+       // OPTIONS
 
     getServerOptions: function (syncData) {        
         syncData.setSyncState("prepare.request.options");
@@ -690,7 +793,7 @@ var network = {
             syncData.req.overrideMimeType("text/plain");
             syncData.req.setRequestHeader("User-Agent", userAgent);            
             syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
-            syncData.req.timeout = eas.base.getConnectionTimeout(syncData);
+            syncData.req.timeout = eas.base.getConnectionTimeout();
 
             syncData.req.ontimeout = function () {
                 resolve();
