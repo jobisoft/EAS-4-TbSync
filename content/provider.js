@@ -454,6 +454,12 @@ var base = {
      * return StatusData
      */
     syncFolderList: async function (syncData, syncJob, syncRunNr) {
+        // Recommendation: Put the actual function call inside a try catch, to
+        // ensure returning a proper StatusData object, regardless of what
+        // happens inside that function. You may also throw custom errors
+        // in that function, which have the StatusData obj attached, which
+        // should be returned.
+        
         try {
             await eas.sync.folderList(syncData);
         } catch (e) {
@@ -489,6 +495,12 @@ var base = {
      * return StatusData
      */
     syncFolder: async function (syncData, syncJob, syncRunNr) {
+        // Recommendation: Put the actual function call inside a try catch, to
+        // ensure returning a proper StatusData object, regardless of what
+        // happens inside that function. You may also throw custom errors
+        // in that function, which have the StatusData obj attached, which
+        // should be returned.
+        
         try {
             switch (syncJob) {
                 case "deletefolder":
