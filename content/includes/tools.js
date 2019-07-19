@@ -55,12 +55,22 @@ var tools = {
         return "MZTB" + uuid;
     },
     
+    getUriFromDirectoryId: function(ownerId) {
+        let directories = MailServices.ab.directories;
+        while (directories.hasMoreElements()) {
+          let directory = directories.getNext();
+          if (directory instanceof Components.interfaces.nsIAbDirectory) {
+                if (ownerId.startsWith(directory.dirPrefId)) return directory.URI;
+          }
+        }
+        return null;
+    },
+    
     //function to get correct uri of current card for global book as well for mailLists
     getSelectedUri : function(aUri, aCard) {       
         if (aUri == "moz-abdirectory://?") {
             //get parent via card owner
-            let ownerId = aCard.directoryId;
-            return tbSync.getUriFromDirectoryId(ownerId);            
+            return eas.tools.getUriFromDirectoryId(aCard.directoryId);            
         } else if (MailServices.ab.getDirectory(aUri).isMailList) {
             //MailList suck, we have to cut the url to get the parent
             return aUri.substring(0, aUri.lastIndexOf("/"))     

@@ -845,7 +845,7 @@ wbxml.ctag();*/
         //This will resync all missing items fresh from the server
         tbSync.errorlog.add("info", syncData.errorInfo, "RevertViaFolderResync");
         eas.base.onResetTarget(syncData.currentFolderData);
-        throw tbSync.eas.finish("resyncFolder", "RevertViaFolderResync"); 
+        throw eas.sync.finish("resyncFolder", "RevertViaFolderResync"); 
     },
 
 

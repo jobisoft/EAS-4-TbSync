@@ -104,13 +104,17 @@ var tbSyncAbServerSearch = {
             let selectedDirectoryURI = window.GetSelectedDirectory();
             
             if (searchbox && selectedDirectoryURI) {
-              let addressbook = MailServices.ab.getDirectory(selectedDirectoryURI);
-              
-              let folders = tbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
-              if (folders.length == 1) {
-                searchbox.setAttribute("placeholder", tbSync.getString("addressbook.searchgal::" + tbSync.db.getAccountProperty(folders[0].accountID, "accountname")));
+              if (selectedDirectoryURI == "moz-abdirectory://?") {
+                  searchbox.setAttribute("placeholder",  tbSync.getString("addressbook.searchall"));
               } else {
-                searchbox.setAttribute("placeholder", tbSync.getString((selectedDirectoryURI == "moz-abdirectory://?") ? "addressbook.searchall" : "addressbook.searchthis"));
+                let addressbook = MailServices.ab.getDirectory(selectedDirectoryURI);
+                
+                let folders = tbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
+                if (folders.length == 1) {
+                  searchbox.setAttribute("placeholder", tbSync.getString("addressbook.searchgal::" + tbSync.db.getAccountProperty(folders[0].accountID, "accountname")));
+                } else {
+                  searchbox.setAttribute("placeholder", tbSync.getString("addressbook.searchthis"));
+                }
               }
             }
           }
