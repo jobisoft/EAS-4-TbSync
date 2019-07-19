@@ -896,7 +896,7 @@ var network = {
         
         let requests = [];
         for (let i=0; i< urls.length; i++) {
-            await tbSync.tools.sleep(200, false);
+            await tbSync.tools.sleep(200);
             requests.push( eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
         }
  
@@ -941,7 +941,7 @@ var network = {
         let connection = { url, user };
         
         do {            
-            await tbSync.tools.sleep(200, false);
+            await tbSync.tools.sleep(200);
             result = await eas.network.getServerConnectionViaAutodiscoverRequest(method, connection, password, maxtimeout);
             method = "";
             
