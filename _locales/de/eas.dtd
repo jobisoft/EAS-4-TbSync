@@ -21,16 +21,24 @@
 <!ENTITY pref.usehttps "Sichere Verbindungen verwenden (via https://)">
 <!ENTITY pref.DeviceId "ActiveSync Geräte ID">
 <!ENTITY pref.birthday "Sende Geburtstagsinformation">
-<!ENTITY pref.generaloptions "Allgemein">
-<!ENTITY pref.contactoptions "Kontakte">
+<!ENTITY pref.generaloptions "Allgemeine Optionen">
+<!ENTITY pref.contactoptions "Kontakt Optionen">
+<!ENTITY pref.calendaroptions "Kalender Optionen">
 <!ENTITY pref.provision "Provisionierung erzwingen (wird von Kerio benötigt)">
 <!ENTITY pref.galautocomplete "E-Mail Autovervollständigung mit Ergebnissen aus dem globalen Adressbuch (GAL) ">
 
 <!ENTITY pref.ShowTrashedFolders "Im Papierkorb gefundene Ordner anzeigen" >
 
+<!ENTITY pref.synclimit.all "alles">
+<!ENTITY pref.synclimit.2weeks "ab vor 2 Wochen">
+<!ENTITY pref.synclimit.1month "ab vor 4 Wochen">
+<!ENTITY pref.synclimit.3month "ab vor 3 Monaten">
+<!ENTITY pref.synclimit.6month "ab vor 6 Monaten">
+<!ENTITY pref.synclimit.description "Synchronisationszeitraum: ">
+
 <!ENTITY pref.seperator.comma "Komma">
 <!ENTITY pref.seperator.linebreak "Zeilenumbruch">
-<!ENTITY pref.seperator.description "Separator für mehrzeilige Adressfelder.">
+<!ENTITY pref.seperator.description "Separator für mehrzeilige Adressfelder: ">
 <!ENTITY pref.displayoverride "Überschreibe Anzeigename mit 'Vorname' + 'Nachname'">
 
 <!ENTITY servertype.auto "Automatische Konfiguration via ActiveSync Autodiscover">

@@ -20,13 +20,21 @@
 <!ENTITY pref.ServerNameDescription "например: mail.yourserver.com">
 <!ENTITY pref.usehttps "Использовать безопасное соединение (соединение через https)">
 <!ENTITY pref.DeviceId "Идентификатор устройства">
-<!ENTITY pref.contactoptions "Контактная информация">
 <!ENTITY pref.birthday "Отправить информацию о днях рождения">
-<!ENTITY pref.generaloptions "Общие настройки">
+<!ENTITY pref.generaloptions "Общие параметры">
+<!ENTITY pref.contactoptions "Параметры контакта">
+<!ENTITY pref.calendaroptions "Параметры календаря">
 <!ENTITY pref.provision "Заставить поддерживать (требуется для Kerio)">
 <!ENTITY pref.galautocomplete "Включить результаты из глобальной адресной книги (GAL) в автозаполнение электронной почты">
 
 <!ENTITY pref.ShowTrashedFolders "Показывать папки, найденные в корзине">
+
+<!ENTITY pref.synclimit.all "все">
+<!ENTITY pref.synclimit.2weeks "от 2 недель назад">
+<!ENTITY pref.synclimit.1month "от 4 недель назад">
+<!ENTITY pref.synclimit.3month "от 3 месяцев назад">
+<!ENTITY pref.synclimit.6month "от 6 месяцев назад">
+<!ENTITY pref.synclimit.description "Период синхронизации:">
 
 <!ENTITY pref.seperator.comma "Запятая">
 <!ENTITY pref.seperator.linebreak "Разрыв строки">

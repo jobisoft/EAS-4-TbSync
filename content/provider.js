@@ -257,6 +257,7 @@ var base = {
             "useragent": eas.prefs.getCharPref("clientID.useragent"),
             "devicetype": eas.prefs.getCharPref("clientID.type"),
             "galautocomplete": "1", 
+            "synclimit" : "6",
             }; 
         return row;
     },

@@ -20,13 +20,21 @@
 <!ENTITY pref.ServerNameDescription "például: posta.kiszolgálód.hu">
 <!ENTITY pref.usehttps "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)">
 <!ENTITY pref.DeviceId "ActiveSync eszközazonosító">
-<!ENTITY pref.birthday "Születésnapi adatok küldése">
-<!ENTITY pref.generaloptions "Általános">
-<!ENTITY pref.contactoptions "Névjegyzék">
+<!ENTITY pref.birthday "Születésnapi információk küldése">
+<!ENTITY pref.generaloptions "Általános beállítások">
+<!ENTITY pref.contactoptions "Kapcsolat opciók">
+<!ENTITY pref.calendaroptions "Naptárbeállítások">
 <!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
 <!ENTITY pref.galautocomplete "A globális címjegyzékből (GAL) kapott eredményeket e-mailben töltse ki automatikusan">
 
 <!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése" >
+
+<!ENTITY pref.synclimit.all "mindent">
+<!ENTITY pref.synclimit.2weeks "2 héttel ezelőtt">
+<!ENTITY pref.synclimit.1month "4 héttel ezelőtt">
+<!ENTITY pref.synclimit.3month "3 hónappal ezelőtt">
+<!ENTITY pref.synclimit.6month "6 hónappal ezelőtt">
+<!ENTITY pref.synclimit.description "Szinkronizálási időszak:">
 
 <!ENTITY pref.seperator.comma "Vessző">
 <!ENTITY pref.seperator.linebreak "Sortörés">

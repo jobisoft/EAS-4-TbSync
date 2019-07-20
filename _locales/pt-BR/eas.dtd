@@ -21,12 +21,20 @@
 <!ENTITY pref.usehttps "Utilizar conexão segura (conectar via https)">
 <!ENTITY pref.DeviceId "ActiveSync device ID">
 <!ENTITY pref.birthday "Enviar informações de aniversário">
-<!ENTITY pref.generaloptions "Geral">
-<!ENTITY pref.contactoptions "Contatos">
+<!ENTITY pref.generaloptions "Opções gerais">
+<!ENTITY pref.contactoptions "Opções de contato">
+<!ENTITY pref.calendaroptions "Opções de calendário">
 <!ENTITY pref.provision "Reforçar provisionamento (requiredo pelo Kerio)">
 <!ENTITY pref.galautocomplete "Incluir resultados do catálogo de endereços global (GAL) no preenchimento automático de e-mail">
 
 <!ENTITY pref.ShowTrashedFolders "Mostrar pastas encontradas na lixeira">
+
+<!ENTITY pref.synclimit.all "tudo">
+<!ENTITY pref.synclimit.2weeks "a partir de 2 semanas atrás">
+<!ENTITY pref.synclimit.1month "a partir de 4 semanas atrás">
+<!ENTITY pref.synclimit.3month "a partir de 3 meses atrás">
+<!ENTITY pref.synclimit.6month "a partir de 6 meses atrás">
+<!ENTITY pref.synclimit.description "Período de sincronização:">
 
 <!ENTITY pref.seperator.comma "Vírgula">
 <!ENTITY pref.seperator.linebreak "Quebra de linha">
