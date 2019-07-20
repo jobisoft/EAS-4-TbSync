@@ -601,7 +601,7 @@ wbxml.ctag();*/
                             if (sendItems[0].type == "deleted_by_user") {
                                 //we failed to delete an item, discard and place message in log
                                 syncData.target.removeItemFromChangeLog(sendItems[0].id);
-                                tbSync.errorlog.add("warning", syncData.errorInfo, "ErrorOnDelete::"+sendItems[0].id);
+                                tbSync.eventlog.add("warning", syncData.eventLogInfo, "ErrorOnDelete::"+sendItems[0].id);
                             } else {
                                 let foundItem = await syncData.target.getItem(sendItems[0].id);                    
                                 if (foundItem) {
@@ -785,7 +785,7 @@ wbxml.ctag();*/
                                         await syncData.target.addItem(newItem);
                                     } catch (e) {
                                         eas.xmltools.printXmlData(add[count], true); //include application data in log                  
-                                        tbSync.errorlog.add("warning", syncData.errorInfo, "BadItemSkipped::JavaScriptError", newItem.toString());
+                                        tbSync.eventlog.add("warning", syncData.eventLogInfo, "BadItemSkipped::JavaScriptError", newItem.toString());
                                         throw e; // unable to add item to Thunderbird - fatal error
                                     }
                             } else {
@@ -806,7 +806,7 @@ wbxml.ctag();*/
                     //if ItemOperations.Fetch fails, fall back to Sync.Fetch, if that fails, fall back to resync
                     if (viaItemOperations) {
                         viaItemOperations = false;
-                        tbSync.errorlog.add("info", syncData.errorInfo, "Server returned error during ItemOperations.Fetch, falling back to Sync.Fetch.");
+                        tbSync.eventlog.add("info", syncData.eventLogInfo, "Server returned error during ItemOperations.Fetch, falling back to Sync.Fetch.");
                     } else {
                         await eas.sync.revertLocalChangesViaResync(syncData);
                         return;
@@ -824,7 +824,7 @@ wbxml.ctag();*/
     },
 
     revertLocalChangesViaResync: async function (syncData) {
-        tbSync.errorlog.add("info", syncData.errorInfo, "Server does not support ItemOperations.Fetch and/or Sync.Fetch, must revert via resync.");
+        tbSync.eventlog.add("info", syncData.eventLogInfo, "Server does not support ItemOperations.Fetch and/or Sync.Fetch, must revert via resync.");
         let changes = syncData.target.getItemsFromChangeLog();
 
         syncData.progressData.reset(0, changes.length);
@@ -843,7 +843,7 @@ wbxml.ctag();*/
         }
         
         //This will resync all missing items fresh from the server
-        tbSync.errorlog.add("info", syncData.errorInfo, "RevertViaFolderResync");
+        tbSync.eventlog.add("info", syncData.eventLogInfo, "RevertViaFolderResync");
         eas.base.onResetTarget(syncData.currentFolderData);
         throw eas.sync.finish("resyncFolder", "RevertViaFolderResync"); 
     },
@@ -877,11 +877,11 @@ wbxml.ctag();*/
                         await syncData.target.addItem(newItem);
                     } catch (e) {
                         eas.xmltools.printXmlData(add[count], true); //include application data in log                  
-                        tbSync.errorlog.add("warning", syncData.errorInfo, "BadItemSkipped::JavaScriptError", newItem.toString());
+                        tbSync.eventlog.add("warning", syncData.eventLogInfo, "BadItemSkipped::JavaScriptError", newItem.toString());
                         throw e; // unable to add item to Thunderbird - fatal error
                     }
                 } else {
-                    tbSync.errorlog.add("info", syncData.errorInfo, "Add request, but element exists already, skipped.", ServerId);
+                    tbSync.eventlog.add("info", syncData.eventLogInfo, "Add request, but element exists already, skipped.", ServerId);
                 }
                 syncData.progressData.inc();
             }
@@ -906,7 +906,7 @@ wbxml.ctag();*/
                     else {
                         
                         if (foundItem.changelogStatus !== null) {
-                            tbSync.errorlog.add("info", syncData.errorInfo, "Change request from server, but also local modifications, server wins!", ServerId);
+                            tbSync.eventlog.add("info", syncData.eventLogInfo, "Change request from server, but also local modifications, server wins!", ServerId);
                             foundItem.changelogStatus = null;
                         }
                         
@@ -915,7 +915,7 @@ wbxml.ctag();*/
                             eas.sync[syncData.type].setThunderbirdItemFromWbxml(newItem, data, ServerId, syncData);
                             await syncData.target.modifyItem(newItem, foundItem);
                         } catch (e) {
-                            tbSync.errorlog.add("warning", syncData.errorInfo, "BadItemSkipped::JavaScriptError", newItem.toString());
+                            tbSync.eventlog.add("warning", syncData.eventLogInfo, "BadItemSkipped::JavaScriptError", newItem.toString());
                             eas.xmltools.printXmlData(upd[count], true);  //include application data in log                   
                             throw e; // unable to mod item to Thunderbird - fatal error
                         }
@@ -948,7 +948,7 @@ wbxml.ctag();*/
             //the extra parameter true will re-add the item to the end of the changelog
             syncData.target.removeItemFromChangeLog(id, true);                        
             syncData.failedItems.push(id);            
-            tbSync.errorlog.add("info", syncData.errorInfo, "BadItemSkipped::" + tbSync.getString("status." + cause ,"eas"), "\n\nRequest:\n" + syncData.request + "\n\nResponse:\n" + syncData.response + "\n\nElement:\n" + data);
+            tbSync.eventlog.add("info", syncData.eventLogInfo, "BadItemSkipped::" + tbSync.getString("status." + cause ,"eas"), "\n\nRequest:\n" + syncData.request + "\n\nResponse:\n" + syncData.response + "\n\nElement:\n" + data);
         }
     },
 
@@ -1103,7 +1103,7 @@ wbxml.ctag();*/
             let wbxml = eas.sync[syncData.type].getWbxmlFromThunderbirdItem(item, syncData, isException);
             return wbxml;
         } catch (e) {
-            tbSync.errorlog.add("warning", syncData.errorInfo, "BadItemSkipped::JavaScriptError", item.toString());
+            tbSync.eventlog.add("warning", syncData.eventLogInfo, "BadItemSkipped::JavaScriptError", item.toString());
             throw e; // unable to read item from Thunderbird - fatal error
         }        
     },
@@ -1244,7 +1244,7 @@ wbxml.ctag();*/
             if (data.Recurrence.FirstDayOfWeek) {
                 //recRule.setComponent("WKST", 1, [data.Recurrence.FirstDayOfWeek]); // WKST is not a valid component
                 //recRule.weekStart = data.Recurrence.FirstDayOfWeek; // - (NS_ERROR_NOT_IMPLEMENTED) [calIRecurrenceRule.weekStart]
-                tbSync.errorlog.add("info", syncData.errorInfo, "FirstDayOfWeek tag ignored (not supported).", item.icalString);                
+                tbSync.eventlog.add("info", syncData.eventLogInfo, "FirstDayOfWeek tag ignored (not supported).", item.icalString);                
             }
 
             if (data.Recurrence.Interval) {
@@ -1265,7 +1265,7 @@ wbxml.ctag();*/
                 recRule.untilDate = eas.tools.createDateTime(data.Recurrence.Until);
             }
             if (data.Recurrence.Start) {
-                tbSync.errorlog.add("info", syncData.errorInfo, "Start tag in recurring task is ignored, recurrence will start with first entry.", item.icalString);
+                tbSync.eventlog.add("info", syncData.eventLogInfo, "Start tag in recurring task is ignored, recurrence will start with first entry.", item.icalString);
             }
         
             item.recurrenceInfo.insertRecurrenceItemAt(recRule, 0);
@@ -1317,13 +1317,13 @@ wbxml.ctag();*/
                     }
                     else {
                         // RDATE
-                        tbSync.errorlog.add("info", syncData.errorInfo, "Ignoring RDATE rule (not supported)", recRule.icalString);
+                        tbSync.eventlog.add("info", syncData.eventLogInfo, "Ignoring RDATE rule (not supported)", recRule.icalString);
                     }
                     continue;
                 }
                 if (recRule.isNegative) {
                     // EXRULE
-                    tbSync.errorlog.add("info", syncData.errorInfo, "Ignoring EXRULE rule (not supported)", recRule.icalString);
+                    tbSync.eventlog.add("info", syncData.eventLogInfo, "Ignoring EXRULE rule (not supported)", recRule.icalString);
                     continue;
                 }
 

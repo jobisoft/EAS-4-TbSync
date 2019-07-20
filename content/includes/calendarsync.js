@@ -138,7 +138,7 @@ var Calendar = {
                     // Add attendee to event
                     item.addAttendee(attendee);
                 } else {
-                    tbSync.errorlog("info", syncdata, "Attendee without required name and/or email found. Skipped.");
+                    tbSync.eventlog("info", syncdata, "Attendee without required name and/or email found. Skipped.");
                 }
             }
         }
@@ -276,10 +276,10 @@ var Calendar = {
             } else if (item.startDate) {
                 let timeDiff =item.startDate.getInTimezone(eas.utcTimezone).subtractDate(alarms[0].alarmDate.getInTimezone(eas.utcTimezone));     
                 reminder = timeDiff.inSeconds/60;
-                tbSync.errorlog("info", syncdata, "Converting absolute alarm to relative alarm (not supported).", item.icalString);
+                tbSync.eventlog("info", syncdata, "Converting absolute alarm to relative alarm (not supported).", item.icalString);
             }
             if (reminder >= 0) wbxml.atag("Reminder", reminder.toString());
-            else tbSync.errorlog("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
+            else tbSync.eventlog("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
 
         }
 

@@ -366,7 +366,7 @@ var network = {
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
-                tbSync.errorlog.add("warning", syncData.errorInfo, "Forced Folder Resync", "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                tbSync.eventlog.add("warning", syncData.eventLogInfo, "Forced Folder Resync", "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 syncData.currentFolderData.remove();
                 throw eas.sync.finish("resyncFolder", statusType);
             
@@ -928,7 +928,7 @@ var network = {
             result = {"server": "", "user": user, "error": tbSync.getString("autodiscover.Failed","eas").replace("##user##", user), "errorcode": 503};
         }
 
-        tbSync.errorlog.add("error", new tbSync.ErrorInfo("eas"), result.error, log.join("\n"));
+        tbSync.eventlog.add("error", new tbSync.EventLogInfo("eas"), result.error, log.join("\n"));
         return result;        
     },
        
