@@ -88,7 +88,6 @@ status.nolightning=Componente aggiuntivo Lightning non installato, i calendari n
 status.malformed-xml=Impossibile analizzare XML. Controllare il registro eventi per i dettagli.
 status.invalid=Risposta del server non valida (inutile).
 status.InvalidServerOptions=Il server non fornisce informazioni sulle versioni di ActiveSync supportate. EAS è bloccato per questo utente o questo client (TbSync)? È possibile provare a impostare manualmente la versione di ActiveSync.
-status.foldererror=Almeno una risorsa ha riscontrato un errore di sincronizzazione. Consultare il log di errore per i dettagli.
 
 status.security=Impossibile stabilire una connessione sicura. Si sta utilizzando un certificato autofirmato o non affidabile senza averlo importato in Thunderbird? (##replace.1##)
 helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F

@@ -88,7 +88,6 @@ status.nolightning=A Lightning kiegészítő nincs telepítve, a naptárak nem t
 status.malformed-xml=Nem sikerült elemezni az XML-t. Ellenőrizze az eseménynaplót a részletekért.
 status.invalid=Érvénytelen kiszolgáló válasz (szemét).
 status.InvalidServerOptions=A kiszolgáló nem nyújt felvilágosítást a támogatott ActiveSync verziókról. EAS akadályozva van ez a felhasználó vagy az ügyfél (Thunderbird-összehangolás) számára? Megpróbálhatja kézzel beállítani az ActiveSync verziót.
-status.foldererror=Legalább egy erőforrás szinkronizálási hibát észlelt. További információért lásd a hibajelentést.
 
 status.security=Biztonsági kapcsolat létrehozása nem sikerült. Ön aláírta vagy egyébként nem megbízható tanúsítványt importálta a Thunderbirdbe? (##replace.1##)
 helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
