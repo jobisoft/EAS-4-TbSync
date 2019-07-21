@@ -601,7 +601,11 @@ var network = {
                         wbxml.atag("Class", syncData.type); //only 2.5
                         wbxml.atag("CollectionId", syncData.currentFolderData.getFolderProperty("serverID"));
                         wbxml.switchpage("AirSync");
-                        wbxml.atag("FilterType", eas.tools.getFilterType());
+                        // required !
+                        // https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-ascmd/ffbefa62-e315-40b9-9cc6-f8d74b5f65d4
+                        if (syncData.type == "Calendar") wbxml.atag("FilterType", syncData.currentFolderData.accountData.getAccountProperty("synclimit"));
+                        else wbxml.atag("FilterType", "0"); // we may filter incomplete tasks
+                        
                         wbxml.atag("SyncKey", syncData.synckey);
                         wbxml.switchpage("GetItemEstimate");
                     } else { //14.0
@@ -611,7 +615,8 @@ var network = {
                         wbxml.atag("CollectionId", syncData.currentFolderData.getFolderProperty("serverID"));
                         wbxml.switchpage("AirSync");
                         wbxml.otag("Options");
-                            if (syncData.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
+                            // optional
+                            if (syncData.type == "Calendar") wbxml.atag("FilterType", syncData.currentFolderData.accountData.getAccountProperty("synclimit"));
                             wbxml.atag("Class", syncData.type);
                         wbxml.ctag();
                         wbxml.switchpage("GetItemEstimate");

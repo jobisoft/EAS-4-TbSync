@@ -78,12 +78,6 @@ var tools = {
             return aUri;
         }
     },
-
-    //gets the synclimit a.k.a. filtertype from pref settings, and checks if valid
-    getFilterType: function () {
-        let filterType = eas.prefs.getIntPref("synclimit").toString();
-        return (["0","4","5","6","7"].includes(filterType)) ? filterType : Services.prefs.getDefaultBranch("extensions.tbsync.").getIntPref("eas.synclimit").toString();
-    },
     
     //read file from within the XPI package
     fetchFile: function (aURL, returnType = "Array") {

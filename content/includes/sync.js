@@ -375,7 +375,7 @@ var sync = {
 
                         if (syncData.accountData.getAccountProperty("asversion") != "2.5") {
                             wbxml.otag("Options");
-                                if (syncData.type == "Calendar") wbxml.atag("FilterType", eas.tools.getFilterType());
+                                if (syncData.type == "Calendar") wbxml.atag("FilterType", syncData.currentFolderData.accountData.getAccountProperty("synclimit"));
                                 wbxml.atag("Class", syncData.type);
                                 wbxml.switchpage("AirSyncBase");
                                 wbxml.otag("BodyPreference");
@@ -385,7 +385,7 @@ var sync = {
                             wbxml.ctag();
                         } else if (syncData.type == "Calendar") { //in 2.5 we only send it to filter Calendar
                             wbxml.otag("Options");
-                                 wbxml.atag("FilterType", eas.tools.getFilterType());
+                                 wbxml.atag("FilterType", syncData.currentFolderData.accountData.getAccountProperty("synclimit"));
                             wbxml.ctag();
                         }
 
