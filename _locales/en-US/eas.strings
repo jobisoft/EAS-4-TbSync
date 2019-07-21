@@ -85,7 +85,6 @@ status.wbxmlerror=Sync failed. Server responded with status <##replace.1##>.
 status.wbxmlmissingfield=ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response.
 status.OK=OK
 status.nolightning=Lightning add-on not installed, calendars are not supported.
-status.JavaScriptError=JavaScript error!
 status.malformed-xml=Could not parse XML. Check event log for details. 
 status.invalid=Invalid server response (junk).
 status.InvalidServerOptions=The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually.

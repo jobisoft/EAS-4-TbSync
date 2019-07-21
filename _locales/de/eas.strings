@@ -85,7 +85,6 @@ status.wbxmlerror=Synchronisation fehlgeschlagen. Der Server antwortete mit dem 
 status.wbxmlmissingfield=Verletzung des ActiveSync Protokolls: Notwendiges Feld <##replace.1##> ist nicht in der Serverantwort enthalten.
 status.OK=OK
 status.nolightning=Lightning Add-On nicht installiert, Kalender nicht nutzbar.
-status.JavaScriptError=Javascript Fehler!
 status.malformed-xml=Antwort enthält fehlerhaftes XML, Sync angebrochen. Prüfen Sie bitte das Ereignisprotokoll für weitere Details.
 status.invalid=Ungültige Serverantwort.
 status.InvalidServerOptions=Der Server sendet keine Informationen zu den unterstützten ActiveSync Versionen. Ist EAS für diesen Benutzer bzw. für dieses Programm (TbSync) freigeschaltet? Sie können versuchen, die ActiveSync Version manuell festzulegen.

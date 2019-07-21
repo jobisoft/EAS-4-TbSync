@@ -85,7 +85,6 @@ status.wbxmlerror=A összehangolás sikertelen. A kiszolgáló <##replace.1##> �
 status.wbxmlmissingfield=ActiveSync egyezmény megsértése: A(z) <##replace.1##> kötelező mező hiányzik a kiszolgáló válaszából.
 status.OK=Rendben van
 status.nolightning=A Lightning kiegészítő nincs telepítve, a naptárak nem támogatottak.
-status.JavaScriptError=JavaScript hiba!
 status.malformed-xml=Nem sikerült elemezni az XML-t. Ellenőrizze az eseménynaplót a részletekért.
 status.invalid=Érvénytelen kiszolgáló válasz (szemét).
 status.InvalidServerOptions=A kiszolgáló nem nyújt felvilágosítást a támogatott ActiveSync verziókról. EAS akadályozva van ez a felhasználó vagy az ügyfél (Thunderbird-összehangolás) számára? Megpróbálhatja kézzel beállítani az ActiveSync verziót.
