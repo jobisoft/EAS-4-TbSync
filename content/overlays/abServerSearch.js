@@ -12,8 +12,6 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { MailServices } = ChromeUtils.import("resource:///modules/MailServices.jsm");
 var { tbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
 
-const eas = tbSync.providers.eas;
-
 var tbSyncAbServerSearch = {
 
   request: async function (accountData, currentQuery)  {
@@ -21,12 +19,12 @@ var tbSyncAbServerSearch = {
         return null;
     }
         
-    let response = await eas.network.getSearchResults(accountData, currentQuery);
-    let wbxmlData = eas.network.getDataFromResponse(response);
+    let response = await tbSync.providers.eas.network.getSearchResults(accountData, currentQuery);
+    let wbxmlData = tbSync.providers.eas.network.getDataFromResponse(response);
     let data = [];
 
     if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
-      let results = eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
+      let results = tbSync.providers.eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
       let accountname = accountData.getAccountProperty("accountname");
   
       for (let result of results) {
