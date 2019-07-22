@@ -143,3 +143,5 @@ config.custom=ActiveSync Server Konfiguration
 
 acl.readwrite=Serverzugriff lesend und schreibend
 acl.readonly=Serverzugriff nur lesend (verwerfe lokale Änderungen)
+
+autocomplete.serverdirectory = Globales Serververzeichnis
