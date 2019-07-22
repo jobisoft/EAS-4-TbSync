@@ -49,7 +49,7 @@ var base = {
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
 
-    // The abCSS.xul overlay is just adding a CSS file.
+        // The abCSS.xul overlay is just adding a CSS file.
         await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
