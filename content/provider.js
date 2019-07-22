@@ -48,6 +48,11 @@ var base = {
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
+
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
+
         eas.overlayManager.startObserving();
                 
         try {
@@ -321,15 +326,16 @@ var base = {
 
 
     /**
-     * Implement this method, if the provider should autocomplete emails from
-     * an additional source (a company directory or a global address list).
-     * Results returned by this method will be used for autocompletion while
-     * typing something into the address field of the message composer.
+     * Implement this method, if this provider should add additional entries
+     * to the autocomplete list while typing something into the address field
+     * of the message composer.
      *
-     * If this provider does not support this kind of lookup, it is berrer
-     * to not implement this method instead of returning an empty array.
+     * When creating directories, you can set:
      *
-     * TbSync will execute this only for queries longer than 3 chars.
+     *    directory.setBoolValue("enable_autocomplete", false);
+     *
+     * to disable the default autocomplete for this directory and have full
+     * control over the autocomplete.
      *
      * @param accountData   [in] AccountData of the account which should be
      *                           searched
@@ -338,6 +344,11 @@ var base = {
      * Return arrary of email entries like "Name <email>" or just plain emails.
      */
     abAutoComplete: async function (accountData, currentQuery)  {
+        let data = [];
+
+        if (currentQuery.length < 3)
+            return null;
+        
         if (!accountData.getAccountProperty("allowedEasCommands").split(",").includes("Search")) {
             return null;
         }
@@ -348,7 +359,6 @@ var base = {
             
         let response = await eas.network.getSearchResults(accountData, currentQuery);
         let wbxmlData = eas.network.getDataFromResponse(response);
-        let data = [];
 
         if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
             let results = eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
@@ -357,7 +367,10 @@ var base = {
             for (let count = 0; count < results.length; count++) {
                 if (results[count].Properties) {
                     //tbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
-                    data.push(results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">");
+                    data.push({
+                        value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
+                        comment: tbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
+                        });
                 }
             }
         }
