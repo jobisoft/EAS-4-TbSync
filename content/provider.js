@@ -49,6 +49,7 @@ var base = {
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
 
+    // The abCSS.xul overlay is just adding a CSS file.
         await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
         await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
@@ -341,7 +342,7 @@ var base = {
      *                           searched
      * @param currentQuery  [in] search query
      *
-     * Return arrary of email entries like "Name <email>" or just plain emails.
+     * Return arrary of AutoCompleteData entries.
      */
     abAutoComplete: async function (accountData, currentQuery)  {
         let data = [];
@@ -370,7 +371,9 @@ var base = {
                     data.push({
                         value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
                         comment: tbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
-                        });
+                        icon: "",//eas.base.getProviderIcon(16, accountData),
+                        style: "EASGAL",
+                    });
                 }
             }
         }
