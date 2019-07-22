@@ -11,6 +11,6 @@ treechildren::-moz-tree-image(DirCol, eas) {
 
 /* autocomplete styles */
 .autocomplete-richlistitem[type="EASGAL"] {
-  color: red;
-  background-color: silver;
+  color: DimGrey;
+  background-color: WhiteSmoke;
 }

@@ -371,7 +371,7 @@ var base = {
                     data.push({
                         value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
                         comment: tbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
-                        icon: "",//eas.base.getProviderIcon(16, accountData),
+                        icon: eas.base.getProviderIcon(16, accountData),
                         style: "EASGAL",
                     });
                 }
