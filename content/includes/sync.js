@@ -467,7 +467,11 @@ var sync = {
                                         item = await syncData.target.getItem(changes[i].itemId);
                                         if (item) {
                                             //filter out bad object types for this folder
-                                            if (syncData.type == eas.sync.getEasItemType(item)) {
+                                            if (syncData.type == "Contacts" && item.isMailList) {
+                                                // Mailing lists are not supported, this is not an error
+                                                tbSync.eventlog.add("warning", syncData.eventLogInfo, "MailingListNotSupportedItemSkipped");
+                                                syncData.target.removeItemFromChangeLog(changes[i].itemId);
+                                            } else if (syncData.type == eas.sync.getEasItemType(item)) {
                                                 //create a temp clientId, to cope with too long or invalid clientIds (for EAS)
                                                 let clientId = Date.now() + "-" + c;
                                                 addedItems[clientId] = changes[i].itemId;
