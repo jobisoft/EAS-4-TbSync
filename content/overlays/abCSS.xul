@@ -3,7 +3,6 @@
 
 <overlay 
     id="TbSyncAbEasCssOverlay"
-    oninject="alert('juhu')"
     xmlns:html="http://www.w3.org/1999/xhtml">
 
 </overlay>        

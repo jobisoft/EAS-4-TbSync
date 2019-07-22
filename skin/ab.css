@@ -10,10 +10,7 @@ treechildren::-moz-tree-image(DirCol, eas) {
 }
 
 /* autocomplete styles */
-treechildren::-moz-tree-cell-text(EASGAL) {
+.autocomplete-richlistitem[type="EASGAL"] {
   color: red;
-}
-
-treechildren::-moz-tree-row(EASGAL) {
   background-color: silver;
 }
