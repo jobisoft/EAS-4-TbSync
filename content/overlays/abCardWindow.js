@@ -61,6 +61,7 @@ var tbSyncAbEasCardWindow = {
             //if this window was open during inject, load the extra fields
             if (gEditCard) tbSyncAbEasCardWindow.onLoadCard(gEditCard.card, window.document);
         }
+        window.sizeToContent();
     },
 
     onRemove: function (window) {
