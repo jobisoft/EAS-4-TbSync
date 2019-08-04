@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "Provider for Exchange ActiveSync"
+  },
+  "extensionDescription": {
+    "message": "Добавляет в TbSync поддержку синхронизации для учетных записей Exchange через базирующийся на http/https протокол ActiveSync (контакты, задачи и календари)."
+  }
+}

@@ -1,0 +1,147 @@
+newaccount.add_custom=Fiók hozzáadása
+newaccount.add_auto=Az önműködő felismerés beállításai és fiók hozzáadása
+
+autodiscover.Querying=Beállítások keresése…
+autodiscover.Ok=Az önműködő felderítés sikeresen befejeződött, most ellenőrizheti az választható beállításokat és létrehozhatja az összehangolási kapcsolatot.
+autodiscover.NeedEmail=Az önműködő felismerésnek érvényes e-mail címnek kell lennie felhasználói névként.
+autodiscover.Failed=A felhasználó <##user##> önműködő felderítése sikertelen. Vagy a megadott hitelesítő adatok hibásak voltak, vagy az ActiveSync szolgáltató ideiglenes problémát okozott, vagy nem támogatja az önműködő felderítést.
+
+deletefolder.notallowed=Kérjük, törölje le a(z) „##replace.1##” mappát, mielőtt megpróbálnánk kuka ürítése.
+deletefolder.confirm=Tényleg azt szeretné, hogy a(z) „##replace.1##” mappa véglegesen törölje a kukát?
+
+deletefolder.menuentry=„##replace.1##” mappa kuka ürítése
+recyclebin=Kuka
+
+syncstate.prepare.request.setdeviceinfo=Eszköz tájékoztatás küldése
+syncstate.send.request.setdeviceinfo=Eszköz tájékoztatás küldése
+syncstate.eval.response.setdeviceinfo=Eszköz tájékoztatás küldése
+
+syncstate.syncing=Összehangolás kezdése
+syncstate.preparing=Készítse elő a következő elemet az összehangolásához
+syncstate.done=Készítse elő a következő elemet az összehangolásához
+syncstate.accountdone=Fiók kész
+
+syncstate.prepare.request.autodiscover=Frissített kiszolgáló beállítások kérése
+syncstate.send.request.autodiscover=Várakozás a frissített kiszolgáló beállításokra
+syncstate.eval.response.autodiscover=Frissített kiszolgáló beállítások feldolgozása
+
+syncstate.prepare.request.options=A kiszolgáló beállításainak megkeresése
+syncstate.send.request.options=Várakozás a kiszolgáló beállításaira
+syncstate.eval.response.options=A kiszolgáló beállításainak feldolgozása
+
+syncstate.prepare.request.folders=A mappalisták frissítés elküldése
+syncstate.send.request.folders=Várakozás a mappa listájának frissítésére
+syncstate.eval.response.folders=A mappalista frissítés feldolgozása
+
+syncstate.prepare.request.synckey=Összehangoláskulcs kérése
+syncstate.send.request.synckey=Várakozás az összehangoláskulcsra
+syncstate.eval.response.synckey=Összehangoláskulcs feldolgozása
+
+syncstate.prepare.request.deletefolder=Előkészület a mappa törlésére
+syncstate.send.request.deletefolder=Várakozás a mappa törlésére
+syncstate.eval.response.deletefolder=A mappa törölve
+
+syncstate.prepare.request.provision=A rendelkezés igénylése
+syncstate.send.request.provision=Várakozás a rendelkezésre
+syncstate.eval.response.provision=Feldolgozási rendelkezés
+
+syncstate.prepare.request.estimate=Módosítási becslés kérése
+syncstate.send.request.estimate=Várakozás a becslés megváltoztatására
+syncstate.eval.response.estimate=Feldolgozási becslés változása
+
+syncstate.prepare.request.remotechanges=Távoli módosítások kérése
+syncstate.send.request.remotechanges=Várakozás a távoli módosításokra
+syncstate.eval.response.remotechanges=A távoli módosítások feldolgozása
+
+syncstate.prepare.request.localchanges=Helyi változások küldése
+syncstate.send.request.localchanges=Várakozás a helyi változások elismerésére
+syncstate.eval.response.localchanges=A helyi változások elismerésének feldolgozása
+
+syncstate.prepare.request.revertlocalchanges=Helyi változások gyűjtése
+syncstate.send.request.revertlocalchanges=Várja a legfrissebb verziókat
+syncstate.eval.response.revertlocalchanges=A helyi változások visszaállítása
+
+syncstate.prepare.request.localdeletes=Helyi törlések küldése
+syncstate.send.request.localdeletes=Várakozás a helyi törlések nyugtázására
+syncstate.eval.response.localdeletes=A helyi törlések feldolgozása
+
+status.notsyncronized=A fiókot összehangolni kell, legalább egy elem nem összehangolva van.
+status.disabled=A fiók nincs engedélyezve, az összehangolás le van tiltva.
+status.notargets=Az összehangolás megszakítása, mert a szinkronizálási célokat nem lehetett létrehozni.
+status.nouserhost=Hiányzik a felhasználónév és/vagy a kiszolgáló név. Kérjük, adja meg ezeket az értékeket.
+status.timeout=Közlés időtúllépés.
+status.networkerror=Nem tudott csatlakozni a kiszolgálóhoz.
+status.404=A felhasználó nem található (404-es HTTP-hiba).
+status.403=Kiszolgáló elutasította a kapcsolatot (tiltott) (403-ás HTTP-hiba).
+status.401=Nem sikerült hitelesíteni, ellenőrizni a felhasználónevet és a jelszót (401-es HTTP-hiba).
+status.449=Kiszolgáló kérések készítése (449-es HTTP-hiba).
+status.500=Ismeretlen kiszolgálóhiba (500-as HTTP-hiba).
+status.503=A szolgáltatás nem elérhető (503-ás HTTP-hiba).
+status.httperror=Közlés hiba (HTTP állapot ##replace.1##).
+status.empty-response=A kiszolgáló váratlan üres választ küld.
+status.wbxml-parse-error=A kiszolgáló olvashatatlan választ küld.
+status.response-contains-no-data=A szerverre adott válasz nem tartalmaz adatokat.
+status.wbxmlerror=A összehangolás sikertelen. A kiszolgáló <##replace.1##> állapotban válaszolt.
+status.wbxmlmissingfield=ActiveSync egyezmény megsértése: A(z) <##replace.1##> kötelező mező hiányzik a kiszolgáló válaszából.
+status.OK=Rendben van
+status.nolightning=A Lightning kiegészítő nincs telepítve, a naptárak nem támogatottak.
+status.malformed-xml=Nem sikerült elemezni az XML-t. Ellenőrizze az eseménynaplót a részletekért.
+status.invalid=Érvénytelen kiszolgáló válasz (szemét).
+status.InvalidServerOptions=A kiszolgáló nem nyújt felvilágosítást a támogatott ActiveSync verziókról. EAS akadályozva van ez a felhasználó vagy az ügyfél (Thunderbird-összehangolás) számára? Megpróbálhatja kézzel beállítani az ActiveSync verziót.
+
+status.security=Biztonsági kapcsolat létrehozása nem sikerült. Ön aláírta vagy egyébként nem megbízható tanúsítványt importálta a Thunderbirdbe? (##replace.1##)
+helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
+status.network=Nem tudott csatlakozni a kiszolgálóhoz (##replace.1##).
+
+status.syncing=Összehangol
+status.skipped=Még nem támogatott, kihagyva
+status.aborted=Nem összehangolva
+status.pending=Várakozás összehangolásra
+status.modified=Helyi módosítások
+
+status.resync-loop=Hiba történt, amelyből nem sikerült visszaszerezni a fiók újbóli létrehozásával. Kérjük, tiltsd le a fiókot, és próbálkozz újra. (Hiba: újra összehangolja hurok)
+
+status.policy.2=Az ügyfél számára nincs irányelv (Policy). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést.
+status.policy.3=Ismeretlen irányelvtípus (PolicyType) érték. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést.
+status.policy.4=A kiszolgáló házirend-adatai sérültek (esetleg meghamisították). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést.
+status.policy.5=Az ügyfél elismeri a rossz irányelv kulcsot (PolicyKey). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést.
+
+status.provision=A hozzáférést nem sikerült, állapota <##replace.1##>
+
+status.global.101=A kérelem WBXML-t tartalmaz, de XML-ben nem sikerült dekódolni (101-es HTTP-hiba).
+status.global.102=A kérelem WBXML-t tartalmaz, de XML-ben nem sikerült dekódolni (102-es HTTP-hiba).
+status.global.103=A kérésben megadott XML nem követi a egyezménykövetelményeket (103-ás HTTP-hiba).
+status.global.clientdenied=Az EAS kiszolgáló jelentése <##replace.2##> (állapota ##replace.1##), és nem engedélyezi a Thunderbird-összehangolás számára a fiók elérését.
+helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
+
+status.ServerRejectedSomeItems=Az EAS-kiszolgáló nem fogadta el a ##replace.1## elemeket.
+status.ServerRejectedRequest=Az EAS szerver megtagadta az utolsó kérésünket.
+
+status.BadItemSkipped=Bad Item Skipped: ##replace.1##
+helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+
+status.nosupportedeasversion=A kiszolgáló nem támogatja az ActiveSync 2.5 vagy 14.0 verziót (csak ##replace.1##). A Thunderbird-összehangolás nem fog működni az ActiveSync kiszolgálóval.
+status.notsupportedeasversion=A kiszolgáló nem támogatja a kiválasztott ActiveSync ##replace.1## verziót (csak ##replace.2## verzió).
+
+status.Sync.3=?? Invalid synchronization key (status 3), resyncing ??
+status.Sync.4=?? Malformed request (status 4) ??
+status.Sync.5=?? Temporary server issues or invalid item (status 5) ??
+status.Sync.6=?? Invalid item (status 6) ??
+status.Sync.8=?? Object not found (status 8) ??
+status.Sync.12=?? Folder hierarchy changed (status 12), resyncing ??
+status.FolderDelete.3=Nem lehet törölni egy rendszermappát.
+status.FolderDelete.6=A parancs nem sikerült, hiba történt a kiszolgálón.
+status.FolderDelete.4=?? Folder does not exist (status 4), resyncing ??
+status.FolderDelete.9=?? Invalid synchronization key (status 9), resyncing ??
+status.FolderSync.9=?? Invalid synchronization key (status 9), resyncing ??
+
+status.forbiddenTasksItemInCalendarFolder=?? Forbidden task item in a calendar folder (please resort) ??
+status.forbiddenCalendarItemInTasksFolder=?? Forbidden calendar item in a task folder (please resort) ??
+
+config.auto=Az ActiveSync kiszolgáló beállítások (önműködő észlelés)
+config.custom=Az ActiveSync kiszolgáló beállítások
+
+acl.readwrite=Read from and write to server
+acl.readonly=Read-only server access (revert local changes)
+
+autocomplete.serverdirectory = global server directory

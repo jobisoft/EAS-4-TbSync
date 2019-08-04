@@ -1,0 +1,13 @@
+{
+  "addons": {
+    "eas4tbsync@jobisoft.de": {
+      "updates": [
+        { "version": "%VERSION%",
+          "update_info_url": "https://github.com/jobisoft/EAS-4-TbSync/releases",
+          "update_link": "%LINK%",
+          "applications": {
+            "gecko": { "strict_min_version": "68.0" } } }
+      ]
+    }
+  }
+}

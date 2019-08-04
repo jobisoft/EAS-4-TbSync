@@ -8,3 +8,9 @@ treechildren::-moz-tree-image(DirCol, eas) {
 .abMenuItem[AddrBook="true"][TbSyncIcon="eas"] {
   list-style-image: url("chrome://eas4tbsync/skin/eas16.png");
 }
+
+/* autocomplete styles */
+.autocomplete-richlistitem[type="EASGAL"] {
+  color: DimGrey;
+  background-color: WhiteSmoke;
+}

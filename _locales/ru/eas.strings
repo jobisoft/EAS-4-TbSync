@@ -1,0 +1,147 @@
+newaccount.add_custom=Добавить аккаунт
+newaccount.add_auto=Настройки автообнаружения и добавление аккаунта
+
+autodiscover.Querying=Поиск настроек…
+autodiscover.Ok=Автообнаружение успешно завершено, теперь вы можете проверить дополнительные настройки и установить соединение синхронизации.
+autodiscover.NeedEmail=Автообнаружению нужен действительный адрес электронной почты в качестве имени пользователя.
+autodiscover.Failed=Автообнаружение для пользователя <##user##> не удалось. Либо предоставленные учетные данные были неправильными, либо у вашего провайдера ActiveSync была временная проблема, или не поддерживается автообнаружение.
+
+deletefolder.notallowed=Откажитесь от подписки папки “##replace.1##” прежде чем пытаться очистить ее от мусора.
+deletefolder.confirm=Вы действительно хотите ПЕРМАНЕНТНО ВЫЧИСТИТЬ папку “##replace.1##” из корзины?
+
+deletefolder.menuentry=Перманентно вычистить папку “##replace.1##” из корзины
+recyclebin = Корзина
+
+syncstate.prepare.request.setdeviceinfo=Отправка информации об устройстве
+syncstate.send.request.setdeviceinfo=Ожидание информации об устройстве
+syncstate.eval.response.setdeviceinfo=Обработка информации об устройстве
+
+syncstate.syncing=Инициализация синхронизации
+syncstate.preparing=Подготовка следующего элемента для синхронизации
+syncstate.done=Подготовка следующего элемента для синхронизации
+syncstate.accountdone=Завершенный аккаунт
+
+syncstate.prepare.request.autodiscover=Запрос обновленных настроек сервера
+syncstate.send.request.autodiscover=Ожидание обновленных настроек сервера
+syncstate.eval.response.autodiscover=Обработка обновленных настроек сервера
+
+syncstate.prepare.request.options=Запрос настроек сервера
+syncstate.send.request.options=Ожидание настроек сервера
+syncstate.eval.response.options=Обработка настроек сервера
+
+syncstate.prepare.request.folders=Отправка обновления листа папок
+syncstate.send.request.folders=Ожидание обновления листа папок
+syncstate.eval.response.folders=Обработка обновления листа папок
+
+syncstate.prepare.request.synckey=Запрос элементов синхронизации
+syncstate.send.request.synckey=Ожидание элементов синхронизации
+syncstate.eval.response.synckey=Обработка элементов синхронизации
+
+syncstate.prepare.request.deletefolder=Подготовка к удалению папки
+syncstate.send.request.deletefolder=Ожидание удаления папки
+syncstate.eval.response.deletefolder=Папка удалена
+
+syncstate.prepare.request.provision=Запрос для резервирования
+syncstate.send.request.provision=Ожидание резервирования
+syncstate.eval.response.provision=Обработка резервирования
+
+syncstate.prepare.request.estimate=Запрос оценки изменения
+syncstate.send.request.estimate=Ожидание оценки изменений
+syncstate.eval.response.estimate=Обработка оценки изменений
+
+syncstate.prepare.request.remotechanges=Запрос удаленных изменений
+syncstate.send.request.remotechanges=Ожидание удаленных изменений
+syncstate.eval.response.remotechanges=Обработка удаленных изменений
+
+syncstate.prepare.request.localchanges=Отправка локальных изменений
+syncstate.send.request.localchanges=Ожидание подтверждения локальных изменений
+syncstate.eval.response.localchanges=Обработка подтверждения локальных изменений
+
+syncstate.prepare.request.revertlocalchanges=Сбор локальных изменений
+syncstate.send.request.revertlocalchanges=Ожидание самых последних версий
+syncstate.eval.response.revertlocalchanges=Откат локальных изменений
+
+syncstate.prepare.request.localdeletes=Отправка локальных удалений
+syncstate.send.request.localdeletes=Ожидание подтверждения локальных удалений
+syncstate.eval.response.localdeletes=Обработка подтверждения локальных удалений
+
+status.notsyncronized=Аккаунт должен быть синхронизирован, по крайней мере один элемент не синхронизирован.
+status.disabled=Аккаунт не включен, синхронизация отключена.
+status.notargets=Отмена синхронизации, поскольку цели синхронизации не могут быть созданы.
+status.nouserhost=Отсутствует имя пользователя и/или сервера. Укажите эти значения.
+status.timeout=Тайм-аут связи.
+status.networkerror=Не удалось подключиться к серверу.
+status.404=Пользователь не найден (HTTP Ошибка 404).
+status.403=Сервер отклонил соединение (запрещено) (HTTP Ошибка 403).
+status.401=Не удалось аутентифицировать, проверить имя пользователя и пароль. (HTTP Ошибка 401).
+status.449=Серверные запросы дублируются (HTTP Ошибка 449).
+status.500=Неизвестная ошибка сервера (HTTP Ошибка 500).
+status.503=Сервис недоступен (HTTP Ошибка 503).
+status.httperror=Ошибка связи (HTTP статус ##replace.1##).
+status.empty-response=Сервер отправляет неожиданный пустой ответ.
+status.wbxml-parse-error=Сервер отправляет нечитаемый ответ.
+status.response-contains-no-data=Ответ от сервера не содержит данных.
+status.wbxmlerror=Ошибка синхронизации. Сервер ответил статусом <##replace.1##>.
+status.wbxmlmissingfield=ActiveSync протокол нарушен: Обязательное поле <##replace.1##> отсутствует в ответе сервера.
+status.OK=Готово
+status.nolightning=Lightning Add-On не установлен, календари не поддерживаются.
+status.malformed-xml=Не удалось разобрать XML. Проверьте журнал событий для деталей.
+status.invalid=Недопустимый ответ сервера (мусор в обмене).
+status.InvalidServerOptions=Сервер не предоставляет информацию о поддерживаемых версиях ActiveSync. EAS блокирован для этого пользователя или этого клиента (TbSync)? Вы можете попробовать установить версию ActiveSync вручную.
+
+status.security=Не удалось установить безопасное соединение. Вы используете самоподписанный или ненадежный сертификат без импорта его в Thunderbird? (##replace.1##)
+helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
+status.network=Не удалось подключиться к серверу (##replace.1##).
+
+status.syncing=Синхронизация
+status.skipped=Пока не поддерживается, пропущено
+status.aborted=Не синхронизировано
+status.pending=Ожидание пока синхронизируется
+status.modified=Локальные изменения
+
+status.resync-loop=Произошла ошибка, из-за которой не удалось пересинхронизировать аккаунт. Отключите аккаунт и повторите попытку. (Ошибка: повторная синхронизация)
+
+status.policy.2=Для этого клиента нет политики. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
+status.policy.3=Неизвестное значение политики для этого клиента. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
+status.policy.4=Данные политики на сервере повреждены (возможно, подделаны). Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
+status.policy.5=Клиент обнаружил неправильный ключ политики. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта.
+
+status.provision=Резервирование не удалось со статусом <##replace.1##>
+
+status.global.101=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 101).
+status.global.102=Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 102).
+status.global.103=XML, указанный в запросе, не соответствует требованиям протокола (EAS Ошибка 103).
+status.global.clientdenied=Отчеты сервера EAS <##replace.2##> (статус ##replace.1##) и не позволяют TbSync доступ к вашему аккаунту.
+helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
+
+status.ServerRejectedSomeItems=Сервер EAS не принял элементы ##replace.1##.
+status.ServerRejectedRequest=Сервер EAS отклонил наш последний запрос.
+
+status.BadItemSkipped=Плохой элемент пропущен: ##replace.1##
+helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+
+status.nosupportedeasversion=Сервер не поддерживает ActiveSync v2.5 или v14.0 (только ##replace.1##). TbSync не будет работать с этим ActiveSync сервером.
+status.notsupportedeasversion=Сервер не поддерживает выбранный ActiveSync v##replace.1## (только ##replace.2##).
+
+status.Sync.3=Неверный ключ синхронизации (статус 3), повторная синхронизация
+status.Sync.4=Неверный запрос (статус 4)
+status.Sync.5=Временные проблемы с сервером или недопустимый элемент (статус 5)
+status.Sync.6=Недопустимый элемент (статус 6)
+status.Sync.8=Объект не найден (статус 8)
+status.Sync.12=Изменена иерархия папок (статус 12), повторная синхронизация
+status.FolderDelete.3=Не удается удалить системную папку.
+status.FolderDelete.6=Команда не может быть выполнена, на сервере возникла ошибка.
+status.FolderDelete.4=Папка не существует (статус 4), повторная синхронизация
+status.FolderDelete.9=Неверный ключ синхронизации (статус 9), повторная синхронизация
+status.FolderSync.9=Неверный ключ синхронизации (статус 9), повторная синхронизация
+
+status.forbiddenTasksItemInCalendarFolder=Запрещенный элемент задачи в папке календаря (пожалуйста, исправьте)
+status.forbiddenCalendarItemInTasksFolder=Запрещенный элемент календаря в папке задач (пожалуйста, исправьте)
+
+config.auto=ActiveSync конфигурация сервера (Автообнаружение)
+config.custom=ActiveSync конфигурация сервера
+
+acl.readwrite=Читать и писать на сервер
+acl.readonly=Доступ к серверу только для чтения (отменить локальные изменения)
+
+autocomplete.serverdirectory = global server directory

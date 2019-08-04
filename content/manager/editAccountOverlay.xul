@@ -6,10 +6,12 @@
   <!ENTITY % easDTD SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
   %easDTD;
 ]>
+
 <overlay 
     id="tbSyncAccountConfig" 
-    oninject="tbSync.eas.onSettingsGUILoad(window, tbSyncAccountSettings.account)"
     xmlns:html="http://www.w3.org/1999/xhtml">
+
+    <script type="application/javascript" src="chrome://eas4tbsync/content/manager/editAccountOverlay.js"/>
 
     <menuitem 
         id="TbSync.eas.FolderListContextMenuDelete" 
@@ -17,13 +19,13 @@
         class="menuitem-iconic"
         image="chrome://tbsync/skin/trash16.png"
         appendto="tbsync.accountsettings.FolderListContextMenu"
-        oncommand="tbSync.eas.folderList.deleteFolder(document, tbSyncAccountSettings.account);"/>
+        oncommand="tbSyncEditAccountOverlay.deleteFolder();"/>
     
     <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
     <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />
 
     <tabpanel id="manager.tabpanels.accountsettings" appendto="manager.tabpanels" flex="1" orient="vertical"><!-- ACCOUNT SETTINGS -->
-           <vbox flex="1">
+          <vbox flex="1">
                 <label class="header lockIfConnected" style="margin-left:0; margin-bottom:1ex;" value="" id="tbsync.accountsettings.label.config" />                
                 <grid flex="1">
                    <columns>
@@ -50,7 +52,7 @@
                             <vbox pack="center">
                                 <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
                             </vbox>
-                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSync.eas.stripHost(document, tbSyncAccountSettings.account);" />
+                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncEditAccountOverlay.stripHost(document);" />
                         </row>
                         <row>
                             <hbox/>
@@ -61,12 +63,13 @@
                             <vbox id="asversion.hook" pack="center">
                                 <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="&pref.ActiveSyncVersion;" />
                             </vbox>
-                            <!-- menulist flex="0" id="tbsync.accountsettings.pref.asversionselected"  ></menulist -->
-                            <menupopup id="asversion.popup">
-                                <menuitem label="&pref.autodetect;" value="auto" />
-                                <menuitem label="v2.5" value="2.5" />
-                                <menuitem label="v14.0" value="14.0" />
-                            </menupopup>
+                            <menulist flex="0" id="tbsync.accountsettings.pref.asversionselected" class="lockIfConnected">
+                                <menupopup id="asversion.popup">
+                                    <menuitem label="&pref.autodetect;" value="auto" />
+                                    <menuitem label="v2.5" value="2.5" />
+                                    <menuitem label="v14.0" value="14.0" />
+                                </menupopup>
+                            </menulist>
                         </row>
                         <row>
                             <label class="lockIfConnected" style="text-align:left" value="&pref.DeviceId;" />
@@ -83,7 +86,7 @@
                     </hbox>
                 </vbox>
 
-            </vbox>
+        </vbox>
     </tabpanel>
 
     <tabpanel id="manager.tabpanels.syncsettings" appendto="manager.tabpanels" flex="1" orient="vertical"><!-- SYNC SETTINGS -->
@@ -98,14 +101,32 @@
                     <checkbox id="tbsync.accountsettings.pref.galautocomplete" label="&pref.galautocomplete;" />
                     <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
                     <hbox align="center">
-                        <!-- menulist id="tbsync.accountsettings.pref.seperator"></menulist-->
-                        <menupopup id="separator.popup">
-                            <menuitem label="&pref.seperator.linebreak;" value="10" />
-                            <menuitem label="&pref.seperator.comma;" value="44" />
-                        </menupopup>
-                        <description id="separator.hook" class="lockIfConnected" flex="1">&pref.seperator.description;</description>
+                        <description id="separator.hook" class="lockIfConnected" flex="0">&pref.seperator.description;</description>
+                        <menulist id="tbsync.accountsettings.pref.seperator" class="lockIfConnected">
+                            <menupopup id="separator.popup">
+                                <menuitem label="&pref.seperator.linebreak;" value="10" />
+                                <menuitem label="&pref.seperator.comma;" value="44" />
+                            </menupopup>
+                        </menulist>                            
                     </hbox>
                 </vbox>                            
+
+                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="&pref.calendaroptions;"/>
+                <vbox>                            
+                    <hbox align="center">
+                        <description id="synclimit.hook" class="lockIfConnected" flex="0">&pref.synclimit.description;</description>
+                        <menulist id="tbsync.accountsettings.pref.synclimit" class="lockIfConnected">
+                            <menupopup id="synclimit.popup">
+                                <menuitem label="&pref.synclimit.all;" value="0" />
+                                <menuitem label="&pref.synclimit.2weeks;" value="4" />
+                                <menuitem label="&pref.synclimit.1month;" value="5" />
+                                <menuitem label="&pref.synclimit.3month;" value="6" />
+                                <menuitem label="&pref.synclimit.6month;" value="7" />
+                            </menupopup>
+                        </menulist>                            
+                    </hbox>
+                </vbox>                            
+
 
                 <vbox flex="1" />
                 <vbox class="showIfConnected">

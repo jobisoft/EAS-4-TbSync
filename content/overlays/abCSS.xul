@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://eas4tbsync/skin/ab.css" type="text/css"?>
+
+<overlay 
+    id="TbSyncAbEasCssOverlay"
+    xmlns:html="http://www.w3.org/1999/xhtml">
+
+</overlay>        

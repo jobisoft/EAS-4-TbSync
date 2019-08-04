@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
+
+<overlay 
+    id="TbSyncAbEasDetailsOverlay" 
+    onbeforeinject="tbSyncEasAddressBookDetails.onBeforeInject(window)"
+    oninject="tbSyncEasAddressBookDetails.onInject(window)"
+    onremove="tbSyncEasAddressBookDetails.onRemove(window)"
+    xmlns:html="http://www.w3.org/1999/xhtml">
+
+    <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.js" />
+
+    <description class="CardViewLink" id="cvEmail3Box" insertafter="cvEmail2Box">
+        <html:a href="" id="cvEmail3" />
+    </description>
+
+    <description class="CardViewText" id="easPhWork2" labelprefix="&abCard.Business2PhoneNumber;" insertafter="cvPhWork" />
+    <description class="CardViewText" id="easPhCompany" labelprefix="&abCard.CompanyMainPhone;" insertafter="cvPhWork" />
+    <description class="CardViewText" id="easPhWorkFax" labelprefix="&abCard.BusinessFaxNumber;" insertafter="cvPhFax" />
+
+    <description class="CardViewText" id="easPhHome2" labelprefix="&abCard.Home2PhoneNumber;" insertafter="cvPhHome" />
+
+    <description class="CardViewText" id="easPhAssistant" labelprefix="&abCard.AssistantPhoneNumber;" insertafter="cvPhPager" />
+    <description class="CardViewText" id="easPhCar" labelprefix="&abCard.CarPhoneNumber;" insertafter="cvPhPager" />
+    <description class="CardViewText" id="easPhRadio" labelprefix="&abCard.RadioPhoneNumber;" insertafter="cvPhPager" />
+
+</overlay>        

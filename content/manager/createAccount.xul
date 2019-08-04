@@ -15,9 +15,7 @@
     id="tbsync.newaccount.wizard"
     onload="tbSyncEasNewAccount.onLoad();"
     onunload="tbSyncEasNewAccount.onUnload();"
-    onclose="return tbSyncEasNewAccount.onClose()"
-    onwizardfinish="return tbSyncEasNewAccount.onFinish();"
-    onwizardcancel="return tbSyncEasNewAccount.onCancel()" >
+    onclose="return tbSyncEasNewAccount.onClose()" >
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/manager/createAccount.js"/>
 
@@ -79,8 +77,8 @@
             <vbox>
               <button 
               id="tbsync.error.link" 
-              label="&manager.ShowErrorLog;"
-              oncommand="tbSync.openErrorLog();"/>
+              label="&manager.ShowEventLog;"
+              oncommand="tbSync.eventlog.open();"/>
             </vbox>
         </vbox>    
 

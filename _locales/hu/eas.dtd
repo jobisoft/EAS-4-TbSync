@@ -1,0 +1,80 @@
+<!ENTITY add.title "Exchange ActiveSync-fiók hozzáadása a Thunderbird-összehangoláshoz">
+<!ENTITY add.shortdescription "Fiók adatait">
+<!ENTITY add.ok "Fiók hozzáadása">
+<!ENTITY add.name "Felhasználónév:">
+<!ENTITY add.user "Felhasználónév (e-mail cím):">
+<!ENTITY add.password "Jelszó:">
+<!ENTITY add.url "Kiszolgáló címe:">
+<!ENTITY add.urldescription "Megfelelőnek kell lennie ahhoz, hogy csak az alapkiszolgáló címét adja meg (például: posta.kiszolgálód.hu). Azonban a teljes URL-címet is megadhatjuk (például: https://posta.kiszolgálód.hu/Microsoft-Server-ActiveSync).">
+
+<!ENTITY add.server "Kiszolgáló beállítások:">
+<!ENTITY add.description "Adja meg az új Thunderbird-összehangolás-fiók nevét, a hozzáadni kívánt ActiveSync-fiók (valószínűleg egy e-mail cím) felhasználónevét, és válassza ki az elérhető kiszolgáló beállítások egyikét.">
+
+<!ENTITY pref.autodetect "az elérhető legjobb">
+
+<!ENTITY pref.AccountName "Fióknév">
+<!ENTITY pref.UserName "Felhasználónév">
+<!ENTITY pref.UserNameDescription "A felhasználónév általában a fiókod e-mail címe.">
+<!ENTITY pref.ServerName "Kiszolgáló címe">
+<!ENTITY pref.ActiveSyncVersion "ActiveSync verzió">
+<!ENTITY pref.ServerNameDescription "például: posta.kiszolgálód.hu">
+<!ENTITY pref.usehttps "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)">
+<!ENTITY pref.DeviceId "ActiveSync eszközazonosító">
+<!ENTITY pref.birthday "Születésnapi információk küldése">
+<!ENTITY pref.generaloptions "Általános beállítások">
+<!ENTITY pref.contactoptions "Kapcsolat opciók">
+<!ENTITY pref.calendaroptions "Naptárbeállítások">
+<!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
+<!ENTITY pref.galautocomplete "A globális címjegyzékből (GAL) kapott eredményeket e-mailben töltse ki automatikusan">
+
+<!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése" >
+
+<!ENTITY pref.synclimit.all "mindent">
+<!ENTITY pref.synclimit.2weeks "2 héttel ezelőtt">
+<!ENTITY pref.synclimit.1month "4 héttel ezelőtt">
+<!ENTITY pref.synclimit.3month "3 hónappal ezelőtt">
+<!ENTITY pref.synclimit.6month "6 hónappal ezelőtt">
+<!ENTITY pref.synclimit.description "Szinkronizálási időszak:">
+
+<!ENTITY pref.seperator.comma "Vessző">
+<!ENTITY pref.seperator.linebreak "Sortörés">
+<!ENTITY pref.seperator.description "Több címsort tartalmazó elválasztó.">
+<!ENTITY pref.displayoverride "A megjelenítési név felülbírálása „keresztnév” és „második keresztnév”">
+
+<!ENTITY servertype.auto "Önműködő beállítás az ActiveSync önműködő felismerésével">
+<!ENTITY servertype.custom "Egyéni beállítások">
+<!ENTITY servertype.unlock "Dupla kattintson az összes előre meghatározott kiszolgáló beállításának feloldásához.">
+
+<!ENTITY abCard.MiddleName "Második keresztnév:">
+<!ENTITY abCard.Email3Address "Másodlagos e-mail:">
+<!ENTITY abCard.Home2PhoneNumber "2. otthoni telefon:">
+<!ENTITY abCard.Business2PhoneNumber "2. munkahelyi telefon:">
+<!ENTITY abCard.BusinessFaxNumber "Munkahelyi fax:">
+
+<!ENTITY abCard.ManagerName "Vezető:">
+<!ENTITY abCard.AssistantPhoneNumber "Segítői telefon:">
+<!ENTITY abCard.AssistantName "Segítő:">
+<!ENTITY abCard.Spouse "Házastárs:">
+<!ENTITY abCard.Anniversary "Évforduló:">
+
+<!ENTITY abCard.CarPhoneNumber "Autóstelefon:">
+<!ENTITY abCard.RadioPhoneNumber "Rádiótávbeszélő:">
+<!ENTITY abCard.CompanyMainPhone "Fő munkahelyi telefon:">
+
+<!ENTITY abCard.OtherAddress "Cím:">
+<!ENTITY abCard.OtherCity "Város:">
+<!ENTITY abCard.OtherCountry "Ország:">
+<!ENTITY abCard.OtherZip "Irányítószám:">
+<!ENTITY abCard.OtherState "Állam/tartomány:">
+
+<!ENTITY abCard.header.worknumbers "További munkahelyi számok:">
+<!ENTITY abCard.header.homenumbers "További otthoni számok:">
+<!ENTITY abCard.header.othernumbers "További számok:">
+<!ENTITY abCard.header.messaging "Üzenetek:">
+<!ENTITY abCard.header.people "Emberek:">
+<!ENTITY abCard.header.eas "Egyéb mezők (EAS)">
+<!ENTITY abCard.header.otheraddress "Egyéb cím (EAS)">
+
+<!ENTITY manager.tabs.accountsettings "Fiók beállításai">
+<!ENTITY manager.tabs.syncsettings "Beállítások">
+<!ENTITY manager.tabs.outOfOffice "Önműködő válasz">

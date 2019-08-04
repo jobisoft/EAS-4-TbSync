@@ -1,0 +1,147 @@
+newaccount.add_custom=Adicionar conta
+newaccount.add_auto=Configurações de descoberta automática e adicionar conta
+
+autodiscover.Querying=Procurando por configurações...
+autodiscover.Ok=Descoberta automática concluída com êxito, agora você pode verificar as configurações opcionais e estabelecer a conexão de sincronização.
+autodiscover.NeedEmail=A descoberta automática precisa de um endereço de email válido
+autodiscover.Failed=Descoberta automática para usuário <##user##> falhou. As credenciais fornecidas estavam erradas ou seu provedor do ActiveSync tem um problema temporário ou não oferece suporte à descoberta automática.
+
+deletefolder.notallowed=Por favor, cancele a subscrição da pasta "##replace.1##" antes de tentar limpá-lo do lixo.
+deletefolder.confirm=Você realmente deseja limpar permanentemente a pasta "##replace.1##" da lixeira?
+
+deletefolder.menuentry=Remover permanentemente a pasta "##replace.1##" da lixeira
+recyclebin = Lixeira
+
+syncstate.prepare.request.setdeviceinfo=Enviando informações do dispositivo
+syncstate.send.request.setdeviceinfo=Enviando informações do dispositivo
+syncstate.eval.response.setdeviceinfo=Enviando informações do dispositivo
+
+syncstate.syncing=Inicializar sincronização
+syncstate.preparing=Preparando o próximo item para sincronização
+syncstate.done=Preparando o próximo item para sincronização
+syncstate.accountdone=Sincronização finalizada
+
+syncstate.prepare.request.autodiscover=Solicitando configurações do servidor atualizadas
+syncstate.send.request.autodiscover=Aguardando as configurações do servidor atualizadas
+syncstate.eval.response.autodiscover=Aguardando as configurações do servidor atualizadas
+
+syncstate.prepare.request.options=Solicitando opções do servidor
+syncstate.send.request.options=Aguardando por opções do servidor
+syncstate.eval.response.options=Processando opções do servidor
+
+syncstate.prepare.request.folders=Enviando lista de pastas atualizadas
+syncstate.send.request.folders=Aguardando a atualização da lista de pastas
+syncstate.eval.response.folders=Processando a atualização da lista de pastas
+
+syncstate.prepare.request.synckey=Solicitando SyncKey
+syncstate.send.request.synckey=Esperando SyncKey
+syncstate.eval.response.synckey=Processando SyncKey
+
+syncstate.prepare.request.deletefolder=Preparando-se para excluir pasta
+syncstate.send.request.deletefolder=Aguardando a pasta ser excluída
+syncstate.eval.response.deletefolder=Pasta excluída
+
+syncstate.prepare.request.provision=Solicitando provisão
+syncstate.send.request.provision=Agurdandando provisão
+syncstate.eval.response.provision=Processando provisão
+
+syncstate.prepare.request.estimate=Solicitando estimativa de alterações
+syncstate.send.request.estimate=Aguardando a estimativa de alterações
+syncstate.eval.response.estimate=Processando a estimativa de alterações
+
+syncstate.prepare.request.remotechanges=Solicitando alterações remotas
+syncstate.send.request.remotechanges=Aguardando alterações remotas
+syncstate.eval.response.remotechanges=Processando alterações remotas
+
+syncstate.prepare.request.localchanges=Enviando alterações locais
+syncstate.send.request.localchanges=Aguardando confirmação de alterações locais
+syncstate.eval.response.localchanges=Processando reconhecimento de alterações locais
+
+syncstate.prepare.request.revertlocalchanges=Coletando alterações locais
+syncstate.send.request.revertlocalchanges=Aguardando as versões mais recentes
+syncstate.eval.response.revertlocalchanges=Revertendo alterações locais
+
+syncstate.prepare.request.localdeletes=Enviando exclusões locais
+syncstate.send.request.localdeletes=Aguardando o reconhecimento de exclusões locais
+syncstate.eval.response.localdeletes=Processando reconhecimento de exclusões locais
+
+status.notsyncronized=A conta precisa ser sincronizada, pelo menos, um item está fora de sincronia.
+status.disabled=Desativado
+status.notargets=Anulando a sincronização, porque os destinos de sincronização não puderam ser criados.
+status.nouserhost=Nome de usuário e/ou servidor ausente. Por favor, forneça esses valores.
+status.timeout=Tempo limite de comunicação.
+status.networkerror=Não foi possível conectar ao servidor.
+status.404=Usuário não encontrado (HTTP Erro 404).
+status.403=Conexão rejeitada pelo servidor (proibido) (HTTP Erro 403).
+status.401=Não foi possível autenticar, verifique o nome de usuário e senha (HTTP Erro 401).
+status.449=O servidor solicita o provisionamento (HTTP Erro 449).
+status.500=Erro de servidor desconhecido (HTTP Erro 500).
+status.503=Serviço indisponível (HTTP Erro 503).
+status.httperror=Erro de comunicação (HTTP status ##replace.1##).
+status.empty-response=O servidor enviou uma resposta vazia inesperada.
+status.wbxml-parse-error=O servidor enviou uma resposta ilegível.
+status.response-contains-no-data=A resposta do servidor não contém dados.
+status.wbxmlerror=A sincronização falhou. O servidor respondeu com status <##replace.1##>.
+status.wbxmlmissingfield=Violação do protocolo ActiveSync: o campo obrigatório <##replace.1##> está faltando na resposta do servidor.
+status.OK=OK
+status.nolightning=O complemento Lightning não está instalado, os calendários não são suportados.
+status.malformed-xml=Não foi possível analisar XML. Verifique o log de eventos para obter detalhes.
+status.invalid=Resposta inválida do servidor (lixo).
+status.InvalidServerOptions=O servidor não fornece informações sobre as versões do ActiveSync com suporte. O EAS está bloqueado para este usuário ou esse cliente (TbSync)? Você pode tentar definir a versão do ActiveSync manualmente.
+
+status.security=Não foi possível estabelecer uma conexão segura. Você está usando um certificado autoassinado ou não confiável sem importá-lo para o Thunderbird? (##replace.1##)
+helplink.security=https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F
+status.network=Não foi possível conectar ao servidor (##replace.1##).
+
+status.syncing=Sincronizando
+status.skipped=Ainda não suportado, ignorado
+status.aborted=Não sincronizado
+status.pending=Esperando para ser sincronizado
+status.modified=Modificações locais
+
+status.resync-loop=Ocorreu um erro do qual não conseguimos recuperar ao reativar a conta. Por favor, desative a conta e tente novamente. (Erro: loop de ressincronização)
+
+status.policy.2=Não há política para este cliente. Entre em contato com o administrador do servidor ou desabilite o provisionamento para essa conta.
+status.policy.3=Valor de PolicyType desconhecido. Entre em contato com o administrador do servidor ou desabilite o provisionamento para essa conta.
+status.policy.4=Os dados da política no servidor estão corrompidos (possivelmente adulterados). Entre em contato com o administrador do servidor ou desabilite o provisionamento para essa conta.
+status.policy.5=O cliente está reconhecendo a chave de política incorreta. Entre em contato com o administrador do servidor ou desabilite o provisionamento para essa conta.
+
+status.provision=O provisionamento falhou com o status <##replace.1##>
+
+status.global.101=A solicitação contém WBXML, mas não pôde ser decodificada em XML (Erro EAS 101).
+status.global.102=A solicitação contém WBXML, mas não pôde ser decodificada em XML (Erro EAS 102).
+status.global.103=O XML fornecido na solicitação não segue os requisitos do protocolo (Erro EAS 103).
+status.global.clientdenied=O servidor EAS reporta <##replace.2##> (status ##replace.1##) e não permite que o TbSync acesse sua conta.
+helplink.global.clientdenied=https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F
+
+status.ServerRejectedSomeItems=O servidor EAS não aceitou ##replace.1## elementos.
+status.ServerRejectedRequest=O servidor EAS rejeitou a última solicitação.
+
+status.BadItemSkipped=Item inválido ignorado: ##replace.1##
+helplink.BadItemSkipped=https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped
+
+status.nosupportedeasversion=O servidor não suporta o ActiveSync v2.5 ou v14.0 (somente ##replace.1##). TbSync não funcionará com este servidor ActiveSync.
+status.notsupportedeasversion=O servidor não suporta o ActiveSync selecionado v##replace.1## (somente ##replace.2##).
+
+status.Sync.3=?? Invalid synchronization key (status 3), resyncing ??
+status.Sync.4=?? Malformed request (status 4) ??
+status.Sync.5=?? Temporary server issues or invalid item (status 5) ??
+status.Sync.6=?? Invalid item (status 6) ??
+status.Sync.8=?? Object not found (status 8) ??
+status.Sync.12=?? Folder hierarchy changed (status 12), resyncing ??
+status.FolderDelete.3=Não é possível excluir uma pasta do sistema.
+status.FolderDelete.6=O comando não pôde ser concluído, ocorreu um erro no servidor.
+status.FolderDelete.4=?? Folder does not exist (status 4), resyncing ??
+status.FolderDelete.9=?? Invalid synchronization key (status 9), resyncing ??
+status.FolderSync.9=?? Invalid synchronization key (status 9), resyncing ??
+
+status.forbiddenTasksItemInCalendarFolder=?? Forbidden task item in a calendar folder (please resort) ??
+status.forbiddenCalendarItemInTasksFolder=?? Forbidden calendar item in a task folder (please resort) ??
+
+config.auto=Configuração do servidor ActiveSync (Descoberta Automática)
+config.custom=Configuração do servidor ActiveSync
+
+acl.readwrite=Ler e escrever no servidor
+acl.readonly=Acesso ao servidor somente leitura (reverter alterações locais)
+
+autocomplete.serverdirectory = global server directory

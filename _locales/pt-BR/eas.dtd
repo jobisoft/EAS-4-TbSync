@@ -1,0 +1,80 @@
+<!ENTITY add.title "Adicionando uma conta do Exchange ActiveSync ao TbSync">
+<!ENTITY add.shortdescription "Informações de conta">
+<!ENTITY add.ok "Adicionar conta">
+<!ENTITY add.name "Nome da conta:">
+<!ENTITY add.user "Usuário:">
+<!ENTITY add.password "Senha:">
+<!ENTITY add.url "Endereço do servidor:">
+<!ENTITY add.urldescription "Deve ser suficiente fornecer apenas o endereço básico do servidor (ex.: mail.yourserver.com). No entanto, também é possível fornecer a URL completa (ex.: https://mail.yourserver.com/Microsoft-Server-ActiveSync).">
+
+<!ENTITY add.server "Configuração do servidor:">
+<!ENTITY add.description "Por favor, defina um nome para a nova conta TbSync, informe o nome de usuário (geralmente um endereço de e-mail), a senha e selecione uma das opções de configuração do servidor disponíveis.">
+
+<!ENTITY pref.autodetect "melhor disponível">
+
+<!ENTITY pref.AccountName "Nome da conta">
+<!ENTITY pref.UserName "Usuário">
+<!ENTITY pref.UserNameDescription "O nome do usuário geralmente é o endereço de e-mail da sua conta.">
+<!ENTITY pref.ServerName "Endereço do servidor">
+<!ENTITY pref.ActiveSyncVersion "Versão do ActiveSync">
+<!ENTITY pref.ServerNameDescription "ex. mail.yourserver.com">
+<!ENTITY pref.usehttps "Utilizar conexão segura (conectar via https)">
+<!ENTITY pref.DeviceId "ActiveSync device ID">
+<!ENTITY pref.birthday "Enviar informações de aniversário">
+<!ENTITY pref.generaloptions "Opções gerais">
+<!ENTITY pref.contactoptions "Opções de contato">
+<!ENTITY pref.calendaroptions "Opções de calendário">
+<!ENTITY pref.provision "Reforçar provisionamento (requiredo pelo Kerio)">
+<!ENTITY pref.galautocomplete "Incluir resultados do catálogo de endereços global (GAL) no preenchimento automático de e-mail">
+
+<!ENTITY pref.ShowTrashedFolders "Mostrar pastas encontradas na lixeira">
+
+<!ENTITY pref.synclimit.all "tudo">
+<!ENTITY pref.synclimit.2weeks "a partir de 2 semanas atrás">
+<!ENTITY pref.synclimit.1month "a partir de 4 semanas atrás">
+<!ENTITY pref.synclimit.3month "a partir de 3 meses atrás">
+<!ENTITY pref.synclimit.6month "a partir de 6 meses atrás">
+<!ENTITY pref.synclimit.description "Período de sincronização:">
+
+<!ENTITY pref.seperator.comma "Vírgula">
+<!ENTITY pref.seperator.linebreak "Quebra de linha">
+<!ENTITY pref.seperator.description "Separador para campo de endereço de múltiplas linhas.">
+<!ENTITY pref.displayoverride "Substituir nome de exibição com Nome + Segundo nome">
+
+<!ENTITY servertype.auto "Configuração automática via Autodiscover do ActiveSync">
+<!ENTITY servertype.custom "Configuração personalizada">
+<!ENTITY servertype.unlock "Clique duas vezes para desbloquear todas as configurações do servidor predefinidas.">
+
+<!ENTITY abCard.MiddleName "Nome do meio:">
+<!ENTITY abCard.Email3Address "Email alternativo:">
+<!ENTITY abCard.Home2PhoneNumber "Telefone alternativo residencial:">
+<!ENTITY abCard.Business2PhoneNumber "Telefone alternativo do trabalho:">
+<!ENTITY abCard.BusinessFaxNumber "Fax de trabalho:">
+
+<!ENTITY abCard.ManagerName "Gerenciar:">
+<!ENTITY abCard.AssistantPhoneNumber "Telefone Assistente:">
+<!ENTITY abCard.AssistantName "Assistente:">
+<!ENTITY abCard.Spouse "Esposa:">
+<!ENTITY abCard.Anniversary "Aniversário:">
+
+<!ENTITY abCard.CarPhoneNumber "Telefone do carro:">
+<!ENTITY abCard.RadioPhoneNumber "Telefone de rádio:">
+<!ENTITY abCard.CompanyMainPhone "Telefone principal do trabalho:">
+
+<!ENTITY abCard.OtherAddress "Endereço:">
+<!ENTITY abCard.OtherCity "Cidade:">
+<!ENTITY abCard.OtherCountry "País:">
+<!ENTITY abCard.OtherZip "CEP:">
+<!ENTITY abCard.OtherState "Estado:">
+
+<!ENTITY abCard.header.worknumbers "Números de trabalho adicionais:">
+<!ENTITY abCard.header.homenumbers "Números residenciais adicionais:">
+<!ENTITY abCard.header.othernumbers "Números adicionais:">
+<!ENTITY abCard.header.messaging "Mensagens:">
+<!ENTITY abCard.header.people "Pessoas:">
+<!ENTITY abCard.header.eas "Outros campos (EAS)">
+<!ENTITY abCard.header.otheraddress "Outro endereço (EAS)">
+
+<!ENTITY manager.tabs.accountsettings "Configurações da conta">
+<!ENTITY manager.tabs.syncsettings "Opções">
+<!ENTITY manager.tabs.outOfOffice "Resposta automática">

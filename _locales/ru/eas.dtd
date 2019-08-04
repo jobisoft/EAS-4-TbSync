@@ -1,0 +1,80 @@
+<!ENTITY add.title "Добавить Exchange ActiveSync аккаунт для TbSync">
+<!ENTITY add.shortdescription "Информация об учетной записи">
+<!ENTITY add.ok "Добавить аккаунт">
+<!ENTITY add.name "Имя аккаунта:">
+<!ENTITY add.user "Имя пользователя (email адрес):">
+<!ENTITY add.password "Пароль:">
+<!ENTITY add.url "Адрес сервера:">
+<!ENTITY add.urldescription "Достаточно указать только базовый адрес сервера (например: mail.yourserver.com). Однако также можно указать полный URL-адрес (например: https://mail.yourserver.com/Microsoft-Server-ActiveSync).">
+
+<!ENTITY add.server "Конфигурация сервера:">
+<!ENTITY add.description "Введите имя для нового аккаунта TbSync, имя пользователя аккаунта ActiveSync которое вы хотите добавить (возможно, адрес электронной почты), и выберите один из доступных параметров конфигурации сервера. ">
+
+<!ENTITY pref.autodetect "лучшее из доступных">
+
+<!ENTITY pref.AccountName "Имя аккаунта">
+<!ENTITY pref.UserName "Имя пользователя">
+<!ENTITY pref.UserNameDescription "Имя пользователя обычно является адресом электронной почты вашей учетной записи.">
+<!ENTITY pref.ServerName "Адрес сервера">
+<!ENTITY pref.ActiveSyncVersion "Версия ActiveSync">
+<!ENTITY pref.ServerNameDescription "например: mail.yourserver.com">
+<!ENTITY pref.usehttps "Использовать безопасное соединение (соединение через https)">
+<!ENTITY pref.DeviceId "Идентификатор устройства">
+<!ENTITY pref.birthday "Отправить информацию о днях рождения">
+<!ENTITY pref.generaloptions "Общие параметры">
+<!ENTITY pref.contactoptions "Параметры контакта">
+<!ENTITY pref.calendaroptions "Параметры календаря">
+<!ENTITY pref.provision "Заставить поддерживать (требуется для Kerio)">
+<!ENTITY pref.galautocomplete "Включить результаты из глобальной адресной книги (GAL) в автозаполнение электронной почты">
+
+<!ENTITY pref.ShowTrashedFolders "Показывать папки, найденные в корзине">
+
+<!ENTITY pref.synclimit.all "все">
+<!ENTITY pref.synclimit.2weeks "от 2 недель назад">
+<!ENTITY pref.synclimit.1month "от 4 недель назад">
+<!ENTITY pref.synclimit.3month "от 3 месяцев назад">
+<!ENTITY pref.synclimit.6month "от 6 месяцев назад">
+<!ENTITY pref.synclimit.description "Период синхронизации:">
+
+<!ENTITY pref.seperator.comma "Запятая">
+<!ENTITY pref.seperator.linebreak "Разрыв строки">
+<!ENTITY pref.seperator.description "Сепаратор для многострочного поля адреса.">
+<!ENTITY pref.displayoverride "Переопределить отображаемое имя с помощью “Имя” + “Фамилия”">
+
+<!ENTITY servertype.auto "Автоматическая настройка с помощью ActiveSync автоопределения">
+<!ENTITY servertype.custom "Ручная настройка">
+<!ENTITY servertype.unlock "Дважды щелкните, чтобы разблокировать все предопределенные настройки сервера.">
+
+<!ENTITY abCard.MiddleName "Отчество:">
+<!ENTITY abCard.Email3Address "Запасной Email:">
+<!ENTITY abCard.Home2PhoneNumber "Домашний телефон 2:">
+<!ENTITY abCard.Business2PhoneNumber "Рабочий телефон 2:">
+<!ENTITY abCard.BusinessFaxNumber "Рабочий факс:">
+
+<!ENTITY abCard.ManagerName "Руководитель:">
+<!ENTITY abCard.AssistantPhoneNumber "Телефон помощника:">
+<!ENTITY abCard.AssistantName "Помощник:">
+<!ENTITY abCard.Spouse "Супруг:">
+<!ENTITY abCard.Anniversary "День рождения:">
+
+<!ENTITY abCard.CarPhoneNumber "Автомобильный телефон:">
+<!ENTITY abCard.RadioPhoneNumber "Радиотелефон:">
+<!ENTITY abCard.CompanyMainPhone "Основной рабочий телефон:">
+
+<!ENTITY abCard.OtherAddress "Адрес:">
+<!ENTITY abCard.OtherCity "Город:">
+<!ENTITY abCard.OtherCountry "Страна:">
+<!ENTITY abCard.OtherZip "Почтовый индекс:">
+<!ENTITY abCard.OtherState "Область:">
+
+<!ENTITY abCard.header.worknumbers "Дополнительные рабочие номера:">
+<!ENTITY abCard.header.homenumbers "Дополнительные домашние номера:">
+<!ENTITY abCard.header.othernumbers "Дополнительные номера:">
+<!ENTITY abCard.header.messaging "Мессенджер:">
+<!ENTITY abCard.header.people "Люди:">
+<!ENTITY abCard.header.eas "Другие поля (EAS)">
+<!ENTITY abCard.header.otheraddress "Другой адрес (EAS)">
+
+<!ENTITY manager.tabs.accountsettings "Настройки аккаунта">
+<!ENTITY manager.tabs.syncsettings "Настройки синхронизации">
+<!ENTITY manager.tabs.outOfOffice "Автоответчик">
