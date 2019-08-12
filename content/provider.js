@@ -252,17 +252,15 @@ var base = {
             "user" : "",
             "servertype" : "",
             "seperator" : "10",
-            "https" : "1",
-            "provision" : "0",
-            "birthday" : "0",
-            "displayoverride" : "0", 
-            "horde" : "0",
+            "https" : true,
+            "provision" : false,
+            "displayoverride" : false, 
             "lastEasOptionsUpdate":"0",
             "allowedEasVersions": "",
             "allowedEasCommands": "",
             "useragent": eas.prefs.getCharPref("clientID.useragent"),
             "devicetype": eas.prefs.getCharPref("clientID.type"),
-            "galautocomplete": "1", 
+            "galautocomplete": true, 
             "synclimit" : "7",
             }; 
         return row;
@@ -354,7 +352,7 @@ var base = {
             return null;
         }
 
-        if (accountData.getAccountProperty("galautocomplete") != "1") {
+        if (!accountData.getAccountProperty("galautocomplete")) {
             return null;
         }
             

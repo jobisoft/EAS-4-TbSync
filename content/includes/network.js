@@ -11,7 +11,7 @@
 var network = {  
     
     getEasURL: function(accountData) {
-        let protocol = (accountData.getAccountProperty("https") == "1") ? "https://" : "http://";
+        let protocol = (accountData.getAccountProperty("https")) ? "https://" : "http://";
         let h = protocol + accountData.getAccountProperty("host"); 
         while (h.endsWith("/")) { h = h.slice(0,-1); }
 
@@ -162,7 +162,7 @@ var network = {
                 syncData.req.setRequestHeader("MS-ASProtocolVersion", "14.0");
             }
             syncData.req.setRequestHeader("Content-Length", wbxml.length);
-            if (syncData.accountData.getAccountProperty("provision") == "1") {
+            if (syncData.accountData.getAccountProperty("provision")) {
                 syncData.req.setRequestHeader("X-MS-PolicyKey", syncData.accountData.getAccountProperty("policykey"));
                 tbSync.dump("PolicyKey used", syncData.accountData.getAccountProperty("policykey"));
             }
@@ -217,7 +217,7 @@ var network = {
 
                     case 449: // Request for new provision (enable it if needed)
                         //enable provision
-                        syncData.accountData.setAccountProperty("provision","1");
+                        syncData.accountData.setAccountProperty("provision", true);
                         syncData.accountData.resetAccountProperty("policykey");
                         reject(eas.sync.finish("resyncAccount", syncData.req.status));
                         break;
@@ -434,7 +434,7 @@ var network = {
             case "143": // PolicyRefresh
             case "144": // InvalidPolicyKey
                 //enable provision
-                syncData.accountData.setAccountProperty("provision","1");
+                syncData.accountData.setAccountProperty("provision", true);
                 syncData.accountData.resetAccountProperty("policykey");
                 throw eas.sync.finish("resyncAccount", statusType);
             
@@ -522,7 +522,7 @@ var network = {
 
                 case "2":
                     //server does not have a policy for this device: disable provisioning
-                    syncData.accountData.setAccountProperty("provision","0")
+                    syncData.accountData.setAccountProperty("provision", false)
                     syncData.accountData.resetAccountProperty("policykey");
                     throw eas.sync.finish("resyncAccount", "NoPolicyForThisDevice");
 
@@ -725,7 +725,7 @@ var network = {
                     req.setRequestHeader("MS-ASProtocolVersion", "14.0");
                 }
                 req.setRequestHeader("Content-Length", wbxml.length);
-                if (accountData.getAccountProperty("provision") == "1") {
+                if (accountData.getAccountProperty("provision")) {
                     req.setRequestHeader("X-MS-PolicyKey", accountData.getAccountProperty("policykey"));
                     tbSync.dump("PolicyKey used", accountData.getAccountProperty("policykey"));
                 }
@@ -870,7 +870,7 @@ var network = {
             //update account
             syncData.accountData.setAccountProperty("host", eas.network.stripAutodiscoverUrl(result.server)); 
             syncData.accountData.setAccountProperty("user", result.user);
-            syncData.accountData.setAccountProperty("https", (result.server.substring(0,5) == "https") ? "1" : "0");
+            syncData.accountData.setAccountProperty("https", (result.server.substring(0,5) == "https"));
         }
 
         return result.errorcode;

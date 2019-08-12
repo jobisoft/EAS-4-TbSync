@@ -93,7 +93,7 @@ var sync = {
         }
         
         //do we need to get a new policy key?
-        if (syncData.accountData.getAccountProperty("provision") == "1" && syncData.accountData.getAccountProperty("policykey") == "0") {
+        if (syncData.accountData.getAccountProperty("provision") && syncData.accountData.getAccountProperty("policykey") == "0") {
             await eas.network.getPolicykey(syncData);
         }
         

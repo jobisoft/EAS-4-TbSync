@@ -27,11 +27,11 @@ var tbSyncEditAccountOverlay = {
         if (host.indexOf("https://") == 0) {
             host = host.replace("https://","");
             document.getElementById('tbsync.AccountPropertys.pref.https').checked = true;
-            this.accountData.setAccountProperty("https", "1");
+            this.accountData.setAccountProperty("https", true);
         } else if (host.indexOf("http://") == 0) {
             host = host.replace("http://","");
             document.getElementById('tbsync.AccountPropertys.pref.https').checked = false;
-           this.accountData.setAccountProperty("https", "0");
+           this.accountData.setAccountProperty("https", false);
         }
         
         while (host.endsWith("/")) { host = host.slice(0,-1); }        

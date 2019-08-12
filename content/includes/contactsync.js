@@ -227,7 +227,7 @@ var Contacts = {
 
 
         //further manipulations
-        if (syncdata.accountData.getAccountProperty("displayoverride") == "1") {
+        if (syncdata.accountData.getAccountProperty("displayoverride")) {
            abItem.setProperty("DisplayName", abItem.getProperty("FirstName", "") + " " + abItem.getProperty("LastName", ""));
 
             if (abItem.getProperty("DisplayName", "" ) == " " )
