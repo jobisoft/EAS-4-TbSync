@@ -52,9 +52,9 @@ var Tasks = {
             if (data.Recurrence) {
                 if (dueDate) {
                     item.entryDate = dueDate; 
-                    tbSync.eventlog("info", syncdata, "Copy task dueData to task startDate, because Thunderbird needs a startDate for recurring items.", item.icalString);
+                    tbSync.eventlog.add("info", syncdata, "Copy task dueData to task startDate, because Thunderbird needs a startDate for recurring items.", item.icalString);
                 } else {
-                    tbSync.eventlog("info", syncdata, "Task without startDate and without dueDate but with recurrence info is not supported by Thunderbird. Recurrence will be lost.", item.icalString);
+                    tbSync.eventlog.add("info", syncdata, "Task without startDate and without dueDate but with recurrence info is not supported by Thunderbird. Recurrence will be lost.", item.icalString);
                 }
             }
         }
