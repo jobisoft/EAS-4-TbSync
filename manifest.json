@@ -1,0 +1,21 @@
+{
+  "applications": {
+    "gecko": {
+  "update_url": "https://tbsync.jobisoft.de/beta/TB68/update-eas.json",
+      "id": "eas4tbsync@jobisoft.de",
+      "strict_min_version": "68.0"
+    }
+  },
+  "manifest_version": 2,
+  "name": "EAS for TbSync [Beta Release Channel]",
+  "version": "0.12.9",
+  "author": "John Bieling",
+  "homepage_url": "https://github.com/jobisoft/EAS-4-TbSync/",
+  "description": "Please update your addons via the gear menu, to get the versions compatible with TB68.",
+  "icons": {
+    "32": "skin/eas32.png"
+  },
+  "legacy": {
+    "type": "bootstrap"
+  }
+}
