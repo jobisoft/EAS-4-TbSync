@@ -390,12 +390,12 @@ var network = {
             case "FolderSync.9": // invalid synchronization key - resync
             case "Sync.12": // folder hierarchy changed
                 {
-                    let folders = syncData.accountData.getFolders();
+                    let folders = syncData.accountData.getAllFoldersIncludingCache();
                     for (let folder of folders) {
                         folder.remove();
                     }		    
                     // reset account
-                    eas.onEnableAccount(syncData.accountData);
+                    eas.base.onEnableAccount(syncData.accountData);
                     throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 }
         }
@@ -420,12 +420,12 @@ var network = {
 
             case "110": //server error - resync
                 {
-                    let folders = syncData.accountData.getFolders();
+                    let folders = syncData.accountData.getAllFoldersIncludingCache();
                     for (let folder of folders) {
                         folder.remove();
                     }		    
                     // reset account
-                    eas.onEnableAccount(syncData.accountData);
+                    eas.base.onEnableAccount(syncData.accountData);
                     throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 }
                 
@@ -783,68 +783,104 @@ var network = {
 
        // OPTIONS
 
-    getServerOptions: function (syncData) {        
+    getServerOptions: async function (syncData) {        
         syncData.setSyncState("prepare.request.options");
         let authData = eas.network.getAuthData(syncData.accountData);
 
         let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
         tbSync.dump("Sending", "OPTIONS " + eas.network.getEasURL(syncData.accountData));
         
-        return new Promise(function(resolve,reject) {
-            // Create request handler - API changed with TB60 to new XMKHttpRequest()
-            syncData.req = new XMLHttpRequest();
-            syncData.req.mozBackgroundRequest = true;
-            syncData.req.open("OPTIONS", eas.network.getEasURL(syncData.accountData), true);
-            syncData.req.overrideMimeType("text/plain");
-            syncData.req.setRequestHeader("User-Agent", userAgent);            
-            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
-            syncData.req.timeout = eas.base.getConnectionTimeout();
+        let allowedRetries = 5;
+        let retry;
+        do {
+            retry = false;
+            
+            let result = await new Promise(function(resolve,reject) {
+                syncData.req = new XMLHttpRequest();
+                syncData.req.mozBackgroundRequest = true;
+                syncData.req.open("OPTIONS", eas.network.getEasURL(syncData.accountData), true);
+                syncData.req.overrideMimeType("text/plain");
+                syncData.req.setRequestHeader("User-Agent", userAgent);            
+                syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
+                syncData.req.timeout = eas.base.getConnectionTimeout();
 
-            syncData.req.ontimeout = function () {
-                resolve();
-            };
+                syncData.req.ontimeout = function () {
+                    resolve();
+                };
 
-            syncData.req.onerror = function () {
-                resolve();
-            };
+                syncData.req.onerror = function () {
+                    resolve();
+                };
 
-            syncData.req.onload = function() {
-                syncData.setSyncState("eval.request.options");
-                let responseData = {};
+                syncData.req.onload = function() {
+                    syncData.setSyncState("eval.request.options");
+                    let responseData = {};
 
-                switch(syncData.req.status) {
-                    case 401: // AuthError
-                            reject(eas.sync.finish("error", "401"));
-                        break;
+                    switch(syncData.req.status) {
+                        case 401: // AuthError
+                            let rv = {};
+                            rv.errorObj = eas.sync.finish("error", "401");
+                            rv.errorType = "PasswordPrompt";
+                            resolve(rv);
+                            break;
 
-                    case 200:
-                            responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
-                            responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
+                        case 200:
+                                responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
+                                responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
 
-                            tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
-                            "responseText: " + syncData.req.responseText + "\n" +
-                            "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
-                            "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
+                                tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
+                                "responseText: " + syncData.req.responseText + "\n" +
+                                "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
+                                "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
 
-                            if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
-                                syncData.accountData.setAccountProperty("allowedEasCommands", responseData["MS-ASProtocolCommands"]);
-                                syncData.accountData.setAccountProperty("allowedEasVersions", responseData["MS-ASProtocolVersions"]);
-                                syncData.accountData.setAccountProperty("lastEasOptionsUpdate", Date.now());
-                            }
-                            resolve();
-                        break;
+                                if (responseData && responseData["MS-ASProtocolCommands"] && responseData["MS-ASProtocolVersions"]) {
+                                    syncData.accountData.setAccountProperty("allowedEasCommands", responseData["MS-ASProtocolCommands"]);
+                                    syncData.accountData.setAccountProperty("allowedEasVersions", responseData["MS-ASProtocolVersions"]);
+                                    syncData.accountData.setAccountProperty("lastEasOptionsUpdate", Date.now());
+                                }
+                                resolve();
+                            break;
 
-                    default:
-                            resolve();
-                        break;
+                        default:
+                                resolve();
+                            break;
 
+                    }
+                };
+                
+                syncData.setSyncState("send.request.options");
+                syncData.req.send();
+                
+            });
+            
+            if (result && result.hasOwnProperty("errorType") && result.errorType == "PasswordPrompt") {
+                if (allowedRetries > 0) {
+                    let authData = eas.network.getAuthData(syncData.accountData);
+                    let promptData = {
+                        windowID: "auth:" + syncData.accountData.accountID,
+                        accountname: syncData.accountData.getAccountProperty("accountname"),
+                        usernameLocked: syncData.accountData.isConnected(),
+                        username: authData.user
+                    }
+                    
+                    let syncState = syncData.getSyncState(); 
+                    syncData.setSyncState("passwordprompt");
+                    let credentials = await tbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                    if (credentials) {
+                        // Update login data and try again.
+                        authData.updateLoginData(credentials.username, credentials.password);
+                        syncData.setSyncState(syncState);
+                        retry = true;
+                    }
                 }
-            };
+
+                if (!retry) {
+                    throw result.errorObj;
+                }
+            }
             
-            syncData.setSyncState("send.request.options");
-            syncData.req.send();
-            
-        });
+            allowedRetries--;
+        } while (retry);
     },
 
 

@@ -103,7 +103,7 @@ var base = {
                     let calendar = tbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
                     if (calendar && calendar.getProperty("imip.identity.key") == "") {
                         //is there an email identity for this eas account?
-                        let authData = eas.network.getAuthData(folder);
+                        let authData = eas.network.getAuthData(folder.accountData);
 
                         let key = eas.tools.getIdentityKey(authData.user);
                         if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?

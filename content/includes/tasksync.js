@@ -99,7 +99,7 @@ var Tasks = {
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
     getWbxmlFromThunderbirdItem: function (tbItem, syncdata) {
-        let item = tbItem.nativeItem;
+        let item = tbItem instanceof tbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
 
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage

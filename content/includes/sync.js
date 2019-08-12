@@ -98,7 +98,7 @@ var sync = {
         }
         
         //set device info
-        await eas.network.setDeviceInformation (syncData);
+        await eas.network.setDeviceInformation(syncData);
 
         syncData.setSyncState("prepare.request.folders"); 
         let foldersynckey = syncData.accountData.getAccountProperty("foldersynckey");
