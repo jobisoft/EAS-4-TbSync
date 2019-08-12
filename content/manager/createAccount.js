@@ -41,7 +41,7 @@ var tbSyncEasNewAccount = {
         
         document.documentElement.getButton("back").hidden = true;
         document.documentElement.getButton("finish").disabled = true;
-        document.documentElement.getButton("finish").label = tbSync.getLocalizedMessage("newaccount.add_auto","eas");
+        document.documentElement.getButton("finish").label = tbSync.getString("newaccount.add_auto","eas");
 
         document.getElementById("tbsync.error").hidden = true;
         document.getElementById("tbsync.spinner").hidden = true;
@@ -66,7 +66,7 @@ var tbSyncEasNewAccount = {
     },
 
     onUserDropdown: function () {
-        document.documentElement.getButton("finish").label = tbSync.getLocalizedMessage("newaccount.add_" + this.elementServertype.value,"eas");
+        document.documentElement.getButton("finish").label = tbSync.getString("newaccount.add_" + this.elementServertype.value,"eas");
         document.getElementById('tbsync.newaccount.url.box').style.visibility = (this.elementServertype.value != "custom") ? "hidden" : "visible";
         this.onUserTextInput();
     },
@@ -87,7 +87,7 @@ var tbSyncEasNewAccount = {
         let url = this.elementUrl.value.trim();
 
         if (servertype == "auto" &&  user.split("@").length != 2) {
-            alert(tbSync.getLocalizedMessage("autodiscover.NeedEmail","eas"))
+            alert(tbSync.getString("autodiscover.NeedEmail","eas"))
             return;
         }
         
@@ -157,7 +157,7 @@ var tbSyncEasNewAccount = {
         let offset = Math.round(((Date.now()-tbSyncEasNewAccount.startTime)/1000));
         let timeout = (offset>2) ? " (" + (tbSyncEasNewAccount.maxTimeout - offset) + ")" : "";
 
-        document.getElementById('tbsync.newaccount.autodiscoverstatus').value  = tbSync.getLocalizedMessage("autodiscover.Querying","eas") + timeout;
+        document.getElementById('tbsync.newaccount.autodiscoverstatus').value  = tbSync.getString("autodiscover.Querying","eas") + timeout;
     },
 
     addAccount (user, password, servertype, accountname, url) {
