@@ -26,7 +26,7 @@ var network = {
             // with the ACCOUNT and not any sort of url, which could change via autodiscover
             // at any time.
             get host() { 
-                return "tbsync.accountid." + accountData.accountID;
+                return "TbSync#" + accountData.accountID;
             },
 
             get user() {
