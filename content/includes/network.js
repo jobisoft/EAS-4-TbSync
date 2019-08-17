@@ -938,14 +938,15 @@ var network = {
         let requests = [];
         let responses = []; //array of objects {url, error, server}
         
+        for (let i=0; i< urls.length; i++) {
+            await tbSync.tools.sleep(200);
+            requests.push( eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
+        }
+
         try {
-            for (let i=0; i< urls.length; i++) {
-                await tbSync.tools.sleep(200);
-                requests.push( eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
-            }
             responses = await Promise.all(requests); 
         } catch (e) {
-            responses.push(e); //this is actually a success, see return value of getServerConnectionViaAutodiscoverRedirectWrapper()
+            responses.push(e.result); //this is actually a success, see return value of getServerConnectionViaAutodiscoverRedirectWrapper()
         }
         
         let result;
@@ -998,8 +999,13 @@ var network = {
         } while (method);
         
         //invert reject and resolve, so we exit the promise group on success right away
-        if (result.server) throw result;
-        else return result;
+        if (result.server) {
+            let e = new Error("Not an error (early exit from promise group)");
+            e.result = result;
+            throw e;
+        } else {
+            return result;
+        }
     },    
     
     getServerConnectionViaAutodiscoverRequest: function (method, connection, password, maxtimeout) {
