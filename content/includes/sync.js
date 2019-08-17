@@ -661,7 +661,7 @@ wbxml.ctag();*/
         
         //was there an error?
         if (syncData.failedItems.length > 0) {
-            throw eas.finish("warning", "ServerRejectedSomeItems::" + syncData.failedItems.length);                            
+            throw eas.sync.finish("warning", "ServerRejectedSomeItems::" + syncData.failedItems.length);                            
         }
         
     },
