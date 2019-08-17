@@ -936,13 +936,13 @@ var network = {
         urls.push({"url":"https://"+parts[1]+"/Autodiscover/Autodiscover.xml", "user":user});
         
         let requests = [];
-        for (let i=0; i< urls.length; i++) {
-            await tbSync.tools.sleep(200);
-            requests.push( eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
-        }
- 
         let responses = []; //array of objects {url, error, server}
+        
         try {
+            for (let i=0; i< urls.length; i++) {
+                await tbSync.tools.sleep(200);
+                requests.push( eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
+            }
             responses = await Promise.all(requests); 
         } catch (e) {
             responses.push(e); //this is actually a success, see return value of getServerConnectionViaAutodiscoverRedirectWrapper()
