@@ -26,14 +26,13 @@ eas.utcTimezone = null;
 
 
 /**
- * Implementation the TbSync interfaces for external provider extensions.
- */    
-
-var base = {
+ * Implementing the TbSync interface for external provider extensions.
+ */
+var base = class {
     /**
      * Called during load of external provider extension to init provider.
      */
-    load: async function () {
+    static async load() {
         // Set default prefs
         let branch = Services.prefs.getDefaultBranch("extensions.eas4tbsync.");
         branch.setIntPref("timeout", 90000);
@@ -129,14 +128,14 @@ var base = {
         } catch(e) {
             Components.utils.reportError(e);        
         }        
-    },
+    }
 
 
 
     /**
      * Called during unload of external provider extension to unload provider.
      */
-    unload: async function () {
+    static async unload() {
         eas.overlayManager.stopObserving();	
 
         // Close all open windows of this provider.
@@ -145,16 +144,16 @@ var base = {
             eas.openWindows[id].close();
           }
         }
-    },
+    }
 
 
 
     /**
      * Returns nice string for the name of provider for the add account menu.
      */
-    getNiceProviderName: function () {
+    static getNiceProviderName() {
         return "Exchange ActiveSync";
-    },
+    }
 
 
 
@@ -165,7 +164,7 @@ var base = {
      * @param accountData  [in] optional AccountData
      *
      */
-    getProviderIcon: function (size, accountData = null) {
+    static getProviderIcon(size, accountData = null) {
         switch (size) {
             case 16:
                 return "chrome://eas4tbsync/skin/eas16.png";
@@ -174,14 +173,14 @@ var base = {
             default :
                 return "chrome://eas4tbsync/skin/eas64.png";
         }
-    },
+    }
 
 
 
     /**
      * Returns a list of sponsors, they will be sorted by the index
      */
-    getSponsors: function () {
+    static getSponsors() {
         return {
             "Schiessl, Michael 1" : {name: "Michael Schiessl", description: "Tine 2.0", icon: "", link: "" },
             "Schiessl, Michael 2" : {name: "Michael Schiessl", description: " Exchange 2007", icon: "", link: "" },
@@ -190,16 +189,16 @@ var base = {
             "Jau, Stephan" : {name: "Stephan Jau", description: "Horde", icon: "", link: "" },
             "Zavar " : {name: "Zavar", description: "Zoho", icon: "", link: "" },
         };
-    },
+    }
 
 
 
     /**
      * Returns the email address of the maintainer (used for bug reports).
      */
-    getMaintainerEmail: function () {
+    static getMaintainerEmail() {
         return "john.bieling@gmx.de";
-    },
+    }
 
 
 
@@ -207,9 +206,9 @@ var base = {
      * Returns the URL of the string bundle file of this provider, it can be
      * accessed by tbSync.getString(<key>, <provider>)
      */
-    getStringBundleUrl: function () {
+    static getStringBundleUrl() {
         return "chrome://eas4tbsync/locale/eas.strings";
-    },
+    }
 
     
 
@@ -219,9 +218,9 @@ var base = {
      * The URL will be opened via openDialog(), when the user wants to create a
      * new account of this provider.
      */
-    getCreateAccountWindowUrl: function () {
+    static getCreateAccountWindowUrl() {
         return "chrome://eas4tbsync/content/manager/createAccount.xul";
-    },
+    }
 
 
 
@@ -237,9 +236,9 @@ var base = {
      * in the manager and provides the tbSync.AccountData of the corresponding
      * account.
      */
-    getEditAccountOverlayUrl: function () {
+    static getEditAccountOverlayUrl() {
         return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";
-    },
+    }
 
 
 
@@ -248,7 +247,7 @@ var base = {
      * accounts database with the default value if not yet stored in the 
      * database.
      */
-    getDefaultAccountEntries: function () {
+    static getDefaultAccountEntries() {
         let row = {
             "policykey" : "0", 
             "foldersynckey" : "0",
@@ -271,7 +270,7 @@ var base = {
             "synclimit" : "7",
             }; 
         return row;
-    },
+    }
 
 
 
@@ -279,7 +278,7 @@ var base = {
      * Return object which contains all possible fields of a row in the folder 
      * database with the default value if not yet stored in the database.
      */
-    getDefaultFolderEntries: function () {
+    static getDefaultFolderEntries() {
         let folder = {
             "type" : "",
             "synckey" : "",
@@ -288,7 +287,7 @@ var base = {
             "serverID" : "",
             };
         return folder;
-    },
+    }
 
 
 
@@ -298,12 +297,12 @@ var base = {
      *
      * @param accountData  [in] AccountData
      */
-    onEnableAccount: function (accountData) {
+    static onEnableAccount(accountData) {
         accountData.resetAccountProperty("policykey");
         accountData.resetAccountProperty("foldersynckey");
         accountData.resetAccountProperty("lastEasOptionsUpdate");
         accountData.resetAccountProperty("lastsynctime");
-    },
+    }
 
 
 
@@ -313,8 +312,8 @@ var base = {
      *
      * @param accountData  [in] AccountData
      */
-    onDisableAccount: function (accountData) {
-    },
+    static onDisableAccount(accountData) {
+    }
 
 
 
@@ -324,10 +323,10 @@ var base = {
      *
      * @param accountData  [in] FolderData
      */
-    onResetTarget: function (folderData) {
+    static onResetTarget(folderData) {
         folderData.resetFolderProperty("synckey");
         folderData.resetFolderProperty("lastsynctime");
-    },
+    }
 
 
 
@@ -349,7 +348,7 @@ var base = {
      *
      * Return arrary of AutoCompleteData entries.
      */
-    abAutoComplete: async function (accountData, currentQuery)  {
+    static async abAutoComplete(accountData, currentQuery)  {
         let data = [];
 
         if (currentQuery.length < 3)
@@ -384,7 +383,7 @@ var base = {
         }
         
         return data;
-    },
+    }
 
 
 
@@ -395,7 +394,7 @@ var base = {
      * @param accountData         [in] AccountData for the account for which the 
      *                                 sorted folder should be returned
      */
-    getSortedFolders: function (accountData) {
+    static getSortedFolders(accountData) {
         let allowedTypesOrder = ["9","14","8","13","7","15"];
         
         function getIdChain (aServerID) {
@@ -440,7 +439,7 @@ var base = {
             sortedFolders.push(sortObj.folder);
         }
         return sortedFolders;        
-    },
+    }
 
 
 
@@ -453,9 +452,9 @@ var base = {
      *
      * return timeout in milliseconds
      */
-    getConnectionTimeout: function (accountData) {
+    static getConnectionTimeout(accountData) {
         return eas.prefs.getIntPref("timeout");
-    },
+    }
     
 
 
@@ -475,7 +474,7 @@ var base = {
      *
      * return StatusData
      */
-    syncFolderList: async function (syncData, syncJob, syncRunNr) {
+    static async syncFolderList(syncData, syncJob, syncRunNr) {
         // Recommendation: Put the actual function call inside a try catch, to
         // ensure returning a proper StatusData object, regardless of what
         // happens inside that function. You may also throw custom errors
@@ -496,7 +495,7 @@ var base = {
 
         // Fall through, if there was no error.
         return new tbSync.StatusData();        
-    },
+    }
     
 
 
@@ -517,7 +516,7 @@ var base = {
      *
      * return StatusData
      */
-    syncFolder: async function (syncData, syncJob, syncRunNr) {
+    static async syncFolder(syncData, syncJob, syncRunNr) {
         // Recommendation: Put the actual function call inside a try catch, to
         // ensure returning a proper StatusData object, regardless of what
         // happens inside that function. You may also throw custom errors
@@ -544,7 +543,7 @@ var base = {
 
         // Fall through, if there was no error.
         return new tbSync.StatusData();   
-    },    
+    }
 }
 
 
@@ -755,7 +754,7 @@ var standardFolderList = {
      * @param window        [in] window object of the account settings window
      * @param folderData    [in] FolderData of the selected folder
      */
-    onContextMenuShowing: function (window, folderData) {
+    static onContextMenuShowing(window, folderData) {
         let hideContextMenuDelete = true;
         if (folderData !== null) {
             //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
@@ -765,7 +764,7 @@ var standardFolderList = {
             }                
         }
         window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
-    },
+    }
 
 
 
@@ -775,7 +774,7 @@ var standardFolderList = {
      *
      * @param folderData         [in] FolderData of the selected folder
      */
-    getTypeImage: function (folderData) {
+    static getTypeImage(folderData) {
         let src = "";
         switch (folderData.getFolderProperty("type")) {
             case "9": 
@@ -792,7 +791,7 @@ var standardFolderList = {
                 break;
         }
         return "chrome://tbsync/skin/" + src;
-    },
+    }
     
 
 
@@ -801,11 +800,11 @@ var standardFolderList = {
      *
      * @param folderData         [in] FolderData of the selected folder
      */ 
-    getFolderDisplayName: function (folderData) {
+    static getFolderDisplayName(folderData) {
         let folderName = folderData.getFolderProperty("foldername");
         if (eas.tools.parentIsTrash(folderData)) folderName = tbSync.getString("recyclebin", "eas") + " | " + folderName;
         return folderName;
-    },
+    }
     
 
 
@@ -818,11 +817,11 @@ var standardFolderList = {
      * Return a list of attributes and their values If both (RO+RW) do
      * not return any attributes, the ACL menu is not displayed at all.
      */ 
-    getAttributesRoAcl: function (folderData) {
+    static getAttributesRoAcl(folderData) {
         return {
             label: tbSync.getString("acl.readonly", "eas"),
         };
-    },
+    }
     
 
 
@@ -835,11 +834,11 @@ var standardFolderList = {
      * Return a list of attributes and their values. If both (RO+RW) do
      * not return any attributes, the ACL menu is not displayed at all.
      */ 
-    getAttributesRwAcl: function (folderData) {
+    static getAttributesRwAcl(folderData) {
         return {
             label: tbSync.getString("acl.readwrite", "eas"),
         }             
-    },
+    }
 }
 
 Services.scriptloader.loadSubScript("chrome://eas4tbsync/content/includes/network.js", this, "UTF-8");
