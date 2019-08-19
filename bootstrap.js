@@ -37,13 +37,6 @@ function uninstall(data, reason) {
 
 function startup(data, reason) {
     // Possible reasons: APP_STARTUP, ADDON_ENABLE, ADDON_INSTALL, ADDON_UPGRADE, or ADDON_DOWNGRADE.
-
-    // Set default prefs
-    let branch = Services.prefs.getDefaultBranch("extensions.eas4tbsync.");
-    branch.setIntPref("timeout", 90000);
-    branch.setIntPref("maxitems", 50);
-    branch.setCharPref("clientID.type", "TbSync");
-    branch.setCharPref("clientID.useragent", "Thunderbird ActiveSync");    
     
     thisID = data.id;
     Services.obs.addObserver(onInitDoneObserver, "tbsync.observer.initialized", false);
