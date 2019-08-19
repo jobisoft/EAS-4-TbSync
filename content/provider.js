@@ -745,7 +745,7 @@ var standardTargets = {
  *    let folderData = folderList.selectedItem.folderData;
  *
  */
-var standardFolderList = {
+var standardFolderList = class {
     /**
      * Is called before the context menu of the folderlist is shown, allows to
      * show/hide custom menu options based on selected folder. During an active
