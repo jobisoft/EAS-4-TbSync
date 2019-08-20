@@ -550,182 +550,179 @@ var Base = class {
 
 
 
-var standardTargets = {
-    // This provider is using the standard "addressbook" targetType, so it must
-    // implement the addressbook object.
-    addressbook : {
-        
-        // define an item property, which should be used for the changelog
-        // basically your primary key for an abItem
-        // UID will be used, if nothing specified
-        primaryKeyField: "X-EAS-SERVERID",
-        
+// This provider is using the standard "addressbook" targetType, so it must
+// implement the addressbook object.
+var StandardAddressbookTarget = {        
+    // define an item property, which should be used for the changelog
+    // basically your primary key for an abItem
+    // UID will be used, if nothing specified
+    primaryKeyField: "X-EAS-SERVERID",
+    
 
 
-        generatePrimaryKey: function (folderData) {
-             return tbSync.generateUUID();
-        },
-        
+    generatePrimaryKey: function (folderData) {
+         return tbSync.generateUUID();
+    },
+    
 
 
-        // enable or disable changelog
-        logUserChanges: true,
+    // enable or disable changelog
+    logUserChanges: true,
 
 
 
-        directoryObserver: function (aTopic, folderData) {
-            switch (aTopic) {
-                case "addrbook-removed":
-                case "addrbook-updated":
-                    //Services.console.logStringMessage("["+ aTopic + "] " + folderData.getFolderProperty("foldername"));
-                    break;
+    directoryObserver: function (aTopic, folderData) {
+        switch (aTopic) {
+            case "addrbook-removed":
+            case "addrbook-updated":
+                //Services.console.logStringMessage("["+ aTopic + "] " + folderData.getFolderProperty("foldername"));
+                break;
+        }
+    },
+    
+
+
+    cardObserver: function (aTopic, folderData, abCardItem) {
+        switch (aTopic) {
+            case "addrbook-contact-updated":
+            case "addrbook-contact-removed":
+                //Services.console.logStringMessage("["+ aTopic + "] " + abCardItem.getProperty("DisplayName"));
+                break;
+
+            case "addrbook-contact-created":
+            {
+                //Services.console.logStringMessage("["+ aTopic + "] "+ abCardItem.getProperty("DisplayName")+">");
+                break;
             }
-        },
+        }
+    },
+    
+
+
+    listObserver: function (aTopic, folderData, abListItem, abListMember) {
+        switch (aTopic) {
+            case "addrbook-list-member-added":
+            case "addrbook-list-member-removed":
+                //Services.console.logStringMessage("["+ aTopic + "] MemberName: " + abListMember.getProperty("DisplayName"));
+                break;
+            
+            case "addrbook-list-removed":
+            case "addrbook-list-updated":
+                //Services.console.logStringMessage("["+ aTopic + "] ListName: " + abListItem.getProperty("ListName"));
+                break;
+            
+            case "addrbook-list-created": 
+                //Services.console.logStringMessage("["+ aTopic + "] ListName: "+abListItem.getProperty("ListName")+">");
+                break;
+        }
+    },
+    
+
+
+    /**
+     * Is called by TargetData::getTarget() if  the standard "addressbook"
+     * targetType is used, and a new addressbook needs to be created.
+     *
+     * @param newname       [in] name of the new address book
+     * @param folderData  [in] FolderData
+     *
+     * return the new directory
+     */
+    createAddressBook: function (newname, folderData) {
+        let dirPrefId = MailServices.ab.newAddressBook(newname, "", 2);  /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
+        let directory = MailServices.ab.getDirectoryFromId(dirPrefId);
+
+        if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
+            directory.setStringValue("tbSyncIcon", "eas");
+            return directory;		
+        }
+        return null;
+    },    
+}
+
+
+
+// This provider is using the standard "calendar" targetType, so it must
+// implement the calendar object.
+var StandardCalendarTarget = {        
         
+    // The calendar target does not support a custom primaryKeyField, because
+    // the lightning implementation only allows to search for items via UID.
+    // Like the addressbook target, the calendar target item element has a
+    // primaryKey getter/setter which - however - only works on the UID.
+    
+    // enable or disable changelog
+    logUserChanges: true,
+    
 
 
-        cardObserver: function (aTopic, folderData, abCardItem) {
-            switch (aTopic) {
-                case "addrbook-contact-updated":
-                case "addrbook-contact-removed":
-                    //Services.console.logStringMessage("["+ aTopic + "] " + abCardItem.getProperty("DisplayName"));
-                    break;
-
-                case "addrbook-contact-created":
-                {
-                    //Services.console.logStringMessage("["+ aTopic + "] "+ abCardItem.getProperty("DisplayName")+">");
-                    break;
-                }
-            }
-        },
-        
+    calendarObserver: function (aTopic, folderData, tbCalendar, aPropertyName, aPropertyValue, aOldPropertyValue) {
+        switch (aTopic) {
+            case "onCalendarPropertyChanged":
+                //Services.console.logStringMessage("["+ aTopic + "] " + tbCalendar.calendar.name + " : " + aPropertyName);
+                break;
+            
+            case "onCalendarDeleted":
+            case "onCalendarPropertyDeleted":
+                //Services.console.logStringMessage("["+ aTopic + "] " +tbCalendar.calendar.name);
+                break;
+        }
+    },
+    
 
 
-        listObserver: function (aTopic, folderData, abListItem, abListMember) {
-            switch (aTopic) {
-                case "addrbook-list-member-added":
-                case "addrbook-list-member-removed":
-                    //Services.console.logStringMessage("["+ aTopic + "] MemberName: " + abListMember.getProperty("DisplayName"));
-                    break;
-                
-                case "addrbook-list-removed":
-                case "addrbook-list-updated":
-                    //Services.console.logStringMessage("["+ aTopic + "] ListName: " + abListItem.getProperty("ListName"));
-                    break;
-                
-                case "addrbook-list-created": 
-                    //Services.console.logStringMessage("["+ aTopic + "] ListName: "+abListItem.getProperty("ListName")+">");
-                    break;
-            }
-        },
-        
-
-
-        /**
-         * Is called by TargetData::getTarget() if  the standard "addressbook"
-         * targetType is used, and a new addressbook needs to be created.
-         *
-         * @param newname       [in] name of the new address book
-         * @param folderData  [in] FolderData
-         *
-         * return the new directory
-         */
-        createAddressBook: function (newname, folderData) {
-            let dirPrefId = MailServices.ab.newAddressBook(newname, "", 2);  /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
-            let directory = MailServices.ab.getDirectoryFromId(dirPrefId);
-
-            if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
-                directory.setStringValue("tbSyncIcon", "eas");
-                return directory;		
-            }
-            return null;
-        },    
+    itemObserver: function (aTopic, folderData, tbItem, tbOldItem) {
+        switch (aTopic) {
+            case "onAddItem":
+            case "onModifyItem":
+            case "onDeleteItem":
+                //Services.console.logStringMessage("["+ aTopic + "] " + tbItem.nativeItem.title);
+                break;
+        }
     },
 
 
 
-    // This provider is using the standard "calendar" targetType, so it must
-    // implement the calendar object.
-    calendar : {
+    /**
+     * Is called by TargetData::getTarget() if  the standard "calendar" targetType is used, and a new calendar needs to be created.
+     *
+     * @param newname       [in] name of the new calendar
+     * @param folderData  [in] folderData
+     *
+     * return the new calendar
+     */
+    createCalendar: function(newname, folderData) {
+        let calManager = tbSync.lightning.cal.getCalendarManager();
+        //Alternative calendar, which uses calTbSyncCalendar
+        //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
+
+        //Create the new standard calendar with a unique name
+        let newCalendar = calManager.createCalendar("storage", Services.io.newURI("moz-storage-calendar://"));
+        newCalendar.id = tbSync.lightning.cal.getUUID();
+        newCalendar.name = newname;
+
+        newCalendar.setProperty("color", folderData.getFolderProperty("targetColor"));
+        newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
+        newCalendar.setProperty("calendar-main-in-composite",true);
+        newCalendar.setProperty("readOnly", folderData.getFolderProperty("downloadonly") == "1");
+        calManager.registerCalendar(newCalendar);
+
+        let authData = eas.network.getAuthData(folderData.accountData);
         
-        // The calendar target does not support a custom primaryKeyField, because
-        // the lightning implementation only allows to search for items via UID.
-        // Like the addressbook target, the calendar target item element has a
-        // primaryKey getter/setter which - however - only works on the UID.
+        //is there an email identity we can associate this calendar to? 
+        //getIdentityKey returns "" if none found, which removes any association
+        let key = eas.tools.getIdentityKey(authData.user);
+        newCalendar.setProperty("fallbackOrganizerName", newCalendar.getProperty("organizerCN"));
+        newCalendar.setProperty("imip.identity.key", key);
+        if (key === "") {
+            //there is no matching email identity - use current default value as best guess and remove association
+            //use current best guess 
+            newCalendar.setProperty("organizerCN", newCalendar.getProperty("fallbackOrganizerName"));
+            newCalendar.setProperty("organizerId", tbSync.lightning.cal.email.prependMailTo(authData.user));
+        }
         
-        // enable or disable changelog
-        logUserChanges: true,
-        
-
-
-        calendarObserver: function (aTopic, folderData, tbCalendar, aPropertyName, aPropertyValue, aOldPropertyValue) {
-            switch (aTopic) {
-                case "onCalendarPropertyChanged":
-                    //Services.console.logStringMessage("["+ aTopic + "] " + tbCalendar.calendar.name + " : " + aPropertyName);
-                    break;
-                
-                case "onCalendarDeleted":
-                case "onCalendarPropertyDeleted":
-                    //Services.console.logStringMessage("["+ aTopic + "] " +tbCalendar.calendar.name);
-                    break;
-            }
-        },
-        
-
-
-        itemObserver: function (aTopic, folderData, tbItem, tbOldItem) {
-            switch (aTopic) {
-                case "onAddItem":
-                case "onModifyItem":
-                case "onDeleteItem":
-                    //Services.console.logStringMessage("["+ aTopic + "] " + tbItem.nativeItem.title);
-                    break;
-            }
-        },
-
-
-
-        /**
-         * Is called by TargetData::getTarget() if  the standard "calendar" targetType is used, and a new calendar needs to be created.
-         *
-         * @param newname       [in] name of the new calendar
-         * @param folderData  [in] folderData
-         *
-         * return the new calendar
-         */
-        createCalendar: function(newname, folderData) {
-            let calManager = tbSync.lightning.cal.getCalendarManager();
-            //Alternative calendar, which uses calTbSyncCalendar
-            //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
-
-            //Create the new standard calendar with a unique name
-            let newCalendar = calManager.createCalendar("storage", Services.io.newURI("moz-storage-calendar://"));
-            newCalendar.id = tbSync.lightning.cal.getUUID();
-            newCalendar.name = newname;
-
-            newCalendar.setProperty("color", folderData.getFolderProperty("targetColor"));
-            newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
-            newCalendar.setProperty("calendar-main-in-composite",true);
-            newCalendar.setProperty("readOnly", folderData.getFolderProperty("downloadonly") == "1");
-            calManager.registerCalendar(newCalendar);
-
-            let authData = eas.network.getAuthData(folderData.accountData);
-            
-            //is there an email identity we can associate this calendar to? 
-            //getIdentityKey returns "" if none found, which removes any association
-            let key = eas.tools.getIdentityKey(authData.user);
-            newCalendar.setProperty("fallbackOrganizerName", newCalendar.getProperty("organizerCN"));
-            newCalendar.setProperty("imip.identity.key", key);
-            if (key === "") {
-                //there is no matching email identity - use current default value as best guess and remove association
-                //use current best guess 
-                newCalendar.setProperty("organizerCN", newCalendar.getProperty("fallbackOrganizerName"));
-                newCalendar.setProperty("organizerId", tbSync.lightning.cal.email.prependMailTo(authData.user));
-            }
-            
-            return newCalendar;
-        },
-    }
+        return newCalendar;
+    },
 }
 
 
