@@ -167,7 +167,7 @@ var network = {
                 tbSync.dump("PolicyKey used", syncData.accountData.getAccountProperty("policykey"));
             }
 
-            syncData.req.timeout = eas.base.getConnectionTimeout();
+            syncData.req.timeout = eas.Base.getConnectionTimeout();
 
             syncData.req.ontimeout = function () {
                 if (allowSoftFail) {
@@ -395,7 +395,7 @@ var network = {
                         folder.remove();
                     }		    
                     // reset account
-                    eas.base.onEnableAccount(syncData.accountData);
+                    eas.Base.onEnableAccount(syncData.accountData);
                     throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 }
         }
@@ -425,7 +425,7 @@ var network = {
                         folder.remove();
                     }		    
                     // reset account
-                    eas.base.onEnableAccount(syncData.accountData);
+                    eas.Base.onEnableAccount(syncData.accountData);
                     throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 }
                 
@@ -730,7 +730,7 @@ var network = {
                     tbSync.dump("PolicyKey used", accountData.getAccountProperty("policykey"));
                 }
 
-                req.timeout = eas.base.getConnectionTimeout();
+                req.timeout = eas.Base.getConnectionTimeout();
 
                 req.ontimeout = function () {
                     reject("GAL Search timeout");
@@ -802,7 +802,7 @@ var network = {
                 syncData.req.overrideMimeType("text/plain");
                 syncData.req.setRequestHeader("User-Agent", userAgent);            
                 syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
-                syncData.req.timeout = eas.base.getConnectionTimeout();
+                syncData.req.timeout = eas.Base.getConnectionTimeout();
 
                 syncData.req.ontimeout = function () {
                     resolve();

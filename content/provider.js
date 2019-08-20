@@ -28,7 +28,7 @@ eas.utcTimezone = null;
 /**
  * Implementing the TbSync interface for external provider extensions.
  */
-var base = class {
+var Base = class {
     /**
      * Called during load of external provider extension to init provider.
      */
@@ -375,7 +375,7 @@ var base = class {
                     data.push({
                         value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
                         comment: tbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
-                        icon: eas.base.getProviderIcon(16, accountData),
+                        icon: eas.Base.getProviderIcon(16, accountData),
                         style: "EASGAL",
                     });
                 }
@@ -733,7 +733,7 @@ var standardTargets = {
 
 
 /**
- * This provider is using the standardFolderList (instead of this it could also
+ * This provider is using the StandardFolderList (instead of this it could also
  * implement the full folderList object).
  *
  * The DOM of the folderlist can be accessed by
@@ -745,7 +745,7 @@ var standardTargets = {
  *    let folderData = folderList.selectedItem.folderData;
  *
  */
-var standardFolderList = class {
+var StandardFolderList = class {
     /**
      * Is called before the context menu of the folderlist is shown, allows to
      * show/hide custom menu options based on selected folder. During an active
