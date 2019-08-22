@@ -20,12 +20,12 @@ sed -i "s/%VERSION%/$version/g" "beta-release-channel-update.json"
 sed -i "s|%LINK%|$1/$3|g" "beta-release-channel-update.json"
 sed -i "s/static getApiVersion() { return \"/static getApiVersion() { return \"Beta /g" "content/provider.js"
 
- echo "Releasing version $version via beta release channel (will include updateURL)"
+echo "Releasing version $version via beta release channel (will include updateURL)"
 sed -i "s|\"name\": \"__MSG_extensionName__\",|\"name\": \"EAS for TbSync [Beta Release Channel]\",|g" "manifest.json"
 sed -i "s|\"gecko\": {|\"gecko\": {\n  \"update_url\": \"$1/$updatefile\",|g" "manifest.json"
 
 cp beta-release-channel-update.json $2/$updatefile
 
-rm $3
-zip -r $3 content _locales skin chrome.manifest manifest.json bootstrap.js LICENSE CONTRIBUTORS.md
-cp $3 $2/$3
+#rm $3
+#zip -r $3 content _locales skin chrome.manifest manifest.json bootstrap.js LICENSE CONTRIBUTORS.md
+#cp $3 $2/$3
