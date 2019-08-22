@@ -158,6 +158,14 @@ var Base = class {
 
 
     /**
+     * Returns version of the TbSync API this provider is using
+     */
+    static getApiVersion() { return "2.0"; }
+
+
+
+
+    /**
      * Returns location of a provider icon.
      *
      * @param size       [in] size of requested icon
