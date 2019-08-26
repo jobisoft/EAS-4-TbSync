@@ -21,7 +21,7 @@ var tbSyncAbEasCardWindow = {
             aParentDirURI = window.document.getElementById("abPopup").value;
         } else {
             //function to get correct uri of current card for global book as well for mailLists
-            aParentDirURI = tbSync.providers.eas.tools.getSelectedUri(window.arguments[0].abURI, window.arguments[0].card);
+            aParentDirURI = TbSync.providers.eas.tools.getSelectedUri(window.arguments[0].abURI, window.arguments[0].card);
         }
         
         //returning false will prevent injection

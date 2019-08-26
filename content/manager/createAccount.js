@@ -8,9 +8,9 @@
  
  "use strict";
 
-var { tbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
 
-const eas = tbSync.providers.eas;
+const eas = TbSync.providers.eas;
 
 var tbSyncEasNewAccount = {
 
@@ -31,7 +31,7 @@ var tbSyncEasNewAccount = {
     },
 
     onLoad: function () {
-        this.providerData = new tbSync.ProviderData("eas");
+        this.providerData = new TbSync.ProviderData("eas");
 
         this.elementName = document.getElementById('tbsync.newaccount.name');
         this.elementUser = document.getElementById('tbsync.newaccount.user');
@@ -41,7 +41,7 @@ var tbSyncEasNewAccount = {
         
         document.documentElement.getButton("back").hidden = true;
         document.documentElement.getButton("finish").disabled = true;
-        document.documentElement.getButton("finish").label = tbSync.getString("newaccount.add_auto","eas");
+        document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_auto","eas");
 
         document.getElementById("tbsync.error").hidden = true;
         document.getElementById("tbsync.spinner").hidden = true;
@@ -66,7 +66,7 @@ var tbSyncEasNewAccount = {
     },
 
     onUserDropdown: function () {
-        document.documentElement.getButton("finish").label = tbSync.getString("newaccount.add_" + this.elementServertype.value,"eas");
+        document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_" + this.elementServertype.value,"eas");
         document.getElementById('tbsync.newaccount.url.box').style.visibility = (this.elementServertype.value != "custom") ? "hidden" : "visible";
         this.onUserTextInput();
     },
@@ -87,7 +87,7 @@ var tbSyncEasNewAccount = {
         let url = this.elementUrl.value.trim();
 
         if (servertype == "auto" &&  user.split("@").length != 2) {
-            alert(tbSync.getString("autodiscover.NeedEmail","eas"))
+            alert(TbSync.getString("autodiscover.NeedEmail","eas"))
             return;
         }
         
@@ -157,7 +157,7 @@ var tbSyncEasNewAccount = {
         let offset = Math.round(((Date.now()-tbSyncEasNewAccount.startTime)/1000));
         let timeout = (offset>2) ? " (" + (tbSyncEasNewAccount.maxTimeout - offset) + ")" : "";
 
-        document.getElementById('tbsync.newaccount.autodiscoverstatus').value  = tbSync.getString("autodiscover.Querying","eas") + timeout;
+        document.getElementById('tbsync.newaccount.autodiscoverstatus').value  = TbSync.getString("autodiscover.Querying","eas") + timeout;
     },
 
     addAccount (user, password, servertype, accountname, url) {

@@ -16,15 +16,15 @@ let onInitDoneObserver = {
     observe: async function (aSubject, aTopic, aData) {        
         let valid = false;
         try {
-            var { tbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
-            valid = tbSync.enabled;
+            var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+            valid = TbSync.enabled;
         } catch (e) {
-            // If this fails, tbSync is not loaded yet and we will get the notification later again.
+            // If this fails, TbSync is not loaded yet and we will get the notification later again.
         }
         
         //load this provider add-on into TbSync
         if (valid) {
-            await tbSync.providers.loadProvider(thisID, "eas", "chrome://eas4tbsync/content/provider.js");
+            await TbSync.providers.loadProvider(thisID, "eas", "chrome://eas4tbsync/content/provider.js");
         }
     }
 }
@@ -62,10 +62,10 @@ function shutdown(data, reason) {
     Services.obs.removeObserver(onInitDoneObserver, "tbsync.observer.initialized");
     //unload this provider add-on from TbSync
     try {
-        var { tbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
-        tbSync.providers.unloadProvider("eas");
+        var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+        TbSync.providers.unloadProvider("eas");
     } catch (e) {
-        //if this fails, tbSync has been unloaded already and has unloaded this addon as well
+        //if this fails, TbSync has been unloaded already and has unloaded this addon as well
     }
     Services.obs.notifyObservers(null, "chrome-flush-caches", null);
 }

@@ -10,7 +10,7 @@
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { MailServices } = ChromeUtils.import("resource:///modules/MailServices.jsm");
-var { tbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
 
 var tbSyncAbServerSearch = {
 
@@ -19,12 +19,12 @@ var tbSyncAbServerSearch = {
         return null;
     }
         
-    let response = await tbSync.providers.eas.network.getSearchResults(accountData, currentQuery);
-    let wbxmlData = tbSync.providers.eas.network.getDataFromResponse(response);
+    let response = await TbSync.providers.eas.network.getSearchResults(accountData, currentQuery);
+    let wbxmlData = TbSync.providers.eas.network.getDataFromResponse(response);
     let data = [];
 
     if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
-      let results = tbSync.providers.eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
+      let results = TbSync.providers.eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
       let accountname = accountData.getAccountProperty("accountname");
   
       for (let result of results) {
@@ -103,15 +103,15 @@ var tbSyncAbServerSearch = {
             
             if (searchbox && selectedDirectoryURI) {
               if (selectedDirectoryURI == "moz-abdirectory://?") {
-                  searchbox.setAttribute("placeholder",  tbSync.getString("addressbook.searchall"));
+                  searchbox.setAttribute("placeholder",  TbSync.getString("addressbook.searchall"));
               } else {
                 let addressbook = MailServices.ab.getDirectory(selectedDirectoryURI);
                 
-                let folders = tbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
+                let folders = TbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
                 if (folders.length == 1) {
-                  searchbox.setAttribute("placeholder", tbSync.getString("addressbook.searchgal::" + tbSync.db.getAccountProperty(folders[0].accountID, "accountname")));
+                  searchbox.setAttribute("placeholder", TbSync.getString("addressbook.searchgal::" + TbSync.db.getAccountProperty(folders[0].accountID, "accountname")));
                 } else {
-                  searchbox.setAttribute("placeholder", tbSync.getString("addressbook.searchthis"));
+                  searchbox.setAttribute("placeholder", TbSync.getString("addressbook.searchthis"));
                 }
               }
             }
@@ -135,17 +135,17 @@ var tbSyncAbServerSearch = {
     if (selectedDirectoryURI == "moz-abdirectory://?") return; //global search not yet(?) supported
     if (selectedDirectoryURI) {
       let addressbook = MailServices.ab.getDirectory(selectedDirectoryURI);
-      let folders = tbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
+      let folders = TbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
       if (folders.length != 1) return;
       
-      let accountData = new tbSync.AccountData(folders[0].accountID);
-      let folderData = new tbSync.FolderData(accountData, folders[0].folderID);
-      let abDirectory = new tbSync.addressbook.AbDirectory(addressbook, folderData);    
+      let accountData = new TbSync.AccountData(folders[0].accountID);
+      let folderData = new TbSync.FolderData(accountData, folders[0].folderID);
+      let abDirectory = new TbSync.addressbook.AbDirectory(addressbook, folderData);    
 
       try {
         let oldresults = addressbook.getCardsFromProperty("X-Server-Searchresult", "TbSync/EAS", true);
         while (oldresults.hasMoreElements()) {
-          let card = new tbSync.addressbook.AbItem(abDirectory, oldresults.getNext().QueryInterface(Components.interfaces.nsIAbCard));
+          let card = new TbSync.addressbook.AbItem(abDirectory, oldresults.getNext().QueryInterface(Components.interfaces.nsIAbCard));
           abDirectory.deleteItem(card);
         }
       } catch (e) {
@@ -160,14 +160,14 @@ var tbSyncAbServerSearch = {
     if (selectedDirectoryURI == "moz-abdirectory://?") return; //global search not yet(?) supported    
     let addressbook = MailServices.ab.getDirectory(selectedDirectoryURI);
     
-    let folders = tbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
+    let folders = TbSync.db.findFolders({"target": addressbook.UID}, {"provider": "eas"});
     if (folders.length == 1) {
       let searchbox = window.document.getElementById("peopleSearchInput");
       let query = searchbox.value;        
 
-      let accountData = new tbSync.AccountData(folders[0].accountID);
-      let folderData = new tbSync.FolderData(accountData, folders[0].folderID);
-      let abDirectory = new tbSync.addressbook.AbDirectory(addressbook, folderData);
+      let accountData = new TbSync.AccountData(folders[0].accountID);
+      let folderData = new TbSync.FolderData(accountData, folders[0].folderID);
+      let abDirectory = new TbSync.addressbook.AbDirectory(addressbook, folderData);
       let accountname = accountData.getAccountProperty("accountname");
       
       if (true) { // we may want to disable this
@@ -184,7 +184,7 @@ var tbSyncAbServerSearch = {
             this._serverSearchBusy = true;
             while (this._serverSearchBusy) {
 
-              await tbSync.tools.sleep(1000);
+              await TbSync.tools.sleep(1000);
               let currentQuery = this._serverSearchNextQuery;
               this._serverSearchNextQuery = "";
               let results = await tbSyncAbServerSearch.request(accountData, currentQuery);

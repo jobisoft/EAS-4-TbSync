@@ -34,12 +34,12 @@ var network = {
             },
 
             get password() {
-                return tbSync.passwordManager.getLoginInfo(this.host, "TbSync/EAS", this.user);
+                return TbSync.passwordManager.getLoginInfo(this.host, "TbSync/EAS", this.user);
             },
 
             updateLoginData: function(newUsername, newPassword) {
                 let oldUsername = this.user;
-                tbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
+                TbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
                 // Also update the username of this account. Add dedicated username setter?
                 accountData.setAccountProperty("user", newUsername);
             },          
@@ -85,7 +85,7 @@ var network = {
                             
                             let syncState = syncData.getSyncState(); 
                             syncData.setSyncState("passwordprompt");
-                            let credentials = await tbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                            let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
                             if (credentials) {
                                 // Update login data and try again.
                                 authData.updateLoginData(credentials.username, credentials.password);
@@ -145,7 +145,7 @@ var network = {
         let deviceType = syncData.accountData.getAccountProperty("devicetype");
         let deviceId = syncData.accountData.getAccountProperty("deviceId");
 
-        tbSync.dump("Sending (EAS v"+syncData.accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
+        TbSync.dump("Sending (EAS v"+syncData.accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
         
         return new Promise(function(resolve,reject) {
             // Create request handler - API changed with TB60 to new XMKHttpRequest()
@@ -155,7 +155,7 @@ var network = {
             syncData.req.overrideMimeType("text/plain");
             syncData.req.setRequestHeader("User-Agent", userAgent);
             syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
-            syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(connection.user + ':' + connection.password));
+            syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(connection.user + ':' + connection.password));
             if (syncData.accountData.getAccountProperty("asversion") == "2.5") {
                 syncData.req.setRequestHeader("MS-ASProtocolVersion", "2.5");
             } else {
@@ -164,7 +164,7 @@ var network = {
             syncData.req.setRequestHeader("Content-Length", wbxml.length);
             if (syncData.accountData.getAccountProperty("provision")) {
                 syncData.req.setRequestHeader("X-MS-PolicyKey", syncData.accountData.getAccountProperty("policykey"));
-                tbSync.dump("PolicyKey used", syncData.accountData.getAccountProperty("policykey"));
+                TbSync.dump("PolicyKey used", syncData.accountData.getAccountProperty("policykey"));
             }
 
             syncData.req.timeout = eas.Base.getConnectionTimeout();
@@ -181,7 +181,7 @@ var network = {
                 if (allowSoftFail) {
                     resolve("");
                 } else {
-                    let error = tbSync.network.createTCPErrorFromFailedXHR(syncData.req) || "networkerror";
+                    let error = TbSync.network.createTCPErrorFromFailedXHR(syncData.req) || "networkerror";
                     let rv = {};
                     rv.errorObj = eas.sync.finish("error", error);
                     rv.errorType = "NetworkError";
@@ -200,7 +200,7 @@ var network = {
 
                         //What to do on error? IS this an error? Yes!
                         if (!allowSoftFail && response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
-                            tbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + syncData.req.status + ", ready state = " + syncData.req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
+                            TbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + syncData.req.status + ", ready state = " + syncData.req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
                             reject(eas.sync.finish("warning", "invalid"));
                         } else {
                             resolve(response);
@@ -226,7 +226,7 @@ var network = {
                         let header = syncData.req.getResponseHeader("X-MS-Location");
                         let newHost = header.slice(header.indexOf("://") + 3, header.indexOf("/M"));
 
-                        tbSync.dump("redirect (451)", "header: " + header + ", oldHost: " +syncData.accountData.getAccountProperty("host") + ", newHost: " + newHost);
+                        TbSync.dump("redirect (451)", "header: " + header + ", oldHost: " +syncData.accountData.getAccountProperty("host") + ", newHost: " + newHost);
 
                         syncData.accountData.setAccountProperty("host", newHost);
                         reject(eas.sync.finish("resyncAccount", syncData.req.status));
@@ -265,28 +265,28 @@ var network = {
         }
         
         //include xml in log, if userdatalevel 2 or greater
-        if ((tbSync.prefs.getBoolPref("log.toconsole") || tbSync.prefs.getBoolPref("log.tofile")) && tbSync.prefs.getIntPref("log.userdatalevel")>1) {
+        if ((TbSync.prefs.getBoolPref("log.toconsole") || TbSync.prefs.getBoolPref("log.tofile")) && TbSync.prefs.getIntPref("log.userdatalevel")>1) {
 
             //log raw wbxml if userdatalevel is 3 or greater
-            if (tbSync.prefs.getIntPref("log.userdatalevel")>2) {
+            if (TbSync.prefs.getIntPref("log.userdatalevel")>2) {
                 let charcodes = [];
                 for (let i=0; i< wbxml.length; i++) charcodes.push(wbxml.charCodeAt(i).toString(16));
                 let bytestring = charcodes.join(" ");
-                tbSync.dump("WBXML: " + what, "\n" + bytestring);
+                TbSync.dump("WBXML: " + what, "\n" + bytestring);
             }
 
             if (xml) {
                 //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
                 //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
                 //if userdatalevel is 3 or greater print everything, otherwise exclude application data
-                if (tbSync.prefs.getIntPref("log.userdatalevel")<3) {
+                if (TbSync.prefs.getIntPref("log.userdatalevel")<3) {
                     let rx = new RegExp("<ApplicationData[\\d\\D]*?\/ApplicationData>", "g");
-                    tbSync.dump("XML: " + what, "\n" + xml.replace(rx, ""));
+                    TbSync.dump("XML: " + what, "\n" + xml.replace(rx, ""));
                 } else {
-                    tbSync.dump("XML: " + what, "\n" + xml);
+                    TbSync.dump("XML: " + what, "\n" + xml);
                 }
             } else {
-                tbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
+                TbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
             }
         }
     
@@ -357,7 +357,7 @@ var network = {
             return "";
         }
 
-        tbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
+        TbSync.dump("wbxml status check", type + ": " + fullpath + " = " + status);
 
         //handle errrors based on type
         let statusType = type+"."+status;
@@ -366,7 +366,7 @@ var network = {
                         MUST return to SyncKey element value of 0 for the collection. The client SHOULD either delete any items that were added 
                         since the last successful Sync or the client MUST add those items back to the server after completing the full resynchronization
                         */
-                tbSync.eventlog.add("warning", syncData.eventLogInfo, "Forced Folder Resync", "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+                TbSync.eventlog.add("warning", syncData.eventLogInfo, "Forced Folder Resync", "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
                 syncData.currentFolderData.remove();
                 throw eas.sync.finish("resyncFolder", statusType);
             
@@ -510,7 +510,7 @@ var network = {
                 throw eas.sync.finish("error", "wbxmlmissingfield::Provision.Status");
             } else if (provisionStatus != "1") {
                 //dump policy status as well
-                if (policyStatus) tbSync.dump("PolicyKey","Received policy status: " + policyStatus);
+                if (policyStatus) TbSync.dump("PolicyKey","Received policy status: " + policyStatus);
                 throw eas.sync.finish("error", "provision::" + provisionStatus);
             }
 
@@ -530,7 +530,7 @@ var network = {
                     if (policykey === false) {
                         throw eas.sync.finish("error", "wbxmlmissingfield::Provision.Policies.Policy.PolicyKey");
                     } 
-                    tbSync.dump("PolicyKey","Received policykey (" + loop + "): " + policykey);
+                    TbSync.dump("PolicyKey","Received policykey (" + loop + "): " + policykey);
                     syncData.accountData.setAccountProperty("policykey", policykey);
                     break;
 
@@ -707,7 +707,7 @@ var network = {
         let deviceType = accountData.getAccountProperty("devicetype");
         let deviceId = accountData.getAccountProperty("deviceId");
 
-        tbSync.dump("Sending (EAS v" + accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
+        TbSync.dump("Sending (EAS v" + accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
         
         try {
             let response = await new Promise(function(resolve, reject) {
@@ -718,7 +718,7 @@ var network = {
                 req.overrideMimeType("text/plain");
                 req.setRequestHeader("User-Agent", userAgent);
                 req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
-                req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
+                req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
                 if (accountData.getAccountProperty("asversion") == "2.5") {
                     req.setRequestHeader("MS-ASProtocolVersion", "2.5");
                 } else {
@@ -727,7 +727,7 @@ var network = {
                 req.setRequestHeader("Content-Length", wbxml.length);
                 if (accountData.getAccountProperty("provision")) {
                     req.setRequestHeader("X-MS-PolicyKey", accountData.getAccountProperty("policykey"));
-                    tbSync.dump("PolicyKey used", accountData.getAccountProperty("policykey"));
+                    TbSync.dump("PolicyKey used", accountData.getAccountProperty("policykey"));
                 }
 
                 req.timeout = eas.Base.getConnectionTimeout();
@@ -750,7 +750,7 @@ var network = {
 
                             //What to do on error? IS this an error? Yes!
                             if (response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
-                                tbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + req.status + ", ready state = " + req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
+                                TbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + req.status + ", ready state = " + req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
                                 reject("GAL Search Response Invalid");
                             } else {
                                 resolve(response);
@@ -788,7 +788,7 @@ var network = {
         let authData = eas.network.getAuthData(syncData.accountData);
 
         let userAgent = syncData.accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
-        tbSync.dump("Sending", "OPTIONS " + eas.network.getEasURL(syncData.accountData));
+        TbSync.dump("Sending", "OPTIONS " + eas.network.getEasURL(syncData.accountData));
         
         let allowedRetries = 5;
         let retry;
@@ -801,7 +801,7 @@ var network = {
                 syncData.req.open("OPTIONS", eas.network.getEasURL(syncData.accountData), true);
                 syncData.req.overrideMimeType("text/plain");
                 syncData.req.setRequestHeader("User-Agent", userAgent);            
-                syncData.req.setRequestHeader("Authorization", 'Basic ' + tbSync.tools.b64encode(authData.user + ':' + authData.password));
+                syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
                 syncData.req.timeout = eas.Base.getConnectionTimeout();
 
                 syncData.req.ontimeout = function () {
@@ -828,7 +828,7 @@ var network = {
                                 responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
                                 responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
 
-                                tbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
+                                TbSync.dump("EAS OPTIONS with response (status: 200)", "\n" +
                                 "responseText: " + syncData.req.responseText + "\n" +
                                 "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
                                 "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
@@ -865,7 +865,7 @@ var network = {
                     
                     let syncState = syncData.getSyncState(); 
                     syncData.setSyncState("passwordprompt");
-                    let credentials = await tbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                    let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
                     if (credentials) {
                         // Update login data and try again.
                         authData.updateLoginData(credentials.username, credentials.password);
@@ -916,7 +916,7 @@ var network = {
         let u = url;
         while (u.endsWith("/")) { u = u.slice(0,-1); }
         if (u.endsWith("/Microsoft-Server-ActiveSync")) u=u.slice(0, -28);
-        else tbSync.dump("Received non-standard EAS url via autodiscover:", url);
+        else TbSync.dump("Received non-standard EAS url via autodiscover:", url);
 
         return u.split("//")[1]; //cut off protocol
     },
@@ -939,7 +939,7 @@ var network = {
         let responses = []; //array of objects {url, error, server}
         
         for (let i=0; i< urls.length; i++) {
-            await tbSync.tools.sleep(200);
+            await TbSync.tools.sleep(200);
             requests.push( eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout) );
         }
 
@@ -961,16 +961,16 @@ var network = {
             
             if (responses[r].error == 403 || responses[r].error == 401) {
                 //we could still find a valid server, so just store this state
-                result = {"server": "", "user": responses[r].user, "errorcode": responses[r].error, "error": tbSync.getString("status." + responses[r].error, "eas")};
+                result = {"server": "", "user": responses[r].user, "errorcode": responses[r].error, "error": TbSync.getString("status." + responses[r].error, "eas")};
             }
         } 
         
         //this is only reached on fail, if no result defined yet, use general error
         if (!result) { 
-            result = {"server": "", "user": user, "error": tbSync.getString("autodiscover.Failed","eas").replace("##user##", user), "errorcode": 503};
+            result = {"server": "", "user": user, "error": TbSync.getString("autodiscover.Failed","eas").replace("##user##", user), "errorcode": 503};
         }
 
-        tbSync.eventlog.add("error", new tbSync.EventLogInfo("eas"), result.error, log.join("\n"));
+        TbSync.eventlog.add("error", new TbSync.EventLogInfo("eas"), result.error, log.join("\n"));
         return result;        
     },
        
@@ -983,12 +983,12 @@ var network = {
         let connection = { url, user };
         
         do {            
-            await tbSync.tools.sleep(200);
+            await TbSync.tools.sleep(200);
             result = await eas.network.getServerConnectionViaAutodiscoverRequest(method, connection, password, maxtimeout);
             method = "";
             
             if (result.error == "redirect found") {
-                tbSync.dump("EAS autodiscover URL redirect",  "\n" + connection.url + " @ " + connection.user + " => \n" + result.url + " @ " + result.user);
+                TbSync.dump("EAS autodiscover URL redirect",  "\n" + connection.url + " @ " + connection.user + " => \n" + result.url + " @ " + result.user);
                 connection.url = result.url;
                 connection.user = result.user;
                 method = "HEAD";
@@ -1009,7 +1009,7 @@ var network = {
     },    
     
     getServerConnectionViaAutodiscoverRequest: function (method, connection, password, maxtimeout) {
-        tbSync.dump("Querry EAS autodiscover URL", connection.url + " @ " + connection.user);
+        TbSync.dump("Querry EAS autodiscover URL", connection.url + " @ " + connection.user);
         
         return new Promise(function(resolve,reject) {
             
@@ -1035,18 +1035,18 @@ var network = {
             if (method == "POST") {
                 req.setRequestHeader("Content-Length", xml.length);
                 req.setRequestHeader("Content-Type", "text/xml");
-                if (secure) req.setRequestHeader("Authorization", "Basic " + tbSync.tools.b64encode(connection.user + ":" + password));                
+                if (secure) req.setRequestHeader("Authorization", "Basic " + TbSync.tools.b64encode(connection.user + ":" + password));                
             }
 
             req.ontimeout = function () {
-                tbSync.dump("EAS autodiscover with timeout", "\n" + connection.url + " => \n" + req.responseURL);
+                TbSync.dump("EAS autodiscover with timeout", "\n" + connection.url + " => \n" + req.responseURL);
                 resolve({"url":req.responseURL, "error":"timeout", "server":"", "user":connection.user});
             };
            
             req.onerror = function () {
-                let error = tbSync.network.createTCPErrorFromFailedXHR(req);
+                let error = TbSync.network.createTCPErrorFromFailedXHR(req);
                 if (!error) error = req.responseText;
-                tbSync.dump("EAS autodiscover with error ("+error+")",  "\n" + connection.url + " => \n" + req.responseURL);
+                TbSync.dump("EAS autodiscover with error ("+error+")",  "\n" + connection.url + " => \n" + req.responseURL);
                 resolve({"url":req.responseURL, "error":error, "server":"", "user":connection.user});
             };
 
@@ -1070,7 +1070,7 @@ var network = {
                 }
                 
                 //evaluate secure POST requests which have not been redirected
-                tbSync.dump("EAS autodiscover POST with status (" + req.status + ")",   "\n" + connection.url + " => \n" + req.responseURL  + "\n[" + req.responseText + "]");
+                TbSync.dump("EAS autodiscover POST with status (" + req.status + ")",   "\n" + connection.url + " => \n" + req.responseURL  + "\n[" + req.responseText + "]");
                 
                 if (req.status === 200) {
                     let data = eas.xmltools.getDataFromXMLString(req.responseText);

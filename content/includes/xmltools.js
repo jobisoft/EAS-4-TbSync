@@ -60,9 +60,9 @@ var xmltools = {
 
     //print content of xml data object (if debug output enabled)
     printXmlData : function (data, printApplicationData) {
-        if ((tbSync.prefs.getBoolPref("log.toconsole") || tbSync.prefs.getBoolPref("log.tofile")) && printApplicationData) {
+        if ((TbSync.prefs.getBoolPref("log.toconsole") || TbSync.prefs.getBoolPref("log.tofile")) && printApplicationData) {
             let dump = JSON.stringify(data);
-            tbSync.dump("Extracted XML data", "\n" + dump);
+            TbSync.dump("Extracted XML data", "\n" + dump);
         }
     },
 
@@ -83,7 +83,7 @@ var xmltools = {
 
         //check if xml is error document
         if (xml.documentElement.nodeName == "parsererror") {
-            tbSync.dump("BAD XML", "The above XML and WBXML could not be parsed correctly, something is wrong.");
+            TbSync.dump("BAD XML", "The above XML and WBXML could not be parsed correctly, something is wrong.");
             throw eas.sync.finish("error", "malformed-xml");
         }
 

@@ -78,7 +78,7 @@
               <button 
               id="tbsync.error.link" 
               label="&manager.ShowEventLog;"
-              oncommand="tbSync.eventlog.open();"/>
+              oncommand="TbSync.eventlog.open();"/>
             </vbox>
         </vbox>    
 

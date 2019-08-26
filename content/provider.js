@@ -8,8 +8,8 @@
 
 "use strict";
 
-// Every object in here will be loaded into tbSync.providers.<providername>.
-const eas = tbSync.providers.eas;
+// Every object in here will be loaded into TbSync.providers.<providername>.
+const eas = TbSync.providers.eas;
 
 eas.prefs = Services.prefs.getBranch("extensions.eas4tbsync.");
 
@@ -64,23 +64,23 @@ var Base = class {
                 
         try {
             // Create a basic error info (no accountname or foldername, just the provider)
-            let eventLogInfo = new tbSync.EventLogInfo("eas");
+            let eventLogInfo = new TbSync.EventLogInfo("eas");
             
-            if (tbSync.lightning.isAvailable()) {
+            if (TbSync.lightning.isAvailable()) {
                 
                 //get timezone info of default timezone (old cal. without dtz are depricated)
-                eas.defaultTimezone = (tbSync.lightning.cal.dtz && tbSync.lightning.cal.dtz.defaultTimezone) ? tbSync.lightning.cal.dtz.defaultTimezone : tbSync.lightning.cal.calendarDefaultTimezone();
-                eas.utcTimezone = (tbSync.lightning.cal.dtz && tbSync.lightning.cal.dtz.UTC) ? tbSync.lightning.cal.dtz.UTC : tbSync.lightning.cal.UTC();
+                eas.defaultTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.defaultTimezone) ? TbSync.lightning.cal.dtz.defaultTimezone : TbSync.lightning.cal.calendarDefaultTimezone();
+                eas.utcTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.UTC) ? TbSync.lightning.cal.dtz.UTC : TbSync.lightning.cal.UTC();
                 if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
-                    tbSync.eventlog.add("info", eventLogInfo, "Default timezone has been found.");                    
+                    TbSync.eventlog.add("info", eventLogInfo, "Default timezone has been found.");                    
                 } else {
-                    tbSync.eventlog.add("info", eventLogInfo, "Default timezone is not defined, using UTC!");
+                    TbSync.eventlog.add("info", eventLogInfo, "Default timezone is not defined, using UTC!");
                     eas.defaultTimezone = eas.utcTimezone;
                 }
 
                 eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
                 if (!eas.defaultTimezoneInfo) {
-                    tbSync.eventlog.add("info", eventLogInfo, "Could not create defaultTimezoneInfo");
+                    TbSync.eventlog.add("info", eventLogInfo, "Could not create defaultTimezoneInfo");
                 }
                 
                 //get windows timezone data from CSV
@@ -103,10 +103,10 @@ var Base = class {
                 // - A) find email identity and accociate (which sets organizer to that user identity)
                 // - B) overwrite default organizer with current best guess
                 //TODO: Do this after email accounts changed, not only on restart? 
-                let providerData = new tbSync.ProviderData("eas");
+                let providerData = new TbSync.ProviderData("eas");
                 let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
                 for (let folder of folders) {
-                    let calendar = tbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
+                    let calendar = TbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
                     if (calendar && calendar.getProperty("imip.identity.key") == "") {
                         //is there an email identity for this eas account?
                         let authData = eas.network.getAuthData(folder.accountData);
@@ -114,7 +114,7 @@ var Base = class {
                         let key = eas.tools.getIdentityKey(authData.user);
                         if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?
                             //set transient calendar organizer settings based on current best guess and 
-                            calendar.setProperty("organizerId", tbSync.lightning.cal.email.prependMailTo(authData.user));
+                            calendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
                             calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
                         } else {                      
                             //force switch to found identity
@@ -123,7 +123,7 @@ var Base = class {
                     }
                 }
             } else {
-                    tbSync.eventlog.add("info", eventLogInfo, "Lightning was not loaded, creation of timezone objects has been skipped.");
+                    TbSync.eventlog.add("info", eventLogInfo, "Lightning was not loaded, creation of timezone objects has been skipped.");
             }
         } catch(e) {
             Components.utils.reportError(e);        
@@ -212,7 +212,7 @@ var Base = class {
 
     /**
      * Returns the URL of the string bundle file of this provider, it can be
-     * accessed by tbSync.getString(<key>, <provider>)
+     * accessed by TbSync.getString(<key>, <provider>)
      */
     static getStringBundleUrl() {
         return "chrome://eas4tbsync/locale/eas.strings";
@@ -241,7 +241,7 @@ var Base = class {
      *    tbSyncEditAccountOverlay.onload(window, accountData)
      *
      * which is called each time an account of this provider is viewed/selected
-     * in the manager and provides the tbSync.AccountData of the corresponding
+     * in the manager and provides the TbSync.AccountData of the corresponding
      * account.
      */
     static getEditAccountOverlayUrl() {
@@ -379,10 +379,10 @@ var Base = class {
         
             for (let count = 0; count < results.length; count++) {
                 if (results[count].Properties) {
-                    //tbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
+                    //TbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
                     data.push({
                         value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
-                        comment: tbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
+                        comment: TbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
                         icon: eas.Base.getProviderIcon(16, accountData),
                         style: "EASGAL",
                     });
@@ -478,7 +478,7 @@ var Base = class {
      *                           syncDescription.maxAccountReruns. 
      *
      * !!! NEVER CALL THIS FUNCTION DIRECTLY BUT USE !!!
-     *    tbSync.AccountData::sync()
+     *    TbSync.AccountData::sync()
      *
      * return StatusData
      */
@@ -502,7 +502,7 @@ var Base = class {
         }
 
         // Fall through, if there was no error.
-        return new tbSync.StatusData();        
+        return new TbSync.StatusData();        
     }
     
 
@@ -519,8 +519,8 @@ var Base = class {
      *                           syncDescription.maxFolderReruns.
      *
      * !!! NEVER CALL THIS FUNCTION DIRECTLY BUT USE !!!
-     *    tbSync.AccountData::sync() or
-     *    tbSync.FolderData::sync()
+     *    TbSync.AccountData::sync() or
+     *    TbSync.FolderData::sync()
      *
      * return StatusData
      */
@@ -550,7 +550,7 @@ var Base = class {
         }
 
         // Fall through, if there was no error.
-        return new tbSync.StatusData();   
+        return new TbSync.StatusData();   
     }
 }
 
@@ -569,7 +569,7 @@ var StandardAddressbookTarget = {
 
 
     generatePrimaryKey: function (folderData) {
-         return tbSync.generateUUID();
+         return TbSync.generateUUID();
     },
     
 
@@ -700,13 +700,13 @@ var StandardCalendarTarget = {
      * return the new calendar
      */
     createCalendar: function(newname, folderData) {
-        let calManager = tbSync.lightning.cal.getCalendarManager();
+        let calManager = TbSync.lightning.cal.getCalendarManager();
         //Alternative calendar, which uses calTbSyncCalendar
         //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
 
         //Create the new standard calendar with a unique name
         let newCalendar = calManager.createCalendar("storage", Services.io.newURI("moz-storage-calendar://"));
-        newCalendar.id = tbSync.lightning.cal.getUUID();
+        newCalendar.id = TbSync.lightning.cal.getUUID();
         newCalendar.name = newname;
 
         newCalendar.setProperty("color", folderData.getFolderProperty("targetColor"));
@@ -726,7 +726,7 @@ var StandardCalendarTarget = {
             //there is no matching email identity - use current default value as best guess and remove association
             //use current best guess 
             newCalendar.setProperty("organizerCN", newCalendar.getProperty("fallbackOrganizerName"));
-            newCalendar.setProperty("organizerId", tbSync.lightning.cal.email.prependMailTo(authData.user));
+            newCalendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
         }
         
         return newCalendar;
@@ -765,7 +765,7 @@ var StandardFolderList = class {
             //if a folder in trash is selected, also show ContextMenuDelete (but only if FolderDelete is allowed)
             if (eas.tools.parentIsTrash(folderData) && folderData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
                 hideContextMenuDelete = false;
-                window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = tbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("foldername"), "eas");
+                window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = TbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("foldername"), "eas");
             }                
         }
         window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
@@ -807,7 +807,7 @@ var StandardFolderList = class {
      */ 
     static getFolderDisplayName(folderData) {
         let folderName = folderData.getFolderProperty("foldername");
-        if (eas.tools.parentIsTrash(folderData)) folderName = tbSync.getString("recyclebin", "eas") + " | " + folderName;
+        if (eas.tools.parentIsTrash(folderData)) folderName = TbSync.getString("recyclebin", "eas") + " | " + folderName;
         return folderName;
     }
     
@@ -824,7 +824,7 @@ var StandardFolderList = class {
      */ 
     static getAttributesRoAcl(folderData) {
         return {
-            label: tbSync.getString("acl.readonly", "eas"),
+            label: TbSync.getString("acl.readonly", "eas"),
         };
     }
     
@@ -841,7 +841,7 @@ var StandardFolderList = class {
      */ 
     static getAttributesRwAcl(folderData) {
         return {
-            label: tbSync.getString("acl.readwrite", "eas"),
+            label: TbSync.getString("acl.readwrite", "eas"),
         }             
     }
 }

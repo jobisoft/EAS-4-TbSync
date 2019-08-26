@@ -8,7 +8,7 @@
 
 "use strict";
 
-const eas = tbSync.providers.eas;
+const eas = TbSync.providers.eas;
 
 var tbSyncEditAccountOverlay = {
 
@@ -18,7 +18,7 @@ var tbSyncEditAccountOverlay = {
         // special treatment for configuration label, which is a permanent setting and will not change by switching modes
         let configlabel = window.document.getElementById("tbsync.accountsettings.label.config");
         if (configlabel) {
-            configlabel.setAttribute("value", tbSync.getString("config.custom", "eas"));
+            configlabel.setAttribute("value", TbSync.getString("config.custom", "eas"));
         }
     },
 
@@ -47,8 +47,8 @@ var tbSyncEditAccountOverlay = {
             //only trashed folders can be purged (for example O365 does not show deleted folders but also does not allow to purge them)
             if (!eas.tools.parentIsTrash(folderData)) return;
             
-            if (folderData.getFolderProperty("selected")) window.alert(tbSync.getString("deletefolder.notallowed::" + folderData.getFolderProperty("foldername"), "eas"));
-            else if (window.confirm(tbSync.getString("deletefolder.confirm::" + folderData.getFolderProperty("foldername"), "eas"))) {
+            if (folderData.getFolderProperty("selected")) window.alert(TbSync.getString("deletefolder.notallowed::" + folderData.getFolderProperty("foldername"), "eas"));
+            else if (window.confirm(TbSync.getString("deletefolder.confirm::" + folderData.getFolderProperty("foldername"), "eas"))) {
                 folderData.sync({syncList: false, syncJob: "deletefolder"});
             } 
         }            

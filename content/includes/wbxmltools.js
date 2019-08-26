@@ -40,7 +40,7 @@ var wbxmltools = {
                     break;
                     
                 case 0x02: // A character entity. Followed by a mb_u_int32 encoding the character entity number.
-                    tbSync.dump("wbxml", "Encoded character entity has not yet been implemented. Sorry.");
+                    TbSync.dump("wbxml", "Encoded character entity has not yet been implemented. Sorry.");
                     return false;
                     break;
                 
@@ -67,7 +67,7 @@ var wbxmltools = {
                 case 0xC2: // Single-byte document-type-specific extension token.
                 case 0xC3: // Opaque document-type-specific data.
                 case 0xC4: // Unknown tag, with content and attributes.
-                    tbSync.dump("wbxml", "Global token <" + token + "> has not yet been implemented. Sorry.");
+                    TbSync.dump("wbxml", "Global token <" + token + "> has not yet been implemented. Sorry.");
                     return false;
                     break;
                     
@@ -87,7 +87,7 @@ var wbxmltools = {
                     }
 
                     if (this.isUnknownToken(codepage, token)) {
-                        tbSync.eventlog.add("warning", null, "WBXML: Unknown token <" + token + "> for codepage <"+codepage+">.");
+                        TbSync.eventlog.add("warning", null, "WBXML: Unknown token <" + token + "> for codepage <"+codepage+">.");
                     }
             }
             num = num + 1;

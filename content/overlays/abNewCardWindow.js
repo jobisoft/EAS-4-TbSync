@@ -22,9 +22,9 @@ var tbSyncEasAbNewCardWindow = {
 
     onAbSelectChangeNewCard: function () {        
         //remove our overlay (if injected)
-        tbSync.providers.eas.overlayManager.removeOverlay(window, "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
+        TbSync.providers.eas.overlayManager.removeOverlay(window, "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
         //inject our overlay (if our card)
-        tbSync.providers.eas.overlayManager.injectOverlay(window, "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
+        TbSync.providers.eas.overlayManager.injectOverlay(window, "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
     },
         
 }

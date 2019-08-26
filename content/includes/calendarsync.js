@@ -8,8 +8,8 @@
  
  "use strict";
 
-const cal = tbSync.lightning.cal;
-const ICAL = tbSync.lightning.ICAL;
+const cal = TbSync.lightning.cal;
+const ICAL = TbSync.lightning.ICAL;
 
 var Calendar = {
 
@@ -18,7 +18,7 @@ var Calendar = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
         
-        let item = tbItem instanceof tbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+        let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
         
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
@@ -35,11 +35,11 @@ var Calendar = {
 
         if (data.TimeZone) {
             if (data.TimeZone == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") {
-                tbSync.dump("Recieve TZ", "No timezone data received, using local default timezone.");
+                TbSync.dump("Recieve TZ", "No timezone data received, using local default timezone.");
             } else {
                 //load timezone struct into EAS TimeZone object
                 easTZ.easTimeZone64 = data.TimeZone;
-                if (tbSync.prefs.getIntPref("log.userdatalevel")>2) tbSync.dump("Recieve TZ", item.title + easTZ.toString());
+                if (TbSync.prefs.getIntPref("log.userdatalevel")>2) TbSync.dump("Recieve TZ", item.title + easTZ.toString());
                 stdOffset = easTZ.utcOffset;
                 dstOffset = easTZ.daylightBias + easTZ.utcOffset;
             }
@@ -138,7 +138,7 @@ var Calendar = {
                     // Add attendee to event
                     item.addAttendee(attendee);
                 } else {
-                    tbSync.eventlog.add("info", syncdata, "Attendee without required name and/or email found. Skipped.");
+                    TbSync.eventlog.add("info", syncdata, "Attendee without required name and/or email found. Skipped.");
                 }
             }
         }
@@ -192,7 +192,7 @@ var Calendar = {
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
     getWbxmlFromThunderbirdItem: function (tbItem, syncdata, isException = false) {
-        let item = tbItem instanceof tbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+        let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
 
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
@@ -239,7 +239,7 @@ var Calendar = {
             }
             
             wbxml.atag("TimeZone", easTZ.easTimeZone64);
-             if (tbSync.prefs.getIntPref("log.userdatalevel")>2) tbSync.dump("Send TZ", item.title + easTZ.toString());
+             if (TbSync.prefs.getIntPref("log.userdatalevel")>2) TbSync.dump("Send TZ", item.title + easTZ.toString());
         }
         
         //AllDayEvent (for simplicity, we always send a value)
@@ -276,10 +276,10 @@ var Calendar = {
             } else if (item.startDate) {
                 let timeDiff =item.startDate.getInTimezone(eas.utcTimezone).subtractDate(alarms[0].alarmDate.getInTimezone(eas.utcTimezone));     
                 reminder = timeDiff.inSeconds/60;
-                tbSync.eventlog.add("info", syncdata, "Converting absolute alarm to relative alarm (not supported).", item.icalString);
+                TbSync.eventlog.add("info", syncdata, "Converting absolute alarm to relative alarm (not supported).", item.icalString);
             }
             if (reminder >= 0) wbxml.atag("Reminder", reminder.toString());
-            else tbSync.eventlog.add("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
+            else TbSync.eventlog.add("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
 
         }
 
@@ -381,7 +381,7 @@ var Calendar = {
         //TODO: attachements (needs EAS 16.0!)
         
         //https://dxr.mozilla.org/comm-central/source/calendar/base/public/calIAlarm.idl
-        //tbSync.dump("ALARM ("+i+")", [, alarms[i].related, alarms[i].repeat, alarms[i].repeatOffset, alarms[i].repeatDate, alarms[i].action].join("|"));
+        //TbSync.dump("ALARM ("+i+")", [, alarms[i].related, alarms[i].repeat, alarms[i].repeatOffset, alarms[i].repeatDate, alarms[i].action].join("|"));
 
         return wbxml.getBytes();
     }
@@ -393,7 +393,7 @@ var Calendar = {
         while (propEnum.hasMoreElements()) {
             let prop = propEnum.getNext().QueryInterface(Components.interfaces.nsIProperty);
             let pname = prop.name;
-            tbSync.dump("PROP", pname + " = " + prop.value);
+            TbSync.dump("PROP", pname + " = " + prop.value);
         }
         */
     

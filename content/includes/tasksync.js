@@ -15,7 +15,7 @@ var Tasks = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
 
-        let item = tbItem instanceof tbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+        let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
         
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
@@ -52,9 +52,9 @@ var Tasks = {
             if (data.Recurrence) {
                 if (dueDate) {
                     item.entryDate = dueDate; 
-                    tbSync.eventlog.add("info", syncdata, "Copy task dueData to task startDate, because Thunderbird needs a startDate for recurring items.", item.icalString);
+                    TbSync.eventlog.add("info", syncdata, "Copy task dueData to task startDate, because Thunderbird needs a startDate for recurring items.", item.icalString);
                 } else {
-                    tbSync.eventlog.add("info", syncdata, "Task without startDate and without dueDate but with recurrence info is not supported by Thunderbird. Recurrence will be lost.", item.icalString);
+                    TbSync.eventlog.add("info", syncdata, "Task without startDate and without dueDate but with recurrence info is not supported by Thunderbird. Recurrence will be lost.", item.icalString);
                 }
             }
         }
@@ -99,7 +99,7 @@ var Tasks = {
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
     getWbxmlFromThunderbirdItem: function (tbItem, syncdata) {
-        let item = tbItem instanceof tbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+        let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
 
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage

@@ -252,7 +252,7 @@ var tools = {
             let tempDate = new Date(str);
             datestring = eas.tools.dateToBasicISOString(tempDate);
         }
-        return tbSync.lightning.cal.createDateTime(datestring);
+        return TbSync.lightning.cal.createDateTime(datestring);
     },    
 
 
@@ -291,16 +291,16 @@ var tools = {
     //guess the IANA timezone (used by TB) based on the current offset (standard or daylight)
     guessTimezoneByCurrentOffset: function(curOffset, utcDateTime) {
         //if we only now the current offset and the current date, we need to actually try each TZ.
-        let tzService = tbSync.lightning.cal.getTimezoneService();
+        let tzService = TbSync.lightning.cal.getTimezoneService();
 
         //first try default tz
         let test = utcDateTime.getInTimezone(eas.defaultTimezoneInfo.timezone);
-        tbSync.dump("Matching TZ via current offset: " + test.timezone.tzid + " @ " + curOffset, test.timezoneOffset/-60);
+        TbSync.dump("Matching TZ via current offset: " + test.timezone.tzid + " @ " + curOffset, test.timezoneOffset/-60);
         if (test.timezoneOffset/-60 == curOffset) return test.timezone;
         
         //second try UTC
         test = utcDateTime.getInTimezone(eas.utcTimezone);
-        tbSync.dump("Matching TZ via current offset: " + test.timezone.tzid + " @ " + curOffset, test.timezoneOffset/-60);
+        TbSync.dump("Matching TZ via current offset: " + test.timezone.tzid + " @ " + curOffset, test.timezoneOffset/-60);
         if (test.timezoneOffset/-60 == curOffset) return test.timezone;
         
         //third try all others
@@ -308,7 +308,7 @@ var tools = {
         while (enumerator.hasMore()) {
             let id = enumerator.getNext();
             let test = utcDateTime.getInTimezone(tzService.getTimezone(id));
-            tbSync.dump("Matching TZ via current offset: " + test.timezone.tzid + " @ " + curOffset, test.timezoneOffset/-60);
+            TbSync.dump("Matching TZ via current offset: " + test.timezone.tzid + " @ " + curOffset, test.timezoneOffset/-60);
             if (test.timezoneOffset/-60 == curOffset) return test.timezone;
         }
         
@@ -332,7 +332,7 @@ var tools = {
                 eas.cachedTimezoneData.stdOffset = {};
                 eas.cachedTimezoneData.bothOffsets = {};                    
                     
-                let tzService = tbSync.lightning.cal.getTimezoneService();
+                let tzService = TbSync.lightning.cal.getTimezoneService();
 
                 //cache timezones data from internal IANA data
                 let enumerator = tzService.timezoneIds;
@@ -347,7 +347,7 @@ var tools = {
                     eas.cachedTimezoneData.abbreviations[tzInfo.std.abbreviation] = id;
                     eas.cachedTimezoneData.iana[id] = tzInfo;
                     
-                    //tbSync.dump("TZ ("+ tzInfo.std.id + " :: " + tzInfo.dst.id +  " :: " + tzInfo.std.displayname + " :: " + tzInfo.dst.displayname + " :: " + tzInfo.std.offset + " :: " + tzInfo.dst.offset + ")", tzService.getTimezone(id));
+                    //TbSync.dump("TZ ("+ tzInfo.std.id + " :: " + tzInfo.dst.id +  " :: " + tzInfo.std.displayname + " :: " + tzInfo.dst.displayname + " :: " + tzInfo.std.offset + " :: " + tzInfo.dst.offset + ")", tzService.getTimezone(id));
                 }
 
                 //make sure, that UTC timezone is there
@@ -373,11 +373,11 @@ var tools = {
                 //check the windowsZoneName of the default TZ and of the winning, if they match, use default TZ
                 //so Rome could win, even Berlin is the default IANA zone
                 if (eas.defaultTimezoneInfo.std.windowsZoneName && eas.windowsTimezoneMap[stdName] != eas.defaultTimezoneInfo.std.id && eas.cachedTimezoneData.iana[eas.windowsTimezoneMap[stdName]].std.offset == eas.defaultTimezoneInfo.std.offset && stdName == eas.defaultTimezoneInfo.std.windowsZoneName) {
-                    tbSync.dump("Timezone matched via windows timezone name ("+stdName+") with default TZ overtake", eas.windowsTimezoneMap[stdName] + " -> " + eas.defaultTimezoneInfo.std.id);
+                    TbSync.dump("Timezone matched via windows timezone name ("+stdName+") with default TZ overtake", eas.windowsTimezoneMap[stdName] + " -> " + eas.defaultTimezoneInfo.std.id);
                     return eas.defaultTimezoneInfo.timezone;
                 }
                 
-                tbSync.dump("Timezone matched via windows timezone name ("+stdName+")", eas.windowsTimezoneMap[stdName]);
+                TbSync.dump("Timezone matched via windows timezone name ("+stdName+")", eas.windowsTimezoneMap[stdName]);
                 return eas.cachedTimezoneData.iana[eas.windowsTimezoneMap[stdName]].timezone;
             }
 
@@ -385,31 +385,31 @@ var tools = {
             for (let i = 0; i < parts.length; i++) {
                 //check for IANA
                 if (eas.cachedTimezoneData.iana[parts[i]] && eas.cachedTimezoneData.iana[parts[i]].std.offset == stdOffset) {
-                    tbSync.dump("Timezone matched via IANA", parts[i]);
+                    TbSync.dump("Timezone matched via IANA", parts[i]);
                     return eas.cachedTimezoneData.iana[parts[i]].timezone;
                 }
 
                 //check for international abbreviation for standard period (CET, CAT, ...)
                 if (eas.cachedTimezoneData.abbreviations[parts[i]] && eas.cachedTimezoneData.iana[eas.cachedTimezoneData.abbreviations[parts[i]]] && eas.cachedTimezoneData.iana[eas.cachedTimezoneData.abbreviations[parts[i]]].std.offset == stdOffset) {
-                    tbSync.dump("Timezone matched via international abbreviation (" + parts[i] +")", eas.cachedTimezoneData.abbreviations[parts[i]]);
+                    TbSync.dump("Timezone matched via international abbreviation (" + parts[i] +")", eas.cachedTimezoneData.abbreviations[parts[i]]);
                     return eas.cachedTimezoneData.iana[eas.cachedTimezoneData.abbreviations[parts[i]]].timezone;
                 }
             }
 
             //fallback to zone based on stdOffset and dstOffset, if we have that cached
             if (eas.cachedTimezoneData.bothOffsets[stdOffset+":"+dstOffset]) {
-                tbSync.dump("Timezone matched via both offsets (std:" + stdOffset +", dst:" + dstOffset + ")", eas.cachedTimezoneData.bothOffsets[stdOffset+":"+dstOffset].tzid);
+                TbSync.dump("Timezone matched via both offsets (std:" + stdOffset +", dst:" + dstOffset + ")", eas.cachedTimezoneData.bothOffsets[stdOffset+":"+dstOffset].tzid);
                 return eas.cachedTimezoneData.bothOffsets[stdOffset+":"+dstOffset];
             }
 
             //fallback to zone based on stdOffset only, if we have that cached
             if (eas.cachedTimezoneData.stdOffset[stdOffset]) {
-                tbSync.dump("Timezone matched via std offset (" + stdOffset +")", eas.cachedTimezoneData.stdOffset[stdOffset].tzid);
+                TbSync.dump("Timezone matched via std offset (" + stdOffset +")", eas.cachedTimezoneData.stdOffset[stdOffset].tzid);
                 return eas.cachedTimezoneData.stdOffset[stdOffset];
             }
             
             //return default timezone, if everything else fails
-            tbSync.dump("Timezone could not be matched via offsets (std:" + stdOffset +", dst:" + dstOffset + "), using default timezone", eas.defaultTimezoneInfo.std.id);
+            TbSync.dump("Timezone could not be matched via offsets (std:" + stdOffset +", dst:" + dstOffset + "), using default timezone", eas.defaultTimezoneInfo.std.id);
             return eas.defaultTimezoneInfo.timezone;
     },
 
@@ -442,8 +442,8 @@ var tools = {
         }
                 
         //we could parse the icalstring by ourself, but I wanted to use ICAL.parse - TODO try catch
-        let info = tbSync.lightning.ICAL.parse("BEGIN:VCALENDAR\r\n" + timezone.icalComponent.toString() + "\r\nEND:VCALENDAR");
-        let comp = new tbSync.lightning.ICAL.Component(info);
+        let info = TbSync.lightning.ICAL.parse("BEGIN:VCALENDAR\r\n" + timezone.icalComponent.toString() + "\r\nEND:VCALENDAR");
+        let comp = new TbSync.lightning.ICAL.Component(info);
         let vtimezone =comp.getFirstSubcomponent("vtimezone");
         let id = vtimezone.getFirstPropertyValue("tzid").toString();
         let zone = vtimezone.getFirstSubcomponent(standardOrDaylight);
@@ -464,7 +464,7 @@ var tools = {
             try {
                 obj.abbreviation = zone.getFirstPropertyValue("tzname").toString();
             } catch(e) {
-                tbSync.dump("Failed TZ", timezone.icalComponent.toString());
+                TbSync.dump("Failed TZ", timezone.icalComponent.toString());
             }
             
             //get displayname
@@ -525,11 +525,11 @@ var tools = {
 
 //TODO: Invites
 /*
-if (tbSync.lightningIsAvailable()) {
+if (TbSync.lightningIsAvailable()) {
     cal.itip.checkAndSendOrigial = cal.itip.checkAndSend;
     cal.itip.checkAndSend = function(aOpType, aItem, aOriginalItem) {
         //if this item is added_by_user, do not call checkAndSend yet, because the UID is wrong, we need to sync first to get the correct ID - TODO
-        tbSync.dump("cal.checkAndSend", aOpType);
+        TbSync.dump("cal.checkAndSend", aOpType);
         cal.itip.checkAndSendOrigial(aOpType, aItem, aOriginalItem);
     }
 }
