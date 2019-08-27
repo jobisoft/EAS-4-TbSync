@@ -83,7 +83,7 @@ var network = {
                                 username: authData.user
                             }
                             
-                            let syncState = syncData.getSyncState(); 
+                            let syncState = syncData.getSyncState().state; 
                             syncData.setSyncState("passwordprompt");
                             let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
                             if (credentials) {
@@ -135,7 +135,7 @@ var network = {
     },
 
     sendRequestPromise: function (wbxml, command, syncData, allowSoftFail = false) {
-        let msg = "Sending data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
+        let msg = "Sending data <" + syncData.getSyncState().state + "> for " + syncData.accountData.getAccountProperty("accountname");
         if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("foldername") + ")";
         syncData.request = eas.network.logXML(wbxml, msg);
         syncData.response = "";
@@ -194,7 +194,7 @@ var network = {
                 switch(syncData.req.status) {
 
                     case 200: //OK
-                        let msg = "Receiving data <" + syncData.getSyncState() + "> for " + syncData.accountData.getAccountProperty("accountname");
+                        let msg = "Receiving data <" + syncData.getSyncState().state + "> for " + syncData.accountData.getAccountProperty("accountname");
                         if (syncData.currentFolderData) msg += " (" + syncData.currentFolderData.getFolderProperty("foldername") + ")";
                         syncData.response = eas.network.logXML(response, msg);
 
@@ -863,7 +863,7 @@ var network = {
                         username: authData.user
                     }
                     
-                    let syncState = syncData.getSyncState(); 
+                    let syncState = syncData.getSyncState().state; 
                     syncData.setSyncState("passwordprompt");
                     let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
                     if (credentials) {
