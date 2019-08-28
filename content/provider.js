@@ -131,7 +131,6 @@ var Base = class {
     }
 
 
-
     /**
      * Called during unload of external provider extension to unload provider.
      */
@@ -147,7 +146,6 @@ var Base = class {
     }
 
 
-
     /**
      * Returns string for the name of provider for the add account menu.
      */
@@ -156,21 +154,14 @@ var Base = class {
     }
 
 
-
     /**
      * Returns version of the TbSync API this provider is using
      */
     static getApiVersion() { return "2.1"; }
 
 
-
-
     /**
      * Returns location of a provider icon.
-     *
-     * @param size       [in] size of requested icon
-     * @param accountData  [in] optional AccountData
-     *
      */
     static getProviderIcon(size, accountData = null) {
         switch (size) {
@@ -182,7 +173,6 @@ var Base = class {
                 return "chrome://eas4tbsync/skin/eas64.png";
         }
     }
-
 
 
     /**
@@ -200,14 +190,12 @@ var Base = class {
     }
 
 
-
     /**
      * Returns the email address of the maintainer (used for bug reports).
      */
     static getMaintainerEmail() {
         return "john.bieling@gmx.de";
     }
-
 
 
     /**
@@ -218,7 +206,6 @@ var Base = class {
         return "chrome://eas4tbsync/locale/eas.strings";
     }
 
-    
 
     /**
      * Returns URL of the new account window.
@@ -231,23 +218,13 @@ var Base = class {
     }
 
 
-
     /**
      * Returns overlay XUL URL of the edit account dialog
      * (chrome://tbsync/content/manager/editAccount.xul)
-     *
-     * This overlay must (!) implement:
-     *
-     *    tbSyncEditAccountOverlay.onload(window, accountData)
-     *
-     * which is called each time an account of this provider is viewed/selected
-     * in the manager and provides the TbSync.AccountData of the corresponding
-     * account.
      */
     static getEditAccountOverlayUrl() {
         return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";
     }
-
 
 
     /**
@@ -281,7 +258,6 @@ var Base = class {
     }
 
 
-
     /**
      * Return object which contains all possible fields of a row in the folder 
      * database with the default value if not yet stored in the database.
@@ -298,12 +274,9 @@ var Base = class {
     }
 
 
-
     /**
      * Is called everytime an account of this provider is enabled in the
      * manager UI.
-     *
-     * @param accountData  [in] AccountData
      */
     static onEnableAccount(accountData) {
         accountData.resetAccountProperty("policykey");
@@ -311,7 +284,6 @@ var Base = class {
         accountData.resetAccountProperty("lastEasOptionsUpdate");
         accountData.resetAccountProperty("lastsynctime");
     }
-
 
 
     /**
@@ -324,37 +296,10 @@ var Base = class {
     }
 
 
-
-    /**
-     * Is called everytime an new target is created, intended to set a clean
-     * sync status.
-     *
-     * @param accountData  [in] FolderData
-     */
-    static onResetTarget(folderData) {
-        folderData.resetFolderProperty("synckey");
-        folderData.resetFolderProperty("lastsynctime");
-    }
-
-
-
     /**
      * Implement this method, if this provider should add additional entries
      * to the autocomplete list while typing something into the address field
      * of the message composer.
-     *
-     * When creating directories, you can set:
-     *
-     *    directory.setBoolValue("enable_autocomplete", false);
-     *
-     * to disable the default autocomplete for this directory and have full
-     * control over the autocomplete.
-     *
-     * @param accountData   [in] AccountData of the account which should be
-     *                           searched
-     * @param currentQuery  [in] search query
-     *
-     * Return arrary of AutoCompleteData entries.
      */
     static async abAutoComplete(accountData, currentQuery)  {
         let data = [];
@@ -394,13 +339,9 @@ var Base = class {
     }
 
 
-
     /**
      * Returns all folders of the account, sorted in the desired order.
      * The most simple implementation is to return accountData.getAllFolders();
-     *
-     * @param accountData         [in] AccountData for the account for which the 
-     *                                 sorted folder should be returned
      */
     static getSortedFolders(accountData) {
         let allowedTypesOrder = ["9","14","8","13","7","15"];
@@ -450,37 +391,18 @@ var Base = class {
     }
 
 
-
     /**
      * Return the connection timeout for an active sync, so TbSync can append
      * a countdown to the connection timeout, while waiting for an answer from
      * the server. Only syncstates which start with "send." will trigger this.
-     *
-     * @param accountData      [in] AccountData
-     *
-     * return timeout in milliseconds
      */
     static getConnectionTimeout(accountData) {
         return eas.prefs.getIntPref("timeout");
     }
     
 
-
     /**
      * Is called if TbSync needs to synchronize the folder list.
-     *
-     * @param syncData      [in] SyncData
-     * @param syncJob       [in] String with a specific sync job. Defaults to
-     *                           "sync", but can be set via the syncDescription
-     *                           of AccountData.sync() or FolderData.sync()
-     * @param syncRunNr     [in] Indicates the n-th number the account is being synced.
-     *                           It starts with 1 and is limited by 
-     *                           syncDescription.maxAccountReruns. 
-     *
-     * !!! NEVER CALL THIS FUNCTION DIRECTLY BUT USE !!!
-     *    TbSync.AccountData::sync()
-     *
-     * return StatusData
      */
     static async syncFolderList(syncData, syncJob, syncRunNr) {
         // Recommendation: Put the actual function call inside a try catch, to
@@ -504,25 +426,10 @@ var Base = class {
         // Fall through, if there was no error.
         return new TbSync.StatusData();        
     }
-    
 
 
     /**
      * Is called if TbSync needs to synchronize a folder.
-     *
-     * @param syncData      [in] SyncData
-     * @param syncJob       [in] String with a specific sync job. Defaults to
-     *                           "sync", but can be set via the syncDescription
-     *                           of AccountData.sync() or FolderData.sync()
-     * @param syncRunNr     [in] Indicates the n-th number the folder is being synced.
-     *                           It starts with 1 and is limited by 
-     *                           syncDescription.maxFolderReruns.
-     *
-     * !!! NEVER CALL THIS FUNCTION DIRECTLY BUT USE !!!
-     *    TbSync.AccountData::sync() or
-     *    TbSync.FolderData::sync()
-     *
-     * return StatusData
      */
     static async syncFolder(syncData, syncJob, syncRunNr) {
         // Recommendation: Put the actual function call inside a try catch, to
@@ -557,40 +464,39 @@ var Base = class {
 
 
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// * TargetData implementation
+// * Using TbSyncs advanced address book TargetData 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-// This provider is using the standard "addressbook" targetType, so it must
-// implement the addressbook object.
-var StandardAddressbookTarget = {        
-    // define an item property, which should be used for the changelog
-    // basically your primary key for an abItem
-    // UID will be used, if nothing specified
-    primaryKeyField: "X-EAS-SERVERID",
+var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData {
+    constructor(folderData) {
+        super(folderData);
+    }
+
+    get primaryKeyField() {
+        return "X-EAS-SERVERID";
+    }
     
-
-
-    generatePrimaryKey: function (folderData) {
+    generatePrimaryKey(folderData) {
          return TbSync.generateUUID();
-    },
-    
-
+    }
 
     // enable or disable changelog
-    logUserChanges: true,
+    get logUserChanges() {
+        return  true;
+    }
 
-
-
-    directoryObserver: function (aTopic, folderData) {
+    directoryObserver(aTopic, folderData) {
         switch (aTopic) {
             case "addrbook-removed":
             case "addrbook-updated":
                 //Services.console.logStringMessage("["+ aTopic + "] " + folderData.getFolderProperty("foldername"));
                 break;
         }
-    },
-    
+    }
 
-
-    cardObserver: function (aTopic, folderData, abCardItem) {
+    cardObserver(aTopic, folderData, abCardItem) {
         switch (aTopic) {
             case "addrbook-contact-updated":
             case "addrbook-contact-removed":
@@ -603,11 +509,9 @@ var StandardAddressbookTarget = {
                 break;
             }
         }
-    },
-    
+    }
 
-
-    listObserver: function (aTopic, folderData, abListItem, abListMember) {
+    listObserver(aTopic, folderData, abListItem, abListMember) {
         switch (aTopic) {
             case "addrbook-list-member-added":
             case "addrbook-list-member-removed":
@@ -623,29 +527,20 @@ var StandardAddressbookTarget = {
                 //Services.console.logStringMessage("["+ aTopic + "] ListName: "+abListItem.getProperty("ListName")+">");
                 break;
         }
-    },
+    }
     
-
-
-    /**
-     * Is called by TargetData::getTarget() if  the standard "addressbook"
-     * targetType is used, and a new addressbook needs to be created.
-     *
-     * @param newname       [in] name of the new address book
-     * @param folderData  [in] FolderData
-     *
-     * return the new directory
-     */
-    createAddressBook: function (newname, folderData) {
+    createAddressbook(newname) {
         let dirPrefId = MailServices.ab.newAddressBook(newname, "", 2);  /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
         let directory = MailServices.ab.getDirectoryFromId(dirPrefId);
-
+        
+        eas.sync.resetFolderSyncInfo(this._folderData);
+        
         if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
             directory.setStringValue("tbSyncIcon", "eas");
             return directory;		
         }
         return null;
-    },    
+    }
 }
 
 
@@ -738,26 +633,14 @@ var StandardCalendarTarget = {
 
 
 /**
- * This provider is using the StandardFolderList (instead of this it could also
- * implement the full folderList object).
- *
- * The DOM of the folderlist can be accessed by
- * 
- *    let list = document.getElementById("tbsync.accountsettings.folderlist");
- * 
- * and the folderData of each entry is attached to each row:
- * 
- *    let folderData = folderList.selectedItem.folderData;
- *
+ * This provider is implementing the StandardFolderList class instead of
+ * the FolderList class.
  */
 var StandardFolderList = class {
     /**
      * Is called before the context menu of the folderlist is shown, allows to
      * show/hide custom menu options based on selected folder. During an active
      * sync, folderData will be null.
-     *
-     * @param window        [in] window object of the account settings window
-     * @param folderData    [in] FolderData of the selected folder
      */
     static onContextMenuShowing(window, folderData) {
         let hideContextMenuDelete = true;
@@ -772,12 +655,9 @@ var StandardFolderList = class {
     }
 
 
-
     /**
      * Return the icon used in the folderlist to represent the different folder
      * types.
-     *
-     * @param folderData         [in] FolderData of the selected folder
      */
     static getTypeImage(folderData) {
         let src = "";
@@ -797,13 +677,10 @@ var StandardFolderList = class {
         }
         return "chrome://tbsync/skin/" + src;
     }
-    
 
 
     /**
      * Return the name of the folder shown in the folderlist.
-     *
-     * @param folderData         [in] FolderData of the selected folder
      */ 
     static getFolderDisplayName(folderData) {
         let folderName = folderData.getFolderProperty("foldername");
@@ -812,12 +689,9 @@ var StandardFolderList = class {
     }
     
 
-
     /**
      * Return the attributes for the ACL RO (readonly menu element per folder.
-    * (label, disabled, hidden, style, ...)
-     *
-     * @param folderData         [in] FolderData of the selected folder
+     * (label, disabled, hidden, style, ...)
      *
      * Return a list of attributes and their values If both (RO+RW) do
      * not return any attributes, the ACL menu is not displayed at all.
@@ -829,12 +703,9 @@ var StandardFolderList = class {
     }
     
 
-
     /**
      * Return the attributes for the ACL RW (readwrite) menu element per folder.
-    * (label, disabled, hidden, style, ...)
-     *
-     * @param folderData         [in] FolderData of the selected folder
+     * (label, disabled, hidden, style, ...)
      *
      * Return a list of attributes and their values. If both (RO+RW) do
      * not return any attributes, the ACL menu is not displayed at all.

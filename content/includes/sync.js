@@ -61,6 +61,13 @@ var sync = {
         return e; 
     }, 
 
+    
+    resetFolderSyncInfo: function (folderData) {
+        folderData.resetFolderProperty("synckey");
+        folderData.resetFolderProperty("lastsynctime");
+    },
+
+    
     // update folders avail on server and handle added, removed and renamed
     // folders
     folderList: async function(syncData) {
@@ -256,6 +263,7 @@ var sync = {
             // accessing the target for the first time will check if it is avail and if not will create it (if possible)
             syncData.target = syncData.currentFolderData.targetData.getTarget();
         } catch (e) {
+            Components.utils.reportError(e);        
             throw eas.sync.finish("warning", e.message);
         }
         
@@ -848,7 +856,7 @@ wbxml.ctag();*/
         
         //This will resync all missing items fresh from the server
         TbSync.eventlog.add("info", syncData.eventLogInfo, "RevertViaFolderResync");
-        eas.Base.onResetTarget(syncData.currentFolderData);
+        eas.sync.resetFolderSyncInfo(syncData.currentFolderData);
         throw eas.sync.finish("resyncFolder", "RevertViaFolderResync"); 
     },
 
