@@ -268,6 +268,7 @@ var Base = class {
             "synckey" : "",
             "target" : "",
             "targetColor" : "",
+            "targetName" : "",            
             "parentID" : "0",
             "serverID" : "",
             };
