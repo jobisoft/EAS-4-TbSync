@@ -605,7 +605,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
         newCalendar.setProperty("color", this.folderData.getFolderProperty("targetColor"));
         newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
         newCalendar.setProperty("calendar-main-in-composite",true);
-        newCalendar.setProperty("readOnly", this.folderData.getFolderProperty("downloadonly") == "1");
+        newCalendar.setProperty("readOnly", this.folderData.getFolderProperty("downloadonly"));
         calManager.registerCalendar(newCalendar);
 
         let authData = eas.network.getAuthData(this.folderData.accountData);

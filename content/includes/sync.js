@@ -313,7 +313,7 @@ var sync = {
                 case "Calendar":
                 case "Tasks":                            
                     //save current value of readOnly (or take it from the setting)
-                    lightningReadOnly = syncData.target.calendar.getProperty("readOnly") || (syncData.currentFolderData.getFolderProperty( "downloadonly") == "1");                       
+                    lightningReadOnly = syncData.target.calendar.getProperty("readOnly") || syncData.currentFolderData.getFolderProperty( "downloadonly");                       
                     syncData.target.calendar.setProperty("readOnly", false);
                     
                     lightningBatch = true;
@@ -350,14 +350,14 @@ var sync = {
     easFolder: async function (syncData)  {
         syncData.progressData.reset();
 
-        if (syncData.currentFolderData.getFolderProperty("downloadonly") == "1") {		
+        if (syncData.currentFolderData.getFolderProperty("downloadonly")) {		
             await eas.sync.revertLocalChanges(syncData);
         }
 
         await eas.network.getItemEstimate (syncData);
         await eas.sync.requestRemoteChanges (syncData); 
 
-        if (syncData.currentFolderData.getFolderProperty("downloadonly") != "1") {		
+        if (syncData.currentFolderData.getFolderProperty("downloadonly")) {		
             await eas.sync.sendLocalChanges(syncData);
         }
     },
