@@ -266,6 +266,7 @@ var Base = class {
         let folder = {
             "type" : "",
             "synckey" : "",
+            "target" : "",
             "targetColor" : "",
             "parentID" : "0",
             "serverID" : "",
