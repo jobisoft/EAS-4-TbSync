@@ -491,7 +491,7 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
         switch (aTopic) {
             case "addrbook-removed":
             case "addrbook-updated":
-                //Services.console.logStringMessage("["+ aTopic + "] " + this._folderData.getFolderProperty("foldername"));
+                //Services.console.logStringMessage("["+ aTopic + "] " + this.folderData.getFolderProperty("foldername"));
                 break;
         }
     }
@@ -533,7 +533,7 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
         let dirPrefId = MailServices.ab.newAddressBook(newname, "", 2);  /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
         let directory = MailServices.ab.getDirectoryFromId(dirPrefId);
         
-        eas.sync.resetFolderSyncInfo(this._folderData);
+        eas.sync.resetFolderSyncInfo(this.folderData);
         
         if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
             directory.setStringValue("tbSyncIcon", "eas");
@@ -545,9 +545,15 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
 
 
 
-// This provider is using the standard "calendar" targetType, so it must
-// implement the calendar object.
-var StandardCalendarTarget = {        
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// * TargetData implementation
+// * Using TbSyncs advanced calendar TargetData 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
+    constructor(folderData) {
+        super(folderData);
+    }       
         
     // The calendar target does not support a custom primaryKeyField, because
     // the lightning implementation only allows to search for items via UID.
@@ -555,11 +561,11 @@ var StandardCalendarTarget = {
     // primaryKey getter/setter which - however - only works on the UID.
     
     // enable or disable changelog
-    logUserChanges: true,
-    
+    get logUserChanges() {
+        return true;
+    }
 
-
-    calendarObserver: function (aTopic, folderData, tbCalendar, aPropertyName, aPropertyValue, aOldPropertyValue) {
+    calendarObserver(aTopic, tbCalendar, aPropertyName, aPropertyValue, aOldPropertyValue) {
         switch (aTopic) {
             case "onCalendarPropertyChanged":
                 //Services.console.logStringMessage("["+ aTopic + "] " + tbCalendar.calendar.name + " : " + aPropertyName);
@@ -570,11 +576,9 @@ var StandardCalendarTarget = {
                 //Services.console.logStringMessage("["+ aTopic + "] " +tbCalendar.calendar.name);
                 break;
         }
-    },
+    }
     
-
-
-    itemObserver: function (aTopic, folderData, tbItem, tbOldItem) {
+    itemObserver(aTopic, tbItem, tbOldItem) {
         switch (aTopic) {
             case "onAddItem":
             case "onModifyItem":
@@ -582,19 +586,9 @@ var StandardCalendarTarget = {
                 //Services.console.logStringMessage("["+ aTopic + "] " + tbItem.nativeItem.title);
                 break;
         }
-    },
+    }
 
-
-
-    /**
-     * Is called by TargetData::getTarget() if  the standard "calendar" targetType is used, and a new calendar needs to be created.
-     *
-     * @param newname       [in] name of the new calendar
-     * @param folderData  [in] folderData
-     *
-     * return the new calendar
-     */
-    createCalendar: function(newname, folderData) {
+    createCalendar(newname) {
         let calManager = TbSync.lightning.cal.getCalendarManager();
         //Alternative calendar, which uses calTbSyncCalendar
         //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
@@ -604,13 +598,15 @@ var StandardCalendarTarget = {
         newCalendar.id = TbSync.lightning.cal.getUUID();
         newCalendar.name = newname;
 
-        newCalendar.setProperty("color", folderData.getFolderProperty("targetColor"));
+        eas.sync.resetFolderSyncInfo(this.folderData);
+
+        newCalendar.setProperty("color", this.folderData.getFolderProperty("targetColor"));
         newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
         newCalendar.setProperty("calendar-main-in-composite",true);
-        newCalendar.setProperty("readOnly", folderData.getFolderProperty("downloadonly") == "1");
+        newCalendar.setProperty("readOnly", this.folderData.getFolderProperty("downloadonly") == "1");
         calManager.registerCalendar(newCalendar);
 
-        let authData = eas.network.getAuthData(folderData.accountData);
+        let authData = eas.network.getAuthData(this.folderData.accountData);
         
         //is there an email identity we can associate this calendar to? 
         //getIdentityKey returns "" if none found, which removes any association
@@ -625,7 +621,7 @@ var StandardCalendarTarget = {
         }
         
         return newCalendar;
-    },
+    }
 }
 
 
