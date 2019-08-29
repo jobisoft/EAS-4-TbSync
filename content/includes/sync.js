@@ -357,7 +357,7 @@ var sync = {
         await eas.network.getItemEstimate (syncData);
         await eas.sync.requestRemoteChanges (syncData); 
 
-        if (syncData.currentFolderData.getFolderProperty("downloadonly")) {		
+        if (!syncData.currentFolderData.getFolderProperty("downloadonly")) {		
             await eas.sync.sendLocalChanges(syncData);
         }
     },
