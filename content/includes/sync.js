@@ -989,7 +989,7 @@ wbxml.ctag();*/
                             eas.sync.updateFailedItems(syncData, errorcause, foundItem.primaryKey, foundItem.toString());
                         } else {
                             let newItem = foundItem.clone();
-                            newItem.id = add[count].ServerId;
+                            newItem.primaryKey = add[count].ServerId;
                             syncData.target.removeItemFromChangeLog(add[count].ClientId);
                             await syncData.target.modifyItem(newItem, foundItem);
                             syncData.progressData.inc();
@@ -1202,6 +1202,7 @@ wbxml.ctag();*/
         return wbxml.getBytes();
     },
 
+    //item is a native lightning item
     setItemRecurrence: function (item, syncData, data) {
         if (data.Recurrence) {
             item.recurrenceInfo = TbSync.lightning.cal.createRecurrenceInfo();
@@ -1299,6 +1300,7 @@ wbxml.ctag();*/
                     }
                     else {
                         let replacement = item.recurrenceInfo.getOccurrenceFor(dateTime);
+                        // replacement is a native lightning item, so we can access its id via .id
                         eas.sync[syncData.type].setThunderbirdItemFromWbxml(replacement, exception, replacement.id, syncData);
                         // Reminders should carry over from parent, but setThunderbirdItemFromWbxml clears all alarms
                         if (!exception.Reminder && item.getAlarms({}).length) {
@@ -1452,7 +1454,7 @@ wbxml.ctag();*/
                             wbxml.atag("Deleted", "1");
                             //Docs say it is allowed, but if present, it does not work
                             //if (asversion == "2.5") {
-                            //    wbxml.atag("UID", item.id);
+                            //    wbxml.atag("UID", item.id); //item.id is not valid, use UID or primaryKey
                             //}
                         wbxml.ctag();
                     }
