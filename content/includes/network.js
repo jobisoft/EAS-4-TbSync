@@ -146,6 +146,12 @@ var network = {
         let deviceId = syncData.accountData.getAccountProperty("deviceId");
 
         TbSync.dump("Sending (EAS v"+syncData.accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
+
+        const textEncoder = new TextEncoder();
+        let encoded = textEncoder.encode(wbxml);            
+        // console.log("wbxml: " + wbxml);
+        // console.log("byte array: " + encoded);
+        // console.log("length :" + wbxml.length + " vs " + encoded.byteLength + " vs " + encoded.length);
         
         return new Promise(function(resolve,reject) {
             // Create request handler - API changed with TB60 to new XMKHttpRequest()
@@ -161,7 +167,7 @@ var network = {
             } else {
                 syncData.req.setRequestHeader("MS-ASProtocolVersion", "14.0");
             }
-            syncData.req.setRequestHeader("Content-Length", wbxml.length);
+            syncData.req.setRequestHeader("Content-Length", encoded.length);
             if (syncData.accountData.getAccountProperty("provision")) {
                 syncData.req.setRequestHeader("X-MS-PolicyKey", syncData.accountData.getAccountProperty("policykey"));
                 TbSync.dump("PolicyKey used", syncData.accountData.getAccountProperty("policykey"));
@@ -241,7 +247,7 @@ var network = {
                 }
             };
 
-            syncData.req.send(wbxml);
+            syncData.req.send(encoded);
             
         });
     },
