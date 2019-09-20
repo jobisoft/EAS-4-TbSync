@@ -606,6 +606,23 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
         newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
         newCalendar.setProperty("calendar-main-in-composite",true);
         newCalendar.setProperty("readOnly", this.folderData.getFolderProperty("downloadonly"));
+        
+        switch (this.folderData.getFolderProperty("type")) {
+            case "8": //event
+            case "13":
+                newCalendar.setProperty("capabilities.tasks.supported", false);
+                newCalendar.setProperty("capabilities.events.supported", true);
+                break;
+            case "7": //todo
+            case "15":        
+                newCalendar.setProperty("capabilities.tasks.supported", true);
+                newCalendar.setProperty("capabilities.events.supported", false);
+                break;
+            default:
+                newCalendar.setProperty("capabilities.tasks.supported", false);
+                newCalendar.setProperty("capabilities.events.supported", false);
+        }
+        
         calManager.registerCalendar(newCalendar);
 
         let authData = eas.network.getAuthData(this.folderData.accountData);
