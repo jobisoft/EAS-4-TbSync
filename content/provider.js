@@ -203,7 +203,7 @@ var Base = class {
      * accessed by TbSync.getString(<key>, <provider>)
      */
     static getStringBundleUrl() {
-        return "chrome://eas4tbsync/locale/eas.strings";
+        return "chrome://eas4tbsync/locale/eas.properties";
     }
 
 
