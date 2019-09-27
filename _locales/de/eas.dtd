@@ -27,7 +27,7 @@
 <!ENTITY pref.provision "Provisionierung erzwingen (wird von Kerio benötigt)">
 <!ENTITY pref.galautocomplete "E-Mail Autovervollständigung mit Ergebnissen aus dem globalen Adressbuch (GAL) ">
 
-<!ENTITY pref.ShowTrashedFolders "Im Papierkorb gefundene Ordner anzeigen" >
+<!ENTITY pref.ShowTrashedFolders "Im Papierkorb gefundene Ordner anzeigen">
 
 <!ENTITY pref.synclimit.all "alles">
 <!ENTITY pref.synclimit.2weeks "ab vor 2 Wochen">

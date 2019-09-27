@@ -27,7 +27,7 @@
 <!ENTITY pref.provision "Ellátás végrehajtása (Kerio követelmény)">
 <!ENTITY pref.galautocomplete "A globális címjegyzékből (GAL) kapott eredményeket e-mailben töltse ki automatikusan">
 
-<!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése" >
+<!ENTITY pref.ShowTrashedFolders "A kukában található mappák megjelenítése">
 
 <!ENTITY pref.synclimit.all "mindent">
 <!ENTITY pref.synclimit.2weeks "2 héttel ezelőtt">
