@@ -39,7 +39,7 @@ var Calendar = {
             } else {
                 //load timezone struct into EAS TimeZone object
                 easTZ.easTimeZone64 = data.TimeZone;
-                if (TbSync.prefs.getIntPref("log.userdatalevel")>2) TbSync.dump("Recieve TZ", item.title + easTZ.toString());
+                if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Recieve TZ", item.title + easTZ.toString());
                 stdOffset = easTZ.utcOffset;
                 dstOffset = easTZ.daylightBias + easTZ.utcOffset;
             }
@@ -239,7 +239,7 @@ var Calendar = {
             }
             
             wbxml.atag("TimeZone", easTZ.easTimeZone64);
-             if (TbSync.prefs.getIntPref("log.userdatalevel")>2) TbSync.dump("Send TZ", item.title + easTZ.toString());
+             if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Send TZ", item.title + easTZ.toString());
         }
         
         //AllDayEvent (for simplicity, we always send a value)

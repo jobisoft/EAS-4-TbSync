@@ -60,7 +60,7 @@ var xmltools = {
 
     //print content of xml data object (if debug output enabled)
     printXmlData : function (data, printApplicationData) {
-        if ((TbSync.prefs.getBoolPref("log.toconsole") || TbSync.prefs.getBoolPref("log.tofile")) && printApplicationData) {
+        if (TbSync.prefs.getIntPref("log.userdatalevel") > 1 || (TbSync.prefs.getIntPref("log.userdatalevel") == 1 && printApplicationData)) {
             let dump = JSON.stringify(data);
             TbSync.dump("Extracted XML data", "\n" + dump);
         }

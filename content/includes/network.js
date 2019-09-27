@@ -269,12 +269,12 @@ var network = {
         if (rawxml)  {
             xml = rawxml.split('><').join('>\n<');
         }
-        
+                
         //include xml in log, if userdatalevel 2 or greater
-        if ((TbSync.prefs.getBoolPref("log.toconsole") || TbSync.prefs.getBoolPref("log.tofile")) && TbSync.prefs.getIntPref("log.userdatalevel")>1) {
+        if (TbSync.prefs.getIntPref("log.userdatalevel") > 1) {
 
             //log raw wbxml if userdatalevel is 3 or greater
-            if (TbSync.prefs.getIntPref("log.userdatalevel")>2) {
+            if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) {
                 let charcodes = [];
                 for (let i=0; i< wbxml.length; i++) charcodes.push(wbxml.charCodeAt(i).toString(16));
                 let bytestring = charcodes.join(" ");
@@ -284,19 +284,13 @@ var network = {
             if (xml) {
                 //raw xml is save xml with all special chars in user data encoded by encodeURIComponent - KEEP that in order to be able to analyze logged XML 
                 //let xml = decodeURIComponent(rawxml.split('><').join('>\n<'));
-                //if userdatalevel is 3 or greater print everything, otherwise exclude application data
-                if (TbSync.prefs.getIntPref("log.userdatalevel")<3) {
-                    let rx = new RegExp("<ApplicationData[\\d\\D]*?\/ApplicationData>", "g");
-                    TbSync.dump("XML: " + what, "\n" + xml.replace(rx, ""));
-                } else {
-                    TbSync.dump("XML: " + what, "\n" + xml);
-                }
+                TbSync.dump("XML: " + what, "\n" + xml);
             } else {
                 TbSync.dump("XML: " + what, "\nFailed to convert WBXML to XML!\n");
             }
         }
     
-    return xml;
+        return xml;
     },
     
     //returns false on parse error and null on empty response (if allowed)

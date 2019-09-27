@@ -135,7 +135,7 @@ var Contacts = {
                             let parsedInput = MailServices.headerParser.makeFromDisplayAddress(value);
                             let fixedValue =  (parsedInput && parsedInput[0] && parsedInput[0].email) ? parsedInput[0].email : value;
                             if (fixedValue != value) {
-                                if (TbSync.prefs.getIntPref("log.userdatalevel")>2) TbSync.dump("Parsing email display string via RFC 2231 and RFC 2047 ("+EAS_property+")", value + " -> " + fixedValue);
+                                if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Parsing email display string via RFC 2231 and RFC 2047 ("+EAS_property+")", value + " -> " + fixedValue);
                                 value = fixedValue;
                             }
                             break;
