@@ -2,9 +2,12 @@ content eas4tbsync  content/
 
 skin    eas4tbsync  classic/1.0 skin/
 
-locale  eas4tbsync  en-US  _locales/en-US/
-locale  eas4tbsync  de     _locales/de/
-locale  eas4tbsync  hu     _locales/hu/
-locale  eas4tbsync  it     _locales/it/
-locale  eas4tbsync  ru     _locales/ru/
-locale  eas4tbsync  pt-BR  _locales/pt_BR/
+locale  tbsync  bg      _locales/bg/
+locale  tbsync  de      _locales/de/
+locale  tbsync  en-US   _locales/en-US/
+locale  tbsync  hu      _locales/hu/
+locale  tbsync  it      _locales/it/
+locale  tbsync  ru      _locales/ru/
+locale  tbsync  pt-BR   _locales/pt_BR/
+locale  tbsync  fr      _locales/fr/
+
