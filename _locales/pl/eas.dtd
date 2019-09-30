@@ -20,12 +20,12 @@
 <!ENTITY pref.ServerNameDescription "np. mail.yourserver.com">
 <!ENTITY pref.usehttps "Użyj bezpiecznego połączenia (połącz przez https)">
 <!ENTITY pref.DeviceId "ActiveSync device ID">
-<!ENTITY pref.birthday "Send birthday information">
+<!ENTITY pref.birthday "Wyślij informacje o urodzinach">
 <!ENTITY pref.generaloptions "Opcje ogólne">
 <!ENTITY pref.contactoptions "Opcje kontaktu">
 <!ENTITY pref.calendaroptions "Opcje kalendarza">
 <!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
-<!ENTITY pref.galautocomplete "Include results from global address book (GAL) in email autocompletion">
+<!ENTITY pref.galautocomplete "Uwzględnij wyniki z globalnej książki adresowej (GAL) w auto-uzupełnianiu adresów e-mail">
 
 <!ENTITY pref.ShowTrashedFolders "Pokaż foldery znalezione w koszu">
 
@@ -39,27 +39,27 @@
 <!ENTITY pref.seperator.comma "Przecinek">
 <!ENTITY pref.seperator.linebreak "Line break">
 <!ENTITY pref.seperator.description "Separator for multiline address field.">
-<!ENTITY pref.displayoverride "Override Display Name with “First Name” + “Second Name”">
+<!ENTITY pref.displayoverride "Zastąp nazwę wyświetlaną ciągiem “Imię“ + “Drugie imię”">
 
 <!ENTITY servertype.auto "Automatyczna konfiguracja poprzez ActiveSync Autodiscover">
 <!ENTITY servertype.custom "Konfiguracja niestandardowa">
-<!ENTITY servertype.unlock "Double click to unlock all predefined server settings.">
+<!ENTITY servertype.unlock "Kliknij dwukrotnie, aby odblokować wszystkie predefiniowane ustawienia serwera.">
 
 <!ENTITY abCard.MiddleName "Drugie imię:">
 <!ENTITY abCard.Email3Address "Alternatywny e-mail:">
-<!ENTITY abCard.Home2PhoneNumber "Home Alternative Phone:">
-<!ENTITY abCard.Business2PhoneNumber "Work Alternative Phone:">
+<!ENTITY abCard.Home2PhoneNumber "Alternatywny telefon domowy:">
+<!ENTITY abCard.Business2PhoneNumber "Alternatywny telefon służbowy:">
 <!ENTITY abCard.BusinessFaxNumber "Faks służbowy:">
 
 <!ENTITY abCard.ManagerName "Menedżer:">
-<!ENTITY abCard.AssistantPhoneNumber "Assistant Phone:">
-<!ENTITY abCard.AssistantName "Assistant:">
-<!ENTITY abCard.Spouse "Spouse:">
-<!ENTITY abCard.Anniversary "Anniversary:">
+<!ENTITY abCard.AssistantPhoneNumber "Telefon Asystenta:">
+<!ENTITY abCard.AssistantName "Asystent:">
+<!ENTITY abCard.Spouse "Małżonek:">
+<!ENTITY abCard.Anniversary "Rocznica:">
 
-<!ENTITY abCard.CarPhoneNumber "Car Phone:">
+<!ENTITY abCard.CarPhoneNumber "Telefon w Aucie:">
 <!ENTITY abCard.RadioPhoneNumber "Radio Phone:">
-<!ENTITY abCard.CompanyMainPhone "Work Main Phone:">
+<!ENTITY abCard.CompanyMainPhone "Główny Telefon Służbowy:">
 
 <!ENTITY abCard.OtherAddress "Adres:">
 <!ENTITY abCard.OtherCity "Miasto:">
@@ -72,9 +72,9 @@
 <!ENTITY abCard.header.othernumbers "Dodatkowe numery:">
 <!ENTITY abCard.header.messaging "Messaging:">
 <!ENTITY abCard.header.people "People:">
-<!ENTITY abCard.header.eas "Other Fields (EAS)">
-<!ENTITY abCard.header.otheraddress "Other Address (EAS)">
+<!ENTITY abCard.header.eas "Inne Pola (EAS)">
+<!ENTITY abCard.header.otheraddress "Inne Adresy (EAS)">
 
 <!ENTITY manager.tabs.accountsettings "Ustawienia konta">
 <!ENTITY manager.tabs.syncsettings "Opcje">
-<!ENTITY manager.tabs.outOfOffice "Auto responder">
+<!ENTITY manager.tabs.outOfOffice "Automatyczna odpowiedź">
