@@ -19,7 +19,7 @@
 <!ENTITY pref.ActiveSyncVersion "Wersja ActiveSync">
 <!ENTITY pref.ServerNameDescription "np. mail.yourserver.com">
 <!ENTITY pref.usehttps "Użyj bezpiecznego połączenia (połącz przez https)">
-<!ENTITY pref.DeviceId "ActiveSync device ID">
+<!ENTITY pref.DeviceId "ID urządzenia ActiveSync">
 <!ENTITY pref.birthday "Wyślij informacje o urodzinach">
 <!ENTITY pref.generaloptions "Opcje ogólne">
 <!ENTITY pref.contactoptions "Opcje kontaktu">
@@ -38,7 +38,7 @@
 
 <!ENTITY pref.seperator.comma "Przecinek">
 <!ENTITY pref.seperator.linebreak "Line break">
-<!ENTITY pref.seperator.description "Separator for multiline address field.">
+<!ENTITY pref.seperator.description "Separator pola adresu wielowierszowego.">
 <!ENTITY pref.displayoverride "Zastąp nazwę wyświetlaną ciągiem “Imię“ + “Drugie imię”">
 
 <!ENTITY servertype.auto "Automatyczna konfiguracja poprzez ActiveSync Autodiscover">
@@ -65,13 +65,13 @@
 <!ENTITY abCard.OtherCity "Miasto:">
 <!ENTITY abCard.OtherCountry "Państwo:">
 <!ENTITY abCard.OtherZip "Kod pocztowy:">
-<!ENTITY abCard.OtherState "State:">
+<!ENTITY abCard.OtherState "Województwo:">
 
 <!ENTITY abCard.header.worknumbers "Dodatkowe numery służbowe:">
 <!ENTITY abCard.header.homenumbers "Dodatkowe numery domowe:">
 <!ENTITY abCard.header.othernumbers "Dodatkowe numery:">
 <!ENTITY abCard.header.messaging "Messaging:">
-<!ENTITY abCard.header.people "People:">
+<!ENTITY abCard.header.people "Osoby:">
 <!ENTITY abCard.header.eas "Inne Pola (EAS)">
 <!ENTITY abCard.header.otheraddress "Inne Adresy (EAS)">
 
