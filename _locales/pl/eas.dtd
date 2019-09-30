@@ -1,5 +1,5 @@
 <!ENTITY add.title "Adding an Exchange ActiveSync account to TbSync">
-<!ENTITY add.shortdescription "Account information">
+<!ENTITY add.shortdescription "Informacje o koncie">
 <!ENTITY add.ok "Dodaj konto">
 <!ENTITY add.name "Nazwa konta:">
 <!ENTITY add.user "Nazwa użytkownika (adres e-mail):">
@@ -27,13 +27,13 @@
 <!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
 <!ENTITY pref.galautocomplete "Include results from global address book (GAL) in email autocompletion">
 
-<!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
+<!ENTITY pref.ShowTrashedFolders "Pokaż foldery znalezione w koszu">
 
 <!ENTITY pref.synclimit.all "wszystko">
-<!ENTITY pref.synclimit.2weeks "from 2 weeks ago">
-<!ENTITY pref.synclimit.1month "from 4 weeks ago">
-<!ENTITY pref.synclimit.3month "from 3 months ago">
-<!ENTITY pref.synclimit.6month "from 6 months ago">
+<!ENTITY pref.synclimit.2weeks "sprzed 2 miesięcy">
+<!ENTITY pref.synclimit.1month "sprzed 4 miesięcy">
+<!ENTITY pref.synclimit.3month "sprzed 3 miesięcy">
+<!ENTITY pref.synclimit.6month "sprzed 6 miesięcy">
 <!ENTITY pref.synclimit.description "Okres synchronizacji: ">
 
 <!ENTITY pref.seperator.comma "Przecinek">
@@ -41,12 +41,12 @@
 <!ENTITY pref.seperator.description "Separator for multiline address field.">
 <!ENTITY pref.displayoverride "Override Display Name with “First Name” + “Second Name”">
 
-<!ENTITY servertype.auto "Automatic configuration via ActiveSync Autodiscover">
+<!ENTITY servertype.auto "Automatyczna konfiguracja poprzez ActiveSync Autodiscover">
 <!ENTITY servertype.custom "Konfiguracja niestandardowa">
 <!ENTITY servertype.unlock "Double click to unlock all predefined server settings.">
 
 <!ENTITY abCard.MiddleName "Drugie imię:">
-<!ENTITY abCard.Email3Address "Alternative Email:">
+<!ENTITY abCard.Email3Address "Alternatywny e-mail:">
 <!ENTITY abCard.Home2PhoneNumber "Home Alternative Phone:">
 <!ENTITY abCard.Business2PhoneNumber "Work Alternative Phone:">
 <!ENTITY abCard.BusinessFaxNumber "Faks służbowy:">
@@ -67,9 +67,9 @@
 <!ENTITY abCard.OtherZip "Kod pocztowy:">
 <!ENTITY abCard.OtherState "State:">
 
-<!ENTITY abCard.header.worknumbers "Additional work numbers:">
-<!ENTITY abCard.header.homenumbers "Additional home numbers:">
-<!ENTITY abCard.header.othernumbers "Additional numbers:">
+<!ENTITY abCard.header.worknumbers "Dodatkowe numery służbowe:">
+<!ENTITY abCard.header.homenumbers "Dodatkowe numery domowe:">
+<!ENTITY abCard.header.othernumbers "Dodatkowe numery:">
 <!ENTITY abCard.header.messaging "Messaging:">
 <!ENTITY abCard.header.people "People:">
 <!ENTITY abCard.header.eas "Other Fields (EAS)">
