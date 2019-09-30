@@ -1,4 +1,4 @@
-<!ENTITY add.title "Adding an Exchange ActiveSync account to TbSync">
+<!ENTITY add.title "Dodawanie konta Exchange ActiveSync do TbSync">
 <!ENTITY add.shortdescription "Informacje o koncie">
 <!ENTITY add.ok "Dodaj konto">
 <!ENTITY add.name "Nazwa konta:">
@@ -14,7 +14,7 @@
 
 <!ENTITY pref.AccountName "Opis">
 <!ENTITY pref.UserName "Nazwa użytkownika">
-<!ENTITY pref.UserNameDescription "User name is usually the email address of your account.">
+<!ENTITY pref.UserNameDescription "Nazwa użytkownika to zazwyczaj adres e-mail Twojego konta.">
 <!ENTITY pref.ServerName "Adres serwera">
 <!ENTITY pref.ActiveSyncVersion "Wersja ActiveSync">
 <!ENTITY pref.ServerNameDescription "np. mail.yourserver.com">
