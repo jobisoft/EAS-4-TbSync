@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "Provider for Exchange ActiveSync"
+  },
+  "extensionDescription": {
+    "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
+  }
+}
