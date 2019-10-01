@@ -5,9 +5,10 @@ skin    eas4tbsync  classic/1.0 skin/
 locale  eas4tbsync  bg      _locales/bg/
 locale  eas4tbsync  de      _locales/de/
 locale  eas4tbsync  en-US   _locales/en-US/
+locale  eas4tbsync  fr      _locales/fr/
 locale  eas4tbsync  hu      _locales/hu/
 locale  eas4tbsync  it      _locales/it/
-locale  eas4tbsync  ru      _locales/ru/
+locale  eas4tbsync  pl      _locales/pl/
 locale  eas4tbsync  pt-BR   _locales/pt_BR/
-locale  eas4tbsync  fr      _locales/fr/
+locale  eas4tbsync  ru      _locales/ru/
 
