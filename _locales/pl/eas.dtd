@@ -24,7 +24,7 @@
 <!ENTITY pref.generaloptions "Opcje ogólne">
 <!ENTITY pref.contactoptions "Opcje kontaktu">
 <!ENTITY pref.calendaroptions "Opcje kalendarza">
-<!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
+<!ENTITY pref.provision "Wymuś provisioning (wymagane przez Kerio)">
 <!ENTITY pref.galautocomplete "Uwzględnij wyniki z globalnej książki adresowej (GAL) w auto-uzupełnianiu adresów e-mail">
 
 <!ENTITY pref.ShowTrashedFolders "Pokaż foldery znalezione w koszu">
@@ -37,7 +37,7 @@
 <!ENTITY pref.synclimit.description "Okres synchronizacji: ">
 
 <!ENTITY pref.seperator.comma "Przecinek">
-<!ENTITY pref.seperator.linebreak "Line break">
+<!ENTITY pref.seperator.linebreak "Znak końca linii">
 <!ENTITY pref.seperator.description "Separator pola adresu wielowierszowego.">
 <!ENTITY pref.displayoverride "Zastąp nazwę wyświetlaną ciągiem “Imię“ + “Drugie imię”">
 
@@ -58,7 +58,7 @@
 <!ENTITY abCard.Anniversary "Rocznica:">
 
 <!ENTITY abCard.CarPhoneNumber "Telefon w Aucie:">
-<!ENTITY abCard.RadioPhoneNumber "Radio Phone:">
+<!ENTITY abCard.RadioPhoneNumber "Radiotelefon:">
 <!ENTITY abCard.CompanyMainPhone "Główny Telefon Służbowy:">
 
 <!ENTITY abCard.OtherAddress "Adres:">
@@ -70,7 +70,7 @@
 <!ENTITY abCard.header.worknumbers "Dodatkowe numery służbowe:">
 <!ENTITY abCard.header.homenumbers "Dodatkowe numery domowe:">
 <!ENTITY abCard.header.othernumbers "Dodatkowe numery:">
-<!ENTITY abCard.header.messaging "Messaging:">
+<!ENTITY abCard.header.messaging "Komunikatory:">
 <!ENTITY abCard.header.people "Osoby:">
 <!ENTITY abCard.header.eas "Inne Pola (EAS)">
 <!ENTITY abCard.header.otheraddress "Inne Adresy (EAS)">
