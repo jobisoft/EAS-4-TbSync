@@ -531,7 +531,7 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
         }
     }
     
-    createAddressbook(newname) {
+    async createAddressbook(newname) {
         let dirPrefId = MailServices.ab.newAddressBook(newname, "", 2);  /* kPABDirectory - return abManager.newAddressBook(name, "moz-abmdbdirectory://", 2); */
         let directory = MailServices.ab.getDirectoryFromId(dirPrefId);
         
@@ -590,7 +590,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
         }
     }
 
-    createCalendar(newname) {
+    async createCalendar(newname) {
         let calManager = TbSync.lightning.cal.getCalendarManager();
         //Alternative calendar, which uses calTbSyncCalendar
         //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));

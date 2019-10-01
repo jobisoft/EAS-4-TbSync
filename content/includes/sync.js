@@ -261,7 +261,7 @@ var sync = {
         // add target to syncData (getTarget() will throw "nolightning" if lightning missing)
         try {
             // accessing the target for the first time will check if it is avail and if not will create it (if possible)
-            syncData.target = syncData.currentFolderData.targetData.getTarget();
+            syncData.target = await syncData.currentFolderData.targetData.getTarget();
         } catch (e) {
             Components.utils.reportError(e);        
             throw eas.sync.finish("warning", e.message);
