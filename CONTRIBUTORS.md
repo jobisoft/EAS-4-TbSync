@@ -16,3 +16,4 @@
 * Alessandro Menti (it)
 * Óvári (hu)
 * Alexey Sinitsyn (ru)
+* Daniel Wróblewski (pl)
