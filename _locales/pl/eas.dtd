@@ -10,7 +10,7 @@
 <!ENTITY add.server "Konfiguracja serwera:">
 <!ENTITY add.description "Wprowadź nazwę nowego konta TbSync, nazwę użytkownika konta ActiveSync, które chcesz dodać (prawdopodobnie adres e-mail) i wybierz jedną z dostępnych opcji konfiguracji serwera. ">
 
-<!ENTITY pref.autodetect "najlepszy dostępny">
+<!ENTITY pref.autodetect "najlepsza dostępna">
 
 <!ENTITY pref.AccountName "Opis">
 <!ENTITY pref.UserName "Nazwa użytkownika">
