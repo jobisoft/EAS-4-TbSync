@@ -10,7 +10,7 @@
 <!ENTITY add.server "Konfiguracja serwera:">
 <!ENTITY add.description "Wprowadź nazwę nowego konta TbSync, nazwę użytkownika konta ActiveSync, które chcesz dodać (prawdopodobnie adres e-mail) i wybierz jedną z dostępnych opcji konfiguracji serwera. ">
 
-<!ENTITY pref.autodetect "najlepszy dostępny">
+<!ENTITY pref.autodetect "najlepsza dostępna">
 
 <!ENTITY pref.AccountName "Opis">
 <!ENTITY pref.UserName "Nazwa użytkownika">
@@ -30,8 +30,8 @@
 <!ENTITY pref.ShowTrashedFolders "Pokaż foldery znalezione w koszu">
 
 <!ENTITY pref.synclimit.all "wszystko">
-<!ENTITY pref.synclimit.2weeks "sprzed 2 miesięcy">
-<!ENTITY pref.synclimit.1month "sprzed 4 miesięcy">
+<!ENTITY pref.synclimit.2weeks "sprzed 2 tygodni">
+<!ENTITY pref.synclimit.1month "sprzed 4 tygodni">
 <!ENTITY pref.synclimit.3month "sprzed 3 miesięcy">
 <!ENTITY pref.synclimit.6month "sprzed 6 miesięcy">
 <!ENTITY pref.synclimit.description "Okres synchronizacji: ">
@@ -54,7 +54,7 @@
 <!ENTITY abCard.ManagerName "Menedżer:">
 <!ENTITY abCard.AssistantPhoneNumber "Telefon Asystenta:">
 <!ENTITY abCard.AssistantName "Asystent:">
-<!ENTITY abCard.Spouse "Małżonek:">
+<!ENTITY abCard.Spouse "Współmałżonek:">
 <!ENTITY abCard.Anniversary "Rocznica:">
 
 <!ENTITY abCard.CarPhoneNumber "Telefon w Aucie:">

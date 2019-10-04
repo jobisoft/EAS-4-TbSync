@@ -3,6 +3,6 @@
     "message": "Dostawca dla Exchange ActiveSync"
   },
   "extensionDescription": {
-    "message": "Dodaje obsługę synchronizacji kont Exchange ActiveSync do TbSync (kontakty, zadania i kalendarze)."
+    "message": "Dodaj obsługę synchronizacji kont Exchange ActiveSync do TbSync (kontakty, zadania i kalendarze)."
   }
 }
