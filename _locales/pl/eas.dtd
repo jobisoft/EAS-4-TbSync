@@ -17,7 +17,7 @@
 <!ENTITY pref.UserNameDescription "Nazwa użytkownika to zazwyczaj adres e-mail Twojego konta.">
 <!ENTITY pref.ServerName "Adres serwera">
 <!ENTITY pref.ActiveSyncVersion "Wersja ActiveSync">
-<!ENTITY pref.ServerNameDescription "np. mail.yourserver.com">
+<!ENTITY pref.ServerNameDescription "np. mail.twojserwer.com">
 <!ENTITY pref.usehttps "Użyj bezpiecznego połączenia (połącz przez https)">
 <!ENTITY pref.DeviceId "ID urządzenia ActiveSync">
 <!ENTITY pref.birthday "Wyślij informacje o urodzinach">
