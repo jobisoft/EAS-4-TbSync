@@ -809,6 +809,14 @@ var network = {
                 };
 
                 syncData.req.onerror = function () {
+                    let responseData = {};
+                    responseData["MS-ASProtocolVersions"] =  syncData.req.getResponseHeader("MS-ASProtocolVersions");
+                    responseData["MS-ASProtocolCommands"] =  syncData.req.getResponseHeader("MS-ASProtocolCommands");                        
+
+                    TbSync.dump("EAS OPTIONS with response (status: "+syncData.req.status+")", "\n" +
+                    "responseText: " + syncData.req.responseText + "\n" +
+                    "responseHeader(MS-ASProtocolVersions): " + responseData["MS-ASProtocolVersions"]+"\n" +
+                    "responseHeader(MS-ASProtocolCommands): " + responseData["MS-ASProtocolCommands"]);
                     resolve();
                 };
 
