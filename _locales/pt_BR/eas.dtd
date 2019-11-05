@@ -19,7 +19,7 @@
 <!ENTITY pref.ActiveSyncVersion "Versão do ActiveSync">
 <!ENTITY pref.ServerNameDescription "ex. mail.yourserver.com">
 <!ENTITY pref.usehttps "Utilizar conexão segura (conectar via https)">
-<!ENTITY pref.DeviceId "ActiveSync device ID">
+<!ENTITY pref.DeviceId "ID Dispositivo ActiveSync">
 <!ENTITY pref.birthday "Enviar informações de aniversário">
 <!ENTITY pref.generaloptions "Opções gerais">
 <!ENTITY pref.contactoptions "Opções de contato">
