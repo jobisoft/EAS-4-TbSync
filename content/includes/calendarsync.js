@@ -168,7 +168,6 @@ var Calendar = {
         //  -> Special case: User sets BusyStatus to TENTIATIVE -> TRANSP is unset and also set STATUS to TENTATIVE
         // The TB STATUS is the correct map for EAS Meetingstatus and should be unset, if it is not a meeting EXCEPT if set to TENTATIVE
         let tbStatus = (data.BusyStatus && data.BusyStatus == "1" ?  "TENTATIVE" : null);
-        console.log("tbStatus: " + tbStatus);
         
         if (data.MeetingStatus) {
             //store original EAS value 
