@@ -158,6 +158,18 @@ var Calendar = {
 
         eas.sync.setItemRecurrence(item, syncdata, data);
         
+        // BusyStatus is always representing the status of the current user in terms of availability.
+        // It has nothing to do with the status of a meeting. The user could be just the organizer, but does not need to attend, so he would be free.
+        // The correct map is between BusyStatus and TRANSP (show time as avail, busy, unset)
+        // A new event always sets TRANSP to busy, so unset is indeed a good way to store Tentiative
+        // However:
+        //  - EAS Meetingstatus only knows ACTIVE or CANCELLED, but not CONFIRMED or TENTATIVE
+        //  - TB STATUS has UNSET, CONFIRMED, TENTATIVE, CANCELLED
+        //  -> Special case: User sets BusyStatus to TENTIATIVE -> TRANSP is unset and also set STATUS to TENTATIVE
+        // The TB STATUS is the correct map for EAS Meetingstatus and should be unset, if it is not a meeting EXCEPT if set to TENTATIVE
+        let tbStatus = (data.BusyStatus && data.BusyStatus == "1" ?  "TENTATIVE" : null);
+        console.log("tbStatus: " + tbStatus);
+        
         if (data.MeetingStatus) {
             //store original EAS value 
             item.setProperty("X-EAS-MeetingStatus", data.MeetingStatus);
@@ -165,19 +177,21 @@ var Calendar = {
             let M = data.MeetingStatus & 0x1;
             let R = data.MeetingStatus & 0x2;
             let C = data.MeetingStatus & 0x4;
-            
             //we can map M+C to TB STATUS (TENTATIVE, CONFIRMED, CANCELLED, unset)
-            //if it is not a meeting -> unset
-            //if it is a meeting -> CANCELLED or CONFIRMED
-            if (M) item.setProperty("STATUS", (C ? "CANCELLED" : "CONFIRMED"));
-            else item.deleteProperty("STATUS");
+
+            if (M) {
+                if (C) tbStatus = "CANCELLED";
+                else if (!tbStatus) tbStatus = "CONFIRMED"; // do not override "TENTIATIVE"
+            }
             
             //we can also use the R information, to update our fallbackOrganizerName
             if (!R && data.OrganizerName) syncdata.target.calendar.setProperty("fallbackOrganizerName", data.OrganizerName);            
         }
 
-        //TODO: attachements (needs EAS 16.0!)
+        if (tbStatus) item.setProperty("STATUS", tbStatus)
+        else item.deleteProperty("STATUS");
 
+        //TODO: attachements (needs EAS 16.0!)
     },
 
 
@@ -248,9 +262,14 @@ var Calendar = {
         //Body
         wbxml.append(eas.sync.getItemBody(item, syncdata));
 
-        //BusyStatus (TRANSP)
-        wbxml.atag("BusyStatus", eas.sync.mapThunderbirdPropertyToEas("TRANSP", "BusyStatus", item));
-
+        //BusyStatus (Free, Tentative, Busy) is taken from TRANSP (busy, free, unset=tentative)
+        //However if STATUS is set to TENTATIVE, overide TRANSP and set BusyStatus to TENTATIVE
+        if (item.hasProperty("STATUS") && item.getProperty("STATUS") == "TENTATIVE") {
+            wbxml.atag("BusyStatus","1");
+        } else {
+            wbxml.atag("BusyStatus", eas.sync.mapThunderbirdPropertyToEas("TRANSP", "BusyStatus", item));
+        }
+        
         //Organizer
         if (!isException) {
             if (item.organizer && item.organizer.commonName) wbxml.atag("OrganizerName", item.organizer.commonName);
