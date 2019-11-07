@@ -177,8 +177,8 @@ var Calendar = {
             let M = data.MeetingStatus & 0x1;
             let R = data.MeetingStatus & 0x2;
             let C = data.MeetingStatus & 0x4;
-            //we can map M+C to TB STATUS (TENTATIVE, CONFIRMED, CANCELLED, unset)
 
+            // We can map M+C to TB STATUS (TENTATIVE, CONFIRMED, CANCELLED, unset).
             if (M) {
                 if (C) tbStatus = "CANCELLED";
                 else if (!tbStatus) tbStatus = "CONFIRMED"; // do not override "TENTIATIVE"
