@@ -78,10 +78,12 @@ var network = {
                             let authData = eas.network.getAuthData(syncData.accountData);
                             let redirect_uri = "https://login.microsoftonline.com/common/oauth2/nativeclient";
                             let client_id = "2980deeb-7460-4723-864a-f9b0f10cd992";
-                            let scope =  client_id + "/.default";
+                            //let scope =  "https://graph.microsoft.com/EAS.AccessAsUser.All";
+                            //let scope =  "https://eas.outlook.com/EAS.AccessAsUser.All";
+                            let scope =  "https://outlook.office.com/EAS.AccessAsUser.All";
                         
                             let oauthData = {
-                                auth_url: "https://login.microsoftonline.com/common/oauth2/authorize",
+                                auth_url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
                                 auth_redirect_uri: redirect_uri,
                                 auth_codefield: "code",
                                 auth_opt: {
@@ -90,10 +92,9 @@ var network = {
                                     redirect_uri,
                                     scope,
                                     prompt: "consent",
-                                    login_hint: authData.user,
-                                    resource: "https://outlook.office365.com"
+                                    login_hint: authData.user
                                 },
-                                access_url: "https://login.microsoftonline.com/common/oauth2/token",
+                                access_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
                                 access_codefield: "code",
                                 access_opt: {
                                     client_id,
@@ -150,7 +151,7 @@ var network = {
                                 } else if (errorcode == 401) {
                                     // manipulate rv to run password prompt
                                     ALLOWED_RETRIES[rv.errorType]++;
-                                    rv.errorType = "PasswordPrompt";
+                                    rv.errorType = eas.prefs.getBoolPref("oauth") ? "OAuthPrompt" : "PasswordPrompt";
                                     rv.errorObj = eas.sync.finish("error", "401");
                                     continue; // with the next loop, skip connection to the server
                                 }
@@ -204,7 +205,7 @@ var network = {
             syncData.req.overrideMimeType("text/plain");
             syncData.req.setRequestHeader("User-Agent", userAgent);
             syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
-            if (eas.prefs.getBoolPref("oauth") {
+            if (eas.prefs.getBoolPref("oauth")) {
                 syncData.req.setRequestHeader("Authorization", 'Bearer ' + connection.password);
             } else {
                 syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(connection.user + ':' + connection.password));
@@ -265,7 +266,7 @@ var network = {
                     case 403: // Forbiddden (some servers send forbidden on AuthError, like Freenet)
                         let rv = {};
                         rv.errorObj = eas.sync.finish("error", "401");
-                        rv.errorType = "PasswordPrompt";
+                        rv.errorType = eas.prefs.getBoolPref("oauth") ? "OAuthPrompt" : "PasswordPrompt";
                         resolve(rv);
                         break;
 
@@ -766,7 +767,7 @@ var network = {
                 req.overrideMimeType("text/plain");
                 req.setRequestHeader("User-Agent", userAgent);
                 req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
-                if (eas.prefs.getBoolPref("oauth") {
+                if (eas.prefs.getBoolPref("oauth")) {
                     syncData.req.setRequestHeader("Authorization", 'Bearer ' + authData.password);
                 } else {
                     req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
@@ -853,7 +854,7 @@ var network = {
                 syncData.req.open("OPTIONS", eas.network.getEasURL(syncData.accountData), true);
                 syncData.req.overrideMimeType("text/plain");
                 syncData.req.setRequestHeader("User-Agent", userAgent);            
-                if (eas.prefs.getBoolPref("oauth") {
+                if (eas.prefs.getBoolPref("oauth")) {
                     syncData.req.setRequestHeader("Authorization", 'Bearer ' + authData.password);
                 } else {
                     syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
@@ -884,7 +885,7 @@ var network = {
                         case 401: // AuthError
                             let rv = {};
                             rv.errorObj = eas.sync.finish("error", "401");
-                            rv.errorType = "PasswordPrompt";
+                            rv.errorType = eas.prefs.getBoolPref("oauth") ? "OAuthPrompt" : "PasswordPrompt";
                             resolve(rv);
                             break;
 
@@ -1099,7 +1100,7 @@ var network = {
             if (method == "POST") {
                 req.setRequestHeader("Content-Length", xml.length);
                 req.setRequestHeader("Content-Type", "text/xml");
-                if (eas.prefs.getBoolPref("oauth") {
+                if (eas.prefs.getBoolPref("oauth")) {
                     syncData.req.setRequestHeader("Authorization", 'Bearer ' + password);
                 } else {
                     if (secure) req.setRequestHeader("Authorization", "Basic " + TbSync.tools.b64encode(connection.user + ":" + password));
