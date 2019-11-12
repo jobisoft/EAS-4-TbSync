@@ -139,7 +139,7 @@ var Base = class {
 
         // Close all open windows of this provider.
         for (let id in eas.openWindows) {
-          if (eas.openWindows.hasOwnProperty(id)) {
+          if (eas.openWindows.hasOwnProperty(id) && eas.openWindows[id]) {
             eas.openWindows[id].close();
           }
         }
