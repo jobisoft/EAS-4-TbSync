@@ -204,7 +204,12 @@ var network = {
             syncData.req.overrideMimeType("text/plain");
             syncData.req.setRequestHeader("User-Agent", userAgent);
             syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
-            syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(connection.user + ':' + connection.password));
+            if (eas.prefs.getBoolPref("oauth") {
+                syncData.req.setRequestHeader("Authorization", 'Bearer ' + connection.password);
+            } else {
+                syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(connection.user + ':' + connection.password));
+            }
+            
             if (syncData.accountData.getAccountProperty("asversion") == "2.5") {
                 syncData.req.setRequestHeader("MS-ASProtocolVersion", "2.5");
             } else {
@@ -761,7 +766,11 @@ var network = {
                 req.overrideMimeType("text/plain");
                 req.setRequestHeader("User-Agent", userAgent);
                 req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
-                req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
+                if (eas.prefs.getBoolPref("oauth") {
+                    syncData.req.setRequestHeader("Authorization", 'Bearer ' + authData.password);
+                } else {
+                    req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
+                }
                 if (accountData.getAccountProperty("asversion") == "2.5") {
                     req.setRequestHeader("MS-ASProtocolVersion", "2.5");
                 } else {
@@ -844,7 +853,11 @@ var network = {
                 syncData.req.open("OPTIONS", eas.network.getEasURL(syncData.accountData), true);
                 syncData.req.overrideMimeType("text/plain");
                 syncData.req.setRequestHeader("User-Agent", userAgent);            
-                syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
+                if (eas.prefs.getBoolPref("oauth") {
+                    syncData.req.setRequestHeader("Authorization", 'Bearer ' + authData.password);
+                } else {
+                    syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
+                }
                 syncData.req.timeout = eas.Base.getConnectionTimeout();
 
                 syncData.req.ontimeout = function () {
@@ -1086,7 +1099,11 @@ var network = {
             if (method == "POST") {
                 req.setRequestHeader("Content-Length", xml.length);
                 req.setRequestHeader("Content-Type", "text/xml");
-                if (secure) req.setRequestHeader("Authorization", "Basic " + TbSync.tools.b64encode(connection.user + ":" + password));                
+                if (eas.prefs.getBoolPref("oauth") {
+                    syncData.req.setRequestHeader("Authorization", 'Bearer ' + password);
+                } else {
+                    if (secure) req.setRequestHeader("Authorization", "Basic " + TbSync.tools.b64encode(connection.user + ":" + password));
+                }                    
             }
 
             req.ontimeout = function () {
