@@ -73,6 +73,49 @@ var network = {
                     
                     switch (rv.errorType) {
                         
+                        case "OAuthPrompt": 
+                        {
+                            let authData = eas.network.getAuthData(syncData.accountData);
+                            let redirect_uri = "https://login.microsoftonline.com/common/oauth2/nativeclient";
+                            let client_id = "2980deeb-7460-4723-864a-f9b0f10cd992";
+                            let scope =  client_id + "/.default";
+                        
+                            let oauthData = {
+                                auth_url: "https://login.microsoftonline.com/common/oauth2/authorize",
+                                auth_redirect_uri: redirect_uri,
+                                auth_codefield: "code",
+                                auth_opt: {
+                                    client_id,
+                                    response_type: "code",
+                                    redirect_uri,
+                                    scope,
+                                    prompt: "consent",
+                                    login_hint: authData.user,
+                                    resource: "https://outlook.office365.com"
+                                },
+                                access_url: "https://login.microsoftonline.com/common/oauth2/token",
+                                access_codefield: "code",
+                                access_opt: {
+                                    client_id,
+                                    scope,
+                                    redirect_uri,
+                                    grant_type: "authorization_code"
+                                },
+                                windowID: "auth:" + syncData.accountData.accountID,
+                                accountname: syncData.accountData.getAccountProperty("accountname"),
+                            }
+                            
+                            let syncState = syncData.getSyncState().state; 
+                            syncData.setSyncState("passwordprompt");
+                            let token = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
+                            if (token) {
+                                authData.updateLoginData(authData.user, token);
+                                syncData.setSyncState(syncState);
+                                retry = true;
+                            }
+                        }
+                        break;
+                        
                         case "PasswordPrompt": 
                         {
                             let authData = eas.network.getAuthData(syncData.accountData);
