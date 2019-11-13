@@ -47,6 +47,7 @@ var tbSyncEasNewAccount = {
         document.getElementById("tbsync.spinner").hidden = true;
 
         document.getElementById('tbsync.newaccount.url.box').style.visibility =  (this.elementServertype.value != "custom") ? "hidden" : "visible";
+        document.getElementById('tbsync.newaccount.password.box').style.visibility =  (this.elementServertype.value != "custom") ? "hidden" : "visible";
         document.getElementById("tbsync.newaccount.name").focus();
 
         document.addEventListener("wizardfinish", tbSyncEasNewAccount.onFinish.bind(this));
@@ -59,7 +60,7 @@ var tbSyncEasNewAccount = {
     onUserTextInput: function () {
         document.getElementById("tbsync.error").hidden = true;
         if (this.elementServertype.value != "custom") {
-            document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "" || this.elementPass.value == "");
+            document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "" ); //|| this.elementPass.value == "");
         } else {
             document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "" || this.elementPass.value == "" ||  this.elementUrl.value.trim() == "");
         }
@@ -68,6 +69,7 @@ var tbSyncEasNewAccount = {
     onUserDropdown: function () {
         document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_" + this.elementServertype.value,"eas");
         document.getElementById('tbsync.newaccount.url.box').style.visibility = (this.elementServertype.value != "custom") ? "hidden" : "visible";
+        document.getElementById('tbsync.newaccount.password.box').style.visibility = (this.elementServertype.value != "custom") ? "hidden" : "visible";
         this.onUserTextInput();
     },
 
@@ -81,10 +83,11 @@ var tbSyncEasNewAccount = {
 
     validate: async function () {
         let user = this.elementUser.value;
-        let password = this.elementPass.value;
         let servertype = this.elementServertype.value;
         let accountname = this.elementName.value.trim();
-        let url = this.elementUrl.value.trim();
+
+        let url = (servertype == "auto") ? "" : this.elementUrl.value.trim();
+        let password = (servertype == "auto") ? "" : this.elementPass.value;
 
         if (servertype == "auto" &&  user.split("@").length != 2) {
             alert(TbSync.getString("autodiscover.NeedEmail","eas"))
@@ -109,18 +112,47 @@ var tbSyncEasNewAccount = {
             let updateTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
             updateTimer.initWithCallback({notify : function () {tbSyncEasNewAccount.updateAutodiscoverStatus()}}, 1000, 3);
 
-            tbSyncEasNewAccount.startTime = Date.now();
-            tbSyncEasNewAccount.updateAutodiscoverStatus();
+            let v2 = await eas.network.getServerConnectionViaAutodiscoverV2JsonRequest("https://autodiscover-s.outlook.com/autodiscover/autodiscover.json?Email="+encodeURIComponent(user)+"&Protocol=ActiveSync");
+            let oauthData = eas.network.getOAuthData(v2.server, user, "auth:wizard");
+            if (oauthData) {
+                // ask for token
+                document.getElementById("tbsync.spinner").hidden = true;
+                password = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
+                document.getElementById("tbsync.spinner").hidden = false;                
 
-            let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
-            updateTimer.cancel();
-    
-            if (result.server) {
-                user = result.user;
-                url = result.server;
-            } else {                    
-                error = result.error;
+                url=v2.server;
+            } else {            
+                // ask for password
+                let promptData = {
+                    windowID: "auth:wizard",
+                    accountname: accountname,
+                    usernameLocked: true,
+                    username: user
+                }
+                document.getElementById("tbsync.spinner").hidden = true;
+                let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                document.getElementById("tbsync.spinner").hidden = false;
+                
+                if (credentials) {
+                    password = credentials.password;                            
+
+                    tbSyncEasNewAccount.startTime = Date.now();
+                    tbSyncEasNewAccount.updateAutodiscoverStatus();
+
+                    let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
+            
+                    if (result.server) {
+                        user = result.user;
+                        url = result.server;
+                    } else {                    
+                        error = result.error;
+                    }
+                } else {
+                    error = TbSync.getString("status.401", "eas")
+                }
             }
+            
+            updateTimer.cancel();
         }
 
         //now validate the information
