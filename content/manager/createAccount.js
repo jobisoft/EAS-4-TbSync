@@ -117,9 +117,14 @@ var tbSyncEasNewAccount = {
             if (oauthData) {
                 // ask for token
                 document.getElementById("tbsync.spinner").hidden = true;
-                password = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
-                document.getElementById("tbsync.spinner").hidden = false;                
+                let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
+                if (oauth && oauth.accessToken && !oauth.error) {
+                    password = oauth.accessToken;
+                } else {
+                    error = TbSync.getString("status."+oauth.error, "eas");
+                }
 
+                document.getElementById("tbsync.spinner").hidden = false;                
                 url=v2.server;
             } else {            
                 // ask for password
@@ -145,10 +150,8 @@ var tbSyncEasNewAccount = {
                         user = result.user;
                         url = result.server;
                     } else {                    
-                        error = result.error;
+                        error = result.error; // is a localized string
                     }
-                } else {
-                    error = TbSync.getString("status.401", "eas")
                 }
             }
             
@@ -157,6 +160,7 @@ var tbSyncEasNewAccount = {
 
         //now validate the information
         if (!error) {
+            if (!password) error = TbSync.getString("status.401", "eas");
         }
 
         //add if valid

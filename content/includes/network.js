@@ -53,6 +53,13 @@ var network = {
         
         if (url) {
             switch (url) {
+
+                // OAUTH authentication against outlook.com does not seem to work.
+                // case "eas.outlook.com":
+                // {
+                // }
+                // break;
+
                 // Currently we only support Office365 ExchangeOnline
                 case "outlook.office365.com":
                 {       
@@ -124,9 +131,12 @@ var network = {
                             
                             let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                             if (oauthData) {
-                                let token = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
-                                if (token) {
-                                    credentials = {username: authData.user, password: token};
+                                let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
+                                if (oauth && oauth.accessToken && !oauth.error) {
+                                    credentials = {username: authData.user, password: oauth.accessToken};
+                                } else if (oauth && oauth.error) {
+                                    // Override standard password error with error received from asyncOAuthPrompt().
+                                    rv.errorObj = eas.sync.finish("error", oauth.error);
                                 }
                             } else {
                                 let promptData = {
@@ -943,9 +953,12 @@ var network = {
                     let authData = eas.network.getAuthData(syncData.accountData);
                     let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                     if (oauthData) {
-                        let token = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
-                        if (token) {
-                            credentials = {username: authData.user, password: token};
+                        let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
+                        if (oauth && oauth.accessToken && !oauth.error) {
+                            credentials = {username: authData.user, password: oauth.accessToken};
+                        } else if (oauth && oauth.error) {
+                            // Override standard password error with error received from asyncOAuthPrompt().
+                            result.errorObj = eas.sync.finish("error", oauth.error);
                         }
                     } else {
                         let promptData = {
