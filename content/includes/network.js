@@ -65,14 +65,13 @@ var network = {
                 {       
                     let redirect_uri = "https://login.microsoftonline.com/common/oauth2/nativeclient";
                     let client_id = "2980deeb-7460-4723-864a-f9b0f10cd992";
-                    //let scope =  "https://graph.microsoft.com/EAS.AccessAsUser.All";
-                    //let scope =  "https://eas.outlook.com/EAS.AccessAsUser.All";
-                    let scope =  "https://outlook.office.com/EAS.AccessAsUser.All";
+                    let scope =  "offline_access https://outlook.office.com/EAS.AccessAsUser.All"; //offline_access gives us a refresh_token
                 
                     oauthData = {
                         auth_url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
                         auth_redirect_uri: redirect_uri,
                         auth_codefield: "code",
+                        auth_errorfield: "error_description",
                         auth_opt: {
                             client_id,
                             response_type: "code",
@@ -131,9 +130,9 @@ var network = {
                             
                             let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                             if (oauthData) {
-                                let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
-                                if (oauth && oauth.accessToken && !oauth.error) {
-                                    credentials = {username: authData.user, password: oauth.accessToken};
+                                let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
+                                if (oauth && oauth.tokens && !oauth.error) {
+                                    credentials = {username: authData.user, password: oauth.tokens};
                                 } else if (oauth && oauth.error) {
                                     // Override standard password error with error received from asyncOAuthPrompt().
                                     rv.errorObj = eas.sync.finish("error", oauth.error);
@@ -225,7 +224,7 @@ var network = {
             syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
             if (connection.password) {
                 if (eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"))) {
-                    syncData.req.setRequestHeader("Authorization", 'Bearer ' + connection.password);
+                    syncData.req.setRequestHeader("Authorization", 'Bearer ' + TbSync.passwordManager.getOAuthToken(connection.password));
                 } else {
                     syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(connection.user + ':' + connection.password));
                 }
@@ -790,7 +789,7 @@ var network = {
                 
                 if (authData.password) {
                     if (eas.network.getOAuthData(accountData.getAccountProperty("host"))) {
-                        req.setRequestHeader("Authorization", 'Bearer ' + authData.password);
+                        req.setRequestHeader("Authorization", 'Bearer ' + TbSync.passwordManager.getOAuthToken(authData.password));
                     } else {
                         req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
                     }
@@ -880,7 +879,7 @@ var network = {
                 syncData.req.setRequestHeader("User-Agent", userAgent);            
                 if (authData.password) {
                     if (eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"))) {
-                        syncData.req.setRequestHeader("Authorization", 'Bearer ' + authData.password);
+                        syncData.req.setRequestHeader("Authorization", 'Bearer ' + TbSync.passwordManager.getOAuthToken(authData.password));
                     } else {
                         syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
                     }
@@ -953,9 +952,9 @@ var network = {
                     let authData = eas.network.getAuthData(syncData.accountData);
                     let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                     if (oauthData) {
-                        let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
-                        if (oauth && oauth.accessToken && !oauth.error) {
-                            credentials = {username: authData.user, password: oauth.accessToken};
+                        let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
+                        if (oauth && oauth.tokens && !oauth.error) {
+                            credentials = {username: authData.user, password: oauth.tokens};
                         } else if (oauth && oauth.error) {
                             // Override standard password error with error received from asyncOAuthPrompt().
                             result.errorObj = eas.sync.finish("error", oauth.error);
