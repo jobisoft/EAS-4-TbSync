@@ -68,26 +68,52 @@ var network = {
                     let scope =  "offline_access https://outlook.office.com/EAS.AccessAsUser.All"; //offline_access gives us a refresh_token
                 
                     oauthData = {
-                        auth_url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-                        auth_redirect_uri: redirect_uri,
-                        auth_codefield: "code",
-                        auth_errorfield: "error_description",
-                        auth_opt: {
-                            client_id,
-                            response_type: "code",
-                            redirect_uri,
-                            scope,
-                            prompt: "consent",
-                            login_hint: user
+                        auth: {
+                            url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+                            redirectUrl: redirect_uri,
+                            requestParameters: {
+                                client_id,
+                                response_type: "code",
+                                redirect_uri,
+                                scope,
+                                prompt: "consent",
+                                login_hint: user
+                            },
+                            responseFields: {
+                                authToken: "code",
+                                error: "error_description"
+                            }                        
                         },
-                        access_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-                        access_codefield: "code",
-                        access_opt: {
-                            client_id,
-                            scope,
-                            redirect_uri,
-                            grant_type: "authorization_code"
+                        
+                        access: {
+                            url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+                            requestParameters: {
+                                client_id,
+                                scope,
+                                redirect_uri,
+                                grant_type: "authorization_code",
+                                code: null // a value of null indicates the token field
+                            },
+                            responseFields: {
+                                accessToken: "access_token",
+                                refreshToken: "refresh_token",
+                            }                        
                         },
+                        
+                        refresh: {
+                            url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+                            requestParameters: {
+                                client_id,
+                                scope,
+                                grant_type: "refresh_token",
+                                refresh_token: null // a value of null indicates the token field
+                            },
+                            responseFields: {
+                                accessToken: "access_token",
+                                refreshToken: "refresh_token",
+                            }
+                        },                        
+                        
                         windowID: "auth:" + windowID,
                     }
                 }
@@ -123,20 +149,22 @@ var network = {
                         
                         case "PasswordPrompt": 
                         {
+                            let credentials = null;
                             let authData = eas.network.getAuthData(syncData.accountData);
                             let syncState = syncData.getSyncState().state; 
-                            let credentials = null;
                             syncData.setSyncState("passwordprompt");
                             
                             let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                             if (oauthData) {
                                 let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
+                                
+                                credentials = {username: authData.user, password: " "};
                                 if (oauth && oauth.tokens && !oauth.error) {
                                     credentials = {username: authData.user, password: oauth.tokens};
+                                    retry = true;
                                 } else if (oauth && oauth.error) {
                                     // Override standard password error with error received from asyncOAuthPrompt().
-                                    rv.errorObj = eas.sync.finish("error", oauth.error);
-                                }
+                                    rv.errorObj = eas.sync.finish("error", oauth.error);                                }
                             } else {
                                 let promptData = {
                                     windowID: "auth:" + syncData.accountData.accountID,
@@ -145,14 +173,13 @@ var network = {
                                     username: authData.user
                                 }
                                 credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                                if (credentials) retry = true;
                             }
                             
                             if (credentials) {
-                                // Update login data and try again.
                                 authData.updateLoginData(credentials.username, credentials.password);
-                                syncData.setSyncState(syncState);
-                                retry = true;
-                            }                            
+                            }
+                            syncData.setSyncState(syncState);
                         }
                         break;
                         
@@ -946,15 +973,18 @@ var network = {
             if (result && result.hasOwnProperty("errorType") && result.errorType == "PasswordPrompt") {
                 if (allowedRetries > 0) {
                     let credentials = null;
+                    let authData = eas.network.getAuthData(syncData.accountData);
                     let syncState = syncData.getSyncState().state; 
                     syncData.setSyncState("passwordprompt");
 
-                    let authData = eas.network.getAuthData(syncData.accountData);
                     let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                     if (oauthData) {
                         let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
+                        
+                        credentials = {username: authData.user, password: " "};
                         if (oauth && oauth.tokens && !oauth.error) {
                             credentials = {username: authData.user, password: oauth.tokens};
+                            retry = true;                            
                         } else if (oauth && oauth.error) {
                             // Override standard password error with error received from asyncOAuthPrompt().
                             result.errorObj = eas.sync.finish("error", oauth.error);
@@ -967,14 +997,13 @@ var network = {
                             username: authData.user
                         }
                         credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                        if (credentials) retry = true;
                     }
                     
                     if (credentials) {
-                        // Update login data and try again.
                         authData.updateLoginData(credentials.username, credentials.password);
-                        syncData.setSyncState(syncState);
-                        retry = true;
                     }
+                    syncData.setSyncState(syncState);
                 }
 
                 if (!retry) {
