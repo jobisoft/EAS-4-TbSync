@@ -99,13 +99,16 @@ var tbSyncEasNewAccount = {
         
         //document.getElementById("tbsync.newaccount.wizard").canRewind = false;        
         document.getElementById("tbsync.error").hidden = true;
-        document.getElementById("tbsync.spinner").hidden = false;
         document.documentElement.getButton("cancel").disabled = true;
         document.documentElement.getButton("finish").disabled = true;
         document.getElementById("tbsync.newaccount.name").disabled = true;
         document.getElementById("tbsync.newaccount.user").disabled = true;
         document.getElementById("tbsync.newaccount.password").disabled = true;
         document.getElementById("tbsync.newaccount.servertype").disabled = true;
+
+        tbSyncEasNewAccount.startTime = Date.now();
+        tbSyncEasNewAccount.updateAutodiscoverStatus();
+        document.getElementById("tbsync.spinner").hidden = false;
         
         //do autodiscover
         if (servertype == "auto") {
@@ -140,10 +143,6 @@ var tbSyncEasNewAccount = {
                 
                 if (credentials) {
                     password = credentials.password;                            
-
-                    tbSyncEasNewAccount.startTime = Date.now();
-                    tbSyncEasNewAccount.updateAutodiscoverStatus();
-
                     let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
             
                     if (result.server) {
@@ -190,7 +189,7 @@ var tbSyncEasNewAccount = {
     },
 
     updateAutodiscoverStatus: function () {
-        let offset = Math.round(((Date.now()-tbSyncEasNewAccount.startTime)/1000));
+        let offset = Math.round(((Date.now() - tbSyncEasNewAccount.startTime)/1000));
         let timeout = (offset>2) ? " (" + (tbSyncEasNewAccount.maxTimeout - offset) + ")" : "";
 
         document.getElementById('tbsync.newaccount.autodiscoverstatus').value  = TbSync.getString("autodiscover.Querying","eas") + timeout;
