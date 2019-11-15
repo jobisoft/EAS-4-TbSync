@@ -152,10 +152,10 @@ var network = {
                             let credentials = null;
                             let authData = eas.network.getAuthData(syncData.accountData);
                             let syncState = syncData.getSyncState().state; 
-                            syncData.setSyncState("passwordprompt");
                             
                             let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                             if (oauthData) {
+                                syncData.setSyncState("oauthprompt");
                                 let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
                                 
                                 credentials = {username: authData.user, password: " "};
@@ -166,6 +166,7 @@ var network = {
                                     // Override standard password error with error received from asyncOAuthPrompt().
                                     rv.errorObj = eas.sync.finish("error", oauth.error);                                }
                             } else {
+                                syncData.setSyncState("passwordprompt");
                                 let promptData = {
                                     windowID: "auth:" + syncData.accountData.accountID,
                                     accountname: syncData.accountData.getAccountProperty("accountname"),
