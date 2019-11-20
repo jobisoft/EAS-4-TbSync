@@ -145,15 +145,16 @@ var network = {
                 if (ALLOWED_RETRIES[rv.errorType] > 0) {
                     ALLOWED_RETRIES[rv.errorType]--;
                     
+                    let authData = eas.network.getAuthData(syncData.accountData);
+                    let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
+
                     switch (rv.errorType) {
                         
                         case "PasswordPrompt": 
                         {
                             let credentials = null;
-                            let authData = eas.network.getAuthData(syncData.accountData);
                             let syncState = syncData.getSyncState().state; 
                             
-                            let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
                             if (oauthData) {
                                 syncData.setSyncState("oauthprompt");
                                 let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
@@ -187,7 +188,7 @@ var network = {
                         case "NetworkError":
                         {
                             // Could not connect to server. Can we rerun autodiscover?       
-                            if (syncData.accountData.getAccountProperty( "servertype") == "auto") {
+                            if (syncData.accountData.getAccountProperty( "servertype") == "auto" && !oauthData) {
                                 let errorcode = await eas.network.updateServerConnectionViaAutodiscover(syncData);
                                 console.log("ERR: " + errorcode);
                                 if (errorcode == 200) {                       
@@ -1188,7 +1189,8 @@ var network = {
                 req.setRequestHeader("Content-Length", xml.length);
                 req.setRequestHeader("Content-Type", "text/xml");
                 if (secure && password) {
-                    // OAUTH accounts only get here in case of a server connection error by updateServerConnectionViaAutodiscover()
+                    // OAUTH accounts cannot authenticate against the standard discovery services
+                    // updateServerConnectionViaAutodiscover() is not passing them on
                     req.setRequestHeader("Authorization", "Basic " + TbSync.tools.b64encode(connection.user + ":" + password));
                 }                    
             }
