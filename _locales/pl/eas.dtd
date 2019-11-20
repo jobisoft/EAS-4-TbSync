@@ -30,10 +30,10 @@
 <!ENTITY pref.ShowTrashedFolders "Pokaż foldery znalezione w koszu">
 
 <!ENTITY pref.synclimit.all "wszystko">
-<!ENTITY pref.synclimit.2weeks "sprzed 2 tygodni">
-<!ENTITY pref.synclimit.1month "sprzed 4 tygodni">
-<!ENTITY pref.synclimit.3month "sprzed 3 miesięcy">
-<!ENTITY pref.synclimit.6month "sprzed 6 miesięcy">
+<!ENTITY pref.synclimit.2weeks "z 2 tygodni">
+<!ENTITY pref.synclimit.1month "z 4 tygodni">
+<!ENTITY pref.synclimit.3month "z 3 miesięcy">
+<!ENTITY pref.synclimit.6month "z 6 miesięcy">
 <!ENTITY pref.synclimit.description "Okres synchronizacji: ">
 
 <!ENTITY pref.seperator.comma "Przecinek">
