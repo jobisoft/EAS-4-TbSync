@@ -805,74 +805,93 @@ var network = {
 
         TbSync.dump("Sending (EAS v" + accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
         
-        try {
-            let response = await new Promise(function(resolve, reject) {
-                // Create request handler - API changed with TB60 to new XMKHttpRequest()
-                let req = new XMLHttpRequest();
-                req.mozBackgroundRequest = true;
-                req.open("POST", eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
-                req.overrideMimeType("text/plain");
-                req.setRequestHeader("User-Agent", userAgent);
-                req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
-                
-                if (authData.password) {
-                    if (eas.network.getOAuthData(accountData.getAccountProperty("host"))) {
-                        req.setRequestHeader("Authorization", 'Bearer ' + TbSync.passwordManager.getOAuthToken(authData.password));
-                    } else {
-                        req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
-                    }
-                }
-                
-                if (accountData.getAccountProperty("asversion") == "2.5") {
-                    req.setRequestHeader("MS-ASProtocolVersion", "2.5");
-                } else {
-                    req.setRequestHeader("MS-ASProtocolVersion", "14.0");
-                }
-                req.setRequestHeader("Content-Length", wbxml.length);
-                if (accountData.getAccountProperty("provision")) {
-                    req.setRequestHeader("X-MS-PolicyKey", accountData.getAccountProperty("policykey"));
-                    TbSync.dump("PolicyKey used", accountData.getAccountProperty("policykey"));
-                }
-
-                req.timeout = eas.Base.getConnectionTimeout();
-
-                req.ontimeout = function () {
-                    reject("GAL Search timeout");
-                };
-
-                req.onerror = function () {
-                    reject("GAL Search Error");
-                };
-
-                req.onload = function() {
-                    let response = req.responseText;
+        for (let i=0; i < 2; i++) {
+            try {
+                let response = await new Promise(function(resolve, reject) {
+                    // Create request handler - API changed with TB60 to new XMKHttpRequest()
+                    let req = new XMLHttpRequest();
+                    req.mozBackgroundRequest = true;
+                    req.open("POST", eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
+                    req.overrideMimeType("text/plain");
+                    req.setRequestHeader("User-Agent", userAgent);
+                    req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
                     
-                    switch(req.status) {
-
-                        case 200: //OK
-                            eas.network.logXML(response, "Received (GAL Search");
-
-                            //What to do on error? IS this an error? Yes!
-                            if (response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
-                                TbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + req.status + ", ready state = " + req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
-                                reject("GAL Search Response Invalid");
-                            } else {
-                                resolve(response);
-                            }
-                            break;
-                          
-                        default:
-                            reject("GAL Search Failed: " + req.status);
+                    if (authData.password) {
+                        if (eas.network.getOAuthData(accountData.getAccountProperty("host"))) {
+                            req.setRequestHeader("Authorization", 'Bearer ' + TbSync.passwordManager.getOAuthToken(authData.password));
+                        } else {
+                            req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
+                        }
                     }
-                };
+                    
+                    if (accountData.getAccountProperty("asversion") == "2.5") {
+                        req.setRequestHeader("MS-ASProtocolVersion", "2.5");
+                    } else {
+                        req.setRequestHeader("MS-ASProtocolVersion", "14.0");
+                    }
+                    req.setRequestHeader("Content-Length", wbxml.length);
+                    if (accountData.getAccountProperty("provision")) {
+                        req.setRequestHeader("X-MS-PolicyKey", accountData.getAccountProperty("policykey"));
+                        TbSync.dump("PolicyKey used", accountData.getAccountProperty("policykey"));
+                    }
 
-                req.send(wbxml);
-                
-            });
-            return response;
-        } catch (e) {
-            Components.utils.reportError(e);
-            return;
+                    req.timeout = eas.Base.getConnectionTimeout();
+
+                    req.ontimeout = function () {
+                        reject("GAL Search timeout");
+                    };
+
+                    req.onerror = function () {
+                        reject("GAL Search Error");
+                    };
+
+                    req.onload = function() {
+                        let response = req.responseText;
+                        
+                        switch(req.status) {
+
+                            case 200: //OK
+                                eas.network.logXML(response, "Received (GAL Search");
+
+                                //What to do on error? IS this an error? Yes!
+                                if (response.length !== 0 && response.substr(0, 4) !== String.fromCharCode(0x03, 0x01, 0x6A, 0x00)) {
+                                    TbSync.dump("Recieved Data", "Expecting WBXML but got junk (request status = " + req.status + ", ready state = " + req.readyState + "\n>>>>>>>>>>\n" + response + "\n<<<<<<<<<<\n");
+                                    reject("GAL Search Response Invalid");
+                                } else {
+                                    resolve(response);
+                                }
+                                break;
+                              
+                            case 401: // bad auth
+                                    resolve("401");
+                                break;
+                                
+                            default:
+                                reject("GAL Search Failed: " + req.status);
+                        }
+                    };
+
+                    req.send(wbxml);
+                    
+                });
+
+                if (response === "401") {
+                    // try to recover from bad auth via token refresh
+                    let oauthData = eas.network.getOAuthData(accountData.getAccountProperty("host"), authData.user, accountData.accountID);
+                    if (oauthData) {
+                        let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password, true /* do not prompt but only try to refresh */);
+                        if (oauth && oauth.tokens && !oauth.error) {
+                            authData.updateLoginData(authData.user, oauth.tokens);
+                            continue;
+                        }
+                    }
+                }                    
+
+                return response;
+            } catch (e) {
+                Components.utils.reportError(e);
+                return;
+            }
         }
     },
 
