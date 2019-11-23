@@ -120,7 +120,7 @@ var tbSyncEasNewAccount = {
             if (oauthData) {
                 // ask for token
                 document.getElementById("tbsync.spinner").hidden = true;
-                let oauth = await TbSync.passwordManager.asyncOAuthPrompt(oauthData, eas.openWindows);
+                let oauth = await eas.network.asyncOAuthPrompt(oauthData, eas.openWindows);
                 if (oauth && oauth.tokens && !oauth.error) {
                     password = oauth.tokens;
                 } else {
