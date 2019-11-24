@@ -43,6 +43,10 @@ var network = {
                 // Also update the username of this account. Add dedicated username setter?
                 accountData.setAccountProperty("user", newUsername);
             },          
+
+            removeLoginData: function() {
+              TbSync.passwordManager.removeLoginInfos(this.host, "TbSync/EAS");
+            }
         };
         return authData;
     },  
