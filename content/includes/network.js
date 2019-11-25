@@ -8,6 +8,8 @@
  
  "use strict";
 
+var { OAuth2_1 } = ChromeUtils.import("chrome://eas4tbsync/content/OAuth2_1.jsm");
+
 var network = {  
     
     getEasURL: function(accountData) {
@@ -50,87 +52,174 @@ var network = {
         };
         return authData;
     },  
-
-
-    /* TOFDO: Rework and simplify using OAuth2.jsm ! */
     
-    getOAuthData: function(url, user = "", windowID = "") {
-        let oauthData = false;
-        
-        if (url) {
-            switch (url) {
+  // prepare and patch OAuth2 object
+  getOAuthObj: function(configObject = null) {
+    let accountname, user, host;
+    
+    let accountData = (configObject && configObject.hasOwnProperty("accountData")) ? configObject.accountData : null;
+    if (accountData) {
+      accountname = accountData.getAccountProperty("accountname");
+      user = accountData.getAccountProperty("user");
+      host = accountData.getAccountProperty("host");
+    } else {
+      accountname = (configObject && configObject.hasOwnProperty("accountname")) ? configObject.accountname : "";
+      user = (configObject && configObject.hasOwnProperty("user")) ? configObject.user : "";
+      host = (configObject && configObject.hasOwnProperty("host")) ? configObject.host : "";
+    }
 
-                // OAUTH authentication against outlook.com does not seem to work.
-                // case "eas.outlook.com":
-                // {
-                // }
-                // break;
-
-                // Currently we only support Office365 ExchangeOnline
-                case "outlook.office365.com":
-                {       
-                    let redirect_uri = "https://login.microsoftonline.com/common/oauth2/nativeclient";
-                    let client_id = "2980deeb-7460-4723-864a-f9b0f10cd992";
-                    let scope =  "offline_access https://outlook.office.com/EAS.AccessAsUser.All"; //offline_access gives us a refresh_token
-                
-                    oauthData = {
-                        auth: {
-                            url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-                            redirectUrl: redirect_uri,
-                            requestParameters: {
-                                client_id,
-                                response_type: "code",
-                                redirect_uri,
-                                scope,
-                                prompt: "consent",
-                                login_hint: user
-                            },
-                            responseFields: {
-                                authToken: "code",
-                                error: "error_description"
-                            }                        
-                        },
-                        
-                        access: {
-                            url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-                            requestParameters: {
-                                client_id,
-                                scope,
-                                redirect_uri,
-                                grant_type: "authorization_code",
-                                code: null // a value of null indicates the token field
-                            },
-                            responseFields: {
-                                accessToken: "access_token",
-                                refreshToken: "refresh_token",
-                            }                        
-                        },
-                        
-                        refresh: {
-                            url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-                            requestParameters: {
-                                client_id,
-                                scope,
-                                grant_type: "refresh_token",
-                                refresh_token: null // a value of null indicates the token field
-                            },
-                            responseFields: {
-                                accessToken: "access_token",
-                                refreshToken: "refresh_token",
-                            }
-                        },                        
-                        
-                        windowID: "auth:" + windowID,
-                    }
-                }
-                break;
-            }
+    let config = {};
+    switch (host) {
+      case "outlook.office365.com":
+        config = {
+          auth_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+          token_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+          redirect_uri : "https://login.microsoftonline.com/common/oauth2/nativeclient",
+          scope : "offline_access https://outlook.office.com/EAS.AccessAsUser.All",
+          client_id : "2980deeb-7460-4723-864a-f9b0f10cd992",
         }
-        
-        return oauthData;
-    },
+        break;
+      
+      default:
+        return null;
+    }
 
-    getOAuthToken: function(currentTokenString, type = "access") {
+    let oauth = new OAuth2_1("", config.scope, config.client_id, config.client_secret);
+    oauth.requestWindowFeatures = "chrome,private,centerscreen,width=500,height=750";
+
+    // The v2 endpoints are different and need manual override
+    oauth.authURI = config.auth_uri ;
+    oauth.tokenURI = config.token_uri;
+    oauth.completionURI = config.redirect_uri;
+    
+    oauth.extraAuthParams = [
+      ["prompt", "consent"],
+      ["login_hint", user],
+    ];
+        
+    if (accountname) {
+      oauth.requestWindowTitle = "TbSync account <" + accountname + "> requests authorization.";
+    } else {
+      oauth.requestWindowTitle = "A TbSync account requests authorization.";
+    }      
+
+    
+    
+    
+    /* Adding custom methods to the oauth object */ 
+
+    oauth.asyncConnect = async function(rv) {
+      let self = this;
+      rv.error = "";
+      rv.tokens = "";
+
+      // If multiple resources need to authenticate they will all end here, even though they
+      // might share the same token. Due to the async nature, each process will refresh
+      // "its own" token again, which is not needed. We force clear the token here and each
+      // final connect process will actually check the acccessToken and abort the refresh, 
+      // if it is already there, generated by some other process. 
+      if (self.accessToken) self.accessToken = "";
+      
+      try {
+        await new Promise(function(resolve, reject) {
+          // refresh = false will do nothing and resolve immediately, if an accessToken
+          // exists already, which must have been generated by another process, as
+          // we cleared it beforehand.
+          self.connect(resolve, reject, /* with UI */ true, /* refresh */ false);
+        });
+        rv.tokens = self.tokens;
+        return true;
+      } catch (e) {
+        console.log("[OAuth] asyncConnect failed: " + e);
+        rv.error = e;
+      }
+      
+      try {
+        switch (JSON.parse(rv.error).error) {
+          case "cancelled": 
+          case "invalid_grant": 
+            rv.error = "OAuthAbortError"; 
+            break;
+          
+          default:
+            rv.error = "OAuthServerError::"+rv.error; 
+            break;
+        }
+      } catch (e) {
+        rv.error = "OAuthServerError::"+rv.error; 
+      }
+      return false;
+    };
+
+    oauth.isExpired = function() {
+      const OAUTH_GRACE_TIME = 30 * 1000;
+      return (this.tokenExpires - OAUTH_GRACE_TIME < new Date().getTime());
+    };
+    
+    const OAUTHVALUES = [
+      ["access", "", "accessToken"], 
+      ["refresh", "", "refreshToken"], 
+      ["expires", Number.MAX_VALUE, "tokenExpires"],
+    ];
+        
+    // returns a JSON string containing all the oauth values
+    Object.defineProperty(oauth, "tokens", {
+      get: function() {
+        let tokensObj = {};
+        for (let oauthValue of OAUTHVALUES) {
+          // use the system value or if not defined the default
+          tokensObj[oauthValue[0]] = this[oauthValue[2]] || oauthValue[1];
+        }
+        return JSON.stringify(tokensObj);
+      },
+      enumerable: true,
+    });
+    
+    if (accountData) {      
+      // authData allows us to access the password manager values belonging to this account/calendar
+      // simply by authdata.username and authdata.password
+      oauth.authData = TbSync.providers.dav.network.getAuthData(accountData);        
+
+      oauth.parseAndSanitizeTokenString = function(tokenString) {
+        let _tokensObj = {};
+        try {
+          _tokensObj = JSON.parse(tokenString);
+        } catch (e) {}
+
+        let tokensObj = {};
+        for (let oauthValue of OAUTHVALUES) {
+          // use the provided value or if not defined the default
+          tokensObj[oauthValue[0]] = (_tokensObj && _tokensObj.hasOwnProperty(oauthValue[0]))
+            ? _tokensObj[oauthValue[0]]
+            : oauthValue[1];
+        }
+        return tokensObj;
+      };
+      
+      // Define getter/setter to act on the password manager password value belonging to this account/calendar
+      for (let oauthValue of OAUTHVALUES) {
+        Object.defineProperty(oauth, oauthValue[2], {
+          get: function() {
+            return this.parseAndSanitizeTokenString(this.authData.password)[oauthValue[0]];
+          },
+          set: function(val) {
+            let tokens = this.parseAndSanitizeTokenString(this.authData.password);
+            let valueChanged = (val != tokens[oauthValue[0]])
+            if (valueChanged) {
+              console.log("[OAuth] Updating <" + accountID + " / " + oauthValue[0] + ">: " + val);
+              tokens[oauthValue[0]] = val;
+              this.authData.updateLoginData(this.authData.username, JSON.stringify(tokens));
+            }
+          },
+          enumerable: true,
+        });
+      }
+    }
+    
+    return oauth;
+  },    
+
+    getOAuthValue: function(currentTokenString, type = "access") {
         try {
             let tokens = JSON.parse(currentTokenString);
             if (tokens.hasOwnProperty(type))
@@ -140,154 +229,6 @@ var network = {
         }
         return "";
     },
-    
-    // returns obj: {error, tokens}
-    // https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow#refresh-the-access-token
-    asyncOAuthPrompt: async function(data, reference, currentTokenString = "", refreshOnly = false) {
-        if (data.windowID) {      
-         
-            // Before actually asking the user again, assume we have a refresh token, and can get a new token silently
-            let step2Url = data.refresh.url;
-            let step2RequestParameters = data.refresh.requestParameters;
-            let step2ResponseFields = data.refresh.responseFields;
-            let step2Token = eas.network.getOAuthToken(currentTokenString, "refresh");
-
-            if (!step2Token) {
-                if (refreshOnly) {
-                    return {
-                        error: "RefreshOnlyButRefreshFailed", 
-                        tokens: JSON.stringify({access: "", refresh: ""})
-                    }
-                }
-                
-                let parameters = [];
-                for (let key of Object.keys(data.auth.requestParameters)) {
-                    parameters.push(key + "=" + encodeURIComponent(data.auth.requestParameters[key])); 
-                }
-                let authUrl = data.auth.url + "?" + parameters.join("&");      
-                reference[data.windowID] = TbSync.window.openDialog(authUrl, "TbSyncOAuthPrompt:" + data.windowID, "centerscreen,chrome,width=500,height=700");
-                let timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-
-                // Try to get an auth token
-                const {authToken, errorStep1} = await new Promise(function(resolve, reject) {
-                    var loaded = false;
-                    
-                    let event = { 
-                        notify: function(timer) {
-                            let done = false;
-                            let rv = {};
-
-                            try {
-                                let url = reference[data.windowID].location.href;
-                                
-                                // Must be set after accessing the location.href (which might fail).
-                                loaded = true;
-                                
-                                // Abort, if we hit the redirectUrl
-                                if (url.startsWith(data.auth.redirectUrl)) {
-                                    let parts = url.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-                                        rv[key] = decodeURIComponent(value);
-                                    });
-                                    done = true;                
-                                }
-                            } catch (e) {
-                                // Did the window has been loaded, but the user closed it?
-                                if (loaded) {
-                                    done = "OAuthAbortError";
-                                }
-                                //Components.utils.reportError(e);
-                            }
-                            
-                            if (done) {
-                                timer.cancel();
-
-                                let errorStep1 = "";
-                                if (done !==true) errorStep1 = done;
-                                else if (rv.hasOwnProperty(data.auth.responseFields.error) && rv[data.auth.responseFields.error]) errorStep1 =  rv[data.auth.responseFields.error];
-                                resolve({authToken: rv[data.auth.responseFields.authToken], errorStep1});
-                            }
-                            
-                        }
-                    }
-                    
-                    timer.initWithCallback(event, 200, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);          
-                });
-                
-                
-                // Try to close the window.
-                try {
-                    reference[data.windowID].close();
-                    reference[data.windowID] = null;
-                } catch (e) {
-                    //Components.utils.reportError(e);
-                }
-             
-                if (errorStep1) {
-                    return {
-                        error: errorStep1, 
-                        tokens: JSON.stringify({access: "", refresh: ""})
-                    }
-                }
-                
-                // switch step2 from "refresh token" to "get access token"
-                step2Url = data.access.url;
-                step2RequestParameters = data.access.requestParameters;
-                step2ResponseFields = data.access.responseFields;
-                step2Token = authToken;
-            }
-
-            
-            // Try to get new access and refresh token
-            const {access , refresh, errorStep2} = await new Promise(function(resolve, reject) {
-                let req = new XMLHttpRequest();
-                req.mozBackgroundRequest = true;
-                req.open("POST", data.access.url, true);
-                req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded"); // POST data needs to be urlencoded!
-
-                req.onerror = function () {
-                    resolve({access: "", refresh: "", errorStep2: "OAuthNetworkError"});
-                };
-
-                let parameters = [];
-                for (let key of Object.keys(step2RequestParameters)) {
-                    // a parameter value of null indicates the token field
-                    parameters.push(key + "=" + (step2RequestParameters[key] === null ? encodeURIComponent(step2Token) : encodeURIComponent(step2RequestParameters[key]))); 
-                }
-                
-                req.onload = function() {              
-                        switch(req.status) {
-                                case 200: //OK
-                                    {
-                                        let tokens = JSON.parse(req.responseText);
-                                        // the refresh-token may or may not be renewed
-                                        let _access = tokens[step2ResponseFields.accessToken];
-                                        let _refresh = (step2ResponseFields.hasOwnProperty("refreshToken") && tokens.hasOwnProperty(step2ResponseFields.refreshToken)) ? tokens[step2ResponseFields.refreshToken] : step2Token;
-                                        resolve({access: _access, refresh: _refresh, errorStep2: ""});
-                                    }                      
-                                    break;
-                                    
-                                default:
-                                    resolve({access: "", refresh: "", errorStep2: "OAuthHttpError::"+ req.status});
-                        }
-                };
-
-                req.send(parameters.join("&"));
-            });
-
-            return {
-                error: errorStep2, 
-                tokens: JSON.stringify({access, refresh})
-            };
-
-        }
-        
-        throw new Error ("eas.network.asyncOAuthPrompt() is missing a windowID");
-    },
-
-
-
-
-
 
     sendRequest: async function (wbxml, command, syncData, allowSoftFail = false) {
         let ALLOWED_RETRIES = {
@@ -304,28 +245,23 @@ var network = {
                 if (ALLOWED_RETRIES[rv.errorType] > 0) {
                     ALLOWED_RETRIES[rv.errorType]--;
                     
-                    let authData = eas.network.getAuthData(syncData.accountData);
-                    let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
 
                     switch (rv.errorType) {
                         
                         case "PasswordPrompt": 
                         {
-                            let credentials = null;
                             let syncState = syncData.getSyncState().state; 
+                            let oauthData = eas.network.getOAuthObj({ accountData: syncData.accountData });
                             
                             if (oauthData) {
-                                syncData.setSyncState("oauthprompt");
-                                let oauth = await eas.network.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
-                                
-                                credentials = {username: authData.user, password: " "};
-                                if (oauth && oauth.tokens && !oauth.error) {
-                                    credentials = {username: authData.user, password: oauth.tokens};
+                                syncData.setSyncState("oauthprompt");                                
+                                let rv = {}
+                                if (await oauthData.asyncConnect(rv)) {
                                     retry = true;
-                                } else if (oauth && oauth.error) {
-                                    // Override standard password error with error received from asyncOAuthPrompt().
-                                    rv.errorObj = eas.sync.finish("error", oauth.error);                                }
+                                } else {
+                                    rv.errorObj = eas.sync.finish("error", rv.error);                                }
                             } else {
+                                let authData = eas.network.getAuthData(syncData.accountData);
                                 syncData.setSyncState("passwordprompt");
                                 let promptData = {
                                     windowID: "auth:" + syncData.accountData.accountID,
@@ -333,13 +269,13 @@ var network = {
                                     usernameLocked: syncData.accountData.isConnected(),
                                     username: authData.user
                                 }
-                                credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
-                                if (credentials) retry = true;
+                                let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                                if (credentials) {
+                                  retry = true;
+                                  authData.updateLoginData(credentials.username, credentials.password);
+                                }
                             }
-                            
-                            if (credentials) {
-                                authData.updateLoginData(credentials.username, credentials.password);
-                            }
+
                             syncData.setSyncState(syncState);
                         }
                         break;
@@ -411,8 +347,8 @@ var network = {
             syncData.req.setRequestHeader("User-Agent", userAgent);
             syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
             if (connection.password) {
-                if (eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"))) {
-                    syncData.req.setRequestHeader("Authorization", 'Bearer ' + eas.network.getOAuthToken(connection.password));
+                if (eas.network.getOAuthObj({ accountData: syncData.accountData })) {
+                    syncData.req.setRequestHeader("Authorization", 'Bearer ' + eas.network.getOAuthValue(connection.password, "access"));
                 } else {
                     syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(connection.user + ':' + connection.password));
                 }
@@ -977,8 +913,8 @@ var network = {
                     req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
                     
                     if (authData.password) {
-                        if (eas.network.getOAuthData(accountData.getAccountProperty("host"))) {
-                            req.setRequestHeader("Authorization", 'Bearer ' + eas.network.getOAuthToken(authData.password));
+                        if (eas.network.getOAuthObj({ accountData })) {
+                            req.setRequestHeader("Authorization", 'Bearer ' + eas.network.getOAuthValue(authData.password, "access"));
                         } else {
                             req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
                         }
@@ -1037,11 +973,10 @@ var network = {
 
                 if (response === "401") {
                     // try to recover from bad auth via token refresh
-                    let oauthData = eas.network.getOAuthData(accountData.getAccountProperty("host"), authData.user, accountData.accountID);
+                    let oauthData = eas.network.getOAuthObj({ accountData });
                     if (oauthData) {
-                        let oauth = await eas.network.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password, true /* do not prompt but only try to refresh */);
-                        if (oauth && oauth.tokens && !oauth.error) {
-                            authData.updateLoginData(authData.user, oauth.tokens);
+                        let rv = {};
+                        if (await oauthData.asyncConnect(rv)) {
                             continue;
                         }
                     }
@@ -1085,8 +1020,8 @@ var network = {
                 syncData.req.overrideMimeType("text/plain");
                 syncData.req.setRequestHeader("User-Agent", userAgent);            
                 if (authData.password) {
-                    if (eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"))) {
-                        syncData.req.setRequestHeader("Authorization", 'Bearer ' + eas.network.getOAuthToken(authData.password));
+                    if (eas.network.getOAuthObj({ accountData: syncData.accountData })) {
+                        syncData.req.setRequestHeader("Authorization", 'Bearer ' + eas.network.getOAuthValue(authData.password, "access"));
                     } else {
                         syncData.req.setRequestHeader("Authorization", 'Basic ' + TbSync.tools.b64encode(authData.user + ':' + authData.password));
                     }
@@ -1152,37 +1087,32 @@ var network = {
             
             if (result && result.hasOwnProperty("errorType") && result.errorType == "PasswordPrompt") {
                 if (allowedRetries > 0) {
-                    let credentials = null;
-                    let authData = eas.network.getAuthData(syncData.accountData);
                     let syncState = syncData.getSyncState().state; 
                     syncData.setSyncState("passwordprompt");
 
-                    let oauthData = eas.network.getOAuthData(syncData.accountData.getAccountProperty("host"), authData.user, syncData.accountData.accountID);
-                    if (oauthData) {
-                        let oauth = await eas.network.asyncOAuthPrompt(oauthData, eas.openWindows, authData.password);
-                        
-                        credentials = {username: authData.user, password: " "};
-                        if (oauth && oauth.tokens && !oauth.error) {
-                            credentials = {username: authData.user, password: oauth.tokens};
+                    let oauthData = eas.network.getOAuthObj({ accountData: syncData.accountData });
+                    if (oauthData) {                        
+                        let rv = {};
+                        if (await oauthData.asyncConnect(rv)) {
                             retry = true;                            
-                        } else if (oauth && oauth.error) {
-                            // Override standard password error with error received from asyncOAuthPrompt().
-                            result.errorObj = eas.sync.finish("error", oauth.error);
+                        } else {
+                            result.errorObj = eas.sync.finish("error", rv.error);
                         }
                     } else {
+                        let authData = eas.network.getAuthData(syncData.accountData);
                         let promptData = {
                             windowID: "auth:" + syncData.accountData.accountID,
                             accountname: syncData.accountData.getAccountProperty("accountname"),
                             usernameLocked: syncData.accountData.isConnected(),
                             username: authData.user
                         }
-                        credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
-                        if (credentials) retry = true;
+                        let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
+                        if (credentials) {
+                          authData.updateLoginData(credentials.username, credentials.password);
+                          retry = true;
+                        }
                     }
                     
-                    if (credentials) {
-                        authData.updateLoginData(credentials.username, credentials.password);
-                    }
                     syncData.setSyncState(syncState);
                 }
 

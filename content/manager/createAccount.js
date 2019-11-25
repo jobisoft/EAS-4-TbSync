@@ -116,17 +116,16 @@ var tbSyncEasNewAccount = {
             updateTimer.initWithCallback({notify : function () {tbSyncEasNewAccount.updateAutodiscoverStatus()}}, 1000, 3);
 
             let v2 = await eas.network.getServerConnectionViaAutodiscoverV2JsonRequest("https://autodiscover-s.outlook.com/autodiscover/autodiscover.json?Email="+encodeURIComponent(user)+"&Protocol=ActiveSync");
-            let oauthData = eas.network.getOAuthData(v2.server, user, "auth:wizard");
+            let oauthData = eas.network.getOAuthObj({ host: v2.server, user, accountname });
             if (oauthData) {
                 // ask for token
                 document.getElementById("tbsync.spinner").hidden = true;
-                let oauth = await eas.network.asyncOAuthPrompt(oauthData, eas.openWindows);
-                if (oauth && oauth.tokens && !oauth.error) {
-                    password = oauth.tokens;
+                let rv = {};
+                if (await oauthData.asyncConnect(rv)) {
+                    password = rv.tokens;
                 } else {
-                    error = TbSync.getString("status."+oauth.error, "eas");
+                    error = TbSync.getString("status."+rv.error, "eas");
                 }
-
                 document.getElementById("tbsync.spinner").hidden = false;                
                 url=v2.server;
             } else {            
