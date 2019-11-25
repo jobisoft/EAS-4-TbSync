@@ -55,17 +55,19 @@ var network = {
     
   // prepare and patch OAuth2 object
   getOAuthObj: function(configObject = null) {
-    let accountname, user, host;
+    let accountname, user, host, accountID;
     
     let accountData = (configObject && configObject.hasOwnProperty("accountData")) ? configObject.accountData : null;
     if (accountData) {
       accountname = accountData.getAccountProperty("accountname");
       user = accountData.getAccountProperty("user");
       host = accountData.getAccountProperty("host");
+      accountID = accountData.accountID;
     } else {
       accountname = (configObject && configObject.hasOwnProperty("accountname")) ? configObject.accountname : "";
       user = (configObject && configObject.hasOwnProperty("user")) ? configObject.user : "";
       host = (configObject && configObject.hasOwnProperty("host")) ? configObject.host : "";
+      accountID = "";
     }
 
     let config = {};
@@ -178,7 +180,7 @@ var network = {
     if (accountData) {      
       // authData allows us to access the password manager values belonging to this account/calendar
       // simply by authdata.username and authdata.password
-      oauth.authData = TbSync.providers.dav.network.getAuthData(accountData);        
+      oauth.authData = TbSync.providers.eas.network.getAuthData(accountData);        
 
       oauth.parseAndSanitizeTokenString = function(tokenString) {
         let _tokensObj = {};
@@ -206,9 +208,9 @@ var network = {
             let tokens = this.parseAndSanitizeTokenString(this.authData.password);
             let valueChanged = (val != tokens[oauthValue[0]])
             if (valueChanged) {
-              console.log("[OAuth] Updating <" + accountID + " / " + oauthValue[0] + ">: " + val);
+              console.log("[OAuth] Updating <" + this.authData.user + " / " + accountID + " / " + oauthValue[0] + ">: " + val);
               tokens[oauthValue[0]] = val;
-              this.authData.updateLoginData(this.authData.username, JSON.stringify(tokens));
+              this.authData.updateLoginData(this.authData.user, JSON.stringify(tokens));
             }
           },
           enumerable: true,
