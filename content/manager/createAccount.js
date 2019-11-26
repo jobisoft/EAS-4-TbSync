@@ -120,11 +120,11 @@ var tbSyncEasNewAccount = {
             if (oauthData) {
                 // ask for token
                 document.getElementById("tbsync.spinner").hidden = true;
-                let rv = {};
-                if (await oauthData.asyncConnect(rv)) {
-                    password = rv.tokens;
+                let _rv = {};
+                if (await oauthData.asyncConnect(_rv)) {
+                    password = _rv.tokens;
                 } else {
-                    error = TbSync.getString("status."+rv.error, "eas");
+                    error = TbSync.getString("status." + _rv.error, "eas");
                 }
                 document.getElementById("tbsync.spinner").hidden = false;                
                 url=v2.server;

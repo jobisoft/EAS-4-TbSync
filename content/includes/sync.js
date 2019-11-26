@@ -75,7 +75,7 @@ var sync = {
         if (syncData.accountData.getAccountProperty("asversion", "") == "" || (Date.now() - syncData.accountData.getAccountProperty("lastEasOptionsUpdate")) > 86400000 ) {
             await eas.network.getServerOptions(syncData);
         }
-                        
+
         //only update the actual used asversion, if we are currently not connected or it has not yet been set
         if (syncData.accountData.getAccountProperty("asversion", "") == "" || !syncData.accountData.isConnected()) {
             //eval the currently in the UI selected EAS version

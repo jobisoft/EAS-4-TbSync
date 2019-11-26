@@ -132,14 +132,18 @@ var network = {
         rv.tokens = self.tokens;
         return true;
       } catch (e) {
-        console.log("[OAuth] asyncConnect failed: " + e);
-        rv.error = e;
+        rv.error = eas.tools.isString(e) ? e : JSON.stringify(e);
+        console.log("[OAuth] asyncConnect failed: " + rv.error );
       }
       
       try {
         switch (JSON.parse(rv.error).error) {
+          case "invalid_grant":
+            self.accessToken = "";
+            self.refreshToken = "";
+            return true;
+
           case "cancelled": 
-          case "invalid_grant": 
             rv.error = "OAuthAbortError"; 
             break;
           
@@ -149,6 +153,7 @@ var network = {
         }
       } catch (e) {
         rv.error = "OAuthServerError::"+rv.error; 
+        Components.utils.reportError(e);
       }
       return false;
     };
@@ -239,6 +244,9 @@ var network = {
         }
         
         let rv = {};
+        let oauthData = eas.network.getOAuthObj({ accountData: syncData.accountData });
+        let syncState = syncData.getSyncState().state; 
+        
         for (;;) {
 
             if (rv.errorType) {                
@@ -252,16 +260,10 @@ var network = {
                         
                         case "PasswordPrompt": 
                         {
-                            let syncState = syncData.getSyncState().state; 
-                            let oauthData = eas.network.getOAuthObj({ accountData: syncData.accountData });
                             
                             if (oauthData) {
-                                syncData.setSyncState("oauthprompt");                                
-                                let rv = {}
-                                if (await oauthData.asyncConnect(rv)) {
-                                    retry = true;
-                                } else {
-                                    rv.errorObj = eas.sync.finish("error", rv.error);                                }
+                                oauthData.accessToken = "";
+                                retry = true;                                
                             } else {
                                 let authData = eas.network.getAuthData(syncData.accountData);
                                 syncData.setSyncState("passwordprompt");
@@ -277,14 +279,13 @@ var network = {
                                   authData.updateLoginData(credentials.username, credentials.password);
                                 }
                             }
-
-                            syncData.setSyncState(syncState);
                         }
                         break;
                         
                         case "NetworkError":
                         {
-                            // Could not connect to server. Can we rerun autodiscover?       
+                            // Could not connect to server. Can we rerun autodiscover?
+                            // Note: Autodiscover is currently not supported by OAuth
                             if (syncData.accountData.getAccountProperty( "servertype") == "auto" && !oauthData) {
                                 let errorcode = await eas.network.updateServerConnectionViaAutodiscover(syncData);
                                 console.log("ERR: " + errorcode);
@@ -308,6 +309,19 @@ var network = {
                 if (!retry) throw rv.errorObj;
             }
             
+            // check OAuth situation before connecting
+            if (oauthData && (!oauthData.accessToken || oauthData.isExpired())) {
+                syncData.setSyncState("oauthprompt");                                
+                let _rv = {}
+                if (!(await oauthData.asyncConnect(_rv))) {
+                    throw eas.sync.finish("error", _rv.error); 
+                }
+            }            
+            
+            // Return to original syncstate
+            if (syncState != syncData.getSyncState().state) {
+                syncData.setSyncState(syncState);
+            }
             rv = await this.sendRequestPromise(wbxml, command, syncData, allowSoftFail);
             
             if (rv.errorType) {
@@ -897,6 +911,7 @@ var network = {
         let command = "Search";
         
         let authData = eas.network.getAuthData(accountData);
+        let oauthData = eas.network.getOAuthObj({ accountData });
         let userAgent = accountData.getAccountProperty("useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
         let deviceType = accountData.getAccountProperty("devicetype");
         let deviceId = accountData.getAccountProperty("deviceId");
@@ -904,6 +919,14 @@ var network = {
         TbSync.dump("Sending (EAS v" + accountData.getAccountProperty("asversion") +")", "POST " + eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +deviceType + '&DeviceId=' + deviceId, true);
         
         for (let i=0; i < 2; i++) {
+            // check OAuth situation before connecting
+            if (oauthData && (!oauthData.accessToken || oauthData.isExpired())) {
+                let _rv = {}
+                if (!(await oauthData.asyncConnect(_rv))) {
+                    throw eas.sync.finish("error", _rv.error); 
+                }
+            } 
+            
             try {
                 let response = await new Promise(function(resolve, reject) {
                     // Create request handler - API changed with TB60 to new XMKHttpRequest()
@@ -975,12 +998,9 @@ var network = {
 
                 if (response === "401") {
                     // try to recover from bad auth via token refresh
-                    let oauthData = eas.network.getOAuthObj({ accountData });
                     if (oauthData) {
-                        let rv = {};
-                        if (await oauthData.asyncConnect(rv)) {
-                            continue;
-                        }
+                        oauthData.accessToken = "";
+                        continue;
                     }
                 }                    
 
@@ -1012,8 +1032,19 @@ var network = {
         
         let allowedRetries = 5;
         let retry;
+        let oauthData = eas.network.getOAuthObj({ accountData: syncData.accountData });
+        
         do {
             retry = false;
+            
+            // Check OAuth situation before connecting
+            if (oauthData && (!oauthData.accessToken || oauthData.isExpired())) {
+                let _rv = {};
+                syncData.setSyncState("oauthprompt");                                
+                if (!(await oauthData.asyncConnect(_rv))) {
+                    throw eas.sync.finish("error", _rv.error);
+                }
+            }
             
             let result = await new Promise(function(resolve,reject) {
                 syncData.req = new XMLHttpRequest();
@@ -1089,18 +1120,11 @@ var network = {
             
             if (result && result.hasOwnProperty("errorType") && result.errorType == "PasswordPrompt") {
                 if (allowedRetries > 0) {
-                    let syncState = syncData.getSyncState().state; 
-                    syncData.setSyncState("passwordprompt");
-
-                    let oauthData = eas.network.getOAuthObj({ accountData: syncData.accountData });
-                    if (oauthData) {                        
-                        let rv = {};
-                        if (await oauthData.asyncConnect(rv)) {
-                            retry = true;                            
-                        } else {
-                            result.errorObj = eas.sync.finish("error", rv.error);
-                        }
+                    if (oauthData) {
+                        oauthData.accessToken = "";
+                        retry = true;                            
                     } else {
+                        syncData.setSyncState("passwordprompt");
                         let authData = eas.network.getAuthData(syncData.accountData);
                         let promptData = {
                             windowID: "auth:" + syncData.accountData.accountID,
@@ -1114,8 +1138,6 @@ var network = {
                           retry = true;
                         }
                     }
-                    
-                    syncData.setSyncState(syncState);
                 }
 
                 if (!retry) {
