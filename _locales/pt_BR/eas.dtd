@@ -41,10 +41,10 @@
 <!ENTITY pref.seperator.description "Separador para campo de endereço de múltiplas linhas.">
 <!ENTITY pref.displayoverride "Substituir nome de exibição com Nome + Segundo nome">
 
-<!ENTITY servertype.select "--- Please Select ---">
+<!ENTITY servertype.select "--- Selecione ---">
 <!ENTITY servertype.auto "Configuração automática via Autodiscover do ActiveSync">
 <!ENTITY servertype.custom "Configuração personalizada">
-<!ENTITY servertype.office365 "Microsoft Office 365 (Modern Authentication)">
+<!ENTITY servertype.office365 "Microsoft Office 365 (Autenticação Moderna)">
 <!ENTITY servertype.unlock "Clique duas vezes para desbloquear todas as configurações do servidor predefinidas.">
 
 <!ENTITY abCard.MiddleName "Nome do meio:">
