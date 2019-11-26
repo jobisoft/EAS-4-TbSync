@@ -41,8 +41,10 @@
 <!ENTITY pref.seperator.description "Több címsort tartalmazó elválasztó.">
 <!ENTITY pref.displayoverride "A megjelenítési név felülbírálása „keresztnév” és „második keresztnév”">
 
+<!ENTITY servertype.select "--- Please Select ---">
 <!ENTITY servertype.auto "Önműködő beállítás az ActiveSync önműködő felismerésével">
 <!ENTITY servertype.custom "Egyéni beállítások">
+<!ENTITY servertype.office365 "Microsoft Office 365 (Modern Authentication)">
 <!ENTITY servertype.unlock "Dupla kattintson az összes előre meghatározott kiszolgáló beállításának feloldásához.">
 
 <!ENTITY abCard.MiddleName "Második keresztnév:">
