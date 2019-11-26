@@ -32,10 +32,11 @@
                     <vbox pack="center"><label value="&add.server;" /></vbox>
                     <menulist id="tbsync.newaccount.servertype" oncommand="tbSyncEasNewAccount.onUserDropdown();">
                         <menupopup>
+                            <menuitem label="&servertype.select;" value="select" hidden="true"/>
                             <menuitem label="&servertype.auto;" value="auto" />
                             <menuitem label="&servertype.custom;" value="custom" />
-                            <!--menuseparator/>
-                            <menuitem label="&servertype.outlook.com;" value="outlook.com" /-->
+                            <menuseparator/>
+                            <menuitem label="&servertype.office365;" value="office365" />
                         </menupopup>
                     </menulist>
                 </row>
@@ -44,7 +45,7 @@
                     <vbox pack="center"><label value="&add.name;" /></vbox>
                     <textbox id="tbsync.newaccount.name" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
                 </row>
-                <row>
+                <row id="tbsync.newaccount.user.box">
                     <vbox pack="center"><label value="&add.user;" /></vbox>
                     <textbox id="tbsync.newaccount.user" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
                 </row>

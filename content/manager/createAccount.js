@@ -40,15 +40,10 @@ var tbSyncEasNewAccount = {
         this.elementServertype = document.getElementById('tbsync.newaccount.servertype');
         
         document.documentElement.getButton("back").hidden = true;
-        document.documentElement.getButton("finish").disabled = true;
-        document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_auto","eas");
+        this.onUserDropdown();
 
         document.getElementById("tbsync.error").hidden = true;
         document.getElementById("tbsync.spinner").hidden = true;
-
-        document.getElementById('tbsync.newaccount.url.box').style.visibility =  (this.elementServertype.value != "custom") ? "hidden" : "visible";
-        document.getElementById('tbsync.newaccount.password.box').style.visibility =  (this.elementServertype.value != "custom") ? "hidden" : "visible";
-        document.getElementById("tbsync.newaccount.name").focus();
 
         document.addEventListener("wizardfinish", tbSyncEasNewAccount.onFinish.bind(this));
         document.addEventListener("wizardcancel", tbSyncEasNewAccount.onCancel.bind(this));
@@ -59,18 +54,59 @@ var tbSyncEasNewAccount = {
 
     onUserTextInput: function () {
         document.getElementById("tbsync.error").hidden = true;
-        if (this.elementServertype.value != "custom") {
-            document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "" ); //|| this.elementPass.value == "");
-        } else {
-            document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "" || this.elementPass.value == "" ||  this.elementUrl.value.trim() == "");
+        switch (this.elementServertype.value) {
+            case "select":            
+                document.documentElement.getButton("finish").disabled = true;
+                break;
+
+            case "auto":            
+                document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "" || this.elementPass.value == "");
+                break;
+            
+            case "office365":            
+                document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "");
+                break;
+
+            case "custom":
+            default:
+                document.documentElement.getButton("finish").disabled = (this.elementName.value.trim() == "" || this.elementUser.value == "" || this.elementPass.value == "" ||  this.elementUrl.value.trim() == "");
+                break;
         }
     },
 
     onUserDropdown: function () {
-        document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_" + this.elementServertype.value,"eas");
-        document.getElementById('tbsync.newaccount.url.box').style.visibility = (this.elementServertype.value != "custom") ? "hidden" : "visible";
-        document.getElementById('tbsync.newaccount.password.box').style.visibility = (this.elementServertype.value != "custom") ? "hidden" : "visible";
+        switch (this.elementServertype.value) {
+            case "select":            
+                document.getElementById('tbsync.newaccount.user.box').style.visibility = "hidden";
+                document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
+                document.getElementById('tbsync.newaccount.password.box').style.visibility = "hidden";
+                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
+                break;
+
+            case "auto":            
+                document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
+                document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
+                document.getElementById('tbsync.newaccount.password.box').style.visibility = "visible";
+                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_auto","eas");
+                break;
+            
+            case "office365":            
+                document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
+                document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
+                document.getElementById('tbsync.newaccount.password.box').style.visibility = "hidden";
+                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
+                break;
+
+            case "custom":
+            default:
+                document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
+                document.getElementById('tbsync.newaccount.url.box').style.visibility = "visible";
+                document.getElementById('tbsync.newaccount.password.box').style.visibility = "visible";
+                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
+                break;
+        }
         this.onUserTextInput();
+        document.getElementById("tbsync.newaccount.name").focus();        
     },
 
     onFinish: function (event) {
@@ -86,10 +122,10 @@ var tbSyncEasNewAccount = {
         let servertype = this.elementServertype.value;
         let accountname = this.elementName.value.trim();
 
-        let url = (servertype == "auto") ? "" : this.elementUrl.value.trim();
-        let password = (servertype == "auto") ? "" : this.elementPass.value;
+        let url = (servertype == "custom") ?this.elementUrl.value.trim() : "";
+        let password = (servertype == "auto" || servertype == "custom") ? this.elementPass.value : "";
 
-        if (servertype == "auto" &&  user.split("@").length != 2) {
+        if ((servertype == "auto" || servertype == "office365") && user.split("@").length != 2) {
             alert(TbSync.getString("autodiscover.NeedEmail","eas"))
             return;
         }
@@ -111,48 +147,35 @@ var tbSyncEasNewAccount = {
         document.getElementById("tbsync.spinner").hidden = false;
         
         //do autodiscover
-        if (servertype == "auto") {
+        if (servertype == "office365" || servertype == "auto") {
             let updateTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
             updateTimer.initWithCallback({notify : function () {tbSyncEasNewAccount.updateAutodiscoverStatus()}}, 1000, 3);
 
-            let v2 = await eas.network.getServerConnectionViaAutodiscoverV2JsonRequest("https://autodiscover-s.outlook.com/autodiscover/autodiscover.json?Email="+encodeURIComponent(user)+"&Protocol=ActiveSync");
-            let oauthData = eas.network.getOAuthObj({ host: v2.server, user, accountname });
-            if (oauthData) {
-                // ask for token
-                document.getElementById("tbsync.spinner").hidden = true;
-                let _rv = {};
-                if (await oauthData.asyncConnect(_rv)) {
-                    password = _rv.tokens;
-                } else {
-                    error = TbSync.getString("status." + _rv.error, "eas");
-                }
-                document.getElementById("tbsync.spinner").hidden = false;                
-                url=v2.server;
-            } else {            
-                // ask for password
-                let promptData = {
-                    windowID: "auth:wizard",
-                    accountname: accountname,
-                    usernameLocked: true,
-                    username: user
-                }
-                document.getElementById("tbsync.spinner").hidden = true;
-                let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
-                document.getElementById("tbsync.spinner").hidden = false;
-                
-                if (credentials) {
-                    password = credentials.password;                            
-                    let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
-            
-                    if (result.server) {
-                        user = result.user;
-                        url = result.server;
-                    } else {                    
-                        error = result.error; // is a localized string
+            if (servertype == "office365") {
+                let v2 = await eas.network.getServerConnectionViaAutodiscoverV2JsonRequest("https://autodiscover-s.outlook.com/autodiscover/autodiscover.json?Email="+encodeURIComponent(user)+"&Protocol=ActiveSync");
+                let oauthData = eas.network.getOAuthObj({ host: v2.server, user, accountname });
+                if (oauthData) {
+                    // ask for token
+                    document.getElementById("tbsync.spinner").hidden = true;
+                    let _rv = {};
+                    if (await oauthData.asyncConnect(_rv)) {
+                        password = _rv.tokens;
+                    } else {
+                        error = TbSync.getString("status." + _rv.error, "eas");
                     }
+                    document.getElementById("tbsync.spinner").hidden = false;                
+                    url=v2.server;
+                }
+            } else {
+                let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
+                if (result.server) {
+                    user = result.user;
+                    url = result.server;
+                } else {                    
+                    error = result.error; // is a localized string
                 }
             }
-            
+
             updateTimer.cancel();
         }
 
