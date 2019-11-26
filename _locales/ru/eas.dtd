@@ -41,8 +41,10 @@
 <!ENTITY pref.seperator.description "Сепаратор для многострочного поля адреса.">
 <!ENTITY pref.displayoverride "Переопределить отображаемое имя с помощью “Имя” + “Фамилия”">
 
+<!ENTITY servertype.select "--- Пожалуйста, выберите ---">
 <!ENTITY servertype.auto "Автоматическая настройка с помощью ActiveSync автоопределения">
 <!ENTITY servertype.custom "Ручная настройка">
+<!ENTITY servertype.office365 "Microsoft Office 365 (Современная аутентификация)">
 <!ENTITY servertype.unlock "Дважды щелкните, чтобы разблокировать все предопределенные настройки сервера.">
 
 <!ENTITY abCard.MiddleName "Отчество:">

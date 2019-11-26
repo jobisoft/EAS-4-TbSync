@@ -41,8 +41,10 @@
 <!ENTITY pref.seperator.description "Separator für mehrzeilige Adressfelder: ">
 <!ENTITY pref.displayoverride "Überschreibe Anzeigename mit 'Vorname' + 'Nachname'">
 
+<!ENTITY servertype.select "--- Bitte eine Option wählen ---">
 <!ENTITY servertype.auto "Automatische Konfiguration via ActiveSync Autodiscover">
 <!ENTITY servertype.custom "Benutzerspezifische Konfiguration">
+<!ENTITY servertype.office365 "Microsoft Office 365 (moderne Authentifizierung)">
 <!ENTITY servertype.unlock "Doppelklick um die vordefinierten Servereinstellungen zu entsperren.">
 
 <!ENTITY abCard.MiddleName "Zweiter Vorname:">

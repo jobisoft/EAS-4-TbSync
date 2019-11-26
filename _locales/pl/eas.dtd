@@ -41,8 +41,10 @@
 <!ENTITY pref.seperator.description "Separator pola adresu wielowierszowego.">
 <!ENTITY pref.displayoverride "Zastąp nazwę wyświetlaną ciągiem “Imię“ + “Drugie imię”">
 
+<!ENTITY servertype.select "--- Please Select ---">
 <!ENTITY servertype.auto "Automatyczna konfiguracja poprzez ActiveSync Autodiscover">
 <!ENTITY servertype.custom "Konfiguracja niestandardowa">
+<!ENTITY servertype.office365 "Microsoft Office 365 (Modern Authentication)">
 <!ENTITY servertype.unlock "Kliknij dwukrotnie, aby odblokować wszystkie predefiniowane ustawienia serwera.">
 
 <!ENTITY abCard.MiddleName "Drugie imię:">
