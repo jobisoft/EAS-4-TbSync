@@ -41,8 +41,10 @@
 <!ENTITY pref.seperator.description "Separator for multiline address field.">
 <!ENTITY pref.displayoverride "Override Display Name with “First Name” + “Second Name”">
 
+<!ENTITY servertype.select "--- Please Select ---">
 <!ENTITY servertype.auto "Automatic configuration via ActiveSync Autodiscover">
 <!ENTITY servertype.custom "Custom configuration">
+<!ENTITY servertype.office365 "Microsoft Office 365 (Modern Authentication)">
 <!ENTITY servertype.unlock "Double click to unlock all predefined server settings.">
 
 <!ENTITY abCard.MiddleName "Middle name:">
