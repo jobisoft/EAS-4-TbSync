@@ -5,7 +5,7 @@ This provider add-on adds Exchange ActiveSync (EAS v2.5 & v14.0) synchronization
 More information can be found in the [wiki](https://github.com/jobisoft/EAS-4-TbSync/wiki/About:-Provider-for-Exchange-ActiveSync) of this repository
 
 ## Want to add or fix a localization?
-To help translating this project, please visit to [crowdin.com](https://crowdin.com/profile/jobisoft), where the localizations are managed. If you want to add a new language, just contact me and I will set it up.
+To help translating this project, please visit [crowdin.com](https://crowdin.com/profile/jobisoft), where the localizations are managed. If you want to add a new language, just contact me and I will set it up.
 
 
 ## External data sources
