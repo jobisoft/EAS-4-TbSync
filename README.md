@@ -15,5 +15,9 @@ To help translating this project, please visit to [crowdin.com](https://crowdin.
 
 ## Icon sources and attributions
 
+#### CC0 Public Domain
+* [365_*.png] by [Microsoft / Wikimedia](https://commons.wikimedia.org/w/index.php?curid=21546299), converted from [SVG to PNG](https://www.aconvert.com/image/svg-to-png/)
+
 #### CC-BY 3.0
-* [eas16.png] by [FatCow Web Hosting](https://www.iconfinder.com/icons/64484/exchange_ms_icon)
+* [eas*.png] by [FatCow Web Hosting](https://www.iconfinder.com/icons/64484/exchange_ms_icon)
+* [exchange_300.png] derived from [Microsoft Exchange Icon #270871](https://icon-library.net/icon/microsoft-exchange-icon-10.html), [resized](www.simpleimageresizer.com/)

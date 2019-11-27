@@ -8,8 +8,8 @@
 ]>
 
 <wizard
-    width="600"
-    height="500"
+    width="500"
+    height="600"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&add.title;"
     id="tbsync.newaccount.wizard"
@@ -20,27 +20,40 @@
     <script type="application/javascript" src="chrome://eas4tbsync/content/manager/createAccount.js"/>
 
     <wizardpage onFirstPage="true" label="&add.shortdescription;">
-        <description style="width: 450px">&add.description;</description>
+        <description style="width: 350px">&add.description;</description>
 
-        <grid style="margin-top:1ex">
+        <richlistbox height="250"  id="tbsync.newaccount.servertype" seltype="single" style="margin-top:1ex" onselect="tbSyncEasNewAccount.onUserDropdown();">
+            <richlistitem value="auto" style="padding: 4px">
+                <vbox><image src="chrome://eas4tbsync/skin/eas32.png" style="margin:1ex" /></vbox>
+                <vbox flex="1">
+                    <label class="header" value="&servertype.auto;" />
+                    <description>&servertype.description.auto;</description>
+                </vbox>
+            </richlistitem>
+            
+            <richlistitem value="custom" style="padding: 4px">
+                <vbox><image src="chrome://eas4tbsync/skin/eas32.png" style="margin:1ex" /></vbox>
+                <vbox flex="1">
+                    <label class="header" value="&servertype.custom;" />
+                    <description>&servertype.description.custom;</description>
+                </vbox>
+            </richlistitem>
+
+            <richlistitem value="office365" style="padding: 4px">
+                <vbox><image src="chrome://eas4tbsync/skin/365_32.png" style="margin:1ex" /></vbox>
+                <vbox flex="1">
+                    <label class="header" value="&servertype.office365;" />
+                    <description>&servertype.description.office365;</description>
+                </vbox>
+            </richlistitem>        
+        </richlistbox>
+
+        <grid style="margin-top:1em">
             <columns>
                 <column flex="1" />
                 <column flex="2" />
             </columns>
             <rows>
-                <row  style="margin-bottom:1ex;">
-                    <vbox pack="center"><label value="&add.server;" /></vbox>
-                    <menulist id="tbsync.newaccount.servertype" oncommand="tbSyncEasNewAccount.onUserDropdown();">
-                        <menupopup>
-                            <menuitem label="&servertype.select;" value="select" hidden="true"/>
-                            <menuitem label="&servertype.auto;" value="auto" />
-                            <menuitem label="&servertype.custom;" value="custom" />
-                            <menuseparator/>
-                            <menuitem label="&servertype.office365;" value="office365" />
-                        </menupopup>
-                    </menulist>
-                </row>
-
                 <row>
                     <vbox pack="center"><label value="&add.name;" /></vbox>
                     <textbox id="tbsync.newaccount.name" oninput="tbSyncEasNewAccount.onUserTextInput();"/>

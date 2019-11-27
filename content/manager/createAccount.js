@@ -106,7 +106,7 @@ var tbSyncEasNewAccount = {
                 break;
         }
         this.onUserTextInput();
-        document.getElementById("tbsync.newaccount.name").focus();        
+        //document.getElementById("tbsync.newaccount.name").focus();        
     },
 
     onFinish: function (event) {
@@ -165,6 +165,8 @@ var tbSyncEasNewAccount = {
                     }
                     document.getElementById("tbsync.spinner").hidden = false;                
                     url=v2.server;
+                } else {
+                    error = TbSync.getString("status.404", "eas");
                 }
             } else {
                 let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
