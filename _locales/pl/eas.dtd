@@ -8,7 +8,7 @@
 <!ENTITY add.urldescription "Powinno wystarczyć podanie tylko podstawowego adresu serwera (np.: mail.twojserwer.com). Jednakże możliwe jest również podanie pełnego adresu URL (np.: https://mail.twojserwer.com/Microsoft-Server-ActiveSync).">
 
 <!ENTITY add.server "Konfiguracja serwera:">
-<!ENTITY add.description "Please select one of the available server configuration options and enter the requested details. ">
+<!ENTITY add.description "Wybierz jedną z dostępnych opcji konfiguracji serwera i wprowadź wymagane dane. ">
 
 <!ENTITY pref.autodetect "najlepsza dostępna">
 
@@ -41,13 +41,13 @@
 <!ENTITY pref.seperator.description "Separator pola adresu wielowierszowego.">
 <!ENTITY pref.displayoverride "Zastąp nazwę wyświetlaną ciągiem “Imię“ + “Drugie imię”">
 
-<!ENTITY servertype.auto "Automatic configuration">
-<!ENTITY servertype.description.auto "The configuration for many ActiveSync servers can be discovered by providing just your email address.">
+<!ENTITY servertype.auto "Automatyczna konfiguracja">
+<!ENTITY servertype.description.auto "Konfiguracja dla wielu serwerów ActiveSync może zostać odnaleziona poprzez podanie tylko adresu e-mail.">
 
 <!ENTITY servertype.custom "Konfiguracja niestandardowa">
-<!ENTITY servertype.description.custom "Setup your account by manually providing the address of the server you want to connect.">
+<!ENTITY servertype.description.custom "Skonfiguruj konto, podając ręcznie adres serwera, z którym chcesz się połączyć.">
 <!ENTITY servertype.office365 "Microsoft Office 365">
-<!ENTITY servertype.description.office365 "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA).">
+<!ENTITY servertype.description.office365 "Konta połączone z Office 365 korzystają z nowoczesnego procesu uwierzytelniania o nazwie OAuth 2.0, który obsługuje również uwierzytelnianie wielopoziomowe (MFA).">
 
 <!ENTITY servertype.unlock "Kliknij dwukrotnie, aby odblokować wszystkie predefiniowane ustawienia serwera.">
 
