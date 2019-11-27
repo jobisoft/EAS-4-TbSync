@@ -8,7 +8,7 @@
 <!ENTITY add.urldescription "Meist reicht die Angabe der einfachen Serveradresse (z.B.: mail.meinserver.de), alternativ kann aber auch die komplette URL angegeben werden (z.B.: https://mail.meinserver.de/Microsoft-Server-ActiveSync).">
 
 <!ENTITY add.server "Server Konfiguration:">
-<!ENTITY add.description "Please select one of the available server configuration options and enter the requested details. ">
+<!ENTITY add.description "Bitte wählen Sie eine der verfügbaren Server-Konfigurationen aus und geben Sie die angeforderten Details ein. ">
 
 <!ENTITY pref.autodetect "bestmöglich">
 
@@ -41,8 +41,8 @@
 <!ENTITY pref.seperator.description "Separator für mehrzeilige Adressfelder: ">
 <!ENTITY pref.displayoverride "Überschreibe Anzeigename mit 'Vorname' + 'Nachname'">
 
-<!ENTITY servertype.auto "Automatic configuration">
-<!ENTITY servertype.description.auto "The configuration for many ActiveSync servers can be discovered by providing just your email address.">
+<!ENTITY servertype.auto "Automatische Konfiguration">
+<!ENTITY servertype.description.auto "Die Konfiguration vieler ActiveSync Server kann allein durch die Angabe Ihrer E-Mail-Adresse erfolgen.">
 
 <!ENTITY servertype.custom "Benutzerspezifische Konfiguration">
 <!ENTITY servertype.description.custom "Setup your account by manually providing the address of the server you want to connect.">
