@@ -133,7 +133,6 @@ var network = {
         return true;
       } catch (e) {
         rv.error = eas.tools.isString(e) ? e : JSON.stringify(e);
-        console.log("[OAuth] asyncConnect failed: " + rv.error );
       }
       
       try {
@@ -213,7 +212,6 @@ var network = {
             let tokens = this.parseAndSanitizeTokenString(this.authData.password);
             let valueChanged = (val != tokens[oauthValue[0]])
             if (valueChanged) {
-              console.log("[OAuth] Updating <" + this.authData.user + " / " + accountID + " / " + oauthValue[0] + ">: " + val);
               tokens[oauthValue[0]] = val;
               this.authData.updateLoginData(this.authData.user, JSON.stringify(tokens));
             }
