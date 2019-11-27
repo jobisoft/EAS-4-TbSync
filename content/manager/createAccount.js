@@ -75,38 +75,40 @@ var tbSyncEasNewAccount = {
     },
 
     onUserDropdown: function () {
-        switch (this.elementServertype.value) {
-            case "select":            
-                document.getElementById('tbsync.newaccount.user.box').style.visibility = "hidden";
-                document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
-                document.getElementById('tbsync.newaccount.password.box').style.visibility = "hidden";
-                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
-                break;
+        if (this.elementServertype) {
+            switch (this.elementServertype.value) {
+                case "select":            
+                    document.getElementById('tbsync.newaccount.user.box').style.visibility = "hidden";
+                    document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
+                    document.getElementById('tbsync.newaccount.password.box').style.visibility = "hidden";
+                    document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
+                    break;
 
-            case "auto":            
-                document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
-                document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
-                document.getElementById('tbsync.newaccount.password.box').style.visibility = "visible";
-                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_auto","eas");
-                break;
-            
-            case "office365":            
-                document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
-                document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
-                document.getElementById('tbsync.newaccount.password.box').style.visibility = "hidden";
-                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
-                break;
+                case "auto":            
+                    document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
+                    document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
+                    document.getElementById('tbsync.newaccount.password.box').style.visibility = "visible";
+                    document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_auto","eas");
+                    break;
+                
+                case "office365":            
+                    document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
+                    document.getElementById('tbsync.newaccount.url.box').style.visibility = "hidden";
+                    document.getElementById('tbsync.newaccount.password.box').style.visibility = "hidden";
+                    document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
+                    break;
 
-            case "custom":
-            default:
-                document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
-                document.getElementById('tbsync.newaccount.url.box').style.visibility = "visible";
-                document.getElementById('tbsync.newaccount.password.box').style.visibility = "visible";
-                document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
-                break;
+                case "custom":
+                default:
+                    document.getElementById('tbsync.newaccount.user.box').style.visibility = "visible";
+                    document.getElementById('tbsync.newaccount.url.box').style.visibility = "visible";
+                    document.getElementById('tbsync.newaccount.password.box').style.visibility = "visible";
+                    document.documentElement.getButton("finish").label = TbSync.getString("newaccount.add_custom","eas");
+                    break;
+            }
+            this.onUserTextInput();
+            //document.getElementById("tbsync.newaccount.name").focus();
         }
-        this.onUserTextInput();
-        //document.getElementById("tbsync.newaccount.name").focus();        
     },
 
     onFinish: function (event) {
