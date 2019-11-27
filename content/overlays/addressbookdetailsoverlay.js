@@ -38,7 +38,7 @@ var tbSyncEasAddressBookDetails = {
 
             //function to get correct uri of current card for global book as well for mailLists
             let abUri = TbSync.providers.eas.tools.getSelectedUri(window.GetSelectedDirectory(), aCard);
-            let show = (MailServices.ab.getDirectory(abUri).getStringValue("tbSyncProvider", "") == "eas");
+            let show = (TbSync.addressbook.getStringValue(MailServices.ab.getDirectory(abUri), "tbSyncProvider", "") == "eas");
         
             let email3Box = window.document.getElementById("cvEmail3Box");
             if (email3Box) {
