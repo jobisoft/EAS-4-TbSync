@@ -45,9 +45,9 @@
 <!ENTITY servertype.description.auto "Для определения конфигурации множества серверов ActiveSync достаточно указать только адрес Вашей электронной почты.">
 
 <!ENTITY servertype.custom "Ручная настройка">
-<!ENTITY servertype.description.custom "Setup your account by manually providing the address of the server you want to connect.">
+<!ENTITY servertype.description.custom "Настройте Вашу учетную запись, вручную указав адрес сервера, к которому Вы хотите подключиться.">
 <!ENTITY servertype.office365 "Microsoft Office 365">
-<!ENTITY servertype.description.office365 "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA).">
+<!ENTITY servertype.description.office365 "Учетные записи, подключенные к Office 365, используют современный процесс аутентификации под названием OAuth 2.0, который также поддерживает многофакторную аутентификацию (MFA).">
 
 <!ENTITY servertype.unlock "Дважды щелкните, чтобы разблокировать все предопределенные настройки сервера.">
 
