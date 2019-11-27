@@ -8,7 +8,7 @@
 <!ENTITY add.urldescription "Powinno wystarczyć podanie tylko podstawowego adresu serwera (np.: mail.twojserwer.com). Jednakże możliwe jest również podanie pełnego adresu URL (np.: https://mail.twojserwer.com/Microsoft-Server-ActiveSync).">
 
 <!ENTITY add.server "Konfiguracja serwera:">
-<!ENTITY add.description "Wprowadź nazwę nowego konta TbSync, nazwę użytkownika konta ActiveSync, które chcesz dodać (prawdopodobnie adres e-mail) i wybierz jedną z dostępnych opcji konfiguracji serwera. ">
+<!ENTITY add.description "Wybierz jedną z dostępnych opcji konfiguracji serwera i wprowadź wymagane dane. ">
 
 <!ENTITY pref.autodetect "najlepsza dostępna">
 
@@ -41,10 +41,14 @@
 <!ENTITY pref.seperator.description "Separator pola adresu wielowierszowego.">
 <!ENTITY pref.displayoverride "Zastąp nazwę wyświetlaną ciągiem “Imię“ + “Drugie imię”">
 
-<!ENTITY servertype.select "--- Please Select ---">
-<!ENTITY servertype.auto "Automatyczna konfiguracja poprzez ActiveSync Autodiscover">
+<!ENTITY servertype.auto "Automatyczna konfiguracja">
+<!ENTITY servertype.description.auto "Konfiguracja dla wielu serwerów ActiveSync może zostać odnaleziona poprzez podanie tylko adresu e-mail.">
+
 <!ENTITY servertype.custom "Konfiguracja niestandardowa">
-<!ENTITY servertype.office365 "Microsoft Office 365 (Modern Authentication)">
+<!ENTITY servertype.description.custom "Skonfiguruj konto, podając ręcznie adres serwera, z którym chcesz się połączyć.">
+<!ENTITY servertype.office365 "Microsoft Office 365">
+<!ENTITY servertype.description.office365 "Konta połączone z Office 365 korzystają z nowoczesnego procesu uwierzytelniania o nazwie OAuth 2.0, który obsługuje również uwierzytelnianie wielopoziomowe (MFA).">
+
 <!ENTITY servertype.unlock "Kliknij dwukrotnie, aby odblokować wszystkie predefiniowane ustawienia serwera.">
 
 <!ENTITY abCard.MiddleName "Drugie imię:">
@@ -56,7 +60,7 @@
 <!ENTITY abCard.ManagerName "Menedżer:">
 <!ENTITY abCard.AssistantPhoneNumber "Telefon Asystenta:">
 <!ENTITY abCard.AssistantName "Asystent:">
-<!ENTITY abCard.Spouse "Współmałżonek:">
+<!ENTITY abCard.Spouse "Małżonek:">
 <!ENTITY abCard.Anniversary "Rocznica:">
 
 <!ENTITY abCard.CarPhoneNumber "Telefon w Aucie:">

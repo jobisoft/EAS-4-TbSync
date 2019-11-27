@@ -8,7 +8,7 @@
 <!ENTITY add.urldescription "Meist reicht die Angabe der einfachen Serveradresse (z.B.: mail.meinserver.de), alternativ kann aber auch die komplette URL angegeben werden (z.B.: https://mail.meinserver.de/Microsoft-Server-ActiveSync).">
 
 <!ENTITY add.server "Server Konfiguration:">
-<!ENTITY add.description "Bitte wählen Sie einen Namen für das neue TbSync Konto, tragen den Benutzername für das ActiveSync Konto welches Sie hinzufügen möchten (üblicher Weise eine E-Mail Adresse) ein und wählen Sie die passende Option für die Server Konfiguration aus. ">
+<!ENTITY add.description "Bitte wählen Sie eine der verfügbaren Server-Konfigurationen aus und geben Sie die angeforderten Details ein. ">
 
 <!ENTITY pref.autodetect "bestmöglich">
 
@@ -41,10 +41,14 @@
 <!ENTITY pref.seperator.description "Separator für mehrzeilige Adressfelder: ">
 <!ENTITY pref.displayoverride "Überschreibe Anzeigename mit 'Vorname' + 'Nachname'">
 
-<!ENTITY servertype.select "--- Bitte eine Option wählen ---">
-<!ENTITY servertype.auto "Automatische Konfiguration via ActiveSync Autodiscover">
+<!ENTITY servertype.auto "Automatische Konfiguration">
+<!ENTITY servertype.description.auto "Die Konfiguration vieler ActiveSync Server kann allein durch die Angabe Ihrer E-Mail-Adresse erfolgen.">
+
 <!ENTITY servertype.custom "Benutzerspezifische Konfiguration">
-<!ENTITY servertype.office365 "Microsoft Office 365 (moderne Authentifizierung)">
+<!ENTITY servertype.description.custom "Richten Sie Ihr Konto ein, indem Sie die Adresse des Servers angeben, mit dem Sie sich verbinden möchten.">
+<!ENTITY servertype.office365 "Microsoft Office 365">
+<!ENTITY servertype.description.office365 "Konten, die mit Office 365 verbunden sind, verwenden den modernen OAuth 2.0 Authentifizierungsprozess, der auch Multi-Factor-Authentication (MFA) unterstützt.">
+
 <!ENTITY servertype.unlock "Doppelklick um die vordefinierten Servereinstellungen zu entsperren.">
 
 <!ENTITY abCard.MiddleName "Zweiter Vorname:">

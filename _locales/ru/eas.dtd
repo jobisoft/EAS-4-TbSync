@@ -8,7 +8,7 @@
 <!ENTITY add.urldescription "Достаточно указать только базовый адрес сервера (например: mail.yourserver.com). Однако также можно указать полный URL-адрес (например: https://mail.yourserver.com/Microsoft-Server-ActiveSync).">
 
 <!ENTITY add.server "Конфигурация сервера:">
-<!ENTITY add.description "Введите имя для нового аккаунта TbSync, имя пользователя аккаунта ActiveSync которое вы хотите добавить (возможно, адрес электронной почты), и выберите один из доступных параметров конфигурации сервера. ">
+<!ENTITY add.description "Пожалуйста, выберите один из доступных параметров конфигурации сервера и введите требуемую информацию. ">
 
 <!ENTITY pref.autodetect "лучшее из доступных">
 
@@ -41,10 +41,14 @@
 <!ENTITY pref.seperator.description "Сепаратор для многострочного поля адреса.">
 <!ENTITY pref.displayoverride "Переопределить отображаемое имя с помощью “Имя” + “Фамилия”">
 
-<!ENTITY servertype.select "--- Пожалуйста, выберите ---">
-<!ENTITY servertype.auto "Автоматическая настройка с помощью ActiveSync автоопределения">
+<!ENTITY servertype.auto "Автоматическая настройка">
+<!ENTITY servertype.description.auto "Для определения конфигурации множества серверов ActiveSync достаточно указать только адрес Вашей электронной почты.">
+
 <!ENTITY servertype.custom "Ручная настройка">
-<!ENTITY servertype.office365 "Microsoft Office 365 (Современная аутентификация)">
+<!ENTITY servertype.description.custom "Настройте Вашу учетную запись, вручную указав адрес сервера, к которому Вы хотите подключиться.">
+<!ENTITY servertype.office365 "Microsoft Office 365">
+<!ENTITY servertype.description.office365 "Учетные записи, подключенные к Office 365, используют современный процесс аутентификации под названием OAuth 2.0, который также поддерживает многофакторную аутентификацию (MFA).">
+
 <!ENTITY servertype.unlock "Дважды щелкните, чтобы разблокировать все предопределенные настройки сервера.">
 
 <!ENTITY abCard.MiddleName "Отчество:">
