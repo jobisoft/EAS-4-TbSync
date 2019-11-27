@@ -561,7 +561,7 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
         eas.sync.resetFolderSyncInfo(this.folderData);
         
         if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
-            directory.setStringValue("tbSyncIcon", "eas");
+            directory.setStringValue("tbSyncIcon", "eas" + (this.folderData.accountData.getAccountProperty("servertype") == "office365" ? "_365" : ""));
             return directory;		
         }
         return null;

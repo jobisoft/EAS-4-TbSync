@@ -4,9 +4,16 @@ treechildren::-moz-tree-image(DirCol, eas) {
   margin-inline-end: 2px;
   list-style-image: url("chrome://eas4tbsync/skin/eas16.png");
 }
+treechildren::-moz-tree-image(DirCol, eas_365) {
+  margin-inline-end: 2px;
+  list-style-image: url("chrome://eas4tbsync/skin/365_16.png");
+}
 
 .abMenuItem[AddrBook="true"][TbSyncIcon="eas"] {
   list-style-image: url("chrome://eas4tbsync/skin/eas16.png");
+}
+.abMenuItem[AddrBook="true"][TbSyncIcon="eas_365"] {
+  list-style-image: url("chrome://eas4tbsync/skin/365_16.png");
 }
 
 /* autocomplete styles */
