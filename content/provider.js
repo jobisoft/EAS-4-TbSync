@@ -168,13 +168,15 @@ var Base = class {
      * Returns location of a provider icon.
      */
     static getProviderIcon(size, accountData = null) {
+        let base = (accountData && accountData.getAccountProperty("servertype") == "office365") ? "365_" : "eas";
+        
         switch (size) {
             case 16:
-                return "chrome://eas4tbsync/skin/eas16.png";
+                return "chrome://eas4tbsync/skin/" + base + "16.png";
             case 32:
-                return "chrome://eas4tbsync/skin/eas32.png";
+                return "chrome://eas4tbsync/skin/" + base + "32.png";
             default :
-                return "chrome://eas4tbsync/skin/eas64.png";
+                return "chrome://eas4tbsync/skin/" + base + "64.png";
         }
     }
 
