@@ -56,7 +56,9 @@ var network = {
   // prepare and patch OAuth2 object
   getOAuthObj: function(configObject = null) {
     let accountname, user, host, accountID;
-    
+    if (!eas.prefs.getBoolPref("OAuth"))
+      return null;
+      
     let accountData = (configObject && configObject.hasOwnProperty("accountData")) ? configObject.accountData : null;
     if (accountData) {
       accountname = accountData.getAccountProperty("accountname");
