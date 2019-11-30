@@ -55,22 +55,25 @@ var network = {
     
   // prepare and patch OAuth2 object
   getOAuthObj: function(configObject = null) {
-    let accountname, user, host, accountID;
-    if (!eas.prefs.getBoolPref("OAuth"))
-      return null;
+    let accountname, user, host, accountID, servertype;
       
     let accountData = (configObject && configObject.hasOwnProperty("accountData")) ? configObject.accountData : null;
     if (accountData) {
       accountname = accountData.getAccountProperty("accountname");
       user = accountData.getAccountProperty("user");
       host = accountData.getAccountProperty("host");
+      servertype = accountData.getAccountProperty("servertype");
       accountID = accountData.accountID;
     } else {
       accountname = (configObject && configObject.hasOwnProperty("accountname")) ? configObject.accountname : "";
       user = (configObject && configObject.hasOwnProperty("user")) ? configObject.user : "";
       host = (configObject && configObject.hasOwnProperty("host")) ? configObject.host : "";
+      servertype = (configObject && configObject.hasOwnProperty("servertype")) ? configObject.servertype : "";
       accountID = "";
     }
+
+    if (!["office365"].includes(servertype))
+      return null;
 
     let config = {};
     switch (host) {

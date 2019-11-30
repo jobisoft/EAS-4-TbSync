@@ -155,7 +155,7 @@ var tbSyncEasNewAccount = {
 
             if (servertype == "office365") {
                 let v2 = await eas.network.getServerConnectionViaAutodiscoverV2JsonRequest("https://autodiscover-s.outlook.com/autodiscover/autodiscover.json?Email="+encodeURIComponent(user)+"&Protocol=ActiveSync");
-                let oauthData = eas.network.getOAuthObj({ host: v2.server, user, accountname });
+                let oauthData = eas.network.getOAuthObj({ host: v2.server, user, accountname, servertype });
                 if (oauthData) {
                     // ask for token
                     document.getElementById("tbsync.spinner").hidden = true;
