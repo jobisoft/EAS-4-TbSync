@@ -42,12 +42,12 @@
 <!ENTITY pref.displayoverride "Ignora il Nome visualizzato e mostra Nome + Cognome">
 
 <!ENTITY servertype.auto "Configurazione automatica">
-<!ENTITY servertype.description.auto "The configuration for many ActiveSync servers can be discovered by providing just your email address.">
+<!ENTITY servertype.description.auto "Per molti server ActiveSync la configurazione può essere trovata fornendo solo l'indirizzo di posta elettronica.">
 
 <!ENTITY servertype.custom "Configurazione personalizzata">
-<!ENTITY servertype.description.custom "Setup your account by manually providing the address of the server you want to connect.">
+<!ENTITY servertype.description.custom "Imposta l'account fornendo manualmente l'indirizzo del server a cui connettersi.">
 <!ENTITY servertype.office365 "Microsoft Office 365">
-<!ENTITY servertype.description.office365 "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA).">
+<!ENTITY servertype.description.office365 "Gli account connessi a Office 365 utilizzano un processo di autenticazione moderno denominato OAuth 2.0 che supporta anche l'autenticazione a più fattori (MFA).">
 
 <!ENTITY servertype.unlock "Cliccare due volte per sbloccare tutte le impostazioni server predefinite.">
 
