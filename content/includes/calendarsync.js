@@ -76,9 +76,10 @@ var Calendar = {
             alarm.action ="DISPLAY";
             item.addAlarm(alarm);
             
-            let alarmDate = cal.alarms.calculateAlarmDate(item, alarm);
+            let alarmData = cal.alarms.calculateAlarmDate(item, alarm);
+            let startDate = cal.createDateTime(data.StartTime);
             let nowDate = eas.tools.getNowUTC();
-            if (alarmDate.compare(nowDate) < 0) {
+            if (startDate.compare(nowDate) < 0) {
                 // Mark alarm as ACK if in the past.
                 item.alarmLastAck = nowDate;
             }
