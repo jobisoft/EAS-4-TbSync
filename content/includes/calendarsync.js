@@ -69,15 +69,19 @@ var Calendar = {
         //EAS Reminder
         item.clearAlarms();
         if (data.Reminder && data.StartTime) {
-            let startDate = new Date(eas.tools.getIsoUtcString(cal.createDateTime(data.StartTime), true));
-            let nowDate = new Date();
-
             let alarm = cal.createAlarm();
             alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START;
             alarm.offset = cal.createDuration();
             alarm.offset.inSeconds = (0-parseInt(data.Reminder)*60);
             alarm.action ="DISPLAY";
             item.addAlarm(alarm);
+            
+            let alarmDate = cal.alarms.calculateAlarmDate(item, alarm);
+            let nowDate = eas.tools.getNowUTC();
+            if (alarmDate.compare(nowDate) < 0) {
+                // Mark alarm as ACK if in the past.
+                item.alarmLastAck = nowDate;
+            }
         }
 
         eas.sync.mapEasPropertyToThunderbird ("BusyStatus", "TRANSP", data, item);

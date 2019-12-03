@@ -287,7 +287,10 @@ var tools = {
         }
     },
 
-
+    getNowUTC : function() {
+        return TbSync.lightning.cal.dtz.jsDateToDateTime(new Date()).getInTimezone(TbSync.lightning.cal.dtz.UTC);
+    },
+    
     //guess the IANA timezone (used by TB) based on the current offset (standard or daylight)
     guessTimezoneByCurrentOffset: function(curOffset, utcDateTime) {
         //if we only now the current offset and the current date, we need to actually try each TZ.
