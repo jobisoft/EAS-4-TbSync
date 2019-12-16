@@ -167,7 +167,7 @@ var sync = {
                             newFolder.setFolderProperty("targetType", "calendar");
                             break;
                         default:
-                            newFolder.setFolderProperty("targetType", "none");
+                            newFolder.setFolderProperty("targetType", "unknown type ("+add[count].Type+")");
                             break;
                         
                     }
