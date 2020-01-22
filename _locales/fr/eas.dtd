@@ -38,13 +38,13 @@
 
 <!ENTITY pref.seperator.comma "Virgule">
 <!ENTITY pref.seperator.linebreak "Saut de ligne">
-<!ENTITY pref.seperator.description "Separator for multiline address field.">
-<!ENTITY pref.displayoverride "Override Display Name with “First Name” + “Second Name”">
+<!ENTITY pref.seperator.description "Séparateur pour le champ d'adresse multiligne.">
+<!ENTITY pref.displayoverride "Remplacer le nom affiché par &quot;Prénom&quot; + &quot;Nom&quot;">
 
-<!ENTITY servertype.auto "Automatic configuration">
-<!ENTITY servertype.description.auto "The configuration for many ActiveSync servers can be discovered by providing just your email address.">
+<!ENTITY servertype.auto "Configuration automatique">
+<!ENTITY servertype.description.auto "La configuration de nombreux serveurs ActiveSync peut être découverte en fournissant uniquement votre adresse e-mail.">
 
-<!ENTITY servertype.custom "Custom configuration">
+<!ENTITY servertype.custom "Configuration personalisée">
 <!ENTITY servertype.description.custom "Setup your account by manually providing the address of the server you want to connect.">
 <!ENTITY servertype.office365 "Microsoft Office 365">
 <!ENTITY servertype.description.office365 "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA).">
