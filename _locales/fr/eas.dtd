@@ -65,22 +65,22 @@
 
 <!ENTITY abCard.CarPhoneNumber "Téléphone Voiture:">
 <!ENTITY abCard.RadioPhoneNumber "Téléphone Radio:">
-<!ENTITY abCard.CompanyMainPhone "Work Main Phone:">
+<!ENTITY abCard.CompanyMainPhone "Téléphone de Bureau Principal:">
 
-<!ENTITY abCard.OtherAddress "Address:">
-<!ENTITY abCard.OtherCity "City:">
-<!ENTITY abCard.OtherCountry "Country:">
-<!ENTITY abCard.OtherZip "ZIP Code:">
-<!ENTITY abCard.OtherState "State:">
+<!ENTITY abCard.OtherAddress "Adresse:">
+<!ENTITY abCard.OtherCity "Ville:">
+<!ENTITY abCard.OtherCountry "Pays:">
+<!ENTITY abCard.OtherZip "Code Postal:">
+<!ENTITY abCard.OtherState "État:">
 
-<!ENTITY abCard.header.worknumbers "Additional work numbers:">
-<!ENTITY abCard.header.homenumbers "Additional home numbers:">
-<!ENTITY abCard.header.othernumbers "Additional numbers:">
-<!ENTITY abCard.header.messaging "Messaging:">
-<!ENTITY abCard.header.people "People:">
-<!ENTITY abCard.header.eas "Other Fields (EAS)">
-<!ENTITY abCard.header.otheraddress "Other Address (EAS)">
+<!ENTITY abCard.header.worknumbers "Téléphones de bureau supplémentaires:">
+<!ENTITY abCard.header.homenumbers "Téléphones domicile supplémentaires:">
+<!ENTITY abCard.header.othernumbers "Numéros de téléphone supplémentaires:">
+<!ENTITY abCard.header.messaging "Messagerie:">
+<!ENTITY abCard.header.people "Personnes:">
+<!ENTITY abCard.header.eas "Autres champs (EAS)">
+<!ENTITY abCard.header.otheraddress "Autre Adresse (EAS)">
 
-<!ENTITY manager.tabs.accountsettings "Account settings">
-<!ENTITY manager.tabs.syncsettings "Options">
-<!ENTITY manager.tabs.outOfOffice "Auto responder">
+<!ENTITY manager.tabs.accountsettings "Paramètres du compte">
+<!ENTITY manager.tabs.syncsettings "Paramètres">
+<!ENTITY manager.tabs.outOfOffice "Répondeur automatique">
