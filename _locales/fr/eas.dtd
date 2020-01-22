@@ -45,26 +45,26 @@
 <!ENTITY servertype.description.auto "La configuration de nombreux serveurs ActiveSync peut être découverte en fournissant uniquement votre adresse e-mail.">
 
 <!ENTITY servertype.custom "Configuration personalisée">
-<!ENTITY servertype.description.custom "Setup your account by manually providing the address of the server you want to connect.">
+<!ENTITY servertype.description.custom "Configurez votre compte en fournissant manuellement l'adresse du serveur que vous souhaitez connecter.">
 <!ENTITY servertype.office365 "Microsoft Office 365">
-<!ENTITY servertype.description.office365 "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA).">
+<!ENTITY servertype.description.office365 "Les comptes connectés à Office 365 utilisent un processus d'authentification moderne appelé OAuth 2.0 qui supporte également l'authentification multi-facteur (MFA).">
 
-<!ENTITY servertype.unlock "Double click to unlock all predefined server settings.">
+<!ENTITY servertype.unlock "Double-cliquez pour déverrouiller tous les paramètres prédéfinis du serveur.">
 
-<!ENTITY abCard.MiddleName "Middle name:">
-<!ENTITY abCard.Email3Address "Alternative Email:">
-<!ENTITY abCard.Home2PhoneNumber "Home Alternative Phone:">
-<!ENTITY abCard.Business2PhoneNumber "Work Alternative Phone:">
-<!ENTITY abCard.BusinessFaxNumber "Work Fax:">
+<!ENTITY abCard.MiddleName "Deuxième prénom:">
+<!ENTITY abCard.Email3Address "E-mail alternatif:">
+<!ENTITY abCard.Home2PhoneNumber "Téléphone Domicile Alternatif:">
+<!ENTITY abCard.Business2PhoneNumber "Téléphone Bureau Alternatif:">
+<!ENTITY abCard.BusinessFaxNumber "Fax de bureau:">
 
-<!ENTITY abCard.ManagerName "Manager:">
-<!ENTITY abCard.AssistantPhoneNumber "Assistant Phone:">
-<!ENTITY abCard.AssistantName "Assistant:">
-<!ENTITY abCard.Spouse "Spouse:">
-<!ENTITY abCard.Anniversary "Anniversary:">
+<!ENTITY abCard.ManagerName "Manageur:">
+<!ENTITY abCard.AssistantPhoneNumber "Téléphone Assistant(e):">
+<!ENTITY abCard.AssistantName "Assistant(e):">
+<!ENTITY abCard.Spouse "Épou(x/se):">
+<!ENTITY abCard.Anniversary "Anniversaire:">
 
-<!ENTITY abCard.CarPhoneNumber "Car Phone:">
-<!ENTITY abCard.RadioPhoneNumber "Radio Phone:">
+<!ENTITY abCard.CarPhoneNumber "Téléphone Voiture:">
+<!ENTITY abCard.RadioPhoneNumber "Téléphone Radio:">
 <!ENTITY abCard.CompanyMainPhone "Work Main Phone:">
 
 <!ENTITY abCard.OtherAddress "Address:">
