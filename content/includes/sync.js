@@ -1289,9 +1289,6 @@ wbxml.ctag();*/
                 for (let exception of exceptions) {
                     //exception.ExceptionStartTime is in UTC, but the Recurrence Object is in local timezone
                     let dateTime = TbSync.lightning.cal.createDateTime(exception.ExceptionStartTime).getInTimezone(timezone);
-                        console.log("dateTime");
-                        console.log(exception.ExceptionStartTime);
-                        console.log(dateTime);
                     if (data.AllDayEvent == "1") {
                         dateTime.isDate = true;
                         // Pass to replacement event unless overriden
