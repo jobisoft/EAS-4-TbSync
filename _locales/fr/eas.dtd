@@ -1,86 +1,86 @@
-<!ENTITY add.title "Adding an Exchange ActiveSync account to TbSync">
-<!ENTITY add.shortdescription "Account information">
-<!ENTITY add.ok "Add account">
-<!ENTITY add.name "Account name:">
-<!ENTITY add.user "User name (email address):">
-<!ENTITY add.password "Password:">
-<!ENTITY add.url "Server address:">
-<!ENTITY add.urldescription "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync).">
+<!ENTITY add.title "Ajout d'un compte Exchange ActiveSync à TbSync">
+<!ENTITY add.shortdescription "Information du compte">
+<!ENTITY add.ok "Ajouter un compte">
+<!ENTITY add.name "Nom du compte:">
+<!ENTITY add.user "Nom d'utilisateur (adresse e-mail) :">
+<!ENTITY add.password "Mot de passe:">
+<!ENTITY add.url "Adresse du serveur:">
+<!ENTITY add.urldescription "Il devrait suffire de fournir uniquement l'adresse de base du serveur (par exemple : mail.votreserveur.com). Cependant, il est également possible de fournir l'URL complète (par exemple : https://mail.votreserveur.com/Microsoft-Server-ActiveSync).">
 
-<!ENTITY add.server "Server configuration:">
-<!ENTITY add.description "Please select one of the available server configuration options and enter the requested details. ">
+<!ENTITY add.server "Configuration du serveur:">
+<!ENTITY add.description "Veuillez sélectionner une des options de configuration du serveur disponibles et entrer les détails demandés. ">
 
-<!ENTITY pref.autodetect "best available">
+<!ENTITY pref.autodetect "le meilleur disponible">
 
 <!ENTITY pref.AccountName "Description">
-<!ENTITY pref.UserName "User name">
-<!ENTITY pref.UserNameDescription "User name is usually the email address of your account.">
-<!ENTITY pref.ServerName "Server address">
-<!ENTITY pref.ActiveSyncVersion "ActiveSync version">
-<!ENTITY pref.ServerNameDescription "e.g. mail.yourserver.com">
-<!ENTITY pref.usehttps "Use secure connection (connect via https)">
-<!ENTITY pref.DeviceId "ActiveSync device ID">
-<!ENTITY pref.birthday "Send birthday information">
-<!ENTITY pref.generaloptions "General options">
-<!ENTITY pref.contactoptions "Contact options">
-<!ENTITY pref.calendaroptions "Calendar options">
-<!ENTITY pref.provision "Enforce provisioning (required by Kerio)">
-<!ENTITY pref.galautocomplete "Include results from global address book (GAL) in email autocompletion">
+<!ENTITY pref.UserName "Nom d'utilisateur">
+<!ENTITY pref.UserNameDescription "Le nom d'utilisateur est généralement l'adresse e-mail de votre compte.">
+<!ENTITY pref.ServerName "Adresse du serveur">
+<!ENTITY pref.ActiveSyncVersion "Version ActiveSync">
+<!ENTITY pref.ServerNameDescription "par exemple mail.votreserveur.com">
+<!ENTITY pref.usehttps "Utiliser une connexion sécurisée (se connecter via https)">
+<!ENTITY pref.DeviceId "ID de périphérique ActiveSync">
+<!ENTITY pref.birthday "Envoyer la date de naissance">
+<!ENTITY pref.generaloptions "Options générales">
+<!ENTITY pref.contactoptions "Options des contacts">
+<!ENTITY pref.calendaroptions "Options de calendrier">
+<!ENTITY pref.provision "Forcer l'approvisionnement (requis par Kerio)">
+<!ENTITY pref.galautocomplete "Inclure les résultats du carnet d'adresses global (GAL) dans l'auto-complétion des adresses e-mail">
 
-<!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
+<!ENTITY pref.ShowTrashedFolders "Afficher les dossiers trouvés dans la corbeille">
 
-<!ENTITY pref.synclimit.all "everything">
-<!ENTITY pref.synclimit.2weeks "from 2 weeks ago">
-<!ENTITY pref.synclimit.1month "from 4 weeks ago">
-<!ENTITY pref.synclimit.3month "from 3 months ago">
-<!ENTITY pref.synclimit.6month "from 6 months ago">
-<!ENTITY pref.synclimit.description "Synchronization period: ">
+<!ENTITY pref.synclimit.all "tout">
+<!ENTITY pref.synclimit.2weeks "les 2 dernières semaines">
+<!ENTITY pref.synclimit.1month "les 4 dernières semaines">
+<!ENTITY pref.synclimit.3month "les 3 derniers mois">
+<!ENTITY pref.synclimit.6month "les 6 derniers mois">
+<!ENTITY pref.synclimit.description "Période de synchronisation : ">
 
-<!ENTITY pref.seperator.comma "Comma">
-<!ENTITY pref.seperator.linebreak "Line break">
-<!ENTITY pref.seperator.description "Separator for multiline address field.">
-<!ENTITY pref.displayoverride "Override Display Name with “First Name” + “Second Name”">
+<!ENTITY pref.seperator.comma "Virgule">
+<!ENTITY pref.seperator.linebreak "Saut de ligne">
+<!ENTITY pref.seperator.description "Séparateur pour le champ d'adresse multiligne.">
+<!ENTITY pref.displayoverride "Remplacer le nom affiché par &quot;Prénom&quot; + &quot;Nom&quot;">
 
-<!ENTITY servertype.auto "Automatic configuration">
-<!ENTITY servertype.description.auto "The configuration for many ActiveSync servers can be discovered by providing just your email address.">
+<!ENTITY servertype.auto "Configuration automatique">
+<!ENTITY servertype.description.auto "La configuration de nombreux serveurs ActiveSync peut être découverte en fournissant uniquement votre adresse e-mail.">
 
-<!ENTITY servertype.custom "Custom configuration">
-<!ENTITY servertype.description.custom "Setup your account by manually providing the address of the server you want to connect.">
+<!ENTITY servertype.custom "Configuration personalisée">
+<!ENTITY servertype.description.custom "Configurez votre compte en fournissant manuellement l'adresse du serveur que vous souhaitez connecter.">
 <!ENTITY servertype.office365 "Microsoft Office 365">
-<!ENTITY servertype.description.office365 "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA).">
+<!ENTITY servertype.description.office365 "Les comptes connectés à Office 365 utilisent un processus d'authentification moderne appelé OAuth 2.0 qui supporte également l'authentification multi-facteur (MFA).">
 
-<!ENTITY servertype.unlock "Double click to unlock all predefined server settings.">
+<!ENTITY servertype.unlock "Double-cliquez pour déverrouiller tous les paramètres prédéfinis du serveur.">
 
-<!ENTITY abCard.MiddleName "Middle name:">
-<!ENTITY abCard.Email3Address "Alternative Email:">
-<!ENTITY abCard.Home2PhoneNumber "Home Alternative Phone:">
-<!ENTITY abCard.Business2PhoneNumber "Work Alternative Phone:">
-<!ENTITY abCard.BusinessFaxNumber "Work Fax:">
+<!ENTITY abCard.MiddleName "Deuxième prénom:">
+<!ENTITY abCard.Email3Address "E-mail alternatif:">
+<!ENTITY abCard.Home2PhoneNumber "Téléphone Domicile Alternatif:">
+<!ENTITY abCard.Business2PhoneNumber "Téléphone Bureau Alternatif:">
+<!ENTITY abCard.BusinessFaxNumber "Fax de bureau:">
 
-<!ENTITY abCard.ManagerName "Manager:">
-<!ENTITY abCard.AssistantPhoneNumber "Assistant Phone:">
-<!ENTITY abCard.AssistantName "Assistant:">
-<!ENTITY abCard.Spouse "Spouse:">
-<!ENTITY abCard.Anniversary "Anniversary:">
+<!ENTITY abCard.ManagerName "Manageur:">
+<!ENTITY abCard.AssistantPhoneNumber "Téléphone Assistant(e):">
+<!ENTITY abCard.AssistantName "Assistant(e):">
+<!ENTITY abCard.Spouse "Épou(x/se):">
+<!ENTITY abCard.Anniversary "Anniversaire:">
 
-<!ENTITY abCard.CarPhoneNumber "Car Phone:">
-<!ENTITY abCard.RadioPhoneNumber "Radio Phone:">
-<!ENTITY abCard.CompanyMainPhone "Work Main Phone:">
+<!ENTITY abCard.CarPhoneNumber "Téléphone Voiture:">
+<!ENTITY abCard.RadioPhoneNumber "Téléphone Radio:">
+<!ENTITY abCard.CompanyMainPhone "Téléphone de Bureau Principal:">
 
-<!ENTITY abCard.OtherAddress "Address:">
-<!ENTITY abCard.OtherCity "City:">
-<!ENTITY abCard.OtherCountry "Country:">
-<!ENTITY abCard.OtherZip "ZIP Code:">
-<!ENTITY abCard.OtherState "State:">
+<!ENTITY abCard.OtherAddress "Adresse:">
+<!ENTITY abCard.OtherCity "Ville:">
+<!ENTITY abCard.OtherCountry "Pays:">
+<!ENTITY abCard.OtherZip "Code Postal:">
+<!ENTITY abCard.OtherState "État:">
 
-<!ENTITY abCard.header.worknumbers "Additional work numbers:">
-<!ENTITY abCard.header.homenumbers "Additional home numbers:">
-<!ENTITY abCard.header.othernumbers "Additional numbers:">
-<!ENTITY abCard.header.messaging "Messaging:">
-<!ENTITY abCard.header.people "People:">
-<!ENTITY abCard.header.eas "Other Fields (EAS)">
-<!ENTITY abCard.header.otheraddress "Other Address (EAS)">
+<!ENTITY abCard.header.worknumbers "Téléphones de bureau supplémentaires:">
+<!ENTITY abCard.header.homenumbers "Téléphones domicile supplémentaires:">
+<!ENTITY abCard.header.othernumbers "Numéros de téléphone supplémentaires:">
+<!ENTITY abCard.header.messaging "Messagerie:">
+<!ENTITY abCard.header.people "Personnes:">
+<!ENTITY abCard.header.eas "Autres champs (EAS)">
+<!ENTITY abCard.header.otheraddress "Autre Adresse (EAS)">
 
-<!ENTITY manager.tabs.accountsettings "Account settings">
-<!ENTITY manager.tabs.syncsettings "Options">
-<!ENTITY manager.tabs.outOfOffice "Auto responder">
+<!ENTITY manager.tabs.accountsettings "Paramètres du compte">
+<!ENTITY manager.tabs.syncsettings "Paramètres">
+<!ENTITY manager.tabs.outOfOffice "Répondeur automatique">
