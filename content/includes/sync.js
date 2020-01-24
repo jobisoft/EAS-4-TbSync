@@ -1203,7 +1203,7 @@ wbxml.ctag();*/
     },
 
     //item is a native lightning item
-    setItemRecurrence: function (item, syncData, data) {
+    setItemRecurrence: function (item, syncData, data, timezone) {
         if (data.Recurrence) {
             item.recurrenceInfo = TbSync.lightning.cal.createRecurrenceInfo();
             item.recurrenceInfo.item = item;
@@ -1287,7 +1287,11 @@ wbxml.ctag();*/
                 // Exception could be an object or an array of objects
                 let exceptions = [].concat(data.Exceptions.Exception);
                 for (let exception of exceptions) {
-                    let dateTime = TbSync.lightning.cal.createDateTime(exception.ExceptionStartTime);
+                    //exception.ExceptionStartTime is in UTC, but the Recurrence Object is in local timezone
+                    let dateTime = TbSync.lightning.cal.createDateTime(exception.ExceptionStartTime).getInTimezone(timezone);
+                        console.log("dateTime");
+                        console.log(exception.ExceptionStartTime);
+                        console.log(dateTime);
                     if (data.AllDayEvent == "1") {
                         dateTime.isDate = true;
                         // Pass to replacement event unless overriden

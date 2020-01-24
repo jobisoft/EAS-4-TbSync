@@ -161,7 +161,7 @@ var Calendar = {
             item.organizer = organizer;
         }
 
-        eas.sync.setItemRecurrence(item, syncdata, data);
+        eas.sync.setItemRecurrence(item, syncdata, data, eas.tools.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
         
         // BusyStatus is always representing the status of the current user in terms of availability.
         // It has nothing to do with the status of a meeting. The user could be just the organizer, but does not need to attend, so he would be free.
