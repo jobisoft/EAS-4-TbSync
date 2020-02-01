@@ -53,8 +53,8 @@
 
 <!ENTITY abCard.MiddleName "Drugie imię:">
 <!ENTITY abCard.Email3Address "Alternatywny e-mail:">
-<!ENTITY abCard.Home2PhoneNumber "Alternatywny telefon domowy:">
-<!ENTITY abCard.Business2PhoneNumber "Alternatywny telefon służbowy:">
+<!ENTITY abCard.Home2PhoneNumber "Alternatywny Telefon Domowy:">
+<!ENTITY abCard.Business2PhoneNumber "Alternatywny Telefon Służbowy:">
 <!ENTITY abCard.BusinessFaxNumber "Faks służbowy:">
 
 <!ENTITY abCard.ManagerName "Menedżer:">
