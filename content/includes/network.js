@@ -629,16 +629,23 @@ var network = {
             case "131": descriptions["131"]="AccountDisabled";
                 throw eas.sync.finish("error", "global.clientdenied"+ "::" + status + "::" + descriptions[status]);
 
-            case "110": //server error - resync
-                {
-                    let folders = syncData.accountData.getAllFoldersIncludingCache();
-                    for (let folder of folders) {
-                        folder.remove();
-                    }		    
-                    // reset account
-                    eas.Base.onEnableAccount(syncData.accountData);
-                    throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
-                }
+            case "110": //server error - abort and disable autoSync for 30 minutes
+            {
+                let noAutosyncUntil = 30 * 60000 + Date.now();
+                let humanDate = new Date(noAutosyncUntil).toUTCString();
+                syncData.accountData.setAccountProperty("noAutosyncUntil", noAutosyncUntil);
+                throw eas.sync.finish("error", "global." + status, "AutoSync disabled until: " + humanDate + " \n\nRequest:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+
+/*                     // reset account
+ *                     let folders = syncData.accountData.getAllFoldersIncludingCache();
+ *                     for (let folder of folders) {
+ *                         folder.remove();
+ *                     }		    
+ *                     // reset account
+ *                     eas.Base.onEnableAccount(syncData.accountData);
+ *                     throw eas.sync.finish("resyncAccount", statusType, "Request:\n" + syncData.request + "\n\nResponse:\n" + syncData.response);
+ */
+            }
                 
             case "141": // The device is not provisionable
             case "142": // DeviceNotProvisioned
