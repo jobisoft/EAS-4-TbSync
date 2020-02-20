@@ -1353,7 +1353,16 @@ var network = {
                 TbSync.dump("EAS autodiscover POST with status (" + req.status + ")",   "\n" + connection.url + " => \n" + req.responseURL  + "\n[" + req.responseText + "]");
                 
                 if (req.status === 200) {
-                    let data = eas.xmltools.getDataFromXMLString(req.responseText);
+                    let data = null;
+                    // getDataFromXMLString may throw an error which cannot be catched outside onload,
+                    // because we are in an async callback of the surrounding Promise
+                    // Alternatively we could just return the responseText and do any data analysis outside of the Promise
+                    try {
+                        data = eas.xmltools.getDataFromXMLString(req.responseText);
+                    } catch (e) {
+                        resolve({"url":req.responseURL, "error":"bad response", "server":"", "user":connection.user});
+                        return;
+                    }
             
                     if (!(data === null) && data.Autodiscover && data.Autodiscover.Response && data.Autodiscover.Response.Action) {
                         // "Redirect" or "Settings" are possible
