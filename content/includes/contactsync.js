@@ -144,7 +144,7 @@ var Contacts = {
                     abItem.setProperty(TB_property, value);
                 } else {
                     //clear
-                    abItem.deleteProperty(TB_property);
+                    abItem.setProperty(TB_property, "");
                 }
             }
         }
@@ -157,9 +157,9 @@ var Contacts = {
             let value = eas.xmltools.checkString(data[dates[p][0]]);
             if (value == "") {
                 //clear
-                abItem.deleteProperty(dates[p][1]);
-                abItem.deleteProperty(dates[p][2]);
-                abItem.deleteProperty(dates[p][3]);
+                abItem.setProperty(dates[p][1], "");
+                abItem.setProperty(dates[p][2], "");
+                abItem.setProperty(dates[p][3], "");
             } else {
                 //set
                 let dateObj = new Date(value);
@@ -180,8 +180,8 @@ var Contacts = {
             let value = eas.xmltools.checkString(data[streets[p][0]]);
             if (value == "") {
                 //clear
-                abItem.deleteProperty(streets[p][1]);
-                abItem.deleteProperty(streets[p][2]);
+                abItem.setProperty(streets[p][1], "");
+                abItem.setProperty(streets[p][2], "");
             } else {
                 //set
                 let lines = value.split(seperator);
