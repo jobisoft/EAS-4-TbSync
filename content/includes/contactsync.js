@@ -194,6 +194,11 @@ var Contacts = {
         //take care of photo
         if (data.Picture) {
             abItem.addPhoto(id, eas.xmltools.nodeAsArray(data.Picture)[0], "jpg"); //Kerio sends Picture as container
+        } else {
+            //clear
+            abItem.setProperty("PhotoName", "");
+            abItem.setProperty("PhotoType", "");
+            abItem.setProperty("PhotoURI", "");
         }
         
 
@@ -298,6 +303,8 @@ var Contacts = {
         //take care of photo
         if (abItem.getProperty("PhotoType", "") == "file") {
             wbxml.atag("Picture", abItem.getPhoto());                    
+        } else {
+            wbxml.atag("Picture", "");                    
         }
         
         
