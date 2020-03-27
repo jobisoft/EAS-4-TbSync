@@ -1044,7 +1044,7 @@ wbxml.ctag();*/
         //EAS Importance: 0 = LOW | 1 = NORMAL | 2 = HIGH
         Importance : { "0":"9", "1":"5", "2":"1"}, //to PRIORITY
         //EAS Sensitivity :  0 = Normal  |  1 = Personal  |  2 = Private  |  3 = Confidential
-        Sensitivity : { "0":"PUBLIC", "1":"unset", "2":"PRIVATE", "3":"CONFIDENTIAL"}, //to CLASS
+        Sensitivity : { "0":"PUBLIC", "1":"PRIVATE", "2":"PRIVATE", "3":"CONFIDENTIAL"}, //to CLASS
         //EAS BusyStatus:  0 = Free  |  1 = Tentative  |  2 = Busy  |  3 = Work  |  4 = Elsewhere
         BusyStatus : {"0":"TRANSPARENT", "1":"unset", "2":"OPAQUE", "3":"OPAQUE", "4":"OPAQUE"}, //to TRANSP
         //EAS AttendeeStatus: 0 =Response unknown (but needed) |  2 = Tentative  |  3 = Accept  |  4 = Decline  |  5 = Not responded (and not needed) || 1 = Organizer in ResponseType
@@ -1055,7 +1055,7 @@ wbxml.ctag();*/
         //TB PRIORITY: 9 = LOW | 5 = NORMAL | 1 = HIGH
         PRIORITY : { "9":"0", "5":"1", "1":"2","unset":"1"}, //to Importance
         //TB CLASS: PUBLIC, PRIVATE, CONFIDENTIAL)
-        CLASS : { "PUBLIC":"0", "PRIVATE":"2", "CONFIDENTIAL":"3", "unset":"1"}, //to Sensitivity
+        CLASS : { "PUBLIC":"0", "PRIVATE":"2", "CONFIDENTIAL":"3", "unset":"0"}, //to Sensitivity
         //TB TRANSP : free = TRANSPARENT, busy = OPAQUE)
         TRANSP : {"TRANSPARENT":"0", "unset":"1", "OPAQUE":"2"}, // to BusyStatus
         //TB STATUS: NEEDS-ACTION, ACCEPTED, DECLINED, TENTATIVE, (DELEGATED, COMPLETED, IN-PROCESS - for todo)
