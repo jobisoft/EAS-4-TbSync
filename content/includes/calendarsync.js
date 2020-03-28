@@ -16,15 +16,15 @@ var Calendar = {
     // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
-    setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
+    setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata, mode = "standard") {
         
         let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
         
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
-        let easTZ = new eas.tools.TimeZoneDataStructure();
-
         eas.sync.setItemSubject(item, syncdata, data);
+        if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Processing " + mode + " calendar item", item.title + " (" + id + ")");
+
         eas.sync.setItemLocation(item, syncdata, data);
         eas.sync.setItemCategories(item, syncdata, data);
         eas.sync.setItemBody(item, syncdata, data);
@@ -32,7 +32,7 @@ var Calendar = {
         //timezone
         let stdOffset = eas.defaultTimezoneInfo.std.offset;
         let dstOffset = eas.defaultTimezoneInfo.dst.offset;
-
+        let easTZ = new eas.tools.TimeZoneDataStructure();
         if (data.TimeZone) {
             if (data.TimeZone == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") {
                 TbSync.dump("Recieve TZ", "No timezone data received, using local default timezone.");
@@ -44,10 +44,11 @@ var Calendar = {
                 dstOffset = easTZ.daylightBias + easTZ.utcOffset;
             }
         }
-
+        let timezone = eas.tools.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName);
+        
         if (data.StartTime) {
             let utc = cal.createDateTime(data.StartTime); //format "19800101T000000Z" - UTC
-            item.startDate = utc.getInTimezone(eas.tools.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
+            item.startDate = utc.getInTimezone(timezone);
             if (data.AllDayEvent && data.AllDayEvent == "1") {
                 item.startDate.timezone = (cal.dtz && cal.dtz.floating) ? cal.dtz.floating : cal.floating();
                 item.startDate.isDate = true;
@@ -56,7 +57,7 @@ var Calendar = {
 
         if (data.EndTime) {
             let utc = cal.createDateTime(data.EndTime);
-            item.endDate = utc.getInTimezone(eas.tools.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
+            item.endDate = utc.getInTimezone(timezone);
             if (data.AllDayEvent && data.AllDayEvent == "1") {
                 item.endDate.timezone = (cal.dtz && cal.dtz.floating) ? cal.dtz.floating : cal.floating();
                 item.endDate.isDate = true;
@@ -161,7 +162,7 @@ var Calendar = {
             item.organizer = organizer;
         }
 
-        eas.sync.setItemRecurrence(item, syncdata, data, eas.tools.guessTimezoneByStdDstOffset(stdOffset, dstOffset, easTZ.standardName));
+        eas.sync.setItemRecurrence(item, syncdata, data, timezone);
         
         // BusyStatus is always representing the status of the current user in terms of availability.
         // It has nothing to do with the status of a meeting. The user could be just the organizer, but does not need to attend, so he would be free.

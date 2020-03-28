@@ -1302,7 +1302,7 @@ wbxml.ctag();*/
                     else {
                         let replacement = item.recurrenceInfo.getOccurrenceFor(dateTime);
                         // replacement is a native lightning item, so we can access its id via .id
-                        eas.sync[syncData.type].setThunderbirdItemFromWbxml(replacement, exception, replacement.id, syncData);
+                        eas.sync[syncData.type].setThunderbirdItemFromWbxml(replacement, exception, replacement.id, syncData, "recurrence");
                         // Reminders should carry over from parent, but setThunderbirdItemFromWbxml clears all alarms
                         if (!exception.Reminder && item.getAlarms({}).length) {
                             replacement.addAlarm(item.getAlarms({})[0]);

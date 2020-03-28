@@ -13,15 +13,16 @@ var Tasks = {
     // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
-    setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata) {
+    setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata, mode = "standard") {
 
         let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
         
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
+        eas.sync.setItemSubject(item, syncdata, data);
+        if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Processing " + mode + " task item", item.title + " (" + id + ")");
 
         eas.sync.setItemBody(item, syncdata, data);
-        eas.sync.setItemSubject(item, syncdata, data);
         eas.sync.setItemCategories(item, syncdata, data);
         eas.sync.setItemRecurrence(item, syncdata, data);
 

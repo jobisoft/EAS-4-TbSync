@@ -111,8 +111,9 @@ var Contacts = {
     // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
-    setThunderbirdItemFromWbxml: function (abItem, data, id, syncdata) {
+    setThunderbirdItemFromWbxml: function (abItem, data, id, syncdata, mode = "standard") {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
+        if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Processing " + mode + " contact item", id);
 
         abItem.primaryKey = id;
 
