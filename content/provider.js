@@ -18,7 +18,8 @@ eas.flags = Object.freeze({
     allowEmptyResponse: true, 
 });
 
-eas.windowsTimezoneMap = {};
+eas.windowsToIanaTimezoneMap = {};
+eas.ianaToWindowsTimezoneMap = {};
 eas.cachedTimezoneData = null;
 eas.defaultTimezoneInfo = null;
 eas.defaultTimezone = null;
@@ -43,7 +44,7 @@ var Base = class {
         eas.defaultTimezone = null;
         eas.utcTimezone = null;
         eas.defaultTimezoneInfo = null;
-        eas.windowsTimezoneMap = {};
+        eas.windowsToIanaTimezoneMap = {};
         eas.openWindows = {};
 
         eas.overlayManager = new OverlayManager({verbose: 0});
@@ -84,6 +85,14 @@ var Base = class {
                 }
                 
                 //get windows timezone data from CSV
+                let aliasData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/Aliases.csv");
+                let aliasNames = {};
+                for (let i = 0; i<aliasData.length; i++) {
+                    let lData = aliasData[i].split(",");
+                    if (lData.length<2) continue;
+                    aliasNames[lData[0].toString().trim()] = lData[1].toString().trim().split(" ");
+                }
+
                 let csvData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
                 for (let i = 0; i<csvData.length; i++) {
                     let lData = csvData[i].split(",");
@@ -93,11 +102,33 @@ var Base = class {
                     let zoneType = lData[1].toString().trim();
                     let ianaZoneName = lData[2].toString().trim();
                     
-                    if (zoneType == "001") eas.windowsTimezoneMap[windowsZoneName] = ianaZoneName;
+                    if (zoneType == "001") eas.windowsToIanaTimezoneMap[windowsZoneName] = ianaZoneName;
                     if (ianaZoneName == eas.defaultTimezoneInfo.std.id) eas.defaultTimezoneInfo.std.windowsZoneName = windowsZoneName;
+                                        
+                    // build the revers map as well, which is many-to-one, grap iana aliases from the csvData and from the aliasData
+                    // 1. multiple iana zones map to the same windows zone
+                    let ianaZones = ianaZoneName.split(" "); 
+                    for (let ianaZone of ianaZones) {
+                        eas.ianaToWindowsTimezoneMap[ianaZone] = windowsZoneName;
+                        if (aliasNames.hasOwnProperty(ianaZone)) {
+                            for (let aliasName of aliasNames[ianaZone]) {
+                                // 2. multiple iana zonescan be an alias to a main iana zone
+                                eas.ianaToWindowsTimezoneMap[aliasName] = windowsZoneName;
+                            }
+                        }
+                    }
                 }
 
+                let tzService = TbSync.lightning.cal.getTimezoneService();
+                let enumerator = tzService.timezoneIds;
+                while (enumerator.hasMore()) {
+                    let id = enumerator.getNext();
+                    if (!eas.ianaToWindowsTimezoneMap[id]) {
+                        TbSync.eventlog.add("info", eventLogInfo, "The IANA timezone <"+id+"> cannot be mapped to any Exchange timezone.");
+                    }
+                }
 
+                
                 //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
                 //but do not change any explicitly set association
                 // - A) find email identity and accociate (which sets organizer to that user identity)

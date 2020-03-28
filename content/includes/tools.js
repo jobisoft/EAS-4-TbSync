@@ -371,17 +371,17 @@ var tools = {
 
 
             //check for windows timezone name
-            if (eas.windowsTimezoneMap[stdName] && eas.cachedTimezoneData.iana[eas.windowsTimezoneMap[stdName]] && eas.cachedTimezoneData.iana[eas.windowsTimezoneMap[stdName]].std.offset == stdOffset ) {
+            if (eas.windowsToIanaTimezoneMap[stdName] && eas.cachedTimezoneData.iana[eas.windowsToIanaTimezoneMap[stdName]] && eas.cachedTimezoneData.iana[eas.windowsToIanaTimezoneMap[stdName]].std.offset == stdOffset ) {
                 //the windows timezone maps multiple IANA zones to one (Berlin*, Rome, Bruessel)
                 //check the windowsZoneName of the default TZ and of the winning, if they match, use default TZ
                 //so Rome could win, even Berlin is the default IANA zone
-                if (eas.defaultTimezoneInfo.std.windowsZoneName && eas.windowsTimezoneMap[stdName] != eas.defaultTimezoneInfo.std.id && eas.cachedTimezoneData.iana[eas.windowsTimezoneMap[stdName]].std.offset == eas.defaultTimezoneInfo.std.offset && stdName == eas.defaultTimezoneInfo.std.windowsZoneName) {
-                    TbSync.dump("Timezone matched via windows timezone name ("+stdName+") with default TZ overtake", eas.windowsTimezoneMap[stdName] + " -> " + eas.defaultTimezoneInfo.std.id);
+                if (eas.defaultTimezoneInfo.std.windowsZoneName && eas.windowsToIanaTimezoneMap[stdName] != eas.defaultTimezoneInfo.std.id && eas.cachedTimezoneData.iana[eas.windowsToIanaTimezoneMap[stdName]].std.offset == eas.defaultTimezoneInfo.std.offset && stdName == eas.defaultTimezoneInfo.std.windowsZoneName) {
+                    TbSync.dump("Timezone matched via windows timezone name ("+stdName+") with default TZ overtake", eas.windowsToIanaTimezoneMap[stdName] + " -> " + eas.defaultTimezoneInfo.std.id);
                     return eas.defaultTimezoneInfo.timezone;
                 }
                 
-                TbSync.dump("Timezone matched via windows timezone name ("+stdName+")", eas.windowsTimezoneMap[stdName]);
-                return eas.cachedTimezoneData.iana[eas.windowsTimezoneMap[stdName]].timezone;
+                TbSync.dump("Timezone matched via windows timezone name ("+stdName+")", eas.windowsToIanaTimezoneMap[stdName]);
+                return eas.cachedTimezoneData.iana[eas.windowsToIanaTimezoneMap[stdName]].timezone;
             }
 
             let parts = stdName.replace(/[;,()\[\]]/g," ").split(" ");

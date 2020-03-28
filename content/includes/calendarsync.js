@@ -237,8 +237,8 @@ var Calendar = {
             easTZ.standardBias = 0;
             easTZ.daylightBias =  tzInfo.dst.offset -  tzInfo.std.offset;
 
-            easTZ.standardName = tzInfo.std.displayname;
-            easTZ.daylightName = tzInfo.dst.displayname;
+            easTZ.standardName = eas.ianaToWindowsTimezoneMap.hasOwnProperty(tzInfo.std.displayname) ? eas.ianaToWindowsTimezoneMap[tzInfo.std.displayname] : tzInfo.std.displayname;
+            easTZ.daylightName = eas.ianaToWindowsTimezoneMap.hasOwnProperty(tzInfo.dst.displayname) ? eas.ianaToWindowsTimezoneMap[tzInfo.dst.displayname] : tzInfo.dst.displayname;
 
             if (tzInfo.std.switchdate && tzInfo.dst.switchdate) {
                 easTZ.standardDate.wMonth = tzInfo.std.switchdate.month;
