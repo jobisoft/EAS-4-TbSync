@@ -118,14 +118,18 @@ var Tasks = {
 
         //tasks is using extended ISO 8601 (2019-01-18T00:00:00.000Z)  instead of basic (20190118T000000Z), 
         //eas.tools.getIsoUtcString returns extended if true as second parameter is present
+        
+        // TB will enforce a StartDate if it has a recurrence
         let localStartDate = null;
-        if (item.entryDate || item.dueDate) {
-            wbxml.atag("UtcStartDate", eas.tools.getIsoUtcString(item.entryDate ? item.entryDate : item.dueDate, true));
-
+        if (item.entryDate) {
+            wbxml.atag("UtcStartDate", eas.tools.getIsoUtcString(item.entryDate, true));
             //to fake the local time as UTC, getIsoUtcString needs the third parameter to be true
-            localStartDate = eas.tools.getIsoUtcString(item.entryDate ? item.entryDate : item.dueDate, true, true);
+            localStartDate = eas.tools.getIsoUtcString(item.entryDate, true, true);
             wbxml.atag("StartDate", localStartDate);
+        }
 
+        // Tasks without DueDate are breaking O365 - use StartDate as DueDate
+        if (item.entryDate || item.dueDate) {
             wbxml.atag("UtcDueDate", eas.tools.getIsoUtcString(item.dueDate ? item.dueDate : item.entryDate, true));
             //to fake the local time as UTC, getIsoUtcString needs the third parameter to be true
             wbxml.atag("DueDate", eas.tools.getIsoUtcString(item.dueDate ? item.dueDate : item.entryDate, true, true));
