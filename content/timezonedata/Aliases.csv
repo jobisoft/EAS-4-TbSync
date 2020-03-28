@@ -1,0 +1,110 @@
+Africa/Abidjan,Africa/Timbuktu Africa/Bamako Africa/Banjul Africa/Conakry Africa/Dakar Africa/Freetown Africa/Lome Africa/Nouakchott Africa/Ouagadougou Atlantic/St_Helena
+Africa/Cairo,Egypt
+Africa/Johannesburg,Africa/Maseru Africa/Mbabane
+Africa/Lagos,Africa/Bangui Africa/Brazzaville Africa/Douala Africa/Kinshasa Africa/Libreville Africa/Luanda Africa/Malabo Africa/Niamey Africa/Porto-Novo
+Africa/Maputo,Africa/Blantyre Africa/Bujumbura Africa/Gaborone Africa/Harare Africa/Kigali Africa/Lubumbashi Africa/Lusaka
+Africa/Nairobi,Africa/Asmara Africa/Addis_Ababa Africa/Dar_es_Salaam Africa/Djibouti Africa/Kampala Africa/Mogadishu Indian/Antananarivo Indian/Comoro Indian/Mayotte Africa/Asmera
+Africa/Tripoli,Libya
+America/Adak,America/Atka US/Aleutian
+America/Anchorage,US/Alaska
+America/Argentina/Buenos_Aires,America/Buenos_Aires
+America/Argentina/Catamarca,America/Catamarca America/Argentina/ComodRivadavia
+America/Argentina/Cordoba,America/Cordoba America/Rosario
+America/Argentina/Jujuy,America/Jujuy
+America/Argentina/Mendoza,America/Mendoza
+America/Atikokan,America/Coral_Harbour
+America/Chicago,US/Central
+America/Curacao,America/Aruba America/Lower_Princes America/Kralendijk
+America/Denver,America/Shiprock Navajo US/Mountain
+America/Detroit,US/Michigan
+America/Edmonton,Canada/Mountain
+America/Halifax,Canada/Atlantic
+America/Havana,Cuba
+America/Indiana/Indianapolis,America/Fort_Wayne America/Indianapolis US/East-Indiana
+America/Indiana/Knox,America/Knox_IN US/Indiana-Starke
+America/Jamaica,Jamaica
+America/Kentucky/Louisville,America/Louisville
+America/Los_Angeles,US/Pacific US/Pacific-New
+America/Manaus,Brazil/West
+America/Mazatlan,Mexico/BajaSur
+America/Mexico_City,Mexico/General
+America/New_York,US/Eastern
+America/Noronha,Brazil/DeNoronha
+America/Panama,America/Cayman
+America/Phoenix,US/Arizona
+America/Port_of_Spain,America/Virgin America/Anguilla America/Antigua America/Dominica America/Grenada America/Guadeloupe America/Marigot America/Montserrat America/St_Barthelemy America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Tortola
+America/Regina,Canada/East-Saskatchewan Canada/Saskatchewan
+America/Rio_Branco,America/Porto_Acre Brazil/Acre
+America/Santiago,Chile/Continental
+America/Sao_Paulo,Brazil/East
+America/St_Johns,Canada/Newfoundland
+America/Tijuana,America/Ensenada Mexico/BajaNorte America/Santa_Isabel
+America/Toronto,Canada/Eastern America/Montreal
+America/Vancouver,Canada/Pacific
+America/Whitehorse,Canada/Yukon
+America/Winnipeg,Canada/Central
+Asia/Ashgabat,Asia/Ashkhabad
+Asia/Bangkok,Asia/Phnom_Penh Asia/Vientiane
+Asia/Dhaka,Asia/Dacca
+Asia/Dubai,Asia/Muscat
+Asia/Ho_Chi_Minh,Asia/Saigon
+Asia/Hong_Kong,Hongkong
+Asia/Jerusalem,Asia/Tel_Aviv Israel
+Asia/Kathmandu,Asia/Katmandu
+Asia/Kolkata,Asia/Calcutta
+Asia/Macau,Asia/Macao
+Asia/Makassar,Asia/Ujung_Pandang
+Asia/Nicosia,Europe/Nicosia
+Asia/Qatar,Asia/Bahrain
+Asia/Riyadh,Asia/Aden Asia/Kuwait
+Asia/Seoul,ROK
+Asia/Shanghai,Asia/Chongqing Asia/Chungking Asia/Harbin PRC
+Asia/Singapore,Singapore
+Asia/Taipei,ROC
+Asia/Tehran,Iran
+Asia/Thimphu,Asia/Thimbu
+Asia/Tokyo,Japan
+Asia/Ulaanbaatar,Asia/Ulan_Bator
+Asia/Urumqi,Asia/Kashgar
+Asia/Yangon,Asia/Rangoon
+Atlantic/Canary,WET
+Atlantic/Faroe,Atlantic/Faeroe
+Atlantic/Reykjavik,Iceland
+Australia/Adelaide,Australia/South
+Australia/Brisbane,Australia/Queensland
+Australia/Broken_Hill,Australia/Yancowinna
+Australia/Darwin,Australia/North
+Australia/Hobart,Australia/Tasmania
+Australia/Lord_Howe,Australia/LHI
+Australia/Melbourne,Australia/Victoria
+Australia/Perth,Australia/West
+Australia/Sydney,Australia/ACT Australia/Canberra Australia/NSW
+Etc/GMT+10,HST
+Etc/GMT+5,EST
+Etc/GMT+7,MST
+Etc/UTC,Etc/GMT+0 Etc/GMT-0 Etc/GMT0 Etc/Greenwich GMT GMT+0 GMT-0 GMT0 Greenwich Etc/UCT Etc/Universal Etc/Zulu UCT UTC Universal Zulu Etc/GMT
+Europe/Belgrade,Europe/Ljubljana Europe/Podgorica Europe/Sarajevo Europe/Skopje Europe/Zagreb
+Europe/Berlin,MET
+Europe/Bucharest,EET
+Europe/Chisinau,Europe/Tiraspol
+Europe/Dublin,Eire
+Europe/Helsinki,Europe/Mariehamn
+Europe/Istanbul,Asia/Istanbul Turkey
+Europe/Lisbon,Portugal
+Europe/London,Europe/Belfast GB GB-Eire Europe/Jersey Europe/Guernsey Europe/Isle_of_Man
+Europe/Moscow,W-SU
+Europe/Oslo,Atlantic/Jan_Mayen Arctic/Longyearbyen
+Europe/Paris,CET
+Europe/Prague,Europe/Bratislava
+Europe/Rome,Europe/Vatican Europe/San_Marino
+Europe/Warsaw,Poland
+Europe/Zurich,Europe/Busingen Europe/Vaduz
+Pacific/Auckland,Antarctica/South_Pole NZ Antarctica/McMurdo
+Pacific/Chatham,NZ-CHAT
+Pacific/Chuuk,Pacific/Truk Pacific/Yap
+Pacific/Easter,Chile/EasterIsland
+Pacific/Guam,Pacific/Saipan
+Pacific/Honolulu,US/Hawaii Pacific/Johnston
+Pacific/Kwajalein,Kwajalein
+Pacific/Pago_Pago,Pacific/Samoa US/Samoa Pacific/Midway
+Pacific/Pohnpei,Pacific/Ponape
