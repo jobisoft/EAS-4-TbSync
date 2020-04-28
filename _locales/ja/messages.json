@@ -1,8 +1,8 @@
 {
   "extensionName": {
-    "message": "Provider for Exchange ActiveSync"
+    "message": "Exchange ActiveSync 用プロバイダ"
   },
   "extensionDescription": {
-    "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
+    "message": "TbSync に Exchange ActiveSync アカウントの同期サポートを追加します (連絡先、タスクとカレンダー)。"
   }
 }
