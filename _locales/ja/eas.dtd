@@ -1,5 +1,5 @@
 <!ENTITY add.title "Adding an Exchange ActiveSync account to TbSync">
-<!ENTITY add.shortdescription "Account information">
+<!ENTITY add.shortdescription "アカウント情報">
 <!ENTITY add.ok "アカウントを追加">
 <!ENTITY add.name "アカウント名:">
 <!ENTITY add.user "ユーザー名 (電子メールアドレス):">
