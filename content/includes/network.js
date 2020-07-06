@@ -82,7 +82,9 @@ var network = {
           auth_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
           token_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/token",
           redirect_uri : "https://login.microsoftonline.com/common/oauth2/nativeclient",
-          scope : "offline_access https://outlook.office.com/EAS.AccessAsUser.All",
+          // changed in beta 1.14.1, according to
+          // https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#default-and-consent
+          scope : "offline_access https://outlook.office.com/.default", //"offline_access https://outlook.office.com/EAS.AccessAsUser.All",
           client_id : "2980deeb-7460-4723-864a-f9b0f10cd992",
         }
         break;
@@ -100,7 +102,10 @@ var network = {
     oauth.completionURI = config.redirect_uri;
     
     oauth.extraAuthParams = [
-      ["prompt", "consent"],
+      // removed in beta 1.14.1, according to
+      // https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#default-and-consent
+      // prompt = consent will always ask for admin consent, even if it was granted
+      //["prompt", "consent"],
       ["login_hint", user],
     ];
         
