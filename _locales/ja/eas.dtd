@@ -5,7 +5,7 @@
 <!ENTITY add.user "ユーザー名 (電子メールアドレス):">
 <!ENTITY add.password "パスワード:">
 <!ENTITY add.url "サーバー アドレス:">
-<!ENTITY add.urldescription "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync).">
+<!ENTITY add.urldescription "基本的なサーバーアドレスだけを提供するだけで十分です (例: mail.yourserver.com)。 ただし、完全な URL を提供することもできます (例: https://mail.yourserver.com/Microsoft-Server-ActiveSync)。">
 
 <!ENTITY add.server "サーバー設定:">
 <!ENTITY add.description "Please select one of the available server configuration options and enter the requested details. ">
@@ -14,7 +14,7 @@
 
 <!ENTITY pref.AccountName "説明">
 <!ENTITY pref.UserName "ユーザー名">
-<!ENTITY pref.UserNameDescription "User name is usually the email address of your account.">
+<!ENTITY pref.UserNameDescription "ユーザー名は通常、あなたのアカウントの電子メールアドレスです。">
 <!ENTITY pref.ServerName "サーバー アドレス">
 <!ENTITY pref.ActiveSyncVersion "ActiveSync バージョン">
 <!ENTITY pref.ServerNameDescription "例: mail.yourserver.com">
@@ -30,11 +30,11 @@
 <!ENTITY pref.ShowTrashedFolders "Show folders found in trash">
 
 <!ENTITY pref.synclimit.all "全て">
-<!ENTITY pref.synclimit.2weeks "from 2 weeks ago">
-<!ENTITY pref.synclimit.1month "from 4 weeks ago">
-<!ENTITY pref.synclimit.3month "from 3 months ago">
-<!ENTITY pref.synclimit.6month "from 6 months ago">
-<!ENTITY pref.synclimit.description "Synchronization period: ">
+<!ENTITY pref.synclimit.2weeks "2 週間前まで">
+<!ENTITY pref.synclimit.1month "4 週間前まで">
+<!ENTITY pref.synclimit.3month "3 ヶ月前まで">
+<!ENTITY pref.synclimit.6month "6 ヶ月前まで">
+<!ENTITY pref.synclimit.description "同期する期間: ">
 
 <!ENTITY pref.seperator.comma "カンマ">
 <!ENTITY pref.seperator.linebreak "改行">
