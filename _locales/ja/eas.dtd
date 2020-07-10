@@ -8,7 +8,7 @@
 <!ENTITY add.urldescription "基本的なサーバーアドレスだけを提供するだけで十分です (例: mail.yourserver.com)。 ただし、完全な URL を提供することもできます (例: https://mail.yourserver.com/Microsoft-Server-ActiveSync)。">
 
 <!ENTITY add.server "サーバー設定:">
-<!ENTITY add.description "Please select one of the available server configuration options and enter the requested details. ">
+<!ENTITY add.description "利用可能なサーバー構成オプションのいずれかを選択し、要求された詳細を入力してください。 ">
 
 <!ENTITY pref.autodetect "利用可能な最新のバージョン">
 
