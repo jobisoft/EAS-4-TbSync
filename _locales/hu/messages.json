@@ -1,8 +1,572 @@
 {
-  "extensionName": {
-    "message": "Az Exchange ActiveSync szolgáltató"
-  },
-  "extensionDescription": {
-    "message": "Az Exchange ActiveSync-fiókok összehangolás támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync) (névjegyzék, feladatok és naptárak)."
-  }
+    "abCard.Anniversary": {
+        "message": "Évforduló:"
+    },
+    "abCard.AssistantName": {
+        "message": "Segítő:"
+    },
+    "abCard.AssistantPhoneNumber": {
+        "message": "Segítői telefon:"
+    },
+    "abCard.Business2PhoneNumber": {
+        "message": "2. munkahelyi telefon:"
+    },
+    "abCard.BusinessFaxNumber": {
+        "message": "Munkahelyi fax:"
+    },
+    "abCard.CarPhoneNumber": {
+        "message": "Autóstelefon:"
+    },
+    "abCard.CompanyMainPhone": {
+        "message": "Fő munkahelyi telefon:"
+    },
+    "abCard.Email3Address": {
+        "message": "Másodlagos e-mail:"
+    },
+    "abCard.Home2PhoneNumber": {
+        "message": "2. otthoni telefon:"
+    },
+    "abCard.ManagerName": {
+        "message": "Vezető:"
+    },
+    "abCard.MiddleName": {
+        "message": "Második keresztnév:"
+    },
+    "abCard.OtherAddress": {
+        "message": "Cím:"
+    },
+    "abCard.OtherCity": {
+        "message": "Város:"
+    },
+    "abCard.OtherCountry": {
+        "message": "Ország:"
+    },
+    "abCard.OtherState": {
+        "message": "Állam/tartomány:"
+    },
+    "abCard.OtherZip": {
+        "message": "Irányítószám:"
+    },
+    "abCard.RadioPhoneNumber": {
+        "message": "Rádiótávbeszélő:"
+    },
+    "abCard.Spouse": {
+        "message": "Házastárs:"
+    },
+    "abCard.header.eas": {
+        "message": "Egyéb mezők (EAS)"
+    },
+    "abCard.header.homenumbers": {
+        "message": "További otthoni számok:"
+    },
+    "abCard.header.messaging": {
+        "message": "Üzenetek:"
+    },
+    "abCard.header.otheraddress": {
+        "message": "Egyéb cím (EAS)"
+    },
+    "abCard.header.othernumbers": {
+        "message": "További számok:"
+    },
+    "abCard.header.people": {
+        "message": "Emberek:"
+    },
+    "abCard.header.worknumbers": {
+        "message": "További munkahelyi számok:"
+    },
+    "acl.readonly": {
+        "message": "Read-only server access (revert local changes)"
+    },
+    "acl.readwrite": {
+        "message": "Read from and write to server"
+    },
+    "add.description": {
+        "message": "Please select one of the available server configuration options and enter the requested details. "
+    },
+    "add.name": {
+        "message": "Felhasználónév:"
+    },
+    "add.ok": {
+        "message": "Fiók hozzáadása"
+    },
+    "add.password": {
+        "message": "Jelszó:"
+    },
+    "add.server": {
+        "message": "Kiszolgáló beállítások:"
+    },
+    "add.shortdescription": {
+        "message": "Fiók adatait"
+    },
+    "add.title": {
+        "message": "Exchange ActiveSync-fiók hozzáadása a Thunderbird-összehangoláshoz"
+    },
+    "add.url": {
+        "message": "Kiszolgáló címe:"
+    },
+    "add.urldescription": {
+        "message": "Megfelelőnek kell lennie ahhoz, hogy csak az alapkiszolgáló címét adja meg (például: posta.kiszolgálód.hu). Azonban a teljes URL-címet is megadhatjuk (például: https://posta.kiszolgálód.hu/Microsoft-Server-ActiveSync)."
+    },
+    "add.user": {
+        "message": "Felhasználónév (e-mail cím):"
+    },
+    "autocomplete.serverdirectory ": {
+        "message": " global server directory"
+    },
+    "autodiscover.Failed": {
+        "message": "A felhasználó <##user##> önműködő felderítése sikertelen. Vagy a megadott hitelesítő adatok hibásak voltak, vagy az ActiveSync szolgáltató ideiglenes problémát okozott, vagy nem támogatja az önműködő felderítést."
+    },
+    "autodiscover.NeedEmail": {
+        "message": "Az önműködő felismerésnek érvényes e-mail címnek kell lennie felhasználói névként."
+    },
+    "autodiscover.Ok": {
+        "message": "Az önműködő felderítés sikeresen befejeződött, most ellenőrizheti az választható beállításokat és létrehozhatja az összehangolási kapcsolatot."
+    },
+    "autodiscover.Querying": {
+        "message": "Beállítások keresése…"
+    },
+    "config.auto": {
+        "message": "Az ActiveSync kiszolgáló beállítások (önműködő észlelés)"
+    },
+    "config.custom": {
+        "message": "Az ActiveSync kiszolgáló beállítások"
+    },
+    "deletefolder.confirm": {
+        "message": "Tényleg azt szeretné, hogy a(z) „##replace.1##” mappa véglegesen törölje a kukát?"
+    },
+    "deletefolder.menuentry": {
+        "message": "„##replace.1##” mappa kuka ürítése"
+    },
+    "deletefolder.notallowed": {
+        "message": "Kérjük, törölje le a(z) „##replace.1##” mappát, mielőtt megpróbálnánk kuka ürítése."
+    },
+    "extensionDescription": {
+        "message": "Az Exchange ActiveSync-fiókok összehangolás támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync) (névjegyzék, feladatok és naptárak)."
+    },
+    "extensionName": {
+        "message": "Az Exchange ActiveSync szolgáltató"
+    },
+    "helplink.BadItemSkipped": {
+        "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
+    },
+    "helplink.global.clientdenied": {
+        "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F"
+    },
+    "helplink.security": {
+        "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
+    },
+    "manager.tabs.accountsettings": {
+        "message": "Fiók beállításai"
+    },
+    "manager.tabs.outOfOffice": {
+        "message": "Önműködő válasz"
+    },
+    "manager.tabs.syncsettings": {
+        "message": "Beállítások"
+    },
+    "newaccount.add_auto": {
+        "message": "Az önműködő felismerés beállításai és fiók hozzáadása"
+    },
+    "newaccount.add_custom": {
+        "message": "Fiók hozzáadása"
+    },
+    "pref.AccountName": {
+        "message": "Fióknév"
+    },
+    "pref.ActiveSyncVersion": {
+        "message": "ActiveSync verzió"
+    },
+    "pref.DeviceId": {
+        "message": "ActiveSync eszközazonosító"
+    },
+    "pref.ServerName": {
+        "message": "Kiszolgáló címe"
+    },
+    "pref.ServerNameDescription": {
+        "message": "például: posta.kiszolgálód.hu"
+    },
+    "pref.ShowTrashedFolders": {
+        "message": "A kukában található mappák megjelenítése"
+    },
+    "pref.UserName": {
+        "message": "Felhasználónév"
+    },
+    "pref.UserNameDescription": {
+        "message": "A felhasználónév általában a fiókod e-mail címe."
+    },
+    "pref.autodetect": {
+        "message": "az elérhető legjobb"
+    },
+    "pref.birthday": {
+        "message": "Születésnapi információk küldése"
+    },
+    "pref.calendaroptions": {
+        "message": "Naptárbeállítások"
+    },
+    "pref.contactoptions": {
+        "message": "Kapcsolat opciók"
+    },
+    "pref.displayoverride": {
+        "message": "A megjelenítési név felülbírálása „keresztnév” és „második keresztnév”"
+    },
+    "pref.galautocomplete": {
+        "message": "A globális címjegyzékből (GAL) kapott eredményeket e-mailben töltse ki automatikusan"
+    },
+    "pref.generaloptions": {
+        "message": "Általános beállítások"
+    },
+    "pref.provision": {
+        "message": "Ellátás végrehajtása (Kerio követelmény)"
+    },
+    "pref.seperator.comma": {
+        "message": "Vessző"
+    },
+    "pref.seperator.description": {
+        "message": "Több címsort tartalmazó elválasztó."
+    },
+    "pref.seperator.linebreak": {
+        "message": "Sortörés"
+    },
+    "pref.synclimit.1month": {
+        "message": "4 héttel ezelőtt"
+    },
+    "pref.synclimit.2weeks": {
+        "message": "2 héttel ezelőtt"
+    },
+    "pref.synclimit.3month": {
+        "message": "3 hónappal ezelőtt"
+    },
+    "pref.synclimit.6month": {
+        "message": "6 hónappal ezelőtt"
+    },
+    "pref.synclimit.all": {
+        "message": "mindent"
+    },
+    "pref.synclimit.description": {
+        "message": "Szinkronizálási időszak:"
+    },
+    "pref.usehttps": {
+        "message": "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)"
+    },
+    "recyclebin ": {
+        "message": " Trash"
+    },
+    "servertype.auto": {
+        "message": "Automatic configuration"
+    },
+    "servertype.custom": {
+        "message": "Egyéni beállítások"
+    },
+    "servertype.description.auto": {
+        "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
+    },
+    "servertype.description.custom": {
+        "message": "Setup your account by manually providing the address of the server you want to connect."
+    },
+    "servertype.description.office365": {
+        "message": "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA)."
+    },
+    "servertype.office365": {
+        "message": "Microsoft Office 365"
+    },
+    "servertype.unlock": {
+        "message": "Dupla kattintson az összes előre meghatározott kiszolgáló beállításának feloldásához."
+    },
+    "status.401": {
+        "message": "Nem sikerült hitelesíteni, ellenőrizni a felhasználónevet és a jelszót (401-es HTTP-hiba)."
+    },
+    "status.403": {
+        "message": "Kiszolgáló elutasította a kapcsolatot (tiltott) (403-ás HTTP-hiba)."
+    },
+    "status.404": {
+        "message": "A felhasználó nem található (404-es HTTP-hiba)."
+    },
+    "status.449": {
+        "message": "Kiszolgáló kérések készítése (449-es HTTP-hiba)."
+    },
+    "status.500": {
+        "message": "Ismeretlen kiszolgálóhiba (500-as HTTP-hiba)."
+    },
+    "status.503": {
+        "message": "A szolgáltatás nem elérhető (503-ás HTTP-hiba)."
+    },
+    "status.BadItemSkipped": {
+        "message": "Bad Item Skipped: ##replace.1##"
+    },
+    "status.FolderDelete.3": {
+        "message": "Nem lehet törölni egy rendszermappát."
+    },
+    "status.FolderDelete.4": {
+        "message": "?? Folder does not exist (status 4), resyncing ??"
+    },
+    "status.FolderDelete.6": {
+        "message": "A parancs nem sikerült, hiba történt a kiszolgálón."
+    },
+    "status.FolderDelete.9": {
+        "message": "?? Invalid synchronization key (status 9), resyncing ??"
+    },
+    "status.FolderSync.9": {
+        "message": "?? Invalid synchronization key (status 9), resyncing ??"
+    },
+    "status.InvalidServerOptions": {
+        "message": "A kiszolgáló nem nyújt felvilágosítást a támogatott ActiveSync verziókról. EAS akadályozva van ez a felhasználó vagy az ügyfél (Thunderbird-összehangolás) számára? Megpróbálhatja kézzel beállítani az ActiveSync verziót."
+    },
+    "status.OK": {
+        "message": "Rendben van"
+    },
+    "status.ServerRejectedRequest": {
+        "message": "Az EAS szerver megtagadta az utolsó kérésünket."
+    },
+    "status.ServerRejectedSomeItems": {
+        "message": "Az EAS-kiszolgáló nem fogadta el a ##replace.1## elemeket."
+    },
+    "status.Sync.12": {
+        "message": "?? Folder hierarchy changed (status 12), resyncing ??"
+    },
+    "status.Sync.3": {
+        "message": "?? Invalid synchronization key (status 3), resyncing ??"
+    },
+    "status.Sync.4": {
+        "message": "?? Malformed request (status 4) ??"
+    },
+    "status.Sync.5": {
+        "message": "?? Temporary server issues or invalid item (status 5) ??"
+    },
+    "status.Sync.6": {
+        "message": "?? Invalid item (status 6) ??"
+    },
+    "status.Sync.8": {
+        "message": "?? Object not found (status 8) ??"
+    },
+    "status.aborted": {
+        "message": "Nem összehangolva"
+    },
+    "status.disabled": {
+        "message": "A fiók nincs engedélyezve, az összehangolás le van tiltva."
+    },
+    "status.empty-response": {
+        "message": "Server sends unexpected empty response."
+    },
+    "status.forbiddenCalendarItemInTasksFolder": {
+        "message": "?? Forbidden calendar item in a task folder (please resort) ??"
+    },
+    "status.forbiddenTasksItemInCalendarFolder": {
+        "message": "?? Forbidden task item in a calendar folder (please resort) ??"
+    },
+    "status.global.101": {
+        "message": "A kérelem WBXML-t tartalmaz, de XML-ben nem sikerült dekódolni (101-es HTTP-hiba)."
+    },
+    "status.global.102": {
+        "message": "A kérelem WBXML-t tartalmaz, de XML-ben nem sikerült dekódolni (102-es HTTP-hiba)."
+    },
+    "status.global.103": {
+        "message": "A kérésben megadott XML nem követi a egyezménykövetelményeket (103-ás HTTP-hiba)."
+    },
+    "status.global.110": {
+        "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
+    },
+    "status.global.clientdenied": {
+        "message": "Az EAS kiszolgáló jelentése <##replace.2##> (állapota ##replace.1##), és nem engedélyezi a Thunderbird-összehangolás számára a fiók elérését."
+    },
+    "status.httperror": {
+        "message": "Közlés hiba (HTTP állapot ##replace.1##)."
+    },
+    "status.invalid": {
+        "message": "Érvénytelen kiszolgáló válasz (szemét)."
+    },
+    "status.malformed-xml": {
+        "message": "Could not parse XML. Check event log for details."
+    },
+    "status.modified": {
+        "message": "Helyi módosítások"
+    },
+    "status.network": {
+        "message": "Nem tudott csatlakozni a kiszolgálóhoz (##replace.1##)."
+    },
+    "status.networkerror": {
+        "message": "Nem tudott csatlakozni a kiszolgálóhoz."
+    },
+    "status.nolightning": {
+        "message": "A Lightning kiegészítő nincs telepítve, a naptárak nem támogatottak."
+    },
+    "status.nosupportedeasversion": {
+        "message": "A kiszolgáló nem támogatja az ActiveSync 2.5 vagy 14.0 verziót (csak ##replace.1##). A Thunderbird-összehangolás nem fog működni az ActiveSync kiszolgálóval."
+    },
+    "status.notargets": {
+        "message": "Az összehangolás megszakítása, mert a szinkronizálási célokat nem lehetett létrehozni."
+    },
+    "status.notsupportedeasversion": {
+        "message": "A kiszolgáló nem támogatja a kiválasztott ActiveSync ##replace.1## verziót (csak ##replace.2## verzió)."
+    },
+    "status.notsyncronized": {
+        "message": "A fiókot összehangolni kell, legalább egy elem nem összehangolva van."
+    },
+    "status.nouserhost": {
+        "message": "Hiányzik a felhasználónév és/vagy a kiszolgáló név. Kérjük, adja meg ezeket az értékeket."
+    },
+    "status.pending": {
+        "message": "Várakozás összehangolásra"
+    },
+    "status.policy.2": {
+        "message": "Az ügyfél számára nincs irányelv (Policy). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+    },
+    "status.policy.3": {
+        "message": "Ismeretlen irányelvtípus (PolicyType) érték. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+    },
+    "status.policy.4": {
+        "message": "A kiszolgáló házirend-adatai sérültek (esetleg meghamisították). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+    },
+    "status.policy.5": {
+        "message": "Az ügyfél elismeri a rossz irányelv kulcsot (PolicyKey). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+    },
+    "status.provision": {
+        "message": "A hozzáférést nem sikerült, állapota <##replace.1##>"
+    },
+    "status.response-contains-no-data": {
+        "message": "A szerverre adott válasz nem tartalmaz adatokat."
+    },
+    "status.resync-loop": {
+        "message": "Hiba történt, amelyből nem sikerült visszaszerezni a fiók újbóli létrehozásával. Kérjük, tiltsd le a fiókot, és próbálkozz újra. (Hiba: újra összehangolja hurok)"
+    },
+    "status.security": {
+        "message": "Biztonsági kapcsolat létrehozása nem sikerült. Ön aláírta vagy egyébként nem megbízható tanúsítványt importálta a Thunderbirdbe? (##replace.1##)"
+    },
+    "status.skipped": {
+        "message": "Még nem támogatott, kihagyva"
+    },
+    "status.syncing": {
+        "message": "Összehangol"
+    },
+    "status.timeout": {
+        "message": "Közlés időtúllépés."
+    },
+    "status.wbxml-parse-error": {
+        "message": "A kiszolgáló olvashatatlan választ küld."
+    },
+    "status.wbxmlerror": {
+        "message": "A összehangolás sikertelen. A kiszolgáló <##replace.1##> állapotban válaszolt."
+    },
+    "status.wbxmlmissingfield": {
+        "message": "ActiveSync egyezmény megsértése: A(z) <##replace.1##> kötelező mező hiányzik a kiszolgáló válaszából."
+    },
+    "syncstate.accountdone": {
+        "message": "Fiók kész"
+    },
+    "syncstate.done": {
+        "message": "Készítse elő a következő elemet az összehangolásához"
+    },
+    "syncstate.eval.response.autodiscover": {
+        "message": "Frissített kiszolgáló beállítások feldolgozása"
+    },
+    "syncstate.eval.response.deletefolder": {
+        "message": "A mappa törölve"
+    },
+    "syncstate.eval.response.estimate": {
+        "message": "Feldolgozási becslés változása"
+    },
+    "syncstate.eval.response.folders": {
+        "message": "A mappalista frissítés feldolgozása"
+    },
+    "syncstate.eval.response.localchanges": {
+        "message": "A helyi változások elismerésének feldolgozása"
+    },
+    "syncstate.eval.response.localdeletes": {
+        "message": "A helyi törlések feldolgozása"
+    },
+    "syncstate.eval.response.options": {
+        "message": "A kiszolgáló beállításainak feldolgozása"
+    },
+    "syncstate.eval.response.provision": {
+        "message": "Feldolgozási rendelkezés"
+    },
+    "syncstate.eval.response.remotechanges": {
+        "message": "A távoli módosítások feldolgozása"
+    },
+    "syncstate.eval.response.revertlocalchanges": {
+        "message": "A helyi változások visszaállítása"
+    },
+    "syncstate.eval.response.setdeviceinfo": {
+        "message": "Eszköz tájékoztatás küldése"
+    },
+    "syncstate.eval.response.synckey": {
+        "message": "Összehangoláskulcs feldolgozása"
+    },
+    "syncstate.prepare.request.autodiscover": {
+        "message": "Frissített kiszolgáló beállítások kérése"
+    },
+    "syncstate.prepare.request.deletefolder": {
+        "message": "Előkészület a mappa törlésére"
+    },
+    "syncstate.prepare.request.estimate": {
+        "message": "Módosítási becslés kérése"
+    },
+    "syncstate.prepare.request.folders": {
+        "message": "A mappalisták frissítés elküldése"
+    },
+    "syncstate.prepare.request.localchanges": {
+        "message": "Helyi változások küldése"
+    },
+    "syncstate.prepare.request.localdeletes": {
+        "message": "Helyi törlések küldése"
+    },
+    "syncstate.prepare.request.options": {
+        "message": "A kiszolgáló beállításainak megkeresése"
+    },
+    "syncstate.prepare.request.provision": {
+        "message": "A rendelkezés igénylése"
+    },
+    "syncstate.prepare.request.remotechanges": {
+        "message": "Távoli módosítások kérése"
+    },
+    "syncstate.prepare.request.revertlocalchanges": {
+        "message": "Helyi változások gyűjtése"
+    },
+    "syncstate.prepare.request.setdeviceinfo": {
+        "message": "Eszköz tájékoztatás küldése"
+    },
+    "syncstate.prepare.request.synckey": {
+        "message": "Összehangoláskulcs kérése"
+    },
+    "syncstate.preparing": {
+        "message": "Készítse elő a következő elemet az összehangolásához"
+    },
+    "syncstate.send.request.autodiscover": {
+        "message": "Várakozás a frissített kiszolgáló beállításokra"
+    },
+    "syncstate.send.request.deletefolder": {
+        "message": "Várakozás a mappa törlésére"
+    },
+    "syncstate.send.request.estimate": {
+        "message": "Várakozás a becslés megváltoztatására"
+    },
+    "syncstate.send.request.folders": {
+        "message": "Várakozás a mappa listájának frissítésére"
+    },
+    "syncstate.send.request.localchanges": {
+        "message": "Várakozás a helyi változások elismerésére"
+    },
+    "syncstate.send.request.localdeletes": {
+        "message": "Várakozás a helyi törlések nyugtázására"
+    },
+    "syncstate.send.request.options": {
+        "message": "Várakozás a kiszolgáló beállításaira"
+    },
+    "syncstate.send.request.provision": {
+        "message": "Várakozás a rendelkezésre"
+    },
+    "syncstate.send.request.remotechanges": {
+        "message": "Várakozás a távoli módosításokra"
+    },
+    "syncstate.send.request.revertlocalchanges": {
+        "message": "Várja a legfrissebb verziókat"
+    },
+    "syncstate.send.request.setdeviceinfo": {
+        "message": "Eszköz tájékoztatás küldése"
+    },
+    "syncstate.send.request.synckey": {
+        "message": "Várakozás az összehangoláskulcsra"
+    },
+    "syncstate.syncing": {
+        "message": "Összehangolás kezdése"
+    }
 }
