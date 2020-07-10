@@ -249,7 +249,7 @@
         "message": "安全な接続を利用する (https を使用して接続)"
     },
     "recyclebin ": {
-        "message": " Trash"
+        "message": " ごみ箱"
     },
     "servertype.auto": {
         "message": "自動設定"
@@ -375,7 +375,7 @@
         "message": "Invalid server response (junk)."
     },
     "status.malformed-xml": {
-        "message": "Could not parse XML. Check event log for details."
+        "message": "XML を解析できません。詳細はイベントログをご確認ください。"
     },
     "status.modified": {
         "message": "ローカルの変更"
