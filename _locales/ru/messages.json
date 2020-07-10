@@ -1,8 +1,572 @@
 {
-  "extensionName": {
-    "message": "Provider for Exchange ActiveSync"
-  },
-  "extensionDescription": {
-    "message": "Добавляет в TbSync поддержку синхронизации для учетных записей Exchange через базирующийся на http/https протокол ActiveSync (контакты, задачи и календари)."
-  }
+    "abCard.Anniversary": {
+        "message": "День рождения:"
+    },
+    "abCard.AssistantName": {
+        "message": "Помощник:"
+    },
+    "abCard.AssistantPhoneNumber": {
+        "message": "Телефон помощника:"
+    },
+    "abCard.Business2PhoneNumber": {
+        "message": "Рабочий телефон 2:"
+    },
+    "abCard.BusinessFaxNumber": {
+        "message": "Рабочий факс:"
+    },
+    "abCard.CarPhoneNumber": {
+        "message": "Автомобильный телефон:"
+    },
+    "abCard.CompanyMainPhone": {
+        "message": "Основной рабочий телефон:"
+    },
+    "abCard.Email3Address": {
+        "message": "Запасной Email:"
+    },
+    "abCard.Home2PhoneNumber": {
+        "message": "Домашний телефон 2:"
+    },
+    "abCard.ManagerName": {
+        "message": "Руководитель:"
+    },
+    "abCard.MiddleName": {
+        "message": "Отчество:"
+    },
+    "abCard.OtherAddress": {
+        "message": "Адрес:"
+    },
+    "abCard.OtherCity": {
+        "message": "Город:"
+    },
+    "abCard.OtherCountry": {
+        "message": "Страна:"
+    },
+    "abCard.OtherState": {
+        "message": "Область:"
+    },
+    "abCard.OtherZip": {
+        "message": "Почтовый индекс:"
+    },
+    "abCard.RadioPhoneNumber": {
+        "message": "Радиотелефон:"
+    },
+    "abCard.Spouse": {
+        "message": "Супруг:"
+    },
+    "abCard.header.eas": {
+        "message": "Другие поля (EAS)"
+    },
+    "abCard.header.homenumbers": {
+        "message": "Дополнительные домашние номера:"
+    },
+    "abCard.header.messaging": {
+        "message": "Мессенджер:"
+    },
+    "abCard.header.otheraddress": {
+        "message": "Другой адрес (EAS)"
+    },
+    "abCard.header.othernumbers": {
+        "message": "Дополнительные номера:"
+    },
+    "abCard.header.people": {
+        "message": "Люди:"
+    },
+    "abCard.header.worknumbers": {
+        "message": "Дополнительные рабочие номера:"
+    },
+    "acl.readonly": {
+        "message": "Доступ к серверу только для чтения (отменить локальные изменения)"
+    },
+    "acl.readwrite": {
+        "message": "Читать и писать на сервер"
+    },
+    "add.description": {
+        "message": "Пожалуйста, выберите один из доступных параметров конфигурации сервера и введите требуемую информацию. "
+    },
+    "add.name": {
+        "message": "Имя аккаунта:"
+    },
+    "add.ok": {
+        "message": "Добавить аккаунт"
+    },
+    "add.password": {
+        "message": "Пароль:"
+    },
+    "add.server": {
+        "message": "Конфигурация сервера:"
+    },
+    "add.shortdescription": {
+        "message": "Информация об учетной записи"
+    },
+    "add.title": {
+        "message": "Добавить Exchange ActiveSync аккаунт для TbSync"
+    },
+    "add.url": {
+        "message": "Адрес сервера:"
+    },
+    "add.urldescription": {
+        "message": "Достаточно указать только базовый адрес сервера (например: mail.yourserver.com). Однако также можно указать полный URL-адрес (например: https://mail.yourserver.com/Microsoft-Server-ActiveSync)."
+    },
+    "add.user": {
+        "message": "Имя пользователя (email адрес):"
+    },
+    "autocomplete.serverdirectory ": {
+        "message": " global server directory"
+    },
+    "autodiscover.Failed": {
+        "message": "Автообнаружение для пользователя <##user##> не удалось. Либо предоставленные учетные данные были неправильными, либо у вашего провайдера ActiveSync была временная проблема, или не поддерживается автообнаружение."
+    },
+    "autodiscover.NeedEmail": {
+        "message": "Автообнаружению нужен действительный адрес электронной почты в качестве имени пользователя."
+    },
+    "autodiscover.Ok": {
+        "message": "Автообнаружение успешно завершено, теперь вы можете проверить дополнительные настройки и установить соединение синхронизации."
+    },
+    "autodiscover.Querying": {
+        "message": "Поиск настроек…"
+    },
+    "config.auto": {
+        "message": "ActiveSync конфигурация сервера (Автообнаружение)"
+    },
+    "config.custom": {
+        "message": "ActiveSync конфигурация сервера"
+    },
+    "deletefolder.confirm": {
+        "message": "Вы действительно хотите ПЕРМАНЕНТНО ВЫЧИСТИТЬ папку “##replace.1##” из корзины?"
+    },
+    "deletefolder.menuentry": {
+        "message": "Перманентно вычистить папку “##replace.1##” из корзины"
+    },
+    "deletefolder.notallowed": {
+        "message": "Откажитесь от подписки папки “##replace.1##” прежде чем пытаться очистить ее от мусора."
+    },
+    "extensionDescription": {
+        "message": "Добавляет в TbSync поддержку синхронизации для учетных записей Exchange через базирующийся на http/https протокол ActiveSync (контакты, задачи и календари)."
+    },
+    "extensionName": {
+        "message": "Provider for Exchange ActiveSync"
+    },
+    "helplink.BadItemSkipped": {
+        "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
+    },
+    "helplink.global.clientdenied": {
+        "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F"
+    },
+    "helplink.security": {
+        "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
+    },
+    "manager.tabs.accountsettings": {
+        "message": "Настройки аккаунта"
+    },
+    "manager.tabs.outOfOffice": {
+        "message": "Автоответчик"
+    },
+    "manager.tabs.syncsettings": {
+        "message": "Настройки синхронизации"
+    },
+    "newaccount.add_auto": {
+        "message": "Настройки автообнаружения и добавление аккаунта"
+    },
+    "newaccount.add_custom": {
+        "message": "Добавить аккаунт"
+    },
+    "pref.AccountName": {
+        "message": "Имя аккаунта"
+    },
+    "pref.ActiveSyncVersion": {
+        "message": "Версия ActiveSync"
+    },
+    "pref.DeviceId": {
+        "message": "Идентификатор устройства"
+    },
+    "pref.ServerName": {
+        "message": "Адрес сервера"
+    },
+    "pref.ServerNameDescription": {
+        "message": "например: mail.yourserver.com"
+    },
+    "pref.ShowTrashedFolders": {
+        "message": "Показывать папки, найденные в корзине"
+    },
+    "pref.UserName": {
+        "message": "Имя пользователя"
+    },
+    "pref.UserNameDescription": {
+        "message": "Имя пользователя обычно является адресом электронной почты вашей учетной записи."
+    },
+    "pref.autodetect": {
+        "message": "лучшее из доступных"
+    },
+    "pref.birthday": {
+        "message": "Отправить информацию о днях рождения"
+    },
+    "pref.calendaroptions": {
+        "message": "Параметры календаря"
+    },
+    "pref.contactoptions": {
+        "message": "Параметры контакта"
+    },
+    "pref.displayoverride": {
+        "message": "Переопределить отображаемое имя с помощью “Имя” + “Фамилия”"
+    },
+    "pref.galautocomplete": {
+        "message": "Включить результаты из глобальной адресной книги (GAL) в автозаполнение электронной почты"
+    },
+    "pref.generaloptions": {
+        "message": "Общие параметры"
+    },
+    "pref.provision": {
+        "message": "Заставить поддерживать (требуется для Kerio)"
+    },
+    "pref.seperator.comma": {
+        "message": "Запятая"
+    },
+    "pref.seperator.description": {
+        "message": "Сепаратор для многострочного поля адреса."
+    },
+    "pref.seperator.linebreak": {
+        "message": "Разрыв строки"
+    },
+    "pref.synclimit.1month": {
+        "message": "от 4 недель назад"
+    },
+    "pref.synclimit.2weeks": {
+        "message": "от 2 недель назад"
+    },
+    "pref.synclimit.3month": {
+        "message": "от 3 месяцев назад"
+    },
+    "pref.synclimit.6month": {
+        "message": "от 6 месяцев назад"
+    },
+    "pref.synclimit.all": {
+        "message": "все"
+    },
+    "pref.synclimit.description": {
+        "message": "Период синхронизации:"
+    },
+    "pref.usehttps": {
+        "message": "Использовать безопасное соединение (соединение через https)"
+    },
+    "recyclebin ": {
+        "message": " Корзина"
+    },
+    "servertype.auto": {
+        "message": "Автоматическая настройка"
+    },
+    "servertype.custom": {
+        "message": "Ручная настройка"
+    },
+    "servertype.description.auto": {
+        "message": "Для определения конфигурации множества серверов ActiveSync достаточно указать только адрес Вашей электронной почты."
+    },
+    "servertype.description.custom": {
+        "message": "Настройте Вашу учетную запись, вручную указав адрес сервера, к которому Вы хотите подключиться."
+    },
+    "servertype.description.office365": {
+        "message": "Учетные записи, подключенные к Office 365, используют современный процесс аутентификации под названием OAuth 2.0, который также поддерживает многофакторную аутентификацию (MFA)."
+    },
+    "servertype.office365": {
+        "message": "Microsoft Office 365"
+    },
+    "servertype.unlock": {
+        "message": "Дважды щелкните, чтобы разблокировать все предопределенные настройки сервера."
+    },
+    "status.401": {
+        "message": "Не удалось аутентифицировать, проверить имя пользователя и пароль. (HTTP Ошибка 401)."
+    },
+    "status.403": {
+        "message": "Сервер отклонил соединение (запрещено) (HTTP Ошибка 403)."
+    },
+    "status.404": {
+        "message": "Пользователь не найден (HTTP Ошибка 404)."
+    },
+    "status.449": {
+        "message": "Серверные запросы дублируются (HTTP Ошибка 449)."
+    },
+    "status.500": {
+        "message": "Неизвестная ошибка сервера (HTTP Ошибка 500)."
+    },
+    "status.503": {
+        "message": "Сервис недоступен (HTTP Ошибка 503)."
+    },
+    "status.BadItemSkipped": {
+        "message": "Плохой элемент пропущен: ##replace.1##"
+    },
+    "status.FolderDelete.3": {
+        "message": "Не удается удалить системную папку."
+    },
+    "status.FolderDelete.4": {
+        "message": "Папка не существует (статус 4), повторная синхронизация"
+    },
+    "status.FolderDelete.6": {
+        "message": "Команда не может быть выполнена, на сервере возникла ошибка."
+    },
+    "status.FolderDelete.9": {
+        "message": "Неверный ключ синхронизации (статус 9), повторная синхронизация"
+    },
+    "status.FolderSync.9": {
+        "message": "Неверный ключ синхронизации (статус 9), повторная синхронизация"
+    },
+    "status.InvalidServerOptions": {
+        "message": "Сервер не предоставляет информацию о поддерживаемых версиях ActiveSync. EAS блокирован для этого пользователя или этого клиента (TbSync)? Вы можете попробовать установить версию ActiveSync вручную."
+    },
+    "status.OK": {
+        "message": "Готово"
+    },
+    "status.ServerRejectedRequest": {
+        "message": "Сервер EAS отклонил наш последний запрос."
+    },
+    "status.ServerRejectedSomeItems": {
+        "message": "Сервер EAS не принял элементы ##replace.1##."
+    },
+    "status.Sync.12": {
+        "message": "Изменена иерархия папок (статус 12), повторная синхронизация"
+    },
+    "status.Sync.3": {
+        "message": "Неверный ключ синхронизации (статус 3), повторная синхронизация"
+    },
+    "status.Sync.4": {
+        "message": "Неверный запрос (статус 4)"
+    },
+    "status.Sync.5": {
+        "message": "Временные проблемы с сервером или недопустимый элемент (статус 5)"
+    },
+    "status.Sync.6": {
+        "message": "Недопустимый элемент (статус 6)"
+    },
+    "status.Sync.8": {
+        "message": "Объект не найден (статус 8)"
+    },
+    "status.aborted": {
+        "message": "Не синхронизировано"
+    },
+    "status.disabled": {
+        "message": "Аккаунт не включен, синхронизация отключена."
+    },
+    "status.empty-response": {
+        "message": "Сервер отправляет неожиданный пустой ответ."
+    },
+    "status.forbiddenCalendarItemInTasksFolder": {
+        "message": "Запрещенный элемент календаря в папке задач (пожалуйста, исправьте)"
+    },
+    "status.forbiddenTasksItemInCalendarFolder": {
+        "message": "Запрещенный элемент задачи в папке календаря (пожалуйста, исправьте)"
+    },
+    "status.global.101": {
+        "message": "Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 101)."
+    },
+    "status.global.102": {
+        "message": "Запрос содержит WBXML но он не может быть декодирован в XML (EAS Ошибка 102)."
+    },
+    "status.global.103": {
+        "message": "XML, указанный в запросе, не соответствует требованиям протокола (EAS Ошибка 103)."
+    },
+    "status.global.110": {
+        "message": "Сервер сообщил о внутренней ошибке, и мы не должны немедленно повторять попытку. Автоматическая периодическая синхронизация была отключена на 30 минут (Ошибка EAS 110)."
+    },
+    "status.global.clientdenied": {
+        "message": "Отчеты сервера EAS <##replace.2##> (статус ##replace.1##) и не позволяют TbSync доступ к вашему аккаунту."
+    },
+    "status.httperror": {
+        "message": "Ошибка связи (HTTP статус ##replace.1##)."
+    },
+    "status.invalid": {
+        "message": "Недопустимый ответ сервера (мусор в обмене)."
+    },
+    "status.malformed-xml": {
+        "message": "Не удалось разобрать XML. Проверьте журнал событий для деталей."
+    },
+    "status.modified": {
+        "message": "Локальные изменения"
+    },
+    "status.network": {
+        "message": "Не удалось подключиться к серверу (##replace.1##)."
+    },
+    "status.networkerror": {
+        "message": "Не удалось подключиться к серверу."
+    },
+    "status.nolightning": {
+        "message": "Lightning Add-On не установлен, календари не поддерживаются."
+    },
+    "status.nosupportedeasversion": {
+        "message": "Сервер не поддерживает ActiveSync v2.5 или v14.0 (только ##replace.1##). TbSync не будет работать с этим ActiveSync сервером."
+    },
+    "status.notargets": {
+        "message": "Отмена синхронизации, поскольку цели синхронизации не могут быть созданы."
+    },
+    "status.notsupportedeasversion": {
+        "message": "Сервер не поддерживает выбранный ActiveSync v##replace.1## (только ##replace.2##)."
+    },
+    "status.notsyncronized": {
+        "message": "Аккаунт должен быть синхронизирован, по крайней мере один элемент не синхронизирован."
+    },
+    "status.nouserhost": {
+        "message": "Отсутствует имя пользователя и/или сервера. Укажите эти значения."
+    },
+    "status.pending": {
+        "message": "Ожидание пока синхронизируется"
+    },
+    "status.policy.2": {
+        "message": "Для этого клиента нет политики. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта."
+    },
+    "status.policy.3": {
+        "message": "Неизвестное значение политики для этого клиента. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта."
+    },
+    "status.policy.4": {
+        "message": "Данные политики на сервере повреждены (возможно, подделаны). Обратитесь к администратору вашего сервера или отключите использование этого аккаунта."
+    },
+    "status.policy.5": {
+        "message": "Клиент обнаружил неправильный ключ политики. Обратитесь к администратору вашего сервера или отключите использование этого аккаунта."
+    },
+    "status.provision": {
+        "message": "Резервирование не удалось со статусом <##replace.1##>"
+    },
+    "status.response-contains-no-data": {
+        "message": "Ответ от сервера не содержит данных."
+    },
+    "status.resync-loop": {
+        "message": "Произошла ошибка, из-за которой не удалось пересинхронизировать аккаунт. Отключите аккаунт и повторите попытку. (Ошибка: повторная синхронизация)"
+    },
+    "status.security": {
+        "message": "Не удалось установить безопасное соединение. Вы используете самоподписанный или ненадежный сертификат без импорта его в Thunderbird? (##replace.1##)"
+    },
+    "status.skipped": {
+        "message": "Пока не поддерживается, пропущено"
+    },
+    "status.syncing": {
+        "message": "Синхронизация"
+    },
+    "status.timeout": {
+        "message": "Тайм-аут связи."
+    },
+    "status.wbxml-parse-error": {
+        "message": "Сервер отправляет нечитаемый ответ."
+    },
+    "status.wbxmlerror": {
+        "message": "Ошибка синхронизации. Сервер ответил статусом <##replace.1##>."
+    },
+    "status.wbxmlmissingfield": {
+        "message": "ActiveSync протокол нарушен: Обязательное поле <##replace.1##> отсутствует в ответе сервера."
+    },
+    "syncstate.accountdone": {
+        "message": "Завершенный аккаунт"
+    },
+    "syncstate.done": {
+        "message": "Подготовка следующего элемента для синхронизации"
+    },
+    "syncstate.eval.response.autodiscover": {
+        "message": "Обработка обновленных настроек сервера"
+    },
+    "syncstate.eval.response.deletefolder": {
+        "message": "Папка удалена"
+    },
+    "syncstate.eval.response.estimate": {
+        "message": "Обработка оценки изменений"
+    },
+    "syncstate.eval.response.folders": {
+        "message": "Обработка обновления листа папок"
+    },
+    "syncstate.eval.response.localchanges": {
+        "message": "Обработка подтверждения локальных изменений"
+    },
+    "syncstate.eval.response.localdeletes": {
+        "message": "Обработка подтверждения локальных удалений"
+    },
+    "syncstate.eval.response.options": {
+        "message": "Обработка настроек сервера"
+    },
+    "syncstate.eval.response.provision": {
+        "message": "Обработка резервирования"
+    },
+    "syncstate.eval.response.remotechanges": {
+        "message": "Обработка удаленных изменений"
+    },
+    "syncstate.eval.response.revertlocalchanges": {
+        "message": "Откат локальных изменений"
+    },
+    "syncstate.eval.response.setdeviceinfo": {
+        "message": "Обработка информации об устройстве"
+    },
+    "syncstate.eval.response.synckey": {
+        "message": "Обработка элементов синхронизации"
+    },
+    "syncstate.prepare.request.autodiscover": {
+        "message": "Запрос обновленных настроек сервера"
+    },
+    "syncstate.prepare.request.deletefolder": {
+        "message": "Подготовка к удалению папки"
+    },
+    "syncstate.prepare.request.estimate": {
+        "message": "Запрос оценки изменения"
+    },
+    "syncstate.prepare.request.folders": {
+        "message": "Отправка обновления листа папок"
+    },
+    "syncstate.prepare.request.localchanges": {
+        "message": "Отправка локальных изменений"
+    },
+    "syncstate.prepare.request.localdeletes": {
+        "message": "Отправка локальных удалений"
+    },
+    "syncstate.prepare.request.options": {
+        "message": "Запрос настроек сервера"
+    },
+    "syncstate.prepare.request.provision": {
+        "message": "Запрос для резервирования"
+    },
+    "syncstate.prepare.request.remotechanges": {
+        "message": "Запрос удаленных изменений"
+    },
+    "syncstate.prepare.request.revertlocalchanges": {
+        "message": "Сбор локальных изменений"
+    },
+    "syncstate.prepare.request.setdeviceinfo": {
+        "message": "Отправка информации об устройстве"
+    },
+    "syncstate.prepare.request.synckey": {
+        "message": "Запрос элементов синхронизации"
+    },
+    "syncstate.preparing": {
+        "message": "Подготовка следующего элемента для синхронизации"
+    },
+    "syncstate.send.request.autodiscover": {
+        "message": "Ожидание обновленных настроек сервера"
+    },
+    "syncstate.send.request.deletefolder": {
+        "message": "Ожидание удаления папки"
+    },
+    "syncstate.send.request.estimate": {
+        "message": "Ожидание оценки изменений"
+    },
+    "syncstate.send.request.folders": {
+        "message": "Ожидание обновления листа папок"
+    },
+    "syncstate.send.request.localchanges": {
+        "message": "Ожидание подтверждения локальных изменений"
+    },
+    "syncstate.send.request.localdeletes": {
+        "message": "Ожидание подтверждения локальных удалений"
+    },
+    "syncstate.send.request.options": {
+        "message": "Ожидание настроек сервера"
+    },
+    "syncstate.send.request.provision": {
+        "message": "Ожидание резервирования"
+    },
+    "syncstate.send.request.remotechanges": {
+        "message": "Ожидание удаленных изменений"
+    },
+    "syncstate.send.request.revertlocalchanges": {
+        "message": "Ожидание самых последних версий"
+    },
+    "syncstate.send.request.setdeviceinfo": {
+        "message": "Ожидание информации об устройстве"
+    },
+    "syncstate.send.request.synckey": {
+        "message": "Ожидание элементов синхронизации"
+    },
+    "syncstate.syncing": {
+        "message": "Инициализация синхронизации"
+    }
 }

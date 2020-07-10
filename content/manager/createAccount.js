@@ -47,6 +47,8 @@ var tbSyncEasNewAccount = {
 
         document.addEventListener("wizardfinish", tbSyncEasNewAccount.onFinish.bind(this));
         document.addEventListener("wizardcancel", tbSyncEasNewAccount.onCancel.bind(this));
+        // bug https://bugzilla.mozilla.org/show_bug.cgi?id=1618252
+        document.getElementById('tbsync.newaccount.wizard')._adjustWizardHeader();        
     },
 
     onUnload: function () {

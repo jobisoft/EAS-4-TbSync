@@ -48,18 +48,18 @@ var Base = class {
         eas.openWindows = {};
 
         eas.overlayManager = new OverlayManager({verbose: 0});
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abNewCardWindow.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookoverlay.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abNewCardWindow.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookoverlay.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
 
         // The abCSS.xul overlay is just adding a CSS file.
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
+        //await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
 
         eas.overlayManager.startObserving();
                 
@@ -192,7 +192,7 @@ var Base = class {
     /**
      * Returns version of the TbSync API this provider is using
      */
-    static getApiVersion() { return "2.2"; }
+    static getApiVersion() { return "2.3"; }
 
 
     /**
@@ -203,11 +203,11 @@ var Base = class {
         
         switch (size) {
             case 16:
-                return "chrome://eas4tbsync/skin/" + base + "16.png";
+                return "chrome://eas4tbsync/content/skin/" + base + "16.png";
             case 32:
-                return "chrome://eas4tbsync/skin/" + base + "32.png";
+                return "chrome://eas4tbsync/content/skin/" + base + "32.png";
             default :
-                return "chrome://eas4tbsync/skin/" + base + "64.png";
+                return "chrome://eas4tbsync/content/skin/" + base + "64.png";
         }
     }
 
@@ -219,8 +219,8 @@ var Base = class {
         return {
             "Schiessl, Michael 1" : {name: "Michael Schiessl", description: "Tine 2.0", icon: "", link: "" },
             "Schiessl, Michael 2" : {name: "Michael Schiessl", description: " Exchange 2007", icon: "", link: "" },
-            "netcup GmbH" : {name: "netcup GmbH", description : "SOGo", icon: "chrome://eas4tbsync/skin/sponsors/netcup.png", link: "http://www.netcup.de/" },
-            "nethinks GmbH" : {name: "nethinks GmbH", description : "Zarafa", icon: "chrome://eas4tbsync/skin/sponsors/nethinks.png", link: "http://www.nethinks.com/" },
+            "netcup GmbH" : {name: "netcup GmbH", description : "SOGo", icon: "chrome://eas4tbsync/content/skin/sponsors/netcup.png", link: "http://www.netcup.de/" },
+            "nethinks GmbH" : {name: "nethinks GmbH", description : "Zarafa", icon: "chrome://eas4tbsync/content/skin/sponsors/nethinks.png", link: "http://www.nethinks.com/" },
             "Jau, Stephan" : {name: "Stephan Jau", description: "Horde", icon: "", link: "" },
             "Zavar " : {name: "Zavar", description: "Zoho", icon: "", link: "" },
         };
@@ -240,15 +240,6 @@ var Base = class {
      */
     static getMaintainerEmail() {
         return "john.bieling@gmx.de";
-    }
-
-
-    /**
-     * Returns the URL of the string bundle file of this provider, it can be
-     * accessed by TbSync.getString(<key>, <provider>)
-     */
-    static getStringBundleUrl() {
-        return "chrome://eas4tbsync/locale/eas.properties";
     }
 
 
@@ -744,7 +735,7 @@ var StandardFolderList = class {
                 src = "todo16.png";
                 break;
         }
-        return "chrome://tbsync/skin/" + src;
+        return "chrome://tbsync/content/skin/" + src;
     }
 
 

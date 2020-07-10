@@ -1,28 +1,23 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://tbsync/skin/fix_dropdown_1534697.css" type="text/css"?>
-<!DOCTYPE window [
-  <!ENTITY % tbsyncDTD SYSTEM "chrome://tbsync/locale/tbSync.dtd">
-  %tbsyncDTD;
-  <!ENTITY % easDTD SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
-  %easDTD;
-]>
+<?xml-stylesheet href="chrome://tbsync/content/skin/fix_dropdown_1534697.css" type="text/css"?>
 
 <overlay 
     id="tbSyncAccountConfig" 
     xmlns:html="http://www.w3.org/1999/xhtml">
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/manager/editAccountOverlay.js"/>
+    <script type="application/javascript" src="chrome://eas4tbsync/content/locales.js"/>
 
     <menuitem 
         id="TbSync.eas.FolderListContextMenuDelete" 
-        label="&pref.ShowTrashedFolders;" 
+        label="__EAS4TBSYNCMSG_pref.ShowTrashedFolders__" 
         class="menuitem-iconic"
-        image="chrome://tbsync/skin/trash16.png"
+        image="chrome://tbsync/content/skin/trash16.png"
         appendto="tbsync.accountsettings.FolderListContextMenu"
         oncommand="tbSyncEditAccountOverlay.deleteFolder();"/>
     
-    <tab id="manager.tabs.accountsettings" label="&manager.tabs.accountsettings;" appendto="manager.tabs" />
-    <tab id="manager.tabs.syncsettings" label="&manager.tabs.syncsettings;" appendto="manager.tabs" />
+    <tab id="manager.tabs.accountsettings" label="__EAS4TBSYNCMSG_manager.tabs.accountsettings__" appendto="manager.tabs" />
+    <tab id="manager.tabs.syncsettings" label="__EAS4TBSYNCMSG_manager.tabs.syncsettings__" appendto="manager.tabs" />
 
     <tabpanel id="manager.tabpanels.accountsettings" appendto="manager.tabpanels" flex="1" orient="vertical"><!-- ACCOUNT SETTINGS -->
           <vbox flex="1">
@@ -36,43 +31,43 @@
                     <rows>
                         <row>
                             <vbox pack="center">
-                                <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="&pref.AccountName;" />
+                                <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="__EAS4TBSYNCMSG_pref.AccountName__" />
                             </vbox>
                             <textbox id="tbsync.accountsettings.pref.accountname" />
                         </row>
                         
                         <row>
                             <vbox pack="center">
-                                <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.user" value="&pref.UserName;" />
+                                <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.user" value="__EAS4TBSYNCMSG_pref.UserName__" />
                             </vbox>
-                            <textbox class="lockIfConnected" tooltiptext="&pref.UserNameDescription;" id="tbsync.accountsettings.pref.user" />
+                            <textbox class="lockIfConnected" tooltiptext="__EAS4TBSYNCMSG_pref.UserNameDescription__" id="tbsync.accountsettings.pref.user" />
                         </row>
                         
                         <row>
                             <vbox pack="center">
-                                <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="&pref.ServerName;" />
+                                <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="__EAS4TBSYNCMSG_pref.ServerName__" />
                             </vbox>
-                            <textbox class="lockIfConnected"  tooltiptext="&pref.ServerNameDescription;" id="tbsync.accountsettings.pref.host" onblur="tbSyncEditAccountOverlay.stripHost(document);" />
+                            <textbox class="lockIfConnected"  tooltiptext="__EAS4TBSYNCMSG_pref.ServerNameDescription__" id="tbsync.accountsettings.pref.host" onblur="tbSyncEditAccountOverlay.stripHost(document);" />
                         </row>
                         <row>
                             <hbox/>
-                            <checkbox class="lockIfConnected" style="margin-bottom:1ex" id="tbsync.accountsettings.pref.https" label="&pref.usehttps;"  />
+                            <checkbox class="lockIfConnected" style="margin-bottom:1ex" id="tbsync.accountsettings.pref.https" label="__EAS4TBSYNCMSG_pref.usehttps__"  />
                         </row>
                         
                         <row>
                             <vbox id="asversion.hook" pack="center">
-                                <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="&pref.ActiveSyncVersion;" />
+                                <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="__EAS4TBSYNCMSG_pref.ActiveSyncVersion__" />
                             </vbox>
                             <menulist flex="0" id="tbsync.accountsettings.pref.asversionselected" class="lockIfConnected">
                                 <menupopup id="asversion.popup">
-                                    <menuitem label="&pref.autodetect;" value="auto" />
+                                    <menuitem label="__EAS4TBSYNCMSG_pref.autodetect__" value="auto" />
                                     <menuitem label="v2.5" value="2.5" />
                                     <menuitem label="v14.0" value="14.0" />
                                 </menupopup>
                             </menulist>
                         </row>
                         <row>
-                            <label class="lockIfConnected" style="text-align:left" value="&pref.DeviceId;" />
+                            <label class="lockIfConnected" style="text-align:left" value="__EAS4TBSYNCMSG_pref.DeviceId__" />
                             <label value="" disabled="true" id="tbsync.accountsettings.pref.deviceId" />
                         </row>
                    </rows>
@@ -81,8 +76,8 @@
                 <vbox flex="1" />
                 <vbox class="showIfConnected">
                     <hbox>
-                        <vbox pack="center"><image src="chrome://tbsync/skin/info16.png" /></vbox>
-                        <description flex="1">&manager.lockedsettings.description;</description>
+                        <vbox pack="center"><image src="chrome://tbsync/content/skin/info16.png" /></vbox>
+                        <description flex="1">__EAS4TBSYNCMSG_manager.lockedsettings.description__</description>
                     </hbox>
                 </vbox>
 
@@ -91,37 +86,37 @@
 
     <tabpanel id="manager.tabpanels.syncsettings" appendto="manager.tabpanels" flex="1" orient="vertical"><!-- SYNC SETTINGS -->
           <vbox flex="1">
-                <label style="margin-left:0; margin-bottom: 1ex;" class="header lockIfConnected" value="&pref.generaloptions;"/>
+                <label style="margin-left:0; margin-bottom: 1ex;" class="header lockIfConnected" value="__EAS4TBSYNCMSG_pref.generaloptions__"/>
                 <vbox>                            
-                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.provision" label="&pref.provision;"  />
+                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.provision" label="__EAS4TBSYNCMSG_pref.provision__"  />
                 </vbox>                            
 
-                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="&pref.contactoptions;"/>
+                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="__EAS4TBSYNCMSG_pref.contactoptions__"/>
                 <vbox>                            
-                    <checkbox id="tbsync.accountsettings.pref.galautocomplete" label="&pref.galautocomplete;" />
-                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.displayoverride" label="&pref.displayoverride;" />
+                    <checkbox id="tbsync.accountsettings.pref.galautocomplete" label="__EAS4TBSYNCMSG_pref.galautocomplete__" />
+                    <checkbox class="lockIfConnected" id="tbsync.accountsettings.pref.displayoverride" label="__EAS4TBSYNCMSG_pref.displayoverride__" />
                     <hbox align="center">
-                        <description id="separator.hook" class="lockIfConnected" flex="0">&pref.seperator.description;</description>
+                        <description id="separator.hook" class="lockIfConnected" flex="0">__EAS4TBSYNCMSG_pref.seperator.description__</description>
                         <menulist id="tbsync.accountsettings.pref.seperator" class="lockIfConnected">
                             <menupopup id="separator.popup">
-                                <menuitem label="&pref.seperator.linebreak;" value="10" />
-                                <menuitem label="&pref.seperator.comma;" value="44" />
+                                <menuitem label="__EAS4TBSYNCMSG_pref.seperator.linebreak__" value="10" />
+                                <menuitem label="__EAS4TBSYNCMSG_pref.seperator.comma__" value="44" />
                             </menupopup>
                         </menulist>                            
                     </hbox>
                 </vbox>                            
 
-                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="&pref.calendaroptions;"/>
+                <label style="margin-left:0; margin-bottom: 1ex; margin-top: 3ex" class="header lockIfConnected" value="__EAS4TBSYNCMSG_pref.calendaroptions__"/>
                 <vbox>                            
                     <hbox align="center">
-                        <description id="synclimit.hook" class="lockIfConnected" flex="0">&pref.synclimit.description;</description>
+                        <description id="synclimit.hook" class="lockIfConnected" flex="0">__EAS4TBSYNCMSG_pref.synclimit.description__</description>
                         <menulist id="tbsync.accountsettings.pref.synclimit" class="lockIfConnected">
                             <menupopup id="synclimit.popup">
-                                <menuitem label="&pref.synclimit.all;" value="0" />
-                                <menuitem label="&pref.synclimit.2weeks;" value="4" />
-                                <menuitem label="&pref.synclimit.1month;" value="5" />
-                                <menuitem label="&pref.synclimit.3month;" value="6" />
-                                <menuitem label="&pref.synclimit.6month;" value="7" />
+                                <menuitem label="__EAS4TBSYNCMSG_pref.synclimit.all__" value="0" />
+                                <menuitem label="__EAS4TBSYNCMSG_pref.synclimit.2weeks__" value="4" />
+                                <menuitem label="__EAS4TBSYNCMSG_pref.synclimit.1month__" value="5" />
+                                <menuitem label="__EAS4TBSYNCMSG_pref.synclimit.3month__" value="6" />
+                                <menuitem label="__EAS4TBSYNCMSG_pref.synclimit.6month__" value="7" />
                             </menupopup>
                         </menulist>                            
                     </hbox>
@@ -131,8 +126,8 @@
                 <vbox flex="1" />
                 <vbox class="showIfConnected">
                     <hbox>
-                        <vbox pack="center"><image src="chrome://tbsync/skin/info16.png" /></vbox>
-                        <description flex="1">&manager.lockedsettings.description;</description>
+                        <vbox pack="center"><image src="chrome://tbsync/content/skin/info16.png" /></vbox>
+                        <description flex="1">__EAS4TBSYNCMSG_manager.lockedsettings.description__</description>
                     </hbox>
                 </vbox>
             </vbox>

@@ -14,9 +14,19 @@
   "default_locale": "en-US",
   "description": "__MSG_extensionDescription__",
   "icons": {
-    "32": "skin/eas32.png"
+    "32": "content/skin/eas32.png"
   },
-  "legacy": {
-    "type": "bootstrap"
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "experiment_apis": {
+    "LegacyBootstrap": {
+      "schema": "content/api/LegacyBootstrap/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["LegacyBootstrap"]],
+        "script": "content/api/LegacyBootstrap/implementation.js"
+      }
+    }
   }
 }
