@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<overlay 
+
+<overlay
 	id="TbSyncAbServerSearchOverlay" 
-	oninject="tbSyncAbServerSearch.onInject(window)"
-	onremove="tbSyncAbServerSearch.onRemove(window)"
+	omscope="tbSyncAbServerSearch"
 	xmlns:html="http://www.w3.org/1999/xhtml">
 
    <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/abServerSearch.js" />

@@ -1,18 +1,15 @@
 <?xml version="1.0"?>
-<!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
 
 <overlay 
     id="TbSyncAbEasCardWindow" 
-    onbeforeinject="tbSyncAbEasCardWindow.onBeforeInject(window)"
-    oninject="tbSyncAbEasCardWindow.onInject(window)"
-    onremove="tbSyncAbEasCardWindow.onRemove(window)"
+    omscope="tbSyncAbEasCardWindow"
     xmlns:html="http://www.w3.org/1999/xhtml">
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/abCardWindow.js" />
 
     <hbox id="MiddleNameContainer" align="center" insertafter="NameField1Container" >
         <spacer flex="1" />
-        <label control="MiddleName" value="&abCard.MiddleName;" />
+        <label control="MiddleName" value="__EAS4TBSYNCMSG_abCard.MiddleName__" />
         <hbox class="CardEditWidth" >
             <textbox id="MiddleName" flex="1" class="easProperty CardEditWidth" />
         </hbox>
@@ -20,14 +17,14 @@
 
     <hbox id="Email3AddressContainer" align="center" insertafter="SecondaryEmailContainer">
         <spacer flex="1"/>
-        <label control="Email3Address" value="&abCard.Email3Address;" />
+        <label control="Email3Address" value="__EAS4TBSYNCMSG_abCard.Email3Address__" />
         <hbox class="CardEditWidth">
             <textbox id="Email3Address" flex="1" class="easProperty uri-element" />
         </hbox>
     </hbox>
 
-    <tab id="easFields1Tab" label="&abCard.header.eas;"  appendto="abTabs" />
-    <tab id="easFields2Tab" label="&abCard.header.otheraddress;" appendto="abTabs" />
+    <tab id="easFields1Tab" label="__EAS4TBSYNCMSG_abCard.header.eas__"  appendto="abTabs" />
+    <tab id="easFields2Tab" label="__EAS4TBSYNCMSG_abCard.header.otheraddress__" appendto="abTabs" />
       
       <vbox id="easFields1Panel" appendto="abTabPanels" >
       <hbox>
@@ -35,50 +32,50 @@
         <vbox>
           <!-- WORK -->
           <groupbox>
-            <caption label="&abCard.header.worknumbers;"/>
-            <hbox id="CompanyMainPhoneContainer" align="center"><spacer flex="1"/><label control="CompanyMainPhone" value="&abCard.CompanyMainPhone;"/><textbox id="CompanyMainPhone" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="Business2PhoneNumberContainer" align="center"><spacer flex="1"/><label control="Business2PhoneNumber" value="&abCard.Business2PhoneNumber;"/><textbox id="Business2PhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="BusinessFaxNumberContainer" align="center" insertafter="FaxNumberContainer"><spacer flex="1"/><label control="BusinessFaxNumber" value="&abCard.BusinessFaxNumber;"/><textbox id="BusinessFaxNumber" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="AssistantPhoneNumberContainer" align="center"><spacer flex="1"/><label control="AssistantPhoneNumber" value="&abCard.AssistantPhoneNumber;"/><textbox id="AssistantPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+            <caption label="__EAS4TBSYNCMSG_abCard.header.worknumbers__"/>
+            <hbox id="CompanyMainPhoneContainer" align="center"><spacer flex="1"/><label control="CompanyMainPhone" value="__EAS4TBSYNCMSG_abCard.CompanyMainPhone__"/><textbox id="CompanyMainPhone" class="easProperty PhoneEditWidth" /></hbox>
+            <hbox id="Business2PhoneNumberContainer" align="center"><spacer flex="1"/><label control="Business2PhoneNumber" value="__EAS4TBSYNCMSG_abCard.Business2PhoneNumber__"/><textbox id="Business2PhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+            <hbox id="BusinessFaxNumberContainer" align="center" insertafter="FaxNumberContainer"><spacer flex="1"/><label control="BusinessFaxNumber" value="__EAS4TBSYNCMSG_abCard.BusinessFaxNumber__"/><textbox id="BusinessFaxNumber" class="easProperty PhoneEditWidth" /></hbox>
+            <hbox id="AssistantPhoneNumberContainer" align="center"><spacer flex="1"/><label control="AssistantPhoneNumber" value="__EAS4TBSYNCMSG_abCard.AssistantPhoneNumber__"/><textbox id="AssistantPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
           </groupbox>
           <!-- HOME -->
           <groupbox>
-            <caption label="&abCard.header.homenumbers;"/>
+            <caption label="__EAS4TBSYNCMSG_abCard.header.homenumbers__"/>
             <hbox id="Home2PhoneNumberContainer" align="center">
               <spacer flex="1"/>
-              <label control="Home2PhoneNumber" value="&abCard.Home2PhoneNumber;"/>
+              <label control="Home2PhoneNumber" value="__EAS4TBSYNCMSG_abCard.Home2PhoneNumber__"/>
               <textbox id="Home2PhoneNumber" class="easProperty PhoneEditWidth" />
             </hbox>
           </groupbox>
           <!-- OTHER -->
           <groupbox>
-            <caption label="&abCard.header.othernumbers;"/>
-            <hbox id="CarPhoneNumberContainer" align="center"><spacer flex="1"/><label control="CarPhoneNumber" value="&abCard.CarPhoneNumber;" /><textbox id="CarPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="RadioPhoneNumberContainer" align="center"><spacer flex="1"/><label control="RadioPhoneNumber" value="&abCard.RadioPhoneNumber;" /><textbox id="RadioPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+            <caption label="__EAS4TBSYNCMSG_abCard.header.othernumbers__"/>
+            <hbox id="CarPhoneNumberContainer" align="center"><spacer flex="1"/><label control="CarPhoneNumber" value="__EAS4TBSYNCMSG_abCard.CarPhoneNumber__" /><textbox id="CarPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+            <hbox id="RadioPhoneNumberContainer" align="center"><spacer flex="1"/><label control="RadioPhoneNumber" value="__EAS4TBSYNCMSG_abCard.RadioPhoneNumber__" /><textbox id="RadioPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
           </groupbox>
         </vbox>
         <vbox>
           <!-- PEOPLE -->
           <groupbox>
-            <caption label="&abCard.header.people;"/>
+            <caption label="__EAS4TBSYNCMSG_abCard.header.people__"/>
             <hbox id="ManagerNameField" align="center">
               <spacer flex="1"/>
-              <label control="ManagerName" value="&abCard.ManagerName;"/>
+              <label control="ManagerName" value="__EAS4TBSYNCMSG_abCard.ManagerName__"/>
               <textbox id="ManagerName" class="easProperty PhoneEditWidth"/>
             </hbox>
             <hbox id="AssistantNameField" align="center">
               <spacer flex="1"/>
-              <label control="AssistantName" value="&abCard.AssistantName;"/>
+              <label control="AssistantName" value="__EAS4TBSYNCMSG_abCard.AssistantName__"/>
               <textbox id="AssistantName" class="easProperty PhoneEditWidth"/>
             </hbox>
             <hbox id="SpouseField" align="center">
               <spacer flex="1"/>
-              <label control="SpouseName" value="&abCard.Spouse;"/>
+              <label control="SpouseName" value="__EAS4TBSYNCMSG_abCard.Spouse__"/>
               <textbox id="SpouseName" class="easProperty PhoneEditWidth"/>
             </hbox>
             <hbox id="AnniversaryField" align="center">
               <spacer flex="1"/>
-              <label control="Anniversary" value="&abCard.Anniversary;"/>
+              <label control="Anniversary" value="__EAS4TBSYNCMSG_abCard.Anniversary__"/>
               <hbox align="center" style="width: 152px;">
                 <textbox id="AnniversaryDay" maxlength="2" placeholder="DD" flex="1" class="easProperty" />
                 <textbox id="AnniversaryMonth" maxlength="2" placeholder="MM" flex="1" class="easProperty" />
@@ -88,7 +85,7 @@
           </groupbox>
           <!-- MESSAGING -->
           <groupbox>
-            <caption label="&abCard.header.messaging;"/>
+            <caption label="__EAS4TBSYNCMSG_abCard.header.messaging__"/>
             <hbox id="IMAddressContainer" align="center">
               <spacer flex="1"/>
               <label control="IMAddress" value="IM Address #1:"/>
@@ -117,7 +114,7 @@
       <vbox id="easFields2Panel" appendto="abTabPanels" >
       <hbox align="center">
         <spacer flex="1"/>
-        <label control="OtherAddress" value="&abCard.OtherAddress;"/>
+        <label control="OtherAddress" value="__EAS4TBSYNCMSG_abCard.OtherAddress__"/>
         <hbox class="AddressCardEditWidth">
           <textbox id="OtherAddress" flex="1" class="easProperty" />
         </hbox>
@@ -131,24 +128,24 @@
       </hbox>
       <hbox id="OtherCityContainer" align="center">
         <spacer flex="1"/>
-        <label control="OtherAddressCity" value="&abCard.OtherCity;"/>
+        <label control="OtherAddressCity" value="__EAS4TBSYNCMSG_abCard.OtherCity__"/>
         <hbox id="OtherCityFieldContainer" align="center" class="AddressCardEditWidth">
           <textbox id="OtherAddressCity" flex="1" class="easProperty" />
         </hbox>
       </hbox>
       <hbox align="center">
         <spacer flex="1"/>
-        <label control="OtherAddressState" value="&abCard.OtherState;"/>
+        <label control="OtherAddressState" value="__EAS4TBSYNCMSG_abCard.OtherState__"/>
         <hbox align="center" class="AddressCardEditWidth">
           <textbox id="OtherAddressState" flex="1" class="easProperty" />
           <spacer class="stateZipSpacer"/>
-          <label control="OtherAddressPostalCode" value="&abCard.OtherZip;"/>
+          <label control="OtherAddressPostalCode" value="__EAS4TBSYNCMSG_abCard.OtherZip__"/>
           <textbox id="OtherAddressPostalCode" class="easProperty ZipWidth"/>
         </hbox>
       </hbox>
       <hbox align="center">
         <spacer flex="1"/>
-        <label control="OtherAddressCountry" value="&abCard.OtherCountry;" />
+        <label control="OtherAddressCountry" value="__EAS4TBSYNCMSG_abCard.OtherCountry__" />
         <hbox class="AddressCardEditWidth">
           <textbox id="OtherAddressCountry" flex="1" class="easProperty" />
         </hbox>

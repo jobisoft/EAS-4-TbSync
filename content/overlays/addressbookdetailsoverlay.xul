@@ -1,11 +1,8 @@
 <?xml version="1.0"?>
-<!DOCTYPE window SYSTEM "chrome://eas4tbsync/locale/eas.dtd">
 
 <overlay 
     id="TbSyncAbEasDetailsOverlay" 
-    onbeforeinject="tbSyncEasAddressBookDetails.onBeforeInject(window)"
-    oninject="tbSyncEasAddressBookDetails.onInject(window)"
-    onremove="tbSyncEasAddressBookDetails.onRemove(window)"
+    omscope="tbSyncEasAddressBookDetails"
     xmlns:html="http://www.w3.org/1999/xhtml">
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.js" />
@@ -14,14 +11,14 @@
         <html:a href="" id="cvEmail3" />
     </description>
 
-    <description class="CardViewText" id="easPhWork2" labelprefix="&abCard.Business2PhoneNumber;" insertafter="cvPhWork" />
-    <description class="CardViewText" id="easPhCompany" labelprefix="&abCard.CompanyMainPhone;" insertafter="cvPhWork" />
-    <description class="CardViewText" id="easPhWorkFax" labelprefix="&abCard.BusinessFaxNumber;" insertafter="cvPhFax" />
+    <description class="CardViewText" id="easPhWork2" labelprefix="__EAS4TBSYNCMSG_abCard.Business2PhoneNumber__" insertafter="cvPhWork" />
+    <description class="CardViewText" id="easPhCompany" labelprefix="__EAS4TBSYNCMSG_abCard.CompanyMainPhone__" insertafter="cvPhWork" />
+    <description class="CardViewText" id="easPhWorkFax" labelprefix="__EAS4TBSYNCMSG_abCard.BusinessFaxNumber__" insertafter="cvPhFax" />
 
-    <description class="CardViewText" id="easPhHome2" labelprefix="&abCard.Home2PhoneNumber;" insertafter="cvPhHome" />
+    <description class="CardViewText" id="easPhHome2" labelprefix="__EAS4TBSYNCMSG_abCard.Home2PhoneNumber__" insertafter="cvPhHome" />
 
-    <description class="CardViewText" id="easPhAssistant" labelprefix="&abCard.AssistantPhoneNumber;" insertafter="cvPhPager" />
-    <description class="CardViewText" id="easPhCar" labelprefix="&abCard.CarPhoneNumber;" insertafter="cvPhPager" />
-    <description class="CardViewText" id="easPhRadio" labelprefix="&abCard.RadioPhoneNumber;" insertafter="cvPhPager" />
+    <description class="CardViewText" id="easPhAssistant" labelprefix="__EAS4TBSYNCMSG_abCard.AssistantPhoneNumber__" insertafter="cvPhPager" />
+    <description class="CardViewText" id="easPhCar" labelprefix="__EAS4TBSYNCMSG_abCard.CarPhoneNumber__" insertafter="cvPhPager" />
+    <description class="CardViewText" id="easPhRadio" labelprefix="__EAS4TBSYNCMSG_abCard.RadioPhoneNumber__" insertafter="cvPhPager" />
 
 </overlay>        

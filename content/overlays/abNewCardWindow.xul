@@ -2,8 +2,7 @@
 
 <overlay 
 	id="TbSyncEasAbNewCardWindowOverlay" 
-	oninject="tbSyncEasAbNewCardWindow.onInject(window)"
-	onremove="tbSyncEasAbNewCardWindow.onRemove(window)"
+	omscope="tbSyncEasAbNewCardWindow"
 	xmlns:html="http://www.w3.org/1999/xhtml">
 	
    <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/abNewCardWindow.js" />
