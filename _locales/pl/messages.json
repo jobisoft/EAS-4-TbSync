@@ -111,7 +111,7 @@
         "message": "Nazwa użytkownika (adres e-mail):"
     },
     "autocomplete.serverdirectory ": {
-        "message": " global server directory"
+        "message": " globalny katalog serwera"
     },
     "autodiscover.Failed": {
         "message": "Auto-wykrywanie dla użytkownika <##user##> nie powiodło się. Podane dane uwierzytelniające były nieprawidłowe lub dostawca ActiveSync ma tymczasowy problem lub nie obsługuje funkcji automatycznego wykrywania."
@@ -249,7 +249,7 @@
         "message": "Użyj bezpiecznego połączenia (połącz przez https)"
     },
     "recyclebin ": {
-        "message": " Trash"
+        "message": " Kosz"
     },
     "servertype.auto": {
         "message": "Automatyczna konfiguracja"
@@ -345,7 +345,7 @@
         "message": "Wyłączony"
     },
     "status.empty-response": {
-        "message": "Server sends unexpected empty response."
+        "message": "Serwer wysyła nieoczekiwaną pustą odpowiedź."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
         "message": "Niedozwolony element kalendarza w folderze zadań (please resort)"
@@ -375,7 +375,7 @@
         "message": "Niepoprawna odpowiedź serwera (śmieci)."
     },
     "status.malformed-xml": {
-        "message": "Could not parse XML. Check event log for details."
+        "message": "Nie można przetworzyć XML. Sprawdź dziennik zdarzeń, aby uzyskać szczegóły."
     },
     "status.modified": {
         "message": "Zmiany lokalne"
@@ -429,7 +429,7 @@
         "message": "Wystąpił błąd, którego nie udało się naprawić poprzez ponowne zsynchronizowanie konta. Wyłącz konto i spróbuj ponownie. (Błąd: pętla resynchronizacji)"
     },
     "status.security": {
-        "message": "Nie można nawiązać bezpiecznego połączenia. Czy używasz self-signed lub w inny sposób niezaufanego certyfikatu bez importowania go do Thunderbirda? (##replace.1##)"
+        "message": "Nie można nawiązać bezpiecznego połączenia. Czy używasz własnego podpisu lub w inny sposób niezaufanego certyfikatu bez importowania go do Thunderbirda? (##replace.1##)"
     },
     "status.skipped": {
         "message": "Jeszcze nie obsługiwane, pominięto"
