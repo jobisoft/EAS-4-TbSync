@@ -67,95 +67,90 @@ var Base = class {
         try {
             // Create a basic error info (no accountname or foldername, just the provider)
             let eventLogInfo = new TbSync.EventLogInfo("eas");
-            
-            if (TbSync.lightning.isAvailable()) {
-                
-                //get timezone info of default timezone (old cal. without dtz are depricated)
-                eas.defaultTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.defaultTimezone) ? TbSync.lightning.cal.dtz.defaultTimezone : TbSync.lightning.cal.calendarDefaultTimezone();
-                eas.utcTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.UTC) ? TbSync.lightning.cal.dtz.UTC : TbSync.lightning.cal.UTC();
-                if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
-                    TbSync.eventlog.add("info", eventLogInfo, "Default timezone has been found.");                    
-                } else {
-                    TbSync.eventlog.add("info", eventLogInfo, "Default timezone is not defined, using UTC!");
-                    eas.defaultTimezone = eas.utcTimezone;
-                }
-
-                eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
-                if (!eas.defaultTimezoneInfo) {
-                    TbSync.eventlog.add("info", eventLogInfo, "Could not create defaultTimezoneInfo");
-                }
-                
-                //get windows timezone data from CSV
-                let aliasData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/Aliases.csv");
-                let aliasNames = {};
-                for (let i = 0; i<aliasData.length; i++) {
-                    let lData = aliasData[i].split(",");
-                    if (lData.length<2) continue;
-                    aliasNames[lData[0].toString().trim()] = lData[1].toString().trim().split(" ");
-                }
-
-                let csvData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
-                for (let i = 0; i<csvData.length; i++) {
-                    let lData = csvData[i].split(",");
-                    if (lData.length<3) continue;
-                    
-                    let windowsZoneName = lData[0].toString().trim();
-                    let zoneType = lData[1].toString().trim();
-                    let ianaZoneName = lData[2].toString().trim();
-                    
-                    if (zoneType == "001") eas.windowsToIanaTimezoneMap[windowsZoneName] = ianaZoneName;
-                    if (ianaZoneName == eas.defaultTimezoneInfo.std.id) eas.defaultTimezoneInfo.std.windowsZoneName = windowsZoneName;
-                                        
-                    // build the revers map as well, which is many-to-one, grap iana aliases from the csvData and from the aliasData
-                    // 1. multiple iana zones map to the same windows zone
-                    let ianaZones = ianaZoneName.split(" "); 
-                    for (let ianaZone of ianaZones) {
-                        eas.ianaToWindowsTimezoneMap[ianaZone] = windowsZoneName;
-                        if (aliasNames.hasOwnProperty(ianaZone)) {
-                            for (let aliasName of aliasNames[ianaZone]) {
-                                // 2. multiple iana zonescan be an alias to a main iana zone
-                                eas.ianaToWindowsTimezoneMap[aliasName] = windowsZoneName;
-                            }
-                        }
-                    }
-                }
-
-                let tzService = TbSync.lightning.cal.getTimezoneService();
-                let enumerator = tzService.timezoneIds;
-                while (enumerator.hasMore()) {
-                    let id = enumerator.getNext();
-                    if (!eas.ianaToWindowsTimezoneMap[id]) {
-                        TbSync.eventlog.add("info", eventLogInfo, "The IANA timezone <"+id+"> cannot be mapped to any Exchange timezone.");
-                    }
-                }
-
-                
-                //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
-                //but do not change any explicitly set association
-                // - A) find email identity and accociate (which sets organizer to that user identity)
-                // - B) overwrite default organizer with current best guess
-                //TODO: Do this after email accounts changed, not only on restart? 
-                let providerData = new TbSync.ProviderData("eas");
-                let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
-                for (let folder of folders) {
-                    let calendar = TbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
-                    if (calendar && calendar.getProperty("imip.identity.key") == "") {
-                        //is there an email identity for this eas account?
-                        let authData = eas.network.getAuthData(folder.accountData);
-
-                        let key = eas.tools.getIdentityKey(authData.user);
-                        if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?
-                            //set transient calendar organizer settings based on current best guess and 
-                            calendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
-                            calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
-                        } else {                      
-                            //force switch to found identity
-                            calendar.setProperty("imip.identity.key", key);
-                        }
-                    }
-                }
+                            
+            //get timezone info of default timezone (old cal. without dtz are depricated)
+            eas.defaultTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.defaultTimezone) ? TbSync.lightning.cal.dtz.defaultTimezone : TbSync.lightning.cal.calendarDefaultTimezone();
+            eas.utcTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.UTC) ? TbSync.lightning.cal.dtz.UTC : TbSync.lightning.cal.UTC();
+            if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
+                TbSync.eventlog.add("info", eventLogInfo, "Default timezone has been found.");                    
             } else {
-                    TbSync.eventlog.add("info", eventLogInfo, "Lightning was not loaded, creation of timezone objects has been skipped.");
+                TbSync.eventlog.add("info", eventLogInfo, "Default timezone is not defined, using UTC!");
+                eas.defaultTimezone = eas.utcTimezone;
+            }
+
+            eas.defaultTimezoneInfo = eas.tools.getTimezoneInfo(eas.defaultTimezone);
+            if (!eas.defaultTimezoneInfo) {
+                TbSync.eventlog.add("info", eventLogInfo, "Could not create defaultTimezoneInfo");
+            }
+            
+            //get windows timezone data from CSV
+            let aliasData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/Aliases.csv");
+            let aliasNames = {};
+            for (let i = 0; i<aliasData.length; i++) {
+                let lData = aliasData[i].split(",");
+                if (lData.length<2) continue;
+                aliasNames[lData[0].toString().trim()] = lData[1].toString().trim().split(" ");
+            }
+
+            let csvData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
+            for (let i = 0; i<csvData.length; i++) {
+                let lData = csvData[i].split(",");
+                if (lData.length<3) continue;
+                
+                let windowsZoneName = lData[0].toString().trim();
+                let zoneType = lData[1].toString().trim();
+                let ianaZoneName = lData[2].toString().trim();
+                
+                if (zoneType == "001") eas.windowsToIanaTimezoneMap[windowsZoneName] = ianaZoneName;
+                if (ianaZoneName == eas.defaultTimezoneInfo.std.id) eas.defaultTimezoneInfo.std.windowsZoneName = windowsZoneName;
+                                    
+                // build the revers map as well, which is many-to-one, grap iana aliases from the csvData and from the aliasData
+                // 1. multiple iana zones map to the same windows zone
+                let ianaZones = ianaZoneName.split(" "); 
+                for (let ianaZone of ianaZones) {
+                    eas.ianaToWindowsTimezoneMap[ianaZone] = windowsZoneName;
+                    if (aliasNames.hasOwnProperty(ianaZone)) {
+                        for (let aliasName of aliasNames[ianaZone]) {
+                            // 2. multiple iana zonescan be an alias to a main iana zone
+                            eas.ianaToWindowsTimezoneMap[aliasName] = windowsZoneName;
+                        }
+                    }
+                }
+            }
+
+            let tzService = TbSync.lightning.cal.getTimezoneService();
+            let enumerator = tzService.timezoneIds;
+            while (enumerator.hasMore()) {
+                let id = enumerator.getNext();
+                if (!eas.ianaToWindowsTimezoneMap[id]) {
+                    TbSync.eventlog.add("info", eventLogInfo, "The IANA timezone <"+id+"> cannot be mapped to any Exchange timezone.");
+                }
+            }
+
+            
+            //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
+            //but do not change any explicitly set association
+            // - A) find email identity and accociate (which sets organizer to that user identity)
+            // - B) overwrite default organizer with current best guess
+            //TODO: Do this after email accounts changed, not only on restart? 
+            let providerData = new TbSync.ProviderData("eas");
+            let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
+            for (let folder of folders) {
+                let calendar = TbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
+                if (calendar && calendar.getProperty("imip.identity.key") == "") {
+                    //is there an email identity for this eas account?
+                    let authData = eas.network.getAuthData(folder.accountData);
+
+                    let key = eas.tools.getIdentityKey(authData.user);
+                    if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?
+                        //set transient calendar organizer settings based on current best guess and 
+                        calendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
+                        calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
+                    } else {                      
+                        //force switch to found identity
+                        calendar.setProperty("imip.identity.key", key);
+                    }
+                }
             }
         } catch(e) {
             Components.utils.reportError(e);        

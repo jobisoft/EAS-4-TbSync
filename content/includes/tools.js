@@ -528,12 +528,10 @@ var tools = {
 
 //TODO: Invites
 /*
-if (TbSync.lightningIsAvailable()) {
     cal.itip.checkAndSendOrigial = cal.itip.checkAndSend;
     cal.itip.checkAndSend = function(aOpType, aItem, aOriginalItem) {
         //if this item is added_by_user, do not call checkAndSend yet, because the UID is wrong, we need to sync first to get the correct ID - TODO
         TbSync.dump("cal.checkAndSend", aOpType);
         cal.itip.checkAndSendOrigial(aOpType, aItem, aOriginalItem);
     }
-}
 */

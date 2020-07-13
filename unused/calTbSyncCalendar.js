@@ -36,9 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://calendar/modules/calProviderUtils.jsm");
-Components.utils.import("resource://calendar/modules/calUtils.jsm");
+ChromeUtils.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.utils.import("resource://calendar/modules/calProviderUtils.jsm");
+ChromeUtils.import("resource:///modules/calendar/calUtils.jsm");
 
 /**
  * calTbSyncCalendar
