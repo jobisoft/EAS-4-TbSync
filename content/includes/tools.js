@@ -25,10 +25,7 @@ var tools = {
     },
 
     getIdentityKey: function (email) {
-        let acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
-        let accounts = acctMgr.accounts;
-        for (let a = 0; a < accounts.length; a++) {
-            let account = accounts.queryElementAt(a, Components.interfaces.nsIMsgAccount);
+        for (let account of MailServices.accounts.accounts) {
             if (account.defaultIdentity && account.defaultIdentity.email == email) return account.defaultIdentity.key;
         }
         return "";
