@@ -9,7 +9,6 @@
 var EXPORTED_SYMBOLS = ["OAuth2_1"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Log4Moz } = ChromeUtils.import("resource:///modules/gloda/log4moz.js");
 
 Cu.importGlobalProperties(["fetch"]);
 
@@ -23,15 +22,13 @@ function OAuth2_1(aBaseURI, aScope, aAppKey, aAppSecret) {
   this.consumerSecret = aAppSecret;
   this.scope = aScope;
   this.extraAuthParams = [];
-
-  this.log = Log4Moz.getConfiguredLogger("TBOAuth");
 }
 
 OAuth2_1.prototype = {
   consumerKey: null,
   consumerSecret: null,
   completionURI: "http://localhost",
-  requestWindowURI: "chrome://messenger/content/browserRequest.xul",
+  requestWindowURI: "chrome://messenger/content/browserRequest.xhtml",
   requestWindowFeatures: "chrome,private,centerscreen,width=980,height=750",
   requestWindowTitle: "",
   scope: null,

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window
+    width="500"
+    height="600"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="tbSyncEasNewAccount.onLoad();"
+    onunload="tbSyncEasNewAccount.onUnload();"
+    onclose="return tbSyncEasNewAccount.onClose()" >
+
+    <script type="application/javascript" src="chrome://eas4tbsync/content/manager/createAccount.js"/>
+    <script type="application/javascript" src="chrome://eas4tbsync/content/locales.js"/>
+    
+    <wizard
+        title="__EAS4TBSYNCMSG_add.title__"
+        id="tbsync.newaccount.wizard">
+
+        <wizardpage onFirstPage="true" label="__EAS4TBSYNCMSG_add.shortdescription__">
+            <description style="width: 350px">__EAS4TBSYNCMSG_add.description__</description>
+
+            <richlistbox height="250"  id="tbsync.newaccount.servertype" seltype="single" style="margin-top:1ex" onselect="tbSyncEasNewAccount.onUserDropdown();">
+                <richlistitem value="auto" style="padding: 4px">
+                    <vbox><image src="chrome://eas4tbsync/content/skin/eas32.png" style="margin:1ex" /></vbox>
+                    <vbox flex="1">
+                        <label class="header" value="__EAS4TBSYNCMSG_servertype.auto__" />
+                        <description>__EAS4TBSYNCMSG_servertype.description.auto__</description>
+                    </vbox>
+                </richlistitem>
+                
+                <richlistitem value="custom" style="padding: 4px">
+                    <vbox><image src="chrome://eas4tbsync/content/skin/eas32.png" style="margin:1ex" /></vbox>
+                    <vbox flex="1">
+                        <label class="header" value="__EAS4TBSYNCMSG_servertype.custom__" />
+                        <description>__EAS4TBSYNCMSG_servertype.description.custom__</description>
+                    </vbox>
+                </richlistitem>
+
+                <richlistitem value="office365" style="padding: 4px">
+                    <vbox><image src="chrome://eas4tbsync/content/skin/365_32.png" style="margin:1ex" /></vbox>
+                    <vbox flex="1">
+                        <label class="header" value="__EAS4TBSYNCMSG_servertype.office365__" />
+                        <description>__EAS4TBSYNCMSG_servertype.description.office365__</description>
+                    </vbox>
+                </richlistitem>        
+            </richlistbox>
+
+            <grid style="margin-top:1em">
+                <columns>
+                    <column flex="1" />
+                    <column flex="2" />
+                </columns>
+                <rows>
+                    <row>
+                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.name__" /></vbox>
+                        <textbox id="tbsync.newaccount.name" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
+                    </row>
+                    <row id="tbsync.newaccount.user.box">
+                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.user__" /></vbox>
+                        <textbox id="tbsync.newaccount.user" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
+                    </row>
+                    <row id="tbsync.newaccount.password.box">
+                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.password__" /></vbox>
+                        <textbox id="tbsync.newaccount.password" type="password" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
+                    </row>
+                    <row id="tbsync.newaccount.url.box">
+                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.url__" /></vbox>
+                        <textbox id="tbsync.newaccount.url" oninput="tbSyncEasNewAccount.onUserTextInput();" tooltiptext="__EAS4TBSYNCMSG_add.urldescription__"/>
+                    </row>
+
+                    <!--row style="height:40px; margin-top:1ex;margin-bottom:1ex;">
+                        <vbox pack="center"></vbox>
+                        <vbox pack="center"></vbox>
+                    </row-->
+
+                </rows>
+            </grid>
+
+            <vbox flex="1">
+            </vbox>
+            <hbox id="tbsync.spinner">
+                <image src="chrome://tbsync/content/skin/spinner.gif" style="margin-left:1em" width="16" height="16"/>
+                <label id='tbsync.newaccount.autodiscoverstatus' value="" />
+            </hbox>
+           
+            <vbox id="tbsync.error" style="width: 450px;">
+                <description id="tbsync.error.message" flex="1" style="font-weight: bold;"></description>
+                <vbox>
+                  <button 
+                  id="tbsync.error.link" 
+                  label="__EAS4TBSYNCMSG_manager.ShowEventLog__"
+                  oncommand="TbSync.eventlog.open();"/>
+                </vbox>
+            </vbox>    
+
+
+      </wizardpage>
+        
+    </wizard>
+
+</window>

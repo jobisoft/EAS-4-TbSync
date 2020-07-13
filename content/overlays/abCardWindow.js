@@ -16,7 +16,7 @@ var tbSyncAbEasCardWindow = {
     onBeforeInject: function (window) {
         let aParentDirURI  = "";
 
-        if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xul") {
+        if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xhtml") {
             //get provider via uri from drop down
             aParentDirURI = window.document.getElementById("abPopup").value;
         } else {
@@ -52,7 +52,7 @@ var tbSyncAbEasCardWindow = {
             }
         }
 
-        if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xul") {
+        if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xhtml") {
             window.RegisterSaveListener(tbSyncAbEasCardWindow.onSaveCard);        
         } else {            
             window.RegisterLoadListener(tbSyncAbEasCardWindow.onLoadCard);
@@ -66,7 +66,7 @@ var tbSyncAbEasCardWindow = {
     },
 
     onRemove: function (window) {
-        if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xul") {
+        if (window.location.href=="chrome://messenger/content/addressbook/abNewCardDialog.xhtml") {
             window.UnregisterSaveListener(tbSyncAbEasCardWindow.onSaveCard);
         } else {
             window.UnregisterLoadListener(tbSyncAbEasCardWindow.onLoadCard);

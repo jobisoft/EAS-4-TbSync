@@ -35,8 +35,8 @@ var tbSyncEasAddressBook = {
     onAbDirectorySelectionChanged: function () {
         //TODO: Do not do this, if provider did not change
         //remove our details injection (if injected)
-        TbSync.providers.eas.overlayManager.removeOverlay(window, "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xul");
+        TbSync.providers.eas.overlayManager.removeOverlay(window, "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xhtml");
         //inject our details injection (if the new selected book is us)
-        TbSync.providers.eas.overlayManager.injectOverlay(window, "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xul");
+        TbSync.providers.eas.overlayManager.injectOverlay(window, "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xhtml");
     }
 }

@@ -49,18 +49,18 @@ var Base = class {
 
         let providerData = new TbSync.ProviderData("eas");   
         eas.overlayManager = new OverlayManager(providerData.extension, {verbose: 0});
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abNewCardWindow.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCardWindow.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookoverlay.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xul", "chrome://eas4tbsync/content/overlays/abServerSearch.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abNewCardWindow.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCardWindow.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCardWindow.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/addressbookoverlay.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/abServerSearch.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xhtml", "chrome://eas4tbsync/content/overlays/abServerSearch.xhtml");
 
         // The abCSS.xul overlay is just adding a CSS file.
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xul", "chrome://eas4tbsync/content/overlays/abCSS.xul");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
+        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
 
         eas.overlayManager.startObserving();
                 
@@ -251,16 +251,16 @@ var Base = class {
      * new account of this provider.
      */
     static getCreateAccountWindowUrl() {
-        return "chrome://eas4tbsync/content/manager/createAccount.xul";
+        return "chrome://eas4tbsync/content/manager/createAccount.xhtml";
     }
 
 
     /**
      * Returns overlay XUL URL of the edit account dialog
-     * (chrome://tbsync/content/manager/editAccount.xul)
+     * (chrome://tbsync/content/manager/editAccount.xhtml)
      */
     static getEditAccountOverlayUrl() {
-        return "chrome://eas4tbsync/content/manager/editAccountOverlay.xul";
+        return "chrome://eas4tbsync/content/manager/editAccountOverlay.xhtml";
     }
 
 
