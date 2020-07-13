@@ -33,21 +33,21 @@
                             <vbox pack="center">
                                 <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="__EAS4TBSYNCMSG_pref.AccountName__" />
                             </vbox>
-                            <textbox id="tbsync.accountsettings.pref.accountname" />
+                            <html:input id="tbsync.accountsettings.pref.accountname" />
                         </row>
                         
                         <row>
                             <vbox pack="center">
                                 <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.user" value="__EAS4TBSYNCMSG_pref.UserName__" />
                             </vbox>
-                            <textbox class="lockIfConnected" tooltiptext="__EAS4TBSYNCMSG_pref.UserNameDescription__" id="tbsync.accountsettings.pref.user" />
+                            <html:input class="lockIfConnected" tooltiptext="__EAS4TBSYNCMSG_pref.UserNameDescription__" id="tbsync.accountsettings.pref.user" />
                         </row>
                         
                         <row>
                             <vbox pack="center">
                                 <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="__EAS4TBSYNCMSG_pref.ServerName__" />
                             </vbox>
-                            <textbox class="lockIfConnected"  tooltiptext="__EAS4TBSYNCMSG_pref.ServerNameDescription__" id="tbsync.accountsettings.pref.host" onblur="tbSyncEditAccountOverlay.stripHost(document);" />
+                            <html:input class="lockIfConnected"  tooltiptext="__EAS4TBSYNCMSG_pref.ServerNameDescription__" id="tbsync.accountsettings.pref.host" onblur="tbSyncEditAccountOverlay.stripHost(document);" />
                         </row>
                         <row>
                             <hbox/>
