@@ -5,9 +5,14 @@
     width="500"
     height="600"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/1999/xhtml"
     onload="tbSyncEasNewAccount.onLoad();"
     onunload="tbSyncEasNewAccount.onUnload();"
     onclose="return tbSyncEasNewAccount.onClose()" >
+
+    <linkset>
+        <html:link rel="localization" href="toolkit/global/wizard.ftl"/>
+    </linkset>
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/manager/createAccount.js"/>
     <script type="application/javascript" src="chrome://eas4tbsync/content/locales.js"/>
@@ -53,19 +58,19 @@
                 <rows>
                     <row>
                         <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.name__" /></vbox>
-                        <textbox id="tbsync.newaccount.name" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
+                        <html:input id="tbsync.newaccount.name" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
                     </row>
                     <row id="tbsync.newaccount.user.box">
                         <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.user__" /></vbox>
-                        <textbox id="tbsync.newaccount.user" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
+                        <html:input id="tbsync.newaccount.user" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
                     </row>
                     <row id="tbsync.newaccount.password.box">
                         <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.password__" /></vbox>
-                        <textbox id="tbsync.newaccount.password" type="password" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
+                        <html:input id="tbsync.newaccount.password" type="password" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
                     </row>
                     <row id="tbsync.newaccount.url.box">
                         <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.url__" /></vbox>
-                        <textbox id="tbsync.newaccount.url" oninput="tbSyncEasNewAccount.onUserTextInput();" tooltiptext="__EAS4TBSYNCMSG_add.urldescription__"/>
+                        <html:input id="tbsync.newaccount.url" oninput="tbSyncEasNewAccount.onUserTextInput();" tooltiptext="__EAS4TBSYNCMSG_add.urldescription__"/>
                     </row>
 
                     <!--row style="height:40px; margin-top:1ex;margin-bottom:1ex;">
