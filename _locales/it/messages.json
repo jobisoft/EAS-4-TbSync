@@ -132,13 +132,13 @@
         "message": "Configurazione server ActiveSync"
     },
     "deletefolder.confirm": {
-        "message": "ELIMINARE PERMANENTEMENTE la cartella '##replace.1##' dal Cestino?"
+        "message": "ELIMINARE PERMANENTEMENTE la cartella \"##replace.1##\" dal Cestino?"
     },
     "deletefolder.menuentry": {
-        "message": "Elimina permanentemente la cartella '##replace.1##' dal Cestino"
+        "message": "Elimina permanentemente la cartella \"##replace.1##\" dal Cestino"
     },
     "deletefolder.notallowed": {
-        "message": "Annullare la sottoscrizione alla cartella '##replace.1##' prima di provare a eliminarla dal Cestino."
+        "message": "Annullare la sottoscrizione alla cartella \"##replace.1##\" prima di provare a eliminarla dal Cestino."
     },
     "extensionDescription": {
         "message": "Aggiunge il supporto per la sincronizzazione di account Exchange ActiveSync (contatti, attività e calendari) a TbSync."
@@ -375,7 +375,7 @@
         "message": "Risposta del server non valida (inutile)."
     },
     "status.malformed-xml": {
-        "message": "Impossibile analizzare XML. Controllare il registro eventi per i dettagli."
+        "message": "Impossibile analizzare l'XML. Controllare il registro eventi per i dettagli."
     },
     "status.modified": {
         "message": "Modifiche locali presenti"
