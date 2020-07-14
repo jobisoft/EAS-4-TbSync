@@ -110,7 +110,7 @@
     "add.user": {
         "message": "Nazwa użytkownika (adres e-mail):"
     },
-    "autocomplete.serverdirectory ": {
+    "autocomplete.serverdirectory": {
         "message": " globalny katalog serwera"
     },
     "autodiscover.Failed": {
@@ -248,7 +248,7 @@
     "pref.usehttps": {
         "message": "Użyj bezpiecznego połączenia (połącz przez https)"
     },
-    "recyclebin ": {
+    "recyclebin": {
         "message": " Kosz"
     },
     "servertype.auto": {

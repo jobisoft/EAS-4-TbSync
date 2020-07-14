@@ -110,7 +110,7 @@
     "add.user": {
         "message": "Felhasználónév (e-mail cím):"
     },
-    "autocomplete.serverdirectory ": {
+    "autocomplete.serverdirectory": {
         "message": " global server directory"
     },
     "autodiscover.Failed": {
@@ -248,7 +248,7 @@
     "pref.usehttps": {
         "message": "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)"
     },
-    "recyclebin ": {
+    "recyclebin": {
         "message": " Kuka"
     },
     "servertype.auto": {

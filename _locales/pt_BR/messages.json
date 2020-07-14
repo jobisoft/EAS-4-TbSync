@@ -110,7 +110,7 @@
     "add.user": {
         "message": "Usuário:"
     },
-    "autocomplete.serverdirectory ": {
+    "autocomplete.serverdirectory": {
         "message": " diretório global do servidor"
     },
     "autodiscover.Failed": {
@@ -248,7 +248,7 @@
     "pref.usehttps": {
         "message": "Utilizar conexão segura (conectar via https)"
     },
-    "recyclebin ": {
+    "recyclebin": {
         "message": " Lixeira"
     },
     "servertype.auto": {
