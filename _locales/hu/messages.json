@@ -249,7 +249,7 @@
         "message": "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)"
     },
     "recyclebin ": {
-        "message": " Kuka"
+        "message": " Trash"
     },
     "servertype.auto": {
         "message": "Automatic configuration"
@@ -345,7 +345,7 @@
         "message": "A fiók nincs engedélyezve, az összehangolás le van tiltva."
     },
     "status.empty-response": {
-        "message": "A kiszolgáló váratlan üres választ küld."
+        "message": "Server sends unexpected empty response."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
         "message": "?? Forbidden calendar item in a task folder (please resort) ??"
@@ -375,7 +375,7 @@
         "message": "Érvénytelen kiszolgáló válasz (szemét)."
     },
     "status.malformed-xml": {
-        "message": "Nem sikerült elemezni az XML-t. Ellenőrizze az eseménynaplót a részletekért."
+        "message": "Could not parse XML. Check event log for details."
     },
     "status.modified": {
         "message": "Helyi módosítások"
