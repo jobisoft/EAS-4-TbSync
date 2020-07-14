@@ -646,7 +646,9 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
 
         newCalendar.setProperty("color", this.folderData.getFolderProperty("targetColor"));
         newCalendar.setProperty("relaxedMode", true); //sometimes we get "generation too old for modifyItem", check can be disabled with relaxedMode
-        newCalendar.setProperty("calendar-main-in-composite",true);
+        // removed in TB78, as it seems to not fully enable the calendar, if present before registering
+        // https://searchfox.org/comm-central/source/calendar/base/content/calendar-management.js#385
+        //newCalendar.setProperty("calendar-main-in-composite",true);
         newCalendar.setProperty("readOnly", this.folderData.getFolderProperty("downloadonly"));
         
         switch (this.folderData.getFolderProperty("type")) {
