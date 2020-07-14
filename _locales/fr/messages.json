@@ -110,8 +110,8 @@
     "add.user": {
         "message": "Nom d'utilisateur (adresse e-mail) :"
     },
-    "autocomplete.serverdirectory ": {
-        "message": " annuaire global du serveur"
+    "autocomplete.serverdirectory": {
+        "message": " global server directory"
     },
     "autodiscover.Failed": {
         "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
@@ -248,8 +248,8 @@
     "pref.usehttps": {
         "message": "Utiliser une connexion sécurisée (se connecter via https)"
     },
-    "recyclebin ": {
-        "message": " Corbeille"
+    "recyclebin": {
+        "message": " Trash"
     },
     "servertype.auto": {
         "message": "Configuration automatique"
