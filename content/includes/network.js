@@ -8,7 +8,7 @@
  
  "use strict";
 
-var { OAuth2_1 } = ChromeUtils.import("chrome://eas4tbsync/content/OAuth2_1.jsm");
+var { OAuth2 } = ChromeUtils.import("resource:///modules/OAuth2.jsm");
 
 var network = {  
     
@@ -93,13 +93,11 @@ var network = {
         return null;
     }
 
-    let oauth = new OAuth2_1("", config.scope, config.client_id, config.client_secret);
+    let oauth = new OAuth2(config.auth_uri, config.token_uri, config.scope, config.client_id, config.client_secret);
     oauth.requestWindowFeatures = "chrome,private,centerscreen,width=500,height=750";
 
-    // The v2 endpoints are different and need manual override
-    oauth.authURI = config.auth_uri ;
-    oauth.tokenURI = config.token_uri;
-    oauth.completionURI = config.redirect_uri;
+    // The v2 redirection endpoint differs from the default and needs manual override
+    oauth.redirectionEndpoint = config.redirect_uri;
     
     oauth.extraAuthParams = [
       // removed in beta 1.14.1, according to
