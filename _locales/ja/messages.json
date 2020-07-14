@@ -110,7 +110,7 @@
     "add.user": {
         "message": "ユーザー名 (電子メールアドレス):"
     },
-    "autocomplete.serverdirectory ": {
+    "autocomplete.serverdirectory": {
         "message": " global server directory"
     },
     "autodiscover.Failed": {
@@ -248,8 +248,8 @@
     "pref.usehttps": {
         "message": "安全な接続を利用する (https を使用して接続)"
     },
-    "recyclebin ": {
-        "message": " ごみ箱"
+    "recyclebin": {
+        "message": " Trash"
     },
     "servertype.auto": {
         "message": "自動設定"
