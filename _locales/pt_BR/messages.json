@@ -111,7 +111,7 @@
         "message": "Usuário:"
     },
     "autocomplete.serverdirectory ": {
-        "message": " diretório global do servidor"
+        "message": " global server directory"
     },
     "autodiscover.Failed": {
         "message": "Descoberta automática para usuário <##user##> falhou. As credenciais fornecidas estavam erradas ou seu provedor do ActiveSync tem um problema temporário ou não oferece suporte à descoberta automática."
@@ -132,13 +132,13 @@
         "message": "Configuração do servidor ActiveSync"
     },
     "deletefolder.confirm": {
-        "message": "Você realmente deseja limpar permanentemente a pasta '##replace.1##' da lixeira?"
+        "message": "Você realmente deseja limpar permanentemente a pasta \"##replace.1##\" da lixeira?"
     },
     "deletefolder.menuentry": {
-        "message": "Remover permanentemente a pasta '##replace.1##' da lixeira"
+        "message": "Remover permanentemente a pasta \"##replace.1##\" da lixeira"
     },
     "deletefolder.notallowed": {
-        "message": "Por favor, cancele a subscrição da pasta '##replace.1##' antes de tentar limpá-lo do lixo."
+        "message": "Por favor, cancele a subscrição da pasta \"##replace.1##\" antes de tentar limpá-lo do lixo."
     },
     "extensionDescription": {
         "message": "Adiciona suporte para sincronizar contas do Exchange ActiveSync (contatos, tarefas e calendários) para o TbSync."
@@ -249,7 +249,7 @@
         "message": "Utilizar conexão segura (conectar via https)"
     },
     "recyclebin ": {
-        "message": " Lixeira"
+        "message": " Trash"
     },
     "servertype.auto": {
         "message": "Configuração automática"
@@ -345,7 +345,7 @@
         "message": "Desativado"
     },
     "status.empty-response": {
-        "message": "O servidor enviou uma resposta vazia inesperada."
+        "message": "Server sends unexpected empty response."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
         "message": "?? Forbidden calendar item in a task folder (please resort) ??"
@@ -375,7 +375,7 @@
         "message": "Resposta inválida do servidor (lixo)."
     },
     "status.malformed-xml": {
-        "message": "Não foi possível analisar XML. Verifique o log de eventos para obter detalhes."
+        "message": "Could not parse XML. Check event log for details."
     },
     "status.modified": {
         "message": "Modificações locais"
