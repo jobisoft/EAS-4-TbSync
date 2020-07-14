@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://eas4tbsync/content/skin/fieldset.css" type="text/css"?>
 
 <overlay 
     id="TbSyncAbEasCardWindow" 
@@ -31,82 +32,92 @@
         <spacer flex="1"/>
         <vbox>
           <!-- WORK -->
-          <groupbox>
-            <caption label="__EAS4TBSYNCMSG_abCard.header.worknumbers__"/>
-            <hbox id="CompanyMainPhoneContainer" align="center"><spacer flex="1"/><label control="CompanyMainPhone" value="__EAS4TBSYNCMSG_abCard.CompanyMainPhone__"/><html:input id="CompanyMainPhone" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="Business2PhoneNumberContainer" align="center"><spacer flex="1"/><label control="Business2PhoneNumber" value="__EAS4TBSYNCMSG_abCard.Business2PhoneNumber__"/><html:input id="Business2PhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="BusinessFaxNumberContainer" align="center" insertafter="FaxNumberContainer"><spacer flex="1"/><label control="BusinessFaxNumber" value="__EAS4TBSYNCMSG_abCard.BusinessFaxNumber__"/><html:input id="BusinessFaxNumber" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="AssistantPhoneNumberContainer" align="center"><spacer flex="1"/><label control="AssistantPhoneNumber" value="__EAS4TBSYNCMSG_abCard.AssistantPhoneNumber__"/><html:input id="AssistantPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
-          </groupbox>
+          <fieldset>
+            <vbox flex="1">
+              <hbox><legend class="insideTab">__EAS4TBSYNCMSG_abCard.header.worknumbers__</legend></hbox>
+              <hbox id="CompanyMainPhoneContainer" align="center"><spacer flex="1"/><label control="CompanyMainPhone" value="__EAS4TBSYNCMSG_abCard.CompanyMainPhone__"/><html:input id="CompanyMainPhone" class="easProperty PhoneEditWidth" /></hbox>
+              <hbox id="Business2PhoneNumberContainer" align="center"><spacer flex="1"/><label control="Business2PhoneNumber" value="__EAS4TBSYNCMSG_abCard.Business2PhoneNumber__"/><html:input id="Business2PhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+              <hbox id="BusinessFaxNumberContainer" align="center" insertafter="FaxNumberContainer"><spacer flex="1"/><label control="BusinessFaxNumber" value="__EAS4TBSYNCMSG_abCard.BusinessFaxNumber__"/><html:input id="BusinessFaxNumber" class="easProperty PhoneEditWidth" /></hbox>
+              <hbox id="AssistantPhoneNumberContainer" align="center"><spacer flex="1"/><label control="AssistantPhoneNumber" value="__EAS4TBSYNCMSG_abCard.AssistantPhoneNumber__"/><html:input id="AssistantPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+            </vbox>
+          </fieldset>
           <!-- HOME -->
-          <groupbox>
-            <caption label="__EAS4TBSYNCMSG_abCard.header.homenumbers__"/>
-            <hbox id="Home2PhoneNumberContainer" align="center">
-              <spacer flex="1"/>
-              <label control="Home2PhoneNumber" value="__EAS4TBSYNCMSG_abCard.Home2PhoneNumber__"/>
-              <html:input id="Home2PhoneNumber" class="easProperty PhoneEditWidth" />
-            </hbox>
-          </groupbox>
+          <fieldset>
+            <vbox flex="1">
+              <hbox><legend class="insideTab">__EAS4TBSYNCMSG_abCard.header.homenumbers__</legend></hbox>
+              <hbox id="Home2PhoneNumberContainer" align="center">
+                <spacer flex="1"/>
+                <label control="Home2PhoneNumber" value="__EAS4TBSYNCMSG_abCard.Home2PhoneNumber__"/>
+                <html:input id="Home2PhoneNumber" class="easProperty PhoneEditWidth" />
+              </hbox>
+            </vbox>
+          </fieldset>
           <!-- OTHER -->
-          <groupbox>
-            <caption label="__EAS4TBSYNCMSG_abCard.header.othernumbers__"/>
-            <hbox id="CarPhoneNumberContainer" align="center"><spacer flex="1"/><label control="CarPhoneNumber" value="__EAS4TBSYNCMSG_abCard.CarPhoneNumber__" /><html:input id="CarPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
-            <hbox id="RadioPhoneNumberContainer" align="center"><spacer flex="1"/><label control="RadioPhoneNumber" value="__EAS4TBSYNCMSG_abCard.RadioPhoneNumber__" /><html:input id="RadioPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
-          </groupbox>
+          <fieldset>
+            <vbox flex="1">
+              <hbox><legend class="insideTab">__EAS4TBSYNCMSG_abCard.header.othernumbers__</legend></hbox>
+              <hbox id="CarPhoneNumberContainer" align="center"><spacer flex="1"/><label control="CarPhoneNumber" value="__EAS4TBSYNCMSG_abCard.CarPhoneNumber__" /><html:input id="CarPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+              <hbox id="RadioPhoneNumberContainer" align="center"><spacer flex="1"/><label control="RadioPhoneNumber" value="__EAS4TBSYNCMSG_abCard.RadioPhoneNumber__" /><html:input id="RadioPhoneNumber" class="easProperty PhoneEditWidth" /></hbox>
+            </vbox>
+          </fieldset>
         </vbox>
         <vbox>
           <!-- PEOPLE -->
-          <groupbox>
-            <caption label="__EAS4TBSYNCMSG_abCard.header.people__"/>
-            <hbox id="ManagerNameField" align="center">
-              <spacer flex="1"/>
-              <label control="ManagerName" value="__EAS4TBSYNCMSG_abCard.ManagerName__"/>
-              <html:input id="ManagerName" class="easProperty PhoneEditWidth"/>
-            </hbox>
-            <hbox id="AssistantNameField" align="center">
-              <spacer flex="1"/>
-              <label control="AssistantName" value="__EAS4TBSYNCMSG_abCard.AssistantName__"/>
-              <html:input id="AssistantName" class="easProperty PhoneEditWidth"/>
-            </hbox>
-            <hbox id="SpouseField" align="center">
-              <spacer flex="1"/>
-              <label control="SpouseName" value="__EAS4TBSYNCMSG_abCard.Spouse__"/>
-              <html:input id="SpouseName" class="easProperty PhoneEditWidth"/>
-            </hbox>
-            <hbox id="AnniversaryField" align="center">
-              <spacer flex="1"/>
-              <label control="Anniversary" value="__EAS4TBSYNCMSG_abCard.Anniversary__"/>
-              <hbox align="center" style="width: 152px;">
-                <html:input id="AnniversaryDay" maxlength="2" placeholder="DD" flex="1" class="easProperty" />
-                <html:input id="AnniversaryMonth" maxlength="2" placeholder="MM" flex="1" class="easProperty" />
-                <html:input id="AnniversaryYear" maxlength="4" placeholder="YYYY" flex="0" class="easProperty YearWidth" />
+          <fieldset>
+            <vbox flex="1">
+              <hbox><legend class="insideTab">__EAS4TBSYNCMSG_abCard.header.people__</legend></hbox>
+              <hbox id="ManagerNameField" align="center">
+                <spacer flex="1"/>
+                <label control="ManagerName" value="__EAS4TBSYNCMSG_abCard.ManagerName__"/>
+                <html:input id="ManagerName" class="easProperty PhoneEditWidth"/>
               </hbox>
-            </hbox>
-          </groupbox>
+              <hbox id="AssistantNameField" align="center">
+                <spacer flex="1"/>
+                <label control="AssistantName" value="__EAS4TBSYNCMSG_abCard.AssistantName__"/>
+                <html:input id="AssistantName" class="easProperty PhoneEditWidth"/>
+              </hbox>
+              <hbox id="SpouseField" align="center">
+                <spacer flex="1"/>
+                <label control="SpouseName" value="__EAS4TBSYNCMSG_abCard.Spouse__"/>
+                <html:input id="SpouseName" class="easProperty PhoneEditWidth"/>
+              </hbox>
+              <hbox id="AnniversaryField" align="center">
+                <spacer flex="1"/>
+                <label control="Anniversary" value="__EAS4TBSYNCMSG_abCard.Anniversary__"/>
+                <hbox align="center" style="width: 152px;">
+                  <html:input id="AnniversaryDay" maxlength="2" placeholder="DD" flex="1" class="easProperty" />
+                  <html:input id="AnniversaryMonth" maxlength="2" placeholder="MM" flex="1" class="easProperty" />
+                  <html:input id="AnniversaryYear" maxlength="4" placeholder="YYYY" flex="0" class="easProperty YearWidth" />
+                </hbox>
+              </hbox>
+            </vbox>
+          </fieldset>
           <!-- MESSAGING -->
-          <groupbox>
-            <caption label="__EAS4TBSYNCMSG_abCard.header.messaging__"/>
-            <hbox id="IMAddressContainer" align="center">
-              <spacer flex="1"/>
-              <label control="IMAddress" value="IM Address #1:"/>
-              <html:input id="IMAddress" class="easProperty PhoneEditWidth"/>
-            </hbox>
-            <hbox id="IMAddress2Container" align="center">
-              <spacer flex="1"/>
-              <label control="IMAddress2" value="IM Address #2:"/>
-              <html:input id="IMAddress2" class="easProperty PhoneEditWidth"/>
-            </hbox>
-            <hbox id="IMAddress3Container" align="center">
-              <spacer flex="1"/>
-              <label control="IMAddress3" value="IM Address #3:"/>
-              <html:input id="IMAddress3" class="easProperty PhoneEditWidth"/>
-            </hbox>
-            <hbox id="MMSContainer" align="center">
-              <spacer flex="1"/>
-              <label control="MMS" value="MMS:"/>
-              <html:input id="MMS" class="easProperty PhoneEditWidth"/>
-            </hbox>
-          </groupbox>
+          <fieldset>
+            <vbox flex="1">
+              <hbox><legend class="insideTab">__EAS4TBSYNCMSG_abCard.header.messaging__</legend></hbox>
+              <hbox id="IMAddressContainer" align="center">
+                <spacer flex="1"/>
+                <label control="IMAddress" value="IM Address #1:"/>
+                <html:input id="IMAddress" class="easProperty PhoneEditWidth"/>
+              </hbox>
+              <hbox id="IMAddress2Container" align="center">
+                <spacer flex="1"/>
+                <label control="IMAddress2" value="IM Address #2:"/>
+                <html:input id="IMAddress2" class="easProperty PhoneEditWidth"/>
+              </hbox>
+              <hbox id="IMAddress3Container" align="center">
+                <spacer flex="1"/>
+                <label control="IMAddress3" value="IM Address #3:"/>
+                <html:input id="IMAddress3" class="easProperty PhoneEditWidth"/>
+              </hbox>
+              <hbox id="MMSContainer" align="center">
+                <spacer flex="1"/>
+                <label control="MMS" value="MMS:"/>
+                <html:input id="MMS" class="easProperty PhoneEditWidth"/>
+              </hbox>
+            </vbox>
+          </fieldset>
         </vbox>
       </hbox>
     </vbox>

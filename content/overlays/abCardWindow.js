@@ -8,8 +8,8 @@
  
  "use strict";
 
-Components.utils.import("chrome://tbsync/content/tbsync.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 var tbSyncAbEasCardWindow = {
     
@@ -62,6 +62,9 @@ var tbSyncAbEasCardWindow = {
             if (gEditCard) tbSyncAbEasCardWindow.onLoadCard(gEditCard.card, window.document);
         }
         TbSync.localizeNow(window, "eas");
+        
+        // append OS attribute to select proper CSS
+        window.document.getElementById("easFields1Panel").setAttribute("OS", OS.Constants.Sys.Name);
         window.sizeToContent();
     },
 

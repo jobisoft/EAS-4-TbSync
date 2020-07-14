@@ -8,7 +8,7 @@
  
  "use strict";
 
-Components.utils.import("chrome://tbsync/content/tbsync.jsm");
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
 
 var tbSyncEasAbNewCardWindow = {
 
