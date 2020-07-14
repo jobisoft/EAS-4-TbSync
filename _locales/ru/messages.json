@@ -249,7 +249,7 @@
         "message": "Использовать безопасное соединение (соединение через https)"
     },
     "recyclebin ": {
-        "message": " Корзина"
+        "message": " Trash"
     },
     "servertype.auto": {
         "message": "Автоматическая настройка"
@@ -345,7 +345,7 @@
         "message": "Аккаунт не включен, синхронизация отключена."
     },
     "status.empty-response": {
-        "message": "Сервер отправляет неожиданный пустой ответ."
+        "message": "Server sends unexpected empty response."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
         "message": "Запрещенный элемент календаря в папке задач (пожалуйста, исправьте)"
@@ -375,7 +375,7 @@
         "message": "Недопустимый ответ сервера (мусор в обмене)."
     },
     "status.malformed-xml": {
-        "message": "Не удалось разобрать XML. Проверьте журнал событий для деталей."
+        "message": "Could not parse XML. Check event log for details."
     },
     "status.modified": {
         "message": "Локальные изменения"
@@ -486,7 +486,7 @@
         "message": "Откат локальных изменений"
     },
     "syncstate.eval.response.setdeviceinfo": {
-        "message": "Обработка информации об устройстве"
+        "message": "Отправка информации об устройстве"
     },
     "syncstate.eval.response.synckey": {
         "message": "Обработка элементов синхронизации"
@@ -561,7 +561,7 @@
         "message": "Ожидание самых последних версий"
     },
     "syncstate.send.request.setdeviceinfo": {
-        "message": "Ожидание информации об устройстве"
+        "message": "Отправка информации об устройстве"
     },
     "syncstate.send.request.synckey": {
         "message": "Ожидание элементов синхронизации"
