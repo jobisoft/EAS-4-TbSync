@@ -111,7 +111,7 @@
         "message": "Nom d'utilisateur (adresse e-mail) :"
     },
     "autocomplete.serverdirectory ": {
-        "message": " global server directory"
+        "message": " annuaire global du serveur"
     },
     "autodiscover.Failed": {
         "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
@@ -207,7 +207,7 @@
         "message": "Options des contacts"
     },
     "pref.displayoverride": {
-        "message": "Remplacer le nom affiché par &quot;Prénom&quot; + &quot;Nom&quot;"
+        "message": "Remplacer le nom affiché par \"Prénom\" + \"Nom\""
     },
     "pref.galautocomplete": {
         "message": "Inclure les résultats du carnet d'adresses global (GAL) dans l'auto-complétion des adresses e-mail"
@@ -249,7 +249,7 @@
         "message": "Utiliser une connexion sécurisée (se connecter via https)"
     },
     "recyclebin ": {
-        "message": " Trash"
+        "message": " Corbeille"
     },
     "servertype.auto": {
         "message": "Configuration automatique"
@@ -345,7 +345,7 @@
         "message": "Disabled"
     },
     "status.empty-response": {
-        "message": "Server sends unexpected empty response."
+        "message": "Le serveur a renvoyé une réponse vide inattendue."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
         "message": "Forbidden calendar item in a task folder (please resort)"
@@ -375,7 +375,7 @@
         "message": "Invalid server response (junk)."
     },
     "status.malformed-xml": {
-        "message": "Could not parse XML. Check event log for details."
+        "message": "Impossible d’analyser le XML. Vérifiez le journal des événements pour plus de détails."
     },
     "status.modified": {
         "message": "Local modifications"
