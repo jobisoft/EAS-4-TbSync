@@ -111,7 +111,7 @@
         "message": "Benutzername (E-Mail Adresse):"
     },
     "autocomplete.serverdirectory ": {
-        "message": " Globales Serververzeichnis"
+        "message": " global server directory"
     },
     "autodiscover.Failed": {
         "message": "Autodiscover für den Benutzer <##user##> war nicht erfolgreich. Entweder war das Passwort nicht korrekt, Ihr ActiveSync Server hat ein temporäres Problem oder unterstützt kein Autodiscover."
@@ -132,13 +132,13 @@
         "message": "ActiveSync Server Konfiguration"
     },
     "deletefolder.confirm": {
-        "message": "Möchten Sie den Ordner '##replace.1##' wirklich ENDGÜLTIG aus dem Papierkorb ENTFERNEN?"
+        "message": "Möchten Sie den Ordner \"##replace.1##\" wirklich ENDGÜLTIG aus dem Papierkorb ENTFERNEN?"
     },
     "deletefolder.menuentry": {
-        "message": "Den Ordner '##replace.1##' endgültig aus dem Papierkorb entfernen"
+        "message": "Den Ordner \"##replace.1##\" endgültig aus dem Papierkorb entfernen"
     },
     "deletefolder.notallowed": {
-        "message": "Bitte beenden Sie zunächst das Abonement des Ordner '##replace.1##', bevor Sie diesen aus dem Papierkorb entfernen."
+        "message": "Bitte beenden Sie zunächst das Abonement des Ordner \"##replace.1##\", bevor Sie diesen aus dem Papierkorb entfernen."
     },
     "extensionDescription": {
         "message": "Erweitert TbSync und erlaubt die Synchronisation von Exchange ActiveSync Konten (Kontakte, Aufgaben und Kalender)."
@@ -249,7 +249,7 @@
         "message": "Sichere Verbindungen verwenden (via https://)"
     },
     "recyclebin ": {
-        "message": " Papierkorb"
+        "message": " Trash"
     },
     "servertype.auto": {
         "message": "Automatische Konfiguration"
@@ -345,7 +345,7 @@
         "message": "Konto ist deaktiviert, Synchronisation ist ausgeschaltet."
     },
     "status.empty-response": {
-        "message": "Server sendet unerwartete leere Antwort."
+        "message": "Server sends unexpected empty response."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
         "message": "Unerlaubtes Kalender-Element in einem Aufgaben-Objekt (bitte umsortieren)"
@@ -375,7 +375,7 @@
         "message": "Ungültige Serverantwort."
     },
     "status.malformed-xml": {
-        "message": "Antwort enthält fehlerhaftes XML, Sync angebrochen. Prüfen Sie bitte das Ereignisprotokoll für weitere Details."
+        "message": "Could not parse XML. Check event log for details."
     },
     "status.modified": {
         "message": "Lokale Änderungen"
