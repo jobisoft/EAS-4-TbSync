@@ -423,142 +423,142 @@
         "message": "La réponse du serveur ne contient aucune donnée."
     },
     "status.resync-loop": {
-        "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
+        "message": "Il y a eu une erreur à partir de laquelle nous n'avons pas pu rétablir la situation en resynchronisant le compte. Veuillez désactiver le compte et réessayer. (Erreur : boucle de resynchronisation)"
     },
     "status.security": {
-        "message": "Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)"
+        "message": "Impossible d'établir une connexion sécurisée. Utilisez-vous un certificat auto-signé ou autrement non fiable sans l'importer dans Thunderbird ? (##replace.1##)"
     },
     "status.skipped": {
-        "message": "Not yet supported, skipped"
+        "message": "Pas encore pris en charge, ignoré"
     },
     "status.syncing": {
-        "message": "Synchronizing"
+        "message": "Synchronisation en cours"
     },
     "status.timeout": {
-        "message": "Communication timeout."
+        "message": "Délai de communication expiré."
     },
     "status.wbxml-parse-error": {
-        "message": "Server sends unreadable response."
+        "message": "Le serveur envoie une réponse illisible."
     },
     "status.wbxmlerror": {
-        "message": "Sync failed. Server responded with status <##replace.1##>."
+        "message": "La synchronisation a échoué. Le serveur a répondu avec le statut <##replace.1##>."
     },
     "status.wbxmlmissingfield": {
-        "message": "ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response."
+        "message": "Violation du protocole ActiveSync : le champ obligatoire <##replace.1##> est absent de la réponse du serveur."
     },
     "syncstate.accountdone": {
         "message": "Finished account"
     },
     "syncstate.done": {
-        "message": "Preparing next item for synchronization"
+        "message": "Préparation du prochain élément pour la synchronisation"
     },
     "syncstate.eval.response.autodiscover": {
-        "message": "Processing updated server settings"
+        "message": "Traitement des paramètres du serveur mis à jour"
     },
     "syncstate.eval.response.deletefolder": {
-        "message": "Folder deleted"
+        "message": "Dossier supprimé"
     },
     "syncstate.eval.response.estimate": {
-        "message": "Processing change estimate"
+        "message": "Traitement de l'estimation des changements"
     },
     "syncstate.eval.response.folders": {
-        "message": "Processing folder list update"
+        "message": "Mise à jour de la liste des dossiers en cours de traitement"
     },
     "syncstate.eval.response.localchanges": {
-        "message": "Processing acknowledgment of local changes"
+        "message": "Traitement de la confirmation de réception des modifications locales"
     },
     "syncstate.eval.response.localdeletes": {
-        "message": "Processing acknowledgment of local deletes"
+        "message": "Traitement de la confirmation de réception des suppressions locales"
     },
     "syncstate.eval.response.options": {
-        "message": "Processing server options"
+        "message": "Traitement des options du serveur"
     },
     "syncstate.eval.response.provision": {
-        "message": "Processing provision"
+        "message": "Traitement de la provision"
     },
     "syncstate.eval.response.remotechanges": {
-        "message": "Processing remote changes"
+        "message": "Traitement des modifications à distance"
     },
     "syncstate.eval.response.revertlocalchanges": {
-        "message": "Reverting local changes"
+        "message": "Rétablissement des changements locaux"
     },
     "syncstate.eval.response.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Envoi des informations de l'appareil"
     },
     "syncstate.eval.response.synckey": {
-        "message": "Processing SyncKey"
+        "message": "Traitement de la clé de synchronisation"
     },
     "syncstate.prepare.request.autodiscover": {
-        "message": "Requesting updated server settings"
+        "message": "Demande de mise à jour des paramètres du serveur"
     },
     "syncstate.prepare.request.deletefolder": {
-        "message": "Preparing to delete folder"
+        "message": "Préparation de la suppression du dossier"
     },
     "syncstate.prepare.request.estimate": {
-        "message": "Requesting change estimate"
+        "message": "Demande de l'estimation des changements"
     },
     "syncstate.prepare.request.folders": {
-        "message": "Sending folder list update"
+        "message": "Envoi de la mise à jour de la liste de dossiers"
     },
     "syncstate.prepare.request.localchanges": {
-        "message": "Sending local changes"
+        "message": "Envoi des modifications locales"
     },
     "syncstate.prepare.request.localdeletes": {
-        "message": "Sending local deletes"
+        "message": "Envoi des suppressions locales"
     },
     "syncstate.prepare.request.options": {
-        "message": "Requesting server options"
+        "message": "Demande des options du serveur"
     },
     "syncstate.prepare.request.provision": {
-        "message": "Requesting provision"
+        "message": "Demande de provision"
     },
     "syncstate.prepare.request.remotechanges": {
-        "message": "Requesting remote changes"
+        "message": "Traitement des modifications à distance"
     },
     "syncstate.prepare.request.revertlocalchanges": {
-        "message": "Collecting local changes"
+        "message": "Collecte des modifications locales"
     },
     "syncstate.prepare.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Envoi des informations de l'appareil"
     },
     "syncstate.prepare.request.synckey": {
-        "message": "Requesting SyncKey"
+        "message": "Demande de clé de synchronisation"
     },
     "syncstate.preparing": {
-        "message": "Preparing next item for synchronization"
+        "message": "Préparation du prochain élément pour la synchronisation"
     },
     "syncstate.send.request.autodiscover": {
-        "message": "Waiting for updated server settings"
+        "message": "En attente de mise à jour des paramètres du serveur"
     },
     "syncstate.send.request.deletefolder": {
-        "message": "Waiting for folder to be deleted"
+        "message": "En attente de la suppression du dossier"
     },
     "syncstate.send.request.estimate": {
-        "message": "Waiting for change estimate"
+        "message": "En attente de l'estimation des changements"
     },
     "syncstate.send.request.folders": {
-        "message": "Waiting for folder list update"
+        "message": "En attente de mise à jour de la liste des dossiers"
     },
     "syncstate.send.request.localchanges": {
-        "message": "Waiting for acknowledgment of local changes"
+        "message": "En attente de la confirmation de réception des modifications locales"
     },
     "syncstate.send.request.localdeletes": {
-        "message": "Waiting for acknowledgment of local deletes"
+        "message": "En attente de la confirmation de réception des suppressions locales"
     },
     "syncstate.send.request.options": {
-        "message": "Waiting for server options"
+        "message": "En attente des options du serveur"
     },
     "syncstate.send.request.provision": {
-        "message": "Waiting for provision"
+        "message": "En attente de provision"
     },
     "syncstate.send.request.remotechanges": {
-        "message": "Waiting for remote changes"
+        "message": "En attente des modifications à distance"
     },
     "syncstate.send.request.revertlocalchanges": {
         "message": "Waiting for most recent versions"
     },
     "syncstate.send.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Envoi des informations de l'appareil"
     },
     "syncstate.send.request.synckey": {
         "message": "Waiting for SyncKey"
