@@ -309,118 +309,118 @@
         "message": "Clé de synchronisation invalide (statut 9), resynchronisation"
     },
     "status.InvalidServerOptions": {
-        "message": "The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually."
+        "message": "Le serveur ne fournit pas d'informations sur les versions ActiveSync supportées. EAS est-il bloqué pour cet utilisateur ou ce client (TbSync) ? Vous pouvez essayer de définir manuellement la version ActiveSync ."
     },
     "status.OK": {
         "message": "OK"
     },
     "status.ServerRejectedRequest": {
-        "message": "The EAS Server rejected the last request."
+        "message": "Le serveur EAS a rejeté la dernière demande."
     },
     "status.ServerRejectedSomeItems": {
-        "message": "The EAS server did not accept ##replace.1## elements."
+        "message": "Le serveur EAS n'a pas accepté les éléments ##replace.1##."
     },
     "status.Sync.12": {
-        "message": "Folder hierarchy changed (status 12), resyncing"
+        "message": "La hiérarchie des dossiers a changé (statut 12), resynchronisation"
     },
     "status.Sync.3": {
-        "message": "Invalid synchronization key (status 3), resyncing"
+        "message": "Clé de synchronisation invalide (statut 3), resynchronisation"
     },
     "status.Sync.4": {
-        "message": "Malformed request (status 4)"
+        "message": "Requête mal formée (statut 4)"
     },
     "status.Sync.5": {
-        "message": "Temporary server issues or invalid item (status 5)"
+        "message": "Problèmes de serveur temporaires ou élément invalide (statut 5)"
     },
     "status.Sync.6": {
-        "message": "Invalid item (status 6)"
+        "message": "Élément invalide (statut 6)"
     },
     "status.Sync.8": {
-        "message": "Object not found (status 8)"
+        "message": "Objet introuvable (statut 8)"
     },
     "status.aborted": {
-        "message": "Not synchronized"
+        "message": "Non synchronisé"
     },
     "status.disabled": {
-        "message": "Disabled"
+        "message": "Désactivé"
     },
     "status.empty-response": {
         "message": "Le serveur a renvoyé une réponse vide inattendue."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
-        "message": "Forbidden calendar item in a task folder (please resort)"
+        "message": "Élément de calendrier interdit dans un dossier de tâche (veuillez intervenir)"
     },
     "status.forbiddenTasksItemInCalendarFolder": {
-        "message": "Forbidden task item in a calendar folder (please resort)"
+        "message": "Élément de calendrier interdit dans un dossier de tâche (veuillez intervenir)"
     },
     "status.global.101": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 101)."
+        "message": "La requête contient WBXML mais n'a pas pu être décodée en XML (EAS Error 101)."
     },
     "status.global.102": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 102)."
+        "message": "La requête contient WBXML mais n'a pas pu être décodée en XML (EAS Error 102)."
     },
     "status.global.103": {
-        "message": "The XML provided in the request does not follow the protocol requirements (EAS Error 103)."
+        "message": "Le XML fourni dans la requête ne respecte pas les exigences du protocole (EAS Error 103)."
     },
     "status.global.110": {
-        "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
+        "message": "Le serveur a signalé une erreur interne et nous ne devrions pas réessayer immédiatement. La synchronisation périodique automatique a été désactivée pendant 30 minutes (EAS Error 110)."
     },
     "status.global.clientdenied": {
-        "message": "The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account."
+        "message": "Le serveur EAS signale <##replace.2##> (status ##replace.1##) et n'autorise pas TbSync à accéder à votre compte."
     },
     "status.httperror": {
-        "message": "Communication error (HTTP status ##replace.1##)."
+        "message": "Erreur de communication (statut HTTP ##replace.1##)."
     },
     "status.invalid": {
-        "message": "Invalid server response (junk)."
+        "message": "Réponse du serveur invalide (pourriels)."
     },
     "status.malformed-xml": {
         "message": "Impossible d’analyser le XML. Vérifiez le journal des événements pour plus de détails."
     },
     "status.modified": {
-        "message": "Local modifications"
+        "message": "Modifications locales présentes"
     },
     "status.network": {
-        "message": "Could not connect to server (##replace.1##)."
+        "message": "Impossible de se connecter au serveur (##replace.1##)."
     },
     "status.networkerror": {
-        "message": "Could not connect to server."
+        "message": "La connexion au serveur a échoué."
     },
     "status.nosupportedeasversion": {
-        "message": "Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server."
+        "message": "Le serveur ne supporte pas ActiveSync v2.5 ou v14.0 (seulement ##replace.1##). TbSync ne fonctionnera pas avec ce serveur ActiveSync."
     },
     "status.notargets": {
-        "message": "Aborting Sync, because sync targets could not be created."
+        "message": "Annulation de la synchronisation en cours : il est impossible de créer les destinations de synchronisation."
     },
     "status.notsupportedeasversion": {
-        "message": "Server does not support selected ActiveSync v##replace.1## (only ##replace.2##)."
+        "message": "Le serveur ne prend pas en charge la sélection ActiveSync v##replace.1## (seulement ##replace.2##)."
     },
     "status.notsyncronized": {
-        "message": "Account needs to be synchronized, at least one item is out of sync."
+        "message": "Le compte doit être synchronisé : au moins un éléments n'est pas synchronisé."
     },
     "status.nouserhost": {
-        "message": "Missing username and/or server. Please provide those values."
+        "message": "Nom d'utilisateur et/ou serveur manquant. Veuillez fournir ces valeurs."
     },
     "status.pending": {
-        "message": "Waiting to be synchronized"
+        "message": "En attente de synchronisation"
     },
     "status.policy.2": {
-        "message": "There is no policy for this client. Contact your server administrator or disable provisioning for this account."
+        "message": "Il n'y a pas de politique pour ce client. Contactez l'administrateur de votre serveur ou désactivez le provisioning pour ce compte."
     },
     "status.policy.3": {
-        "message": "Unknown PolicyType value. Contact your server administrator or disable provisioning for this account."
+        "message": "Valeur de PolicyType inconnue. Contactez l'administrateur du serveur ou désactivez le provisioning pour ce compte."
     },
     "status.policy.4": {
-        "message": "The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account."
+        "message": "Les données de stratégie sur le serveur sont corrompues (potentiellement altérées). Contactez l'administrateur de votre serveur ou désactivez le provisioning pour ce compte."
     },
     "status.policy.5": {
-        "message": "The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account."
+        "message": "Le client reconnaît la mauvaise clé de stratégie. Contactez l'administrateur du serveur ou désactivez le provisioning pour ce compte."
     },
     "status.provision": {
-        "message": "Provisioning failed with status <##replace.1##>"
+        "message": "Le provisioning a échoué avec le statut <##replace.1##>"
     },
     "status.response-contains-no-data": {
-        "message": "Response from the server contains no data."
+        "message": "La réponse du serveur ne contient aucune donnée."
     },
     "status.resync-loop": {
         "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
