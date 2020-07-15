@@ -386,9 +386,6 @@
     "status.networkerror": {
         "message": "Verbindung zum Server fehlgeschlagen."
     },
-    "status.nolightning": {
-        "message": "Lightning Add-On nicht installiert, Kalender nicht nutzbar."
-    },
     "status.nosupportedeasversion": {
         "message": "Der Server unterstützt kein ActiveSync v2.5 oder v14.0 (nur ##replace.1##). TbSync kann nicht mit diesem Server arbeiten."
     },

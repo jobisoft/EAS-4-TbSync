@@ -386,9 +386,6 @@
     "status.networkerror": {
         "message": "Não foi possível conectar ao servidor."
     },
-    "status.nolightning": {
-        "message": "O complemento Lightning não está instalado, os calendários não são suportados."
-    },
     "status.nosupportedeasversion": {
         "message": "O servidor não suporta o ActiveSync v2.5 ou v14.0 (somente ##replace.1##). TbSync não funcionará com este servidor ActiveSync."
     },

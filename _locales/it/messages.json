@@ -386,9 +386,6 @@
     "status.networkerror": {
         "message": "Impossibile connettersi al server."
     },
-    "status.nolightning": {
-        "message": "Componente aggiuntivo Lightning non installato, i calendari non sono supportati."
-    },
     "status.nosupportedeasversion": {
         "message": "Il server non supporta ActiveSync v2.5 o v14.0 (solo ##replace.1##). TbSync non funzionerà con questo server ActiveSync."
     },

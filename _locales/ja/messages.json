@@ -386,9 +386,6 @@
     "status.networkerror": {
         "message": "サーバーに接続できません。"
     },
-    "status.nolightning": {
-        "message": "Lightning アドオンがインストールされていません。カレンダーはサポートされません。"
-    },
     "status.nosupportedeasversion": {
         "message": "サーバーは ActiveSync v2.5 または v14.0 をサポートしていません (##replace.1## のみ)。TbSync は、この ActiveSync サーバーでは機能しません。"
     },

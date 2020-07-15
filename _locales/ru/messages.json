@@ -386,9 +386,6 @@
     "status.networkerror": {
         "message": "Не удалось подключиться к серверу."
     },
-    "status.nolightning": {
-        "message": "Lightning Add-On не установлен, календари не поддерживаются."
-    },
     "status.nosupportedeasversion": {
         "message": "Сервер не поддерживает ActiveSync v2.5 или v14.0 (только ##replace.1##). TbSync не будет работать с этим ActiveSync сервером."
     },

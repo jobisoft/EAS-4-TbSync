@@ -258,7 +258,7 @@ var sync = {
 
 
     singleFolder: async function (syncData)  {
-        // add target to syncData (getTarget() will throw "nolightning" if lightning missing)
+        // add target to syncData
         try {
             // accessing the target for the first time will check if it is avail and if not will create it (if possible)
             syncData.target = await syncData.currentFolderData.targetData.getTarget();

@@ -386,9 +386,6 @@
     "status.networkerror": {
         "message": "Nem tudott csatlakozni a kiszolgálóhoz."
     },
-    "status.nolightning": {
-        "message": "A Lightning kiegészítő nincs telepítve, a naptárak nem támogatottak."
-    },
     "status.nosupportedeasversion": {
         "message": "A kiszolgáló nem támogatja az ActiveSync 2.5 vagy 14.0 verziót (csak ##replace.1##). A Thunderbird-összehangolás nem fog működni az ActiveSync kiszolgálóval."
     },
