@@ -1,99 +1,99 @@
 {
     "abCard.Anniversary": {
-        "message": "Anniversaire:"
+        "message": "Anniversaire :"
     },
     "abCard.AssistantName": {
-        "message": "Assistant(e):"
+        "message": "Assistant(e) :"
     },
     "abCard.AssistantPhoneNumber": {
-        "message": "Téléphone Assistant(e):"
+        "message": "Téléphone Assistant(e) :"
     },
     "abCard.Business2PhoneNumber": {
-        "message": "Téléphone Bureau Alternatif:"
+        "message": "Téléphone Bureau Alternatif :"
     },
     "abCard.BusinessFaxNumber": {
-        "message": "Fax de bureau:"
+        "message": "Fax de bureau :"
     },
     "abCard.CarPhoneNumber": {
-        "message": "Téléphone Voiture:"
+        "message": "Téléphone Voiture :"
     },
     "abCard.CompanyMainPhone": {
-        "message": "Téléphone de Bureau Principal:"
+        "message": "Téléphone de Bureau Principal :"
     },
     "abCard.Email3Address": {
-        "message": "E-mail alternatif:"
+        "message": "Courriel alternatif :"
     },
     "abCard.Home2PhoneNumber": {
-        "message": "Téléphone Domicile Alternatif:"
+        "message": "Téléphone Domicile Alternatif :"
     },
     "abCard.ManagerName": {
-        "message": "Manageur:"
+        "message": "Supérieur(e) :"
     },
     "abCard.MiddleName": {
-        "message": "Deuxième prénom:"
+        "message": "Deuxième prénom :"
     },
     "abCard.OtherAddress": {
-        "message": "Adresse:"
+        "message": "Adresse :"
     },
     "abCard.OtherCity": {
-        "message": "Ville:"
+        "message": "Ville :"
     },
     "abCard.OtherCountry": {
-        "message": "Pays:"
+        "message": "Pays :"
     },
     "abCard.OtherState": {
-        "message": "État:"
+        "message": "État :"
     },
     "abCard.OtherZip": {
-        "message": "Code Postal:"
+        "message": "Code postal :"
     },
     "abCard.RadioPhoneNumber": {
-        "message": "Téléphone Radio:"
+        "message": "Téléphone Radio :"
     },
     "abCard.Spouse": {
-        "message": "Épou(x/se):"
+        "message": "Épou(x/se) :"
     },
     "abCard.header.eas": {
         "message": "Autres champs (EAS)"
     },
     "abCard.header.homenumbers": {
-        "message": "Téléphones domicile supplémentaires:"
+        "message": "Téléphones domicile supplémentaires :"
     },
     "abCard.header.messaging": {
-        "message": "Messagerie:"
+        "message": "Messagerie :"
     },
     "abCard.header.otheraddress": {
         "message": "Autre Adresse (EAS)"
     },
     "abCard.header.othernumbers": {
-        "message": "Numéros de téléphone supplémentaires:"
+        "message": "Numéros de téléphone supplémentaires :"
     },
     "abCard.header.people": {
-        "message": "Personnes:"
+        "message": "Personnes :"
     },
     "abCard.header.worknumbers": {
-        "message": "Téléphones de bureau supplémentaires:"
+        "message": "Téléphones de bureau supplémentaires :"
     },
     "acl.readonly": {
         "message": "Accès au serveur en lecture seule (annule les modifications locales)"
     },
     "acl.readwrite": {
-        "message": "Lecture et écriture depuis et sur le serveur"
+        "message": "Lecture et écriture sur le serveur"
     },
     "add.description": {
         "message": "Veuillez sélectionner une des options de configuration du serveur disponibles et entrer les détails demandés. "
     },
     "add.name": {
-        "message": "Nom du compte:"
+        "message": "Nom du compte :"
     },
     "add.ok": {
         "message": "Ajouter un compte"
     },
     "add.password": {
-        "message": "Mot de passe:"
+        "message": "Mot de passe :"
     },
     "add.server": {
-        "message": "Configuration du serveur:"
+        "message": "Configuration du serveur :"
     },
     "add.shortdescription": {
         "message": "Information du compte"
@@ -102,7 +102,7 @@
         "message": "Ajout d'un compte Exchange ActiveSync à TbSync"
     },
     "add.url": {
-        "message": "Adresse du serveur:"
+        "message": "Adresse du serveur :"
     },
     "add.urldescription": {
         "message": "Il devrait suffire de fournir uniquement l'adresse de base du serveur (par exemple : mail.votreserveur.com). Cependant, il est également possible de fournir l'URL complète (par exemple : https://mail.votreserveur.com/Microsoft-Server-ActiveSync)."
@@ -210,7 +210,7 @@
         "message": "Remplacer le nom affiché par &quot;Prénom&quot; + &quot;Nom&quot;"
     },
     "pref.galautocomplete": {
-        "message": "Inclure les résultats du carnet d'adresses global (GAL) dans l'auto-complétion des adresses e-mail"
+        "message": "Inclure les résultats du carnet d'adresses global (GAL) dans l'auto-complétion des adresses courriel"
     },
     "pref.generaloptions": {
         "message": "Options générales"
@@ -255,7 +255,7 @@
         "message": "Configuration automatique"
     },
     "servertype.custom": {
-        "message": "Configuration personalisée"
+        "message": "Configuration personnalisée"
     },
     "servertype.description.auto": {
         "message": "La configuration de nombreux serveurs ActiveSync peut être découverte en fournissant uniquement votre adresse e-mail."
@@ -555,15 +555,15 @@
         "message": "En attente des modifications à distance"
     },
     "syncstate.send.request.revertlocalchanges": {
-        "message": "Waiting for most recent versions"
+        "message": "En attente des versions les plus récentes"
     },
     "syncstate.send.request.setdeviceinfo": {
         "message": "Envoi des informations de l'appareil"
     },
     "syncstate.send.request.synckey": {
-        "message": "Waiting for SyncKey"
+        "message": "En attente de clé de synchronisation"
     },
     "syncstate.syncing": {
-        "message": "Initialize synchronization"
+        "message": "Initialisation de la synchronisation"
     }
 }
