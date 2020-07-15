@@ -111,7 +111,7 @@
         "message": "Имя пользователя (email адрес):"
     },
     "autocomplete.serverdirectory": {
-        "message": " global server directory"
+        "message": " глобальный каталог сервера"
     },
     "autodiscover.Failed": {
         "message": "Автообнаружение для пользователя <##user##> не удалось. Либо предоставленные учетные данные были неправильными, либо у вашего провайдера ActiveSync была временная проблема, или не поддерживается автообнаружение."
@@ -519,7 +519,7 @@
         "message": "Сбор локальных изменений"
     },
     "syncstate.prepare.request.setdeviceinfo": {
-        "message": "Отправка информации об устройстве"
+        "message": "Обработка информации об устройстве"
     },
     "syncstate.prepare.request.synckey": {
         "message": "Запрос элементов синхронизации"
@@ -558,7 +558,7 @@
         "message": "Ожидание самых последних версий"
     },
     "syncstate.send.request.setdeviceinfo": {
-        "message": "Ожидание информации об устройстве"
+        "message": "Обработка информации об устройстве"
     },
     "syncstate.send.request.synckey": {
         "message": "Ожидание элементов синхронизации"

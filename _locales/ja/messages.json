@@ -81,7 +81,7 @@
         "message": "Read from and write to server"
     },
     "add.description": {
-        "message": "Please select one of the available server configuration options and enter the requested details. "
+        "message": "利用可能なサーバー構成オプションのいずれかを選択し、要求された詳細を入力してください。 "
     },
     "add.name": {
         "message": "アカウント名:"
@@ -105,7 +105,7 @@
         "message": "サーバー アドレス:"
     },
     "add.urldescription": {
-        "message": "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync)."
+        "message": "基本的なサーバーアドレスだけを提供するだけで十分です (例: mail.yourserver.com)。 ただし、完全な URL を提供することもできます (例: https://mail.yourserver.com/Microsoft-Server-ActiveSync)。"
     },
     "add.user": {
         "message": "ユーザー名 (電子メールアドレス):"
@@ -114,16 +114,16 @@
         "message": " global server directory"
     },
     "autodiscover.Failed": {
-        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
+        "message": "ユーザー <##user##> の自動検出に失敗しました。指定された資格情報が間違っているか、ActiveSyncプロバイダに一時的な問題があるか、自動検出をサポートしていません。"
     },
     "autodiscover.NeedEmail": {
-        "message": "Autodiscover needs a valid email address as user name."
+        "message": "自動検出にはユーザー名として有効なメールアドレスが必要です。"
     },
     "autodiscover.Ok": {
         "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
     },
     "autodiscover.Querying": {
-        "message": "Searching for settings…"
+        "message": "設定を検索中…"
     },
     "config.auto": {
         "message": "ActiveSync server configuration (Autodiscover)"
@@ -192,7 +192,7 @@
         "message": "ユーザー名"
     },
     "pref.UserNameDescription": {
-        "message": "User name is usually the email address of your account."
+        "message": "ユーザー名は通常、あなたのアカウントの電子メールアドレスです。"
     },
     "pref.autodetect": {
         "message": "利用可能な最新のバージョン"
@@ -228,22 +228,22 @@
         "message": "改行"
     },
     "pref.synclimit.1month": {
-        "message": "from 4 weeks ago"
+        "message": "4 週間前まで"
     },
     "pref.synclimit.2weeks": {
-        "message": "from 2 weeks ago"
+        "message": "2 週間前まで"
     },
     "pref.synclimit.3month": {
-        "message": "from 3 months ago"
+        "message": "3 ヶ月前まで"
     },
     "pref.synclimit.6month": {
-        "message": "from 6 months ago"
+        "message": "6 ヶ月前まで"
     },
     "pref.synclimit.all": {
         "message": "全て"
     },
     "pref.synclimit.description": {
-        "message": "Synchronization period: "
+        "message": "同期する期間: "
     },
     "pref.usehttps": {
         "message": "安全な接続を利用する (https を使用して接続)"
@@ -498,13 +498,13 @@
         "message": "Requesting change estimate"
     },
     "syncstate.prepare.request.folders": {
-        "message": "Sending folder list update"
+        "message": "フォルダリストの更新を送信中"
     },
     "syncstate.prepare.request.localchanges": {
         "message": "ローカルの変更を送信中"
     },
     "syncstate.prepare.request.localdeletes": {
-        "message": "Sending local deletes"
+        "message": "ローカルの削除を送信中"
     },
     "syncstate.prepare.request.options": {
         "message": "Requesting server options"
@@ -522,7 +522,7 @@
         "message": "デバイス情報を送信中"
     },
     "syncstate.prepare.request.synckey": {
-        "message": "Requesting SyncKey"
+        "message": "同期キーをリクエスト中"
     },
     "syncstate.preparing": {
         "message": "Preparing next item for synchronization"
