@@ -75,10 +75,10 @@
         "message": "Téléphones de bureau supplémentaires:"
     },
     "acl.readonly": {
-        "message": "Read-only server access (revert local changes)"
+        "message": "Accès au serveur en lecture seule (annule les modifications locales)"
     },
     "acl.readwrite": {
-        "message": "Read from and write to server"
+        "message": "Lecture et écriture depuis et sur le serveur"
     },
     "add.description": {
         "message": "Veuillez sélectionner une des options de configuration du serveur disponibles et entrer les détails demandés. "
@@ -114,31 +114,31 @@
         "message": " annuaire global du serveur"
     },
     "autodiscover.Failed": {
-        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
+        "message": "L'Autodiscover pour l'utilisateur <##user##> a échoué. Soit les informations d'identification fournies étaient erronées, soit votre fournisseur ActiveSync a un problème temporaire, soit il ne prend pas en charge l'Autodiscover."
     },
     "autodiscover.NeedEmail": {
-        "message": "Autodiscover needs a valid email address as user name."
+        "message": "L'Autodiscover a besoin d'une adresse courriel valide comme nom d'utilisateur."
     },
     "autodiscover.Ok": {
-        "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
+        "message": "L'Autodiscover est terminée avec succès, vous pouvez maintenant vérifier les paramètres optionnels et établir la connexion de synchronisation."
     },
     "autodiscover.Querying": {
-        "message": "Searching for settings…"
+        "message": "Recherche de paramètres…"
     },
     "config.auto": {
-        "message": "ActiveSync server configuration (Autodiscover)"
+        "message": "Configuration du serveur ActiveSync (Autodiscover)"
     },
     "config.custom": {
-        "message": "ActiveSync server configuration"
+        "message": "Configuration du serveur ActiveSync"
     },
     "deletefolder.confirm": {
-        "message": "Do you really want to PERMANENTLY PURGE folder “##replace.1##” from trash?"
+        "message": "Voulez-vous vraiment SUPPRIMER DÉFINITIVEMENT le dossier « ##replace.1##» de la corbeille ?"
     },
     "deletefolder.menuentry": {
-        "message": "Permanently purge folder “##replace.1##” from trash"
+        "message": "Supprimer définitivement le dossier « ##replace.1##» de la corbeille"
     },
     "deletefolder.notallowed": {
-        "message": "Please unsubscribe folder “##replace.1##” before trying to purge it from trash."
+        "message": "Veuillez vous désabonner du dossier « ##replace.1##» avant d'essayer de le supprimer de la corbeille."
     },
     "extensionDescription": {
         "message": "Ajouter la prise en charge de la synchronisation des comptes Exchange ActiveSync à TbSync (contacts, tâches et calendriers)."
@@ -165,7 +165,7 @@
         "message": "Paramètres"
     },
     "newaccount.add_auto": {
-        "message": "Autodiscover settings and add account"
+        "message": "Paramètres Autodiscover et ajout de compte"
     },
     "newaccount.add_custom": {
         "message": "Ajouter un compte"
@@ -273,292 +273,292 @@
         "message": "Double-cliquez pour déverrouiller tous les paramètres prédéfinis du serveur."
     },
     "status.401": {
-        "message": "Could not authenticate, check username and password (HTTP Error 401)."
+        "message": "L'authentification a échoué. Veuillez vérifier le couple nom d'utilisateur/mot de passe (erreur HTTP 401)."
     },
     "status.403": {
-        "message": "Server rejected connection (forbidden) (HTTP Error 403)."
+        "message": "Le serveur a rejeté la connexion (interdite) (Erreur HTTP 403)."
     },
     "status.404": {
-        "message": "User not found (HTTP Error 404)."
+        "message": "Utilisateur introuvable (Erreur HTTP 404)."
     },
     "status.449": {
-        "message": "Server requests provisioning (HTTP Error 449)."
+        "message": "Le serveur demande le provisionnement (erreur HTTP 449)."
     },
     "status.500": {
-        "message": "Unknown Server Error (HTTP Error 500)."
+        "message": "Erreur serveur inconnue (Erreur HTTP 500)."
     },
     "status.503": {
-        "message": "Service unavailable (HTTP Error 503)."
+        "message": "Service indisponible (Erreur HTTP 503)."
     },
     "status.BadItemSkipped": {
-        "message": "Bad Item Skipped: ##replace.1##"
+        "message": "Mauvais élément ignoré : ##replace.1##"
     },
     "status.FolderDelete.3": {
-        "message": "Cannot delete a system folder (status 3)"
+        "message": "Impossible de supprimer un dossier système (statut 3)"
     },
     "status.FolderDelete.4": {
-        "message": "Folder does not exist (status 4), resyncing"
+        "message": "Le dossier n'existe pas (statut 4), resynchronisation"
     },
     "status.FolderDelete.6": {
-        "message": "Command could not be completed, an error occurred on the server (status 6)"
+        "message": "La commande n'a pas pu être terminée, une erreur est survenue sur le serveur (statut 6)"
     },
     "status.FolderDelete.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Clé de synchronisation invalide (statut 9), resynchronisation"
     },
     "status.FolderSync.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Clé de synchronisation invalide (statut 9), resynchronisation"
     },
     "status.InvalidServerOptions": {
-        "message": "The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually."
+        "message": "Le serveur ne fournit pas d'informations sur les versions ActiveSync supportées. EAS est-il bloqué pour cet utilisateur ou ce client (TbSync) ? Vous pouvez essayer de définir manuellement la version ActiveSync ."
     },
     "status.OK": {
         "message": "OK"
     },
     "status.ServerRejectedRequest": {
-        "message": "The EAS Server rejected the last request."
+        "message": "Le serveur EAS a rejeté la dernière demande."
     },
     "status.ServerRejectedSomeItems": {
-        "message": "The EAS server did not accept ##replace.1## elements."
+        "message": "Le serveur EAS n'a pas accepté les éléments ##replace.1##."
     },
     "status.Sync.12": {
-        "message": "Folder hierarchy changed (status 12), resyncing"
+        "message": "La hiérarchie des dossiers a changé (statut 12), resynchronisation"
     },
     "status.Sync.3": {
-        "message": "Invalid synchronization key (status 3), resyncing"
+        "message": "Clé de synchronisation invalide (statut 3), resynchronisation"
     },
     "status.Sync.4": {
-        "message": "Malformed request (status 4)"
+        "message": "Requête mal formée (statut 4)"
     },
     "status.Sync.5": {
-        "message": "Temporary server issues or invalid item (status 5)"
+        "message": "Problèmes de serveur temporaires ou élément invalide (statut 5)"
     },
     "status.Sync.6": {
-        "message": "Invalid item (status 6)"
+        "message": "Élément invalide (statut 6)"
     },
     "status.Sync.8": {
-        "message": "Object not found (status 8)"
+        "message": "Objet introuvable (statut 8)"
     },
     "status.aborted": {
-        "message": "Not synchronized"
+        "message": "Non synchronisé"
     },
     "status.disabled": {
-        "message": "Disabled"
+        "message": "Désactivé"
     },
     "status.empty-response": {
         "message": "Le serveur a renvoyé une réponse vide inattendue."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
-        "message": "Forbidden calendar item in a task folder (please resort)"
+        "message": "Élément de calendrier interdit dans un dossier de tâche (veuillez intervenir)"
     },
     "status.forbiddenTasksItemInCalendarFolder": {
-        "message": "Forbidden task item in a calendar folder (please resort)"
+        "message": "Élément de calendrier interdit dans un dossier de tâche (veuillez intervenir)"
     },
     "status.global.101": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 101)."
+        "message": "La requête contient WBXML mais n'a pas pu être décodée en XML (EAS Error 101)."
     },
     "status.global.102": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 102)."
+        "message": "La requête contient WBXML mais n'a pas pu être décodée en XML (EAS Error 102)."
     },
     "status.global.103": {
-        "message": "The XML provided in the request does not follow the protocol requirements (EAS Error 103)."
+        "message": "Le XML fourni dans la requête ne respecte pas les exigences du protocole (EAS Error 103)."
     },
     "status.global.110": {
-        "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
+        "message": "Le serveur a signalé une erreur interne et nous ne devrions pas réessayer immédiatement. La synchronisation périodique automatique a été désactivée pendant 30 minutes (EAS Error 110)."
     },
     "status.global.clientdenied": {
-        "message": "The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account."
+        "message": "Le serveur EAS signale <##replace.2##> (status ##replace.1##) et n'autorise pas TbSync à accéder à votre compte."
     },
     "status.httperror": {
-        "message": "Communication error (HTTP status ##replace.1##)."
+        "message": "Erreur de communication (statut HTTP ##replace.1##)."
     },
     "status.invalid": {
-        "message": "Invalid server response (junk)."
+        "message": "Réponse du serveur invalide (pourriels)."
     },
     "status.malformed-xml": {
         "message": "Impossible d’analyser le XML. Vérifiez le journal des événements pour plus de détails."
     },
     "status.modified": {
-        "message": "Local modifications"
+        "message": "Modifications locales présentes"
     },
     "status.network": {
-        "message": "Could not connect to server (##replace.1##)."
+        "message": "Impossible de se connecter au serveur (##replace.1##)."
     },
     "status.networkerror": {
-        "message": "Could not connect to server."
+        "message": "La connexion au serveur a échoué."
     },
     "status.nosupportedeasversion": {
-        "message": "Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server."
+        "message": "Le serveur ne supporte pas ActiveSync v2.5 ou v14.0 (seulement ##replace.1##). TbSync ne fonctionnera pas avec ce serveur ActiveSync."
     },
     "status.notargets": {
-        "message": "Aborting Sync, because sync targets could not be created."
+        "message": "Annulation de la synchronisation en cours : il est impossible de créer les destinations de synchronisation."
     },
     "status.notsupportedeasversion": {
-        "message": "Server does not support selected ActiveSync v##replace.1## (only ##replace.2##)."
+        "message": "Le serveur ne prend pas en charge la sélection ActiveSync v##replace.1## (seulement ##replace.2##)."
     },
     "status.notsyncronized": {
-        "message": "Account needs to be synchronized, at least one item is out of sync."
+        "message": "Le compte doit être synchronisé : au moins un éléments n'est pas synchronisé."
     },
     "status.nouserhost": {
-        "message": "Missing username and/or server. Please provide those values."
+        "message": "Nom d'utilisateur et/ou serveur manquant. Veuillez fournir ces valeurs."
     },
     "status.pending": {
-        "message": "Waiting to be synchronized"
+        "message": "En attente de synchronisation"
     },
     "status.policy.2": {
-        "message": "There is no policy for this client. Contact your server administrator or disable provisioning for this account."
+        "message": "Il n'y a pas de politique pour ce client. Contactez l'administrateur de votre serveur ou désactivez le provisioning pour ce compte."
     },
     "status.policy.3": {
-        "message": "Unknown PolicyType value. Contact your server administrator or disable provisioning for this account."
+        "message": "Valeur de PolicyType inconnue. Contactez l'administrateur du serveur ou désactivez le provisioning pour ce compte."
     },
     "status.policy.4": {
-        "message": "The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account."
+        "message": "Les données de stratégie sur le serveur sont corrompues (potentiellement altérées). Contactez l'administrateur de votre serveur ou désactivez le provisioning pour ce compte."
     },
     "status.policy.5": {
-        "message": "The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account."
+        "message": "Le client reconnaît la mauvaise clé de stratégie. Contactez l'administrateur du serveur ou désactivez le provisioning pour ce compte."
     },
     "status.provision": {
-        "message": "Provisioning failed with status <##replace.1##>"
+        "message": "Le provisioning a échoué avec le statut <##replace.1##>"
     },
     "status.response-contains-no-data": {
-        "message": "Response from the server contains no data."
+        "message": "La réponse du serveur ne contient aucune donnée."
     },
     "status.resync-loop": {
-        "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
+        "message": "Il y a eu une erreur à partir de laquelle nous n'avons pas pu rétablir la situation en resynchronisant le compte. Veuillez désactiver le compte et réessayer. (Erreur : boucle de resynchronisation)"
     },
     "status.security": {
-        "message": "Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)"
+        "message": "Impossible d'établir une connexion sécurisée. Utilisez-vous un certificat auto-signé ou autrement non fiable sans l'importer dans Thunderbird ? (##replace.1##)"
     },
     "status.skipped": {
-        "message": "Not yet supported, skipped"
+        "message": "Pas encore pris en charge, ignoré"
     },
     "status.syncing": {
-        "message": "Synchronizing"
+        "message": "Synchronisation en cours"
     },
     "status.timeout": {
-        "message": "Communication timeout."
+        "message": "Délai de communication expiré."
     },
     "status.wbxml-parse-error": {
-        "message": "Server sends unreadable response."
+        "message": "Le serveur envoie une réponse illisible."
     },
     "status.wbxmlerror": {
-        "message": "Sync failed. Server responded with status <##replace.1##>."
+        "message": "La synchronisation a échoué. Le serveur a répondu avec le statut <##replace.1##>."
     },
     "status.wbxmlmissingfield": {
-        "message": "ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response."
+        "message": "Violation du protocole ActiveSync : le champ obligatoire <##replace.1##> est absent de la réponse du serveur."
     },
     "syncstate.accountdone": {
         "message": "Finished account"
     },
     "syncstate.done": {
-        "message": "Preparing next item for synchronization"
+        "message": "Préparation du prochain élément pour la synchronisation"
     },
     "syncstate.eval.response.autodiscover": {
-        "message": "Processing updated server settings"
+        "message": "Traitement des paramètres du serveur mis à jour"
     },
     "syncstate.eval.response.deletefolder": {
-        "message": "Folder deleted"
+        "message": "Dossier supprimé"
     },
     "syncstate.eval.response.estimate": {
-        "message": "Processing change estimate"
+        "message": "Traitement de l'estimation des changements"
     },
     "syncstate.eval.response.folders": {
-        "message": "Processing folder list update"
+        "message": "Mise à jour de la liste des dossiers en cours de traitement"
     },
     "syncstate.eval.response.localchanges": {
-        "message": "Processing acknowledgment of local changes"
+        "message": "Traitement de la confirmation de réception des modifications locales"
     },
     "syncstate.eval.response.localdeletes": {
-        "message": "Processing acknowledgment of local deletes"
+        "message": "Traitement de la confirmation de réception des suppressions locales"
     },
     "syncstate.eval.response.options": {
-        "message": "Processing server options"
+        "message": "Traitement des options du serveur"
     },
     "syncstate.eval.response.provision": {
-        "message": "Processing provision"
+        "message": "Traitement de la provision"
     },
     "syncstate.eval.response.remotechanges": {
-        "message": "Processing remote changes"
+        "message": "Traitement des modifications à distance"
     },
     "syncstate.eval.response.revertlocalchanges": {
-        "message": "Reverting local changes"
+        "message": "Rétablissement des changements locaux"
     },
     "syncstate.eval.response.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Envoi des informations de l'appareil"
     },
     "syncstate.eval.response.synckey": {
-        "message": "Processing SyncKey"
+        "message": "Traitement de la clé de synchronisation"
     },
     "syncstate.prepare.request.autodiscover": {
-        "message": "Requesting updated server settings"
+        "message": "Demande de mise à jour des paramètres du serveur"
     },
     "syncstate.prepare.request.deletefolder": {
-        "message": "Preparing to delete folder"
+        "message": "Préparation de la suppression du dossier"
     },
     "syncstate.prepare.request.estimate": {
-        "message": "Requesting change estimate"
+        "message": "Demande de l'estimation des changements"
     },
     "syncstate.prepare.request.folders": {
-        "message": "Sending folder list update"
+        "message": "Envoi de la mise à jour de la liste de dossiers"
     },
     "syncstate.prepare.request.localchanges": {
-        "message": "Sending local changes"
+        "message": "Envoi des modifications locales"
     },
     "syncstate.prepare.request.localdeletes": {
-        "message": "Sending local deletes"
+        "message": "Envoi des suppressions locales"
     },
     "syncstate.prepare.request.options": {
-        "message": "Requesting server options"
+        "message": "Demande des options du serveur"
     },
     "syncstate.prepare.request.provision": {
-        "message": "Requesting provision"
+        "message": "Demande de provision"
     },
     "syncstate.prepare.request.remotechanges": {
-        "message": "Requesting remote changes"
+        "message": "Traitement des modifications à distance"
     },
     "syncstate.prepare.request.revertlocalchanges": {
-        "message": "Collecting local changes"
+        "message": "Collecte des modifications locales"
     },
     "syncstate.prepare.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Envoi des informations de l'appareil"
     },
     "syncstate.prepare.request.synckey": {
-        "message": "Requesting SyncKey"
+        "message": "Demande de clé de synchronisation"
     },
     "syncstate.preparing": {
-        "message": "Preparing next item for synchronization"
+        "message": "Préparation du prochain élément pour la synchronisation"
     },
     "syncstate.send.request.autodiscover": {
-        "message": "Waiting for updated server settings"
+        "message": "En attente de mise à jour des paramètres du serveur"
     },
     "syncstate.send.request.deletefolder": {
-        "message": "Waiting for folder to be deleted"
+        "message": "En attente de la suppression du dossier"
     },
     "syncstate.send.request.estimate": {
-        "message": "Waiting for change estimate"
+        "message": "En attente de l'estimation des changements"
     },
     "syncstate.send.request.folders": {
-        "message": "Waiting for folder list update"
+        "message": "En attente de mise à jour de la liste des dossiers"
     },
     "syncstate.send.request.localchanges": {
-        "message": "Waiting for acknowledgment of local changes"
+        "message": "En attente de la confirmation de réception des modifications locales"
     },
     "syncstate.send.request.localdeletes": {
-        "message": "Waiting for acknowledgment of local deletes"
+        "message": "En attente de la confirmation de réception des suppressions locales"
     },
     "syncstate.send.request.options": {
-        "message": "Waiting for server options"
+        "message": "En attente des options du serveur"
     },
     "syncstate.send.request.provision": {
-        "message": "Waiting for provision"
+        "message": "En attente de provision"
     },
     "syncstate.send.request.remotechanges": {
-        "message": "Waiting for remote changes"
+        "message": "En attente des modifications à distance"
     },
     "syncstate.send.request.revertlocalchanges": {
         "message": "Waiting for most recent versions"
     },
     "syncstate.send.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Envoi des informations de l'appareil"
     },
     "syncstate.send.request.synckey": {
         "message": "Waiting for SyncKey"
