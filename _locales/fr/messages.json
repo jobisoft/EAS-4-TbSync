@@ -75,10 +75,10 @@
         "message": "Téléphones de bureau supplémentaires:"
     },
     "acl.readonly": {
-        "message": "Read-only server access (revert local changes)"
+        "message": "Accès au serveur en lecture seule (annule les modifications locales)"
     },
     "acl.readwrite": {
-        "message": "Read from and write to server"
+        "message": "Lecture et écriture depuis et sur le serveur"
     },
     "add.description": {
         "message": "Veuillez sélectionner une des options de configuration du serveur disponibles et entrer les détails demandés. "
@@ -114,31 +114,31 @@
         "message": " annuaire global du serveur"
     },
     "autodiscover.Failed": {
-        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
+        "message": "L'Autodiscover pour l'utilisateur <##user##> a échoué. Soit les informations d'identification fournies étaient erronées, soit votre fournisseur ActiveSync a un problème temporaire, soit il ne prend pas en charge l'Autodiscover."
     },
     "autodiscover.NeedEmail": {
-        "message": "Autodiscover needs a valid email address as user name."
+        "message": "L'Autodiscover a besoin d'une adresse courriel valide comme nom d'utilisateur."
     },
     "autodiscover.Ok": {
-        "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
+        "message": "L'Autodiscover est terminée avec succès, vous pouvez maintenant vérifier les paramètres optionnels et établir la connexion de synchronisation."
     },
     "autodiscover.Querying": {
-        "message": "Searching for settings…"
+        "message": "Recherche de paramètres…"
     },
     "config.auto": {
-        "message": "ActiveSync server configuration (Autodiscover)"
+        "message": "Configuration du serveur ActiveSync (Autodiscover)"
     },
     "config.custom": {
-        "message": "ActiveSync server configuration"
+        "message": "Configuration du serveur ActiveSync"
     },
     "deletefolder.confirm": {
-        "message": "Do you really want to PERMANENTLY PURGE folder “##replace.1##” from trash?"
+        "message": "Voulez-vous vraiment SUPPRIMER DÉFINITIVEMENT le dossier « ##replace.1##» de la corbeille ?"
     },
     "deletefolder.menuentry": {
-        "message": "Permanently purge folder “##replace.1##” from trash"
+        "message": "Supprimer définitivement le dossier « ##replace.1##» de la corbeille"
     },
     "deletefolder.notallowed": {
-        "message": "Please unsubscribe folder “##replace.1##” before trying to purge it from trash."
+        "message": "Veuillez vous désabonner du dossier « ##replace.1##» avant d'essayer de le supprimer de la corbeille."
     },
     "extensionDescription": {
         "message": "Ajouter la prise en charge de la synchronisation des comptes Exchange ActiveSync à TbSync (contacts, tâches et calendriers)."
@@ -165,7 +165,7 @@
         "message": "Paramètres"
     },
     "newaccount.add_auto": {
-        "message": "Autodiscover settings and add account"
+        "message": "Paramètres Autodiscover et ajout de compte"
     },
     "newaccount.add_custom": {
         "message": "Ajouter un compte"
@@ -273,40 +273,40 @@
         "message": "Double-cliquez pour déverrouiller tous les paramètres prédéfinis du serveur."
     },
     "status.401": {
-        "message": "Could not authenticate, check username and password (HTTP Error 401)."
+        "message": "L'authentification a échoué. Veuillez vérifier le couple nom d'utilisateur/mot de passe (erreur HTTP 401)."
     },
     "status.403": {
-        "message": "Server rejected connection (forbidden) (HTTP Error 403)."
+        "message": "Le serveur a rejeté la connexion (interdite) (Erreur HTTP 403)."
     },
     "status.404": {
-        "message": "User not found (HTTP Error 404)."
+        "message": "Utilisateur introuvable (Erreur HTTP 404)."
     },
     "status.449": {
-        "message": "Server requests provisioning (HTTP Error 449)."
+        "message": "Le serveur demande le provisionnement (erreur HTTP 449)."
     },
     "status.500": {
-        "message": "Unknown Server Error (HTTP Error 500)."
+        "message": "Erreur serveur inconnue (Erreur HTTP 500)."
     },
     "status.503": {
-        "message": "Service unavailable (HTTP Error 503)."
+        "message": "Service indisponible (Erreur HTTP 503)."
     },
     "status.BadItemSkipped": {
-        "message": "Bad Item Skipped: ##replace.1##"
+        "message": "Mauvais élément ignoré : ##replace.1##"
     },
     "status.FolderDelete.3": {
-        "message": "Cannot delete a system folder (status 3)"
+        "message": "Impossible de supprimer un dossier système (statut 3)"
     },
     "status.FolderDelete.4": {
-        "message": "Folder does not exist (status 4), resyncing"
+        "message": "Le dossier n'existe pas (statut 4), resynchronisation"
     },
     "status.FolderDelete.6": {
-        "message": "Command could not be completed, an error occurred on the server (status 6)"
+        "message": "La commande n'a pas pu être terminée, une erreur est survenue sur le serveur (statut 6)"
     },
     "status.FolderDelete.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Clé de synchronisation invalide (statut 9), resynchronisation"
     },
     "status.FolderSync.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Clé de synchronisation invalide (statut 9), resynchronisation"
     },
     "status.InvalidServerOptions": {
         "message": "The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually."
