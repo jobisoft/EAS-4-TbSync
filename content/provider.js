@@ -372,7 +372,7 @@ var Base = class {
                         value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
                         comment: TbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
                         icon: eas.Base.getProviderIcon(16, accountData),
-                        style: "EASGAL",
+                        style: "EASGAL-abook",
                     });
                 }
             }

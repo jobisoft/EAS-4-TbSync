@@ -17,7 +17,7 @@ treechildren::-moz-tree-image(DirCol, eas_365) {
 }
 
 /* autocomplete styles */
-.autocomplete-richlistitem[type="EASGAL"] {
+.autocomplete-richlistitem[type="EASGAL-abook"] {
   color: DimGrey;
   background-color: WhiteSmoke;
 }
