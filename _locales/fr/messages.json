@@ -96,7 +96,7 @@
         "message": "Configuration du serveur :"
     },
     "add.shortdescription": {
-        "message": "Information du compte"
+        "message": "Informations du compte"
     },
     "add.title": {
         "message": "Ajout d'un compte Exchange ActiveSync à TbSync"
@@ -174,7 +174,7 @@
         "message": "Description"
     },
     "pref.ActiveSyncVersion": {
-        "message": "Version ActiveSync"
+        "message": "Version d'ActiveSync"
     },
     "pref.DeviceId": {
         "message": "ID de périphérique ActiveSync"
