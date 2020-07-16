@@ -1149,7 +1149,7 @@ wbxml.ctag();*/
             let cats = [];
             if (Array.isArray(data.Categories.Category)) cats = data.Categories.Category;
             else cats.push(data.Categories.Category);
-            item.setCategories(cats.length, cats);
+            item.setCategories(cats);
         }
     },
     
