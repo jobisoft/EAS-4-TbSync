@@ -207,7 +207,7 @@
         "message": "Options des contacts"
     },
     "pref.displayoverride": {
-        "message": "Remplacer le nom affiché par &quot;Prénom&quot; + &quot;Nom&quot;"
+        "message": "Remplacer le nom affiché par « Prénom » + « Nom »"
     },
     "pref.galautocomplete": {
         "message": "Inclure les résultats du carnet d'adresses global (GAL) dans l'auto-complétion des adresses courriel"
@@ -447,7 +447,7 @@
         "message": "Violation du protocole ActiveSync : le champ obligatoire <##replace.1##> est absent de la réponse du serveur."
     },
     "syncstate.accountdone": {
-        "message": "Finished account"
+        "message": "Synchronisation du compte terminée"
     },
     "syncstate.done": {
         "message": "Préparation du prochain élément pour la synchronisation"
