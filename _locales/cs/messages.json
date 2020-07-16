@@ -111,7 +111,7 @@
         "message": "User name (email address):"
     },
     "autocomplete.serverdirectory": {
-        "message": " global server directory"
+        "message": "global server directory"
     },
     "autodiscover.Failed": {
         "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
@@ -249,7 +249,7 @@
         "message": "Use secure connection (connect via https)"
     },
     "recyclebin": {
-        "message": " Trash"
+        "message": "Trash"
     },
     "servertype.auto": {
         "message": "Automatic configuration"
