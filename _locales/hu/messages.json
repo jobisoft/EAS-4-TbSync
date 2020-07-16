@@ -111,7 +111,7 @@
         "message": "Felhasználónév (e-mail cím):"
     },
     "autocomplete.serverdirectory": {
-        "message": " global server directory"
+        "message": "global server directory"
     },
     "autodiscover.Failed": {
         "message": "A felhasználó <##user##> önműködő felderítése sikertelen. Vagy a megadott hitelesítő adatok hibásak voltak, vagy az ActiveSync szolgáltató ideiglenes problémát okozott, vagy nem támogatja az önműködő felderítést."
@@ -249,7 +249,7 @@
         "message": "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)"
     },
     "recyclebin": {
-        "message": " Kuka"
+        "message": "Trash"
     },
     "servertype.auto": {
         "message": "Automatic configuration"
