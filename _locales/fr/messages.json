@@ -111,7 +111,7 @@
         "message": "Nom d'utilisateur (adresse e-mail) :"
     },
     "autocomplete.serverdirectory": {
-        "message": " annuaire global du serveur"
+        "message": "annuaire global du serveur"
     },
     "autodiscover.Failed": {
         "message": "L'Autodiscover pour l'utilisateur <##user##> a échoué. Soit les informations d'identification fournies étaient erronées, soit votre fournisseur ActiveSync a un problème temporaire, soit il ne prend pas en charge l'Autodiscover."
@@ -249,7 +249,7 @@
         "message": "Utiliser une connexion sécurisée (se connecter via https)"
     },
     "recyclebin": {
-        "message": " Corbeille"
+        "message": "Corbeille"
     },
     "servertype.auto": {
         "message": "Configuration automatique"
@@ -309,7 +309,7 @@
         "message": "Clé de synchronisation invalide (statut 9), resynchronisation"
     },
     "status.InvalidServerOptions": {
-        "message": "Le serveur ne fournit pas d'informations sur les versions ActiveSync supportées. EAS est-il bloqué pour cet utilisateur ou ce client (TbSync) ? Vous pouvez essayer de définir manuellement la version ActiveSync ."
+        "message": "Le serveur ne fournit pas d'informations sur les versions ActiveSync supportées. EAS est-il bloqué pour cet utilisateur ou ce client (TbSync) ? Vous pouvez essayer de définir manuellement la version ActiveSync."
     },
     "status.OK": {
         "message": "OK"
@@ -387,7 +387,7 @@
         "message": "La connexion au serveur a échoué."
     },
     "status.nosupportedeasversion": {
-        "message": "Le serveur ne supporte pas ActiveSync v2.5 ou v14.0 (seulement ##replace.1##). TbSync ne fonctionnera pas avec ce serveur ActiveSync."
+        "message": "Le serveur ne prend pas en charge ActiveSync v2.5 ou v14.0 (seulement ##replace.1##). TbSync ne fonctionnera pas avec ce serveur ActiveSync."
     },
     "status.notargets": {
         "message": "Annulation de la synchronisation en cours : il est impossible de créer les destinations de synchronisation."
@@ -480,7 +480,7 @@
         "message": "Traitement des modifications à distance"
     },
     "syncstate.eval.response.revertlocalchanges": {
-        "message": "Rétablissement des changements locaux"
+        "message": "Rétablissement des modification locales"
     },
     "syncstate.eval.response.setdeviceinfo": {
         "message": "Envoi des informations de l'appareil"
