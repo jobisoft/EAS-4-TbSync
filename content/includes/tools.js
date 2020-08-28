@@ -78,13 +78,33 @@ var tools = {
     
     //read file from within the XPI package
     fetchFile: function (aURL, returnType = "Array") {
-        let uri = Services.io.newURI(aURL); 
-        let data = Components.utils.readUTF8URI(uri);
-        if (returnType == "Array") {
-            return data.replace("\r","").split("\n");
-        } else {
-            return data;
-        }
+        return new Promise((resolve, reject) => {
+            let uri = Services.io.newURI(aURL);
+            let channel = Services.io.newChannelFromURI(uri,
+                                 null,
+                                 Services.scriptSecurityManager.getSystemPrincipal(),
+                                 null,
+                                 Components.interfaces.nsILoadInfo.SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
+                                 Components.interfaces.nsIContentPolicy.TYPE_OTHER);
+
+            NetUtil.asyncFetch(channel, (inputStream, status) => {
+                if (!Components.isSuccessCode(status)) {
+                    reject(status);
+                    return;
+                }
+
+                try {
+                    let data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+                    if (returnType == "Array") {
+                        resolve(data.replace("\r","").split("\n"))
+                    } else {
+                        resolve(data);
+                    }
+                } catch (ex) {
+                    reject(ex);
+                }
+            });
+        });
     },
 
 
