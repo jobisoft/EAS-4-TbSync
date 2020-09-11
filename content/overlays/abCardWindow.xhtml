@@ -8,20 +8,14 @@
 
     <script type="application/javascript" src="chrome://eas4tbsync/content/overlays/abCardWindow.js" />
 
-    <hbox id="MiddleNameContainer" align="center" insertafter="NameField1Container" >
-        <spacer flex="1" />
-        <label control="MiddleName" value="__EAS4TBSYNCMSG_abCard.MiddleName__" />
-        <hbox class="CardEditWidth input-container" >
-            <html:input id="MiddleName" flex="1" class="easProperty input-inline" />
-        </hbox>
+     <label id="jbeas2" class="align-end" control="MiddleName" value="__EAS4TBSYNCMSG_abCard.MiddleName__" insertbefore="nameField2Label"/>
+    <hbox  id="MiddleNameContainer" align="center" class="input-container" insertbefore="nameField2Label">
+        <html:input id="MiddleName" type="text" class="easProperty input-inline"/>
     </hbox>
 
-    <hbox id="Email3AddressContainer" align="center" insertafter="SecondaryEmailContainer">
-        <spacer flex="1"/>
-        <label control="Email3Address" value="__EAS4TBSYNCMSG_abCard.Email3Address__" />
-        <hbox class="CardEditWidth input-container">
-            <html:input id="Email3Address" flex="1" class="easProperty uri-element" />
-        </hbox>
+    <label id="jbeas2" class="align-end" control="Email3Address" value="__EAS4TBSYNCMSG_abCard.Email3Address__" insertbefore="ChatNameLabel"/>
+    <hbox id="Email3AddressContainer" align="center" class="input-container"  insertbefore="ChatNameLabel">
+        <html:input id="Email3Address" type="email" class="easProperty input-inline"/>
     </hbox>
 
     <tab id="easFields1Tab" label="__EAS4TBSYNCMSG_abCard.header.eas__"  appendto="abTabs" />
@@ -122,43 +116,34 @@
       </hbox>
     </vbox>
 
-      <vbox id="easFields2Panel" appendto="abTabPanels" >
-      <hbox align="center">
-        <spacer flex="1"/>
-        <label control="OtherAddress" value="__EAS4TBSYNCMSG_abCard.OtherAddress__"/>
-        <hbox class="AddressCardEditWidth input-container">
-          <html:input id="OtherAddress" flex="1" class="easProperty input-inline" />
+    <vbox id="easFields2Panel" appendto="abTabPanels">
+      <hbox class="inputGrid">
+        <label control="OtherAddress" value="__EAS4TBSYNCMSG_abCard.OtherAddress__" class="align-end"/>
+        <hbox class="input-container">
+          <html:input id="OtherAddress" type="text" class="easProperty input-inline" />
         </hbox>
-      </hbox>
-      <hbox align="center">
-        <spacer flex="1"/>
-        <label control="OtherAddress2" value=""/>
-        <hbox class="AddressCardEditWidth input-container">
-          <html:input id="OtherAddress2" flex="1" class="easProperty input-inline" />
+
+        <label control="OtherAddress2" value="" class="align-end"/>
+        <hbox class="input-container">
+          <html:input id="OtherAddress2" type="text" class="easProperty input-inline" />
         </hbox>
-      </hbox>
-      <hbox id="OtherCityContainer" align="center">
-        <spacer flex="1"/>
-        <label control="OtherAddressCity" value="__EAS4TBSYNCMSG_abCard.OtherCity__"/>
-        <hbox id="OtherCityFieldContainer" align="center" class="AddressCardEditWidth input-container">
-          <html:input id="OtherAddressCity" flex="1" class="easProperty input-inline" />
+
+        <label control="OtherAddressCity" value="__EAS4TBSYNCMSG_abCard.OtherCity__" class="align-end"/>
+        <hbox id="OtherCityFieldContainer" align="center" class="input-container">
+          <html:input id="OtherAddressCity"  type="text" class="easProperty input-inline" />
         </hbox>
-      </hbox>
-      <hbox align="center">
-        <spacer flex="1"/>
-        <label control="OtherAddressState" value="__EAS4TBSYNCMSG_abCard.OtherState__"/>
-        <hbox align="center" class="AddressCardEditWidth input-container">
-          <html:input id="OtherAddressState" flex="1" class="easProperty input-inline" />
-          <spacer class="stateZipSpacer"/>
+ 
+        <label control="OtherAddressState" value="__EAS4TBSYNCMSG_abCard.OtherState__"  class="align-end"/>
+        <hbox align="center" class="input-container">
+          <html:input id="OtherAddressState"  type="text" class="easProperty input-inline" />
+
           <label control="OtherAddressPostalCode" value="__EAS4TBSYNCMSG_abCard.OtherZip__"/>
-          <html:input id="OtherAddressPostalCode" class="easProperty input-inline ZipWidth"/>
+          <html:input id="OtherAddressPostalCode" type="text" class="easProperty input-inline ZipWidth"/>
         </hbox>
-      </hbox>
-      <hbox align="center">
-        <spacer flex="1"/>
-        <label control="OtherAddressCountry" value="__EAS4TBSYNCMSG_abCard.OtherCountry__" />
-        <hbox class="AddressCardEditWidth input-container">
-          <html:input id="OtherAddressCountry" flex="1" class="easProperty input-inline" />
+
+        <label control="OtherAddressCountry" value="__EAS4TBSYNCMSG_abCard.OtherCountry__" class="align-end"/>
+        <hbox class="input-container">
+          <html:input id="OtherAddressCountry" type="text" class="easProperty input-inline" />
         </hbox>
       </hbox>
     </vbox>
