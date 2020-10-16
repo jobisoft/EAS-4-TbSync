@@ -188,7 +188,7 @@ var Base = class {
     /**
      * Returns version of the TbSync API this provider is using
      */
-    static getApiVersion() { return "2.3"; }
+    static getApiVersion() { return "2.4"; }
 
 
     /**
