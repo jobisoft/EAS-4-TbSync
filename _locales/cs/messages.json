@@ -219,130 +219,130 @@
         "message": "Vynutit provisioning (vyžaduje Kerio)"
     },
     "pref.seperator.comma": {
-        "message": "Comma"
+        "message": "Čárka"
     },
     "pref.seperator.description": {
-        "message": "Separator for multiline address field."
+        "message": "Oddělovač pro víceřádkové pole adres."
     },
     "pref.seperator.linebreak": {
-        "message": "Line break"
+        "message": "Nový řádek"
     },
     "pref.synclimit.1month": {
-        "message": "from 4 weeks ago"
+        "message": "poslední 4 týdny"
     },
     "pref.synclimit.2weeks": {
-        "message": "from 2 weeks ago"
+        "message": "poslední 2 týdny"
     },
     "pref.synclimit.3month": {
-        "message": "from 3 months ago"
+        "message": "poslední 3 měsíce"
     },
     "pref.synclimit.6month": {
-        "message": "from 6 months ago"
+        "message": "posledních 6 měsíců"
     },
     "pref.synclimit.all": {
-        "message": "everything"
+        "message": "vše"
     },
     "pref.synclimit.description": {
-        "message": "Synchronization period: "
+        "message": "Období pro synchronizaci: "
     },
     "pref.usehttps": {
-        "message": "Use secure connection (connect via https)"
+        "message": "Použít zabezpečené připojení (přes https)"
     },
     "recyclebin": {
-        "message": "Trash"
+        "message": "Koš"
     },
     "servertype.auto": {
-        "message": "Automatic configuration"
+        "message": "Automatické nastavení pomocí ActiveSync Autodiscover"
     },
     "servertype.custom": {
-        "message": "Custom configuration"
+        "message": "Ruční nastavení"
     },
     "servertype.description.auto": {
-        "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
+        "message": "Pro nastavení většiny ActiveSync serverů stačí zadat pouze e-mailovou adresu."
     },
     "servertype.description.custom": {
-        "message": "Setup your account by manually providing the address of the server you want to connect."
+        "message": "Nastavte si účet pomocí ručního zadání adresy serveru."
     },
     "servertype.description.office365": {
-        "message": "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA)."
+        "message": "Účty Office 365 používají moderní proces ověřování s názvem OAuth 2.0, který také podporuje vícefaktorové ověřování (MFA)."
     },
     "servertype.office365": {
         "message": "Microsoft Office 365"
     },
     "servertype.unlock": {
-        "message": "Double click to unlock all predefined server settings."
+        "message": "Dvojklikem odemknete všechna předdefinovaná nastavení serveru."
     },
     "status.401": {
-        "message": "Could not authenticate, check username and password (HTTP Error 401)."
+        "message": "Chyba ověření, zkontrolujte uživatelské jméno a heslo (HTTP chyba 401)."
     },
     "status.403": {
-        "message": "Server rejected connection (forbidden) (HTTP Error 403)."
+        "message": "Server odmítl spojení (HTTP chyba 403)."
     },
     "status.404": {
-        "message": "User not found (HTTP Error 404)."
+        "message": "Uživatel nebyl nalezen (HTTP chyba 404)."
     },
     "status.449": {
-        "message": "Server requests provisioning (HTTP Error 449)."
+        "message": "Server si vyžádal provisioning (HTTP chyba 449)."
     },
     "status.500": {
-        "message": "Unknown Server Error (HTTP Error 500)."
+        "message": "Neznámá chyba serveru (HTTP chyba 500)."
     },
     "status.503": {
-        "message": "Service unavailable (HTTP Error 503)."
+        "message": "Služba není dostupná (HTTP chyba 503)."
     },
     "status.BadItemSkipped": {
-        "message": "Bad Item Skipped: ##replace.1##"
+        "message": "Vynechána chybná položka: ##replace.1##"
     },
     "status.FolderDelete.3": {
-        "message": "Cannot delete a system folder (status 3)"
+        "message": "Systémovou složku nelze odstranit (status 3)"
     },
     "status.FolderDelete.4": {
-        "message": "Folder does not exist (status 4), resyncing"
+        "message": "Složka neexistuje (status 4), opětovně synchronizuji"
     },
     "status.FolderDelete.6": {
-        "message": "Command could not be completed, an error occurred on the server (status 6)"
+        "message": "Příkaz nemohl být dokončen, došlo k chybě na serveru (status 6)"
     },
     "status.FolderDelete.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Neplatný synchronizační klíč (status 9), opětovně synchronizuji"
     },
     "status.FolderSync.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Neplatný synchronizační klíč (status 9), opětovně synchronizuji"
     },
     "status.InvalidServerOptions": {
-        "message": "The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually."
+        "message": "Server neposkytuje informaci o podporovaných verzích ActiveSync. Je pro tohoto uživatele nebo tohoto klienta (TbSync) EAS blokován? Můžete zkusit nastavit verzi ActiveSync ručně."
     },
     "status.OK": {
         "message": "OK"
     },
     "status.ServerRejectedRequest": {
-        "message": "The EAS Server rejected the last request."
+        "message": "EAS Server poslední požadavek odmítl."
     },
     "status.ServerRejectedSomeItems": {
-        "message": "The EAS server did not accept ##replace.1## elements."
+        "message": "Server EAS nepřijal ##replace.1## položek."
     },
     "status.Sync.12": {
-        "message": "Folder hierarchy changed (status 12), resyncing"
+        "message": "Změnila se struktura složky (status 12), opětovně synchronizuji"
     },
     "status.Sync.3": {
-        "message": "Invalid synchronization key (status 3), resyncing"
+        "message": "Neplatný synchronizační klíč (status 3), opětovně synchronizuji"
     },
     "status.Sync.4": {
-        "message": "Malformed request (status 4)"
+        "message": "Chybný požadavek (status 4)"
     },
     "status.Sync.5": {
-        "message": "Temporary server issues or invalid item (status 5)"
+        "message": "Dočasné potíže na serveru nebo neplatná položka (status 5)"
     },
     "status.Sync.6": {
-        "message": "Invalid item (status 6)"
+        "message": "Neplatná položka (status 6)"
     },
     "status.Sync.8": {
-        "message": "Object not found (status 8)"
+        "message": "Objekt nebyl nalezen (status 8)"
     },
     "status.aborted": {
-        "message": "Not synchronized"
+        "message": "Není synchronizováno"
     },
     "status.disabled": {
-        "message": "Disabled"
+        "message": "Zakázáno"
     },
     "status.empty-response": {
         "message": "Server sends unexpected empty response."
