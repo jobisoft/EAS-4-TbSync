@@ -1,111 +1,111 @@
 {
     "abCard.Anniversary": {
-        "message": "Anniversary:"
+        "message": "Výročí:"
     },
     "abCard.AssistantName": {
-        "message": "Assistant:"
+        "message": "Asistent:"
     },
     "abCard.AssistantPhoneNumber": {
-        "message": "Assistant Phone:"
+        "message": "Telefon asistenta:"
     },
     "abCard.Business2PhoneNumber": {
-        "message": "Work Alternative Phone:"
+        "message": "Alternativní telefon do práce:"
     },
     "abCard.BusinessFaxNumber": {
-        "message": "Work Fax:"
+        "message": "Fax do práce:"
     },
     "abCard.CarPhoneNumber": {
-        "message": "Car Phone:"
+        "message": "Telefon do auta:"
     },
     "abCard.CompanyMainPhone": {
-        "message": "Work Main Phone:"
+        "message": "Hlavní pracovní telefon:"
     },
     "abCard.Email3Address": {
-        "message": "Alternative Email:"
+        "message": "Alternativní e-mail:"
     },
     "abCard.Home2PhoneNumber": {
-        "message": "Home Alternative Phone:"
+        "message": "Alternativní telefon domů:"
     },
     "abCard.ManagerName": {
-        "message": "Manager:"
+        "message": "Manažer:"
     },
     "abCard.MiddleName": {
-        "message": "Middle name:"
+        "message": "Prostřední jméno:"
     },
     "abCard.OtherAddress": {
-        "message": "Address:"
+        "message": "Adresa:"
     },
     "abCard.OtherCity": {
-        "message": "City:"
+        "message": "Město:"
     },
     "abCard.OtherCountry": {
-        "message": "Country:"
+        "message": "Země:"
     },
     "abCard.OtherState": {
-        "message": "State:"
+        "message": "Stát:"
     },
     "abCard.OtherZip": {
-        "message": "ZIP Code:"
+        "message": "PSČ:"
     },
     "abCard.RadioPhoneNumber": {
-        "message": "Radio Phone:"
+        "message": "Radiotelefon:"
     },
     "abCard.Spouse": {
-        "message": "Spouse:"
+        "message": "Manžel(ka):"
     },
     "abCard.header.eas": {
-        "message": "Other Fields (EAS)"
+        "message": "Další pole (EAS)"
     },
     "abCard.header.homenumbers": {
-        "message": "Additional home numbers:"
+        "message": "Další čísla domů:"
     },
     "abCard.header.messaging": {
-        "message": "Messaging:"
+        "message": "Zprávy:"
     },
     "abCard.header.otheraddress": {
-        "message": "Other Address (EAS)"
+        "message": "Jiná adresa (EAS)"
     },
     "abCard.header.othernumbers": {
-        "message": "Additional numbers:"
+        "message": "Další čísla:"
     },
     "abCard.header.people": {
-        "message": "People:"
+        "message": "Lidé:"
     },
     "abCard.header.worknumbers": {
-        "message": "Additional work numbers:"
+        "message": "Další čísla do práce:"
     },
     "acl.readonly": {
-        "message": "Read-only server access (revert local changes)"
+        "message": "Přistup na server pouze pro čtení (odstranit místní změny)"
     },
     "acl.readwrite": {
-        "message": "Read from and write to server"
+        "message": "Přístup na server pro čtení i zápis"
     },
     "add.description": {
-        "message": "Please select one of the available server configuration options and enter the requested details. "
+        "message": "Vyberte prosím jednu z dostupných možností konfigurace serveru a zadejte požadované podrobnosti. "
     },
     "add.name": {
-        "message": "Account name:"
+        "message": "Název účtu:"
     },
     "add.ok": {
-        "message": "Add account"
+        "message": "Přidat účet"
     },
     "add.password": {
-        "message": "Password:"
+        "message": "Heslo:"
     },
     "add.server": {
-        "message": "Server configuration:"
+        "message": "Nastavení serveru:"
     },
     "add.shortdescription": {
-        "message": "Account information"
+        "message": "Informace o účtu"
     },
     "add.title": {
-        "message": "Adding an Exchange ActiveSync account to TbSync"
+        "message": "Přidání nového účtu Exchange ActiveSync do TbSync"
     },
     "add.url": {
-        "message": "Server address:"
+        "message": "Adresa serveru:"
     },
     "add.urldescription": {
-        "message": "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync)."
+        "message": "Mělo by stačit zadat pouze adresu serveru (např. mail.mujmail.cz). Nicméně můžete zadat i celou URL (např. https://mail.mujmail.cz/Microsoft-Server-ActiveSync)."
     },
     "add.user": {
         "message": "User name (email address):"
@@ -168,7 +168,7 @@
         "message": "Autodiscover settings and add account"
     },
     "newaccount.add_custom": {
-        "message": "Add account"
+        "message": "Přidat účet"
     },
     "pref.AccountName": {
         "message": "Description"
