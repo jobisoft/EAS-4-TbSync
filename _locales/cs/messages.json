@@ -156,67 +156,67 @@
         "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
     },
     "manager.tabs.accountsettings": {
-        "message": "Account settings"
+        "message": "Nastavení účtu"
     },
     "manager.tabs.outOfOffice": {
-        "message": "Auto responder"
+        "message": "Automatická odpověď"
     },
     "manager.tabs.syncsettings": {
-        "message": "Options"
+        "message": "Volby"
     },
     "newaccount.add_auto": {
-        "message": "Autodiscover settings and add account"
+        "message": "Vyhledat nastavení a přidat účet"
     },
     "newaccount.add_custom": {
         "message": "Přidat účet"
     },
     "pref.AccountName": {
-        "message": "Description"
+        "message": "Pojmenování"
     },
     "pref.ActiveSyncVersion": {
-        "message": "ActiveSync version"
+        "message": "Verze ActiveSync"
     },
     "pref.DeviceId": {
-        "message": "ActiveSync device ID"
+        "message": "ID zařízení ActiveSync"
     },
     "pref.ServerName": {
-        "message": "Server address"
+        "message": "Adresa serveru"
     },
     "pref.ServerNameDescription": {
-        "message": "e.g. mail.yourserver.com"
+        "message": "např. mail.mujmail.cz"
     },
     "pref.ShowTrashedFolders": {
-        "message": "Show folders found in trash"
+        "message": "Zobrazit složky nalezené v koši"
     },
     "pref.UserName": {
-        "message": "User name"
+        "message": "Uživatelské jméno"
     },
     "pref.UserNameDescription": {
-        "message": "User name is usually the email address of your account."
+        "message": "Uživatelské jméno je obvykle e-mailová adresa vašeho účtu."
     },
     "pref.autodetect": {
-        "message": "best available"
+        "message": "nejlepší možná"
     },
     "pref.birthday": {
-        "message": "Send birthday information"
+        "message": "Odeslat informace o narozeninách"
     },
     "pref.calendaroptions": {
-        "message": "Calendar options"
+        "message": "Nastavení kalendáře"
     },
     "pref.contactoptions": {
-        "message": "Contact options"
+        "message": "Kontakty"
     },
     "pref.displayoverride": {
-        "message": "Override Display Name with “First Name” + “Second Name”"
+        "message": "Vynutit zobrazování jména jako \"křestní\" + \"příjmení\""
     },
     "pref.galautocomplete": {
-        "message": "Include results from global address book (GAL) in email autocompletion"
+        "message": "Zahrnout výsledky z globálního adresáře (GAL) do našeptávače emailových adres"
     },
     "pref.generaloptions": {
-        "message": "General options"
+        "message": "Obecné"
     },
     "pref.provision": {
-        "message": "Enforce provisioning (required by Kerio)"
+        "message": "Vynutit provisioning (vyžaduje Kerio)"
     },
     "pref.seperator.comma": {
         "message": "Comma"
