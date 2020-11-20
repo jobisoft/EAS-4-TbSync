@@ -108,43 +108,43 @@
         "message": "Mělo by stačit zadat pouze adresu serveru (např. mail.mujmail.cz). Nicméně můžete zadat i celou URL (např. https://mail.mujmail.cz/Microsoft-Server-ActiveSync)."
     },
     "add.user": {
-        "message": "User name (email address):"
+        "message": "Uživatelské jméno (e-mailová adresa):"
     },
     "autocomplete.serverdirectory": {
-        "message": "global server directory"
+        "message": "globální adresář serveru"
     },
     "autodiscover.Failed": {
-        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
+        "message": "Automatické nastavení pro uživatele <##user##> selhalo. Buď nejsou zadané přihlašovací údaje správné, nebo má váš poskytovatel ActiveSync dočasný problém, anebo nepodporuje automatické nastavení."
     },
     "autodiscover.NeedEmail": {
-        "message": "Autodiscover needs a valid email address as user name."
+        "message": "Funkce automatického nastavení Autodiscover vyžaduje zadání platné e-mailové adresy jako uživatelského jména."
     },
     "autodiscover.Ok": {
-        "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
+        "message": "Automatické nastavení bylo úspěšně dokončeno. Nyní si můžete projít volitelné nastavení a vytvořit synchronizační připojení."
     },
     "autodiscover.Querying": {
-        "message": "Searching for settings…"
+        "message": "Hledám nastavení…"
     },
     "config.auto": {
-        "message": "ActiveSync server configuration (Autodiscover)"
+        "message": "Konfigurace serveru ActiveSync (Autodiscover)"
     },
     "config.custom": {
-        "message": "ActiveSync server configuration"
+        "message": "Konfigurace serveru ActiveSync"
     },
     "deletefolder.confirm": {
-        "message": "Do you really want to PERMANENTLY PURGE folder “##replace.1##” from trash?"
+        "message": "Opravdu chcete z koše TRVALE vymazat složku “##replace.1##”?"
     },
     "deletefolder.menuentry": {
-        "message": "Permanently purge folder “##replace.1##” from trash"
+        "message": "Trvale z koše vymazat složku “##replace.1##”"
     },
     "deletefolder.notallowed": {
-        "message": "Please unsubscribe folder “##replace.1##” before trying to purge it from trash."
+        "message": "Prosím, odhlašte odběr složky “##replace.1##“ předtím, než se ji pokusíte odstranit z koše."
     },
     "extensionDescription": {
-        "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
+        "message": "Přidává do TbSync podporu synchronizace pro účty Exchange ActiveSync (kontakty, úkoly a kalendáře)."
     },
     "extensionName": {
-        "message": "Provider for Exchange ActiveSync"
+        "message": "Modul poskytovatele pro Exchange ActiveSync"
     },
     "helplink.BadItemSkipped": {
         "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
