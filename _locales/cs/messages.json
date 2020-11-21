@@ -207,7 +207,7 @@
         "message": "Kontakty"
     },
     "pref.displayoverride": {
-        "message": "Vynutit zobrazování jména jako \"křestní\" + \"příjmení\""
+        "message": "Vynutit zobrazování jména jako “křestní” + “příjmení”"
     },
     "pref.galautocomplete": {
         "message": "Zahrnout výsledky z globálního adresáře (GAL) do našeptávače emailových adres"
@@ -528,42 +528,42 @@
         "message": "Příprava další položky na synchronizaci"
     },
     "syncstate.send.request.autodiscover": {
-        "message": "Waiting for updated server settings"
+        "message": "Čekám na aktualizované nastavení serveru"
     },
     "syncstate.send.request.deletefolder": {
-        "message": "Waiting for folder to be deleted"
+        "message": "Čekám na vymazání složky"
     },
     "syncstate.send.request.estimate": {
-        "message": "Waiting for change estimate"
+        "message": "Čekám na změnu odhadu"
     },
     "syncstate.send.request.folders": {
-        "message": "Waiting for folder list update"
+        "message": "Čekám na aktualizaci seznamu složek"
     },
     "syncstate.send.request.localchanges": {
-        "message": "Waiting for acknowledgment of local changes"
+        "message": "Čekám na potvrzení místních změn"
     },
     "syncstate.send.request.localdeletes": {
-        "message": "Waiting for acknowledgment of local deletes"
+        "message": "Čekám na potvrzení místních výmazů"
     },
     "syncstate.send.request.options": {
-        "message": "Waiting for server options"
+        "message": "Čekám na možnosti serveru"
     },
     "syncstate.send.request.provision": {
-        "message": "Waiting for provision"
+        "message": "Čekám na provision"
     },
     "syncstate.send.request.remotechanges": {
-        "message": "Waiting for remote changes"
+        "message": "Čekám na změny ze serveru"
     },
     "syncstate.send.request.revertlocalchanges": {
-        "message": "Waiting for most recent versions"
+        "message": "Čekám na nejnovější verze"
     },
     "syncstate.send.request.setdeviceinfo": {
         "message": "Odesílám informace o zařízení"
     },
     "syncstate.send.request.synckey": {
-        "message": "Waiting for SyncKey"
+        "message": "Čekám na SyncKey"
     },
     "syncstate.syncing": {
-        "message": "Initialize synchronization"
+        "message": "Inicializuji synchronizaci"
     }
 }
