@@ -363,97 +363,97 @@
         "message": "Poskytnuté XML data neodpovídají požadavkům protokolu (EAS chyba 103)."
     },
     "status.global.110": {
-        "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
+        "message": "Server nahlásil interní chybu, automatická synchronizace byla pozastavena na 30 minut (EAS chyba 110)."
     },
     "status.global.clientdenied": {
-        "message": "The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account."
+        "message": "EAS server nahlásil <##replace.2##> (status ##replace.1##) a nepovolil pro TbSync přístup k účtu."
     },
     "status.httperror": {
-        "message": "Communication error (HTTP status ##replace.1##)."
+        "message": "Chyba komunikace (HTTP status ##replace.1##)."
     },
     "status.invalid": {
-        "message": "Invalid server response (junk)."
+        "message": "Neplatná odpověď serveru."
     },
     "status.malformed-xml": {
-        "message": "Could not parse XML. Check event log for details."
+        "message": "Nelze zpracovat XML. Podrobnosti naleznete v protokolu událostí."
     },
     "status.modified": {
-        "message": "Local modifications"
+        "message": "Místní změny"
     },
     "status.network": {
-        "message": "Could not connect to server (##replace.1##)."
+        "message": "Nelze se připojit k serveru (##replace.1##)."
     },
     "status.networkerror": {
-        "message": "Could not connect to server."
+        "message": "Nelze se připojit k serveru."
     },
     "status.nosupportedeasversion": {
-        "message": "Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server."
+        "message": "Server nepodporuje ActiveSync v2.5 nebo v14.0 (pouze ##replace.1##). TbSync nepodporuje tento typ ActiveSync serveru."
     },
     "status.notargets": {
-        "message": "Aborting Sync, because sync targets could not be created."
+        "message": "Synchronizace byla přerušena, protože nebylo možné vytvořit cíle pro synchronizaci."
     },
     "status.notsupportedeasversion": {
-        "message": "Server does not support selected ActiveSync v##replace.1## (only ##replace.2##)."
+        "message": "Server nepodporuje vybranou verzi ActiveSync v##replace.1## (pouze ##replace.2##)."
     },
     "status.notsyncronized": {
-        "message": "Account needs to be synchronized, at least one item is out of sync."
+        "message": "Účet musí být synchronizován, alespoň jedna položka není synchronizována."
     },
     "status.nouserhost": {
-        "message": "Missing username and/or server. Please provide those values."
+        "message": "Uživatel a/nebo server nebyl zadán. Prosím, doplňte chybějící hodnoty."
     },
     "status.pending": {
-        "message": "Waiting to be synchronized"
+        "message": "Čeká se na synchronizaci"
     },
     "status.policy.2": {
-        "message": "There is no policy for this client. Contact your server administrator or disable provisioning for this account."
+        "message": "Chybí zásady pro tohoto klienta. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.policy.3": {
-        "message": "Unknown PolicyType value. Contact your server administrator or disable provisioning for this account."
+        "message": "Neznámá hodnota PolicyType. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.policy.4": {
-        "message": "The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account."
+        "message": "Data zásad na serveru jsou porušená. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.policy.5": {
-        "message": "The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account."
+        "message": "Klient přijal špatný klíč zásad. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.provision": {
-        "message": "Provisioning failed with status <##replace.1##>"
+        "message": "Provisioning skončil chybou <##replace.1##>"
     },
     "status.response-contains-no-data": {
-        "message": "Response from the server contains no data."
+        "message": "Odpověď serveru neobsahovala data."
     },
     "status.resync-loop": {
-        "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
+        "message": "Nastala chyba, kterou není možné napravit pouze opětovnou synchronizací. Prosím, zakažte tento účet a zkuste to znovu. (Chyba: zacyklená synchronizace)"
     },
     "status.security": {
-        "message": "Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)"
+        "message": "Nelze navázat zabezpečené spojení. Používáte samopodepsaný nebo jinak nedůvěryhodný certifikát, aniž byste jej importovali do Thunderbirdu? (##replace.1##)"
     },
     "status.skipped": {
-        "message": "Not yet supported, skipped"
+        "message": "Ještě není podporováno, přeskočeno"
     },
     "status.syncing": {
-        "message": "Synchronizing"
+        "message": "Probíhá synchronizace"
     },
     "status.timeout": {
-        "message": "Communication timeout."
+        "message": "Časový limit komunikace vypršel."
     },
     "status.wbxml-parse-error": {
-        "message": "Server sends unreadable response."
+        "message": "Odpověď serveru byla nečitelná."
     },
     "status.wbxmlerror": {
-        "message": "Sync failed. Server responded with status <##replace.1##>."
+        "message": "Chyba synchronizace. Server hlásí status <##replace.1##>."
     },
     "status.wbxmlmissingfield": {
-        "message": "ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response."
+        "message": "Porušení protokolu ActiveSync: Vyžadované pole <##replace.1##> v odpovědi serveru chybí."
     },
     "syncstate.accountdone": {
-        "message": "Finished account"
+        "message": "Synchronizace účtu dokončena"
     },
     "syncstate.done": {
-        "message": "Preparing next item for synchronization"
+        "message": "Příprava další položky na synchronizaci"
     },
     "syncstate.eval.response.autodiscover": {
-        "message": "Processing updated server settings"
+        "message": "Zpracovávám aktualizované nastavení serveru"
     },
     "syncstate.eval.response.deletefolder": {
         "message": "Folder deleted"
@@ -525,7 +525,7 @@
         "message": "Requesting SyncKey"
     },
     "syncstate.preparing": {
-        "message": "Preparing next item for synchronization"
+        "message": "Příprava další položky na synchronizaci"
     },
     "syncstate.send.request.autodiscover": {
         "message": "Waiting for updated server settings"
