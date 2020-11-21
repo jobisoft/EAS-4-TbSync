@@ -495,7 +495,7 @@
         "message": "Preparando la eliminación de la carpeta"
     },
     "syncstate.prepare.request.estimate": {
-        "message": "Solicitando estimación de cambio"
+        "message": "Solicitando estimación de cambios"
     },
     "syncstate.prepare.request.folders": {
         "message": "Enviando actualización de lista de carpetas"
@@ -528,34 +528,34 @@
         "message": "Preparando el siguiente elemento para la sincronización"
     },
     "syncstate.send.request.autodiscover": {
-        "message": "Waiting for updated server settings"
+        "message": "Esperando la configuración actualizada del servidor"
     },
     "syncstate.send.request.deletefolder": {
-        "message": "Waiting for folder to be deleted"
+        "message": "Esperando la eliminación de la carpeta"
     },
     "syncstate.send.request.estimate": {
-        "message": "Waiting for change estimate"
+        "message": "Esperando la estimación de cambios"
     },
     "syncstate.send.request.folders": {
-        "message": "Waiting for folder list update"
+        "message": "Esperando la actualización de la lista de carpetas"
     },
     "syncstate.send.request.localchanges": {
-        "message": "Waiting for acknowledgment of local changes"
+        "message": "Esperando el reconocimiento de cambios locales"
     },
     "syncstate.send.request.localdeletes": {
-        "message": "Waiting for acknowledgment of local deletes"
+        "message": "Esperando el reconocimiento de eliminaciones locales"
     },
     "syncstate.send.request.options": {
-        "message": "Waiting for server options"
+        "message": "Esperando las opciones del servidor"
     },
     "syncstate.send.request.provision": {
-        "message": "Waiting for provision"
+        "message": "Esperando el aprovisionamiento"
     },
     "syncstate.send.request.remotechanges": {
-        "message": "Waiting for remote changes"
+        "message": "Esperando los cambios remotos"
     },
     "syncstate.send.request.revertlocalchanges": {
-        "message": "Waiting for most recent versions"
+        "message": "Esperando las versiones más recientes"
     },
     "syncstate.send.request.setdeviceinfo": {
         "message": "Enviando información del dispositivo"
