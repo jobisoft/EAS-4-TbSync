@@ -456,73 +456,73 @@
         "message": "Zpracovávám aktualizované nastavení serveru"
     },
     "syncstate.eval.response.deletefolder": {
-        "message": "Folder deleted"
+        "message": "Složka smazána"
     },
     "syncstate.eval.response.estimate": {
-        "message": "Processing change estimate"
+        "message": "Zpracovávám změnu odhadu"
     },
     "syncstate.eval.response.folders": {
-        "message": "Processing folder list update"
+        "message": "Zpracovávám aktualizaci seznamu složek"
     },
     "syncstate.eval.response.localchanges": {
-        "message": "Processing acknowledgment of local changes"
+        "message": "Zpracovávám potvrzení místních změn"
     },
     "syncstate.eval.response.localdeletes": {
-        "message": "Processing acknowledgment of local deletes"
+        "message": "Zpracovávám potvrzení místních výmazů"
     },
     "syncstate.eval.response.options": {
-        "message": "Processing server options"
+        "message": "Zpracovávám možnosti serveru"
     },
     "syncstate.eval.response.provision": {
-        "message": "Processing provision"
+        "message": "Zpracovávám provision"
     },
     "syncstate.eval.response.remotechanges": {
-        "message": "Processing remote changes"
+        "message": "Zpracovávám změny ze serveru"
     },
     "syncstate.eval.response.revertlocalchanges": {
-        "message": "Reverting local changes"
+        "message": "Vracím zpět místní změny"
     },
     "syncstate.eval.response.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Odesílám informace o zařízení"
     },
     "syncstate.eval.response.synckey": {
-        "message": "Processing SyncKey"
+        "message": "Zpracovávám SyncKey"
     },
     "syncstate.prepare.request.autodiscover": {
-        "message": "Requesting updated server settings"
+        "message": "Žádám o aktualizované nastavení serveru"
     },
     "syncstate.prepare.request.deletefolder": {
-        "message": "Preparing to delete folder"
+        "message": "Připravuji vymazání složky"
     },
     "syncstate.prepare.request.estimate": {
-        "message": "Requesting change estimate"
+        "message": "Žádám o změnu odhadu"
     },
     "syncstate.prepare.request.folders": {
-        "message": "Sending folder list update"
+        "message": "Odesílám aktualizaci seznamu složek"
     },
     "syncstate.prepare.request.localchanges": {
-        "message": "Sending local changes"
+        "message": "Odesílám místní změny"
     },
     "syncstate.prepare.request.localdeletes": {
-        "message": "Sending local deletes"
+        "message": "Odesílám místní výmazy"
     },
     "syncstate.prepare.request.options": {
-        "message": "Requesting server options"
+        "message": "Posílám požadavek na zaslání možností serveru"
     },
     "syncstate.prepare.request.provision": {
-        "message": "Requesting provision"
+        "message": "Žádám o provision"
     },
     "syncstate.prepare.request.remotechanges": {
-        "message": "Requesting remote changes"
+        "message": "Žádám o změny na serveru"
     },
     "syncstate.prepare.request.revertlocalchanges": {
-        "message": "Collecting local changes"
+        "message": "Shromažďuji místní změny"
     },
     "syncstate.prepare.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Odesílám informace o zařízení"
     },
     "syncstate.prepare.request.synckey": {
-        "message": "Requesting SyncKey"
+        "message": "Žádám o SyncKey"
     },
     "syncstate.preparing": {
         "message": "Příprava další položky na synchronizaci"
@@ -558,7 +558,7 @@
         "message": "Waiting for most recent versions"
     },
     "syncstate.send.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Odesílám informace o zařízení"
     },
     "syncstate.send.request.synckey": {
         "message": "Waiting for SyncKey"
