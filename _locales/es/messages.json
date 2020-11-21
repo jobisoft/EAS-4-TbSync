@@ -156,55 +156,55 @@
         "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
     },
     "manager.tabs.accountsettings": {
-        "message": "Account settings"
+        "message": "Ajustes de la cuenta"
     },
     "manager.tabs.outOfOffice": {
-        "message": "Auto responder"
+        "message": "Respuesta automática"
     },
     "manager.tabs.syncsettings": {
-        "message": "Options"
+        "message": "Opciones"
     },
     "newaccount.add_auto": {
-        "message": "Autodiscover settings and add account"
+        "message": "Detectar ajustes automáticamente y añadir cuenta"
     },
     "newaccount.add_custom": {
         "message": "Añadir cuenta"
     },
     "pref.AccountName": {
-        "message": "Description"
+        "message": "Descripción"
     },
     "pref.ActiveSyncVersion": {
-        "message": "ActiveSync version"
+        "message": "Versión de ActiveSync"
     },
     "pref.DeviceId": {
-        "message": "ActiveSync device ID"
+        "message": "ID de dispositivo de ActiveSync"
     },
     "pref.ServerName": {
-        "message": "Server address"
+        "message": "Dirección del servidor"
     },
     "pref.ServerNameDescription": {
-        "message": "e.g. mail.yourserver.com"
+        "message": "por ejemplo, correo.servidor.com"
     },
     "pref.ShowTrashedFolders": {
-        "message": "Show folders found in trash"
+        "message": "Mostrar carpetas encontradas en la papelera"
     },
     "pref.UserName": {
-        "message": "User name"
+        "message": "Nombre de usuario"
     },
     "pref.UserNameDescription": {
-        "message": "User name is usually the email address of your account."
+        "message": "El nombre de usuario suele ser la dirección de correo electrónico de su cuenta."
     },
     "pref.autodetect": {
-        "message": "best available"
+        "message": "mejor disponible"
     },
     "pref.birthday": {
-        "message": "Send birthday information"
+        "message": "Enviar información de cumpleaños"
     },
     "pref.calendaroptions": {
-        "message": "Calendar options"
+        "message": "Opciones de calendario"
     },
     "pref.contactoptions": {
-        "message": "Contact options"
+        "message": "Opciones de contactos"
     },
     "pref.displayoverride": {
         "message": "Override Display Name with “First Name” + “Second Name”"
