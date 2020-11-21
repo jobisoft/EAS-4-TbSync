@@ -345,22 +345,22 @@
         "message": "Zakázáno"
     },
     "status.empty-response": {
-        "message": "Server sends unexpected empty response."
+        "message": "Server zaslal odpověď bez obsahu."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
-        "message": "Forbidden calendar item in a task folder (please resort)"
+        "message": "V seznamu úkolů máte uložený záznam, který má patřit do kalendáře (prosím, přesuňte jej)"
     },
     "status.forbiddenTasksItemInCalendarFolder": {
-        "message": "Forbidden task item in a calendar folder (please resort)"
+        "message": "V kalendáři máte uložený záznam, který má patřit mezi úkoly (prosím, přesuňte jej)"
     },
     "status.global.101": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 101)."
+        "message": "Požadavek obsahuje WBXML, ale nemohl být dekódován do XML (EAS chyba 101)."
     },
     "status.global.102": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 102)."
+        "message": "Požadavek obsahuje WBXML, ale nemohl být dekódován do XML (EAS chyba 102)."
     },
     "status.global.103": {
-        "message": "The XML provided in the request does not follow the protocol requirements (EAS Error 103)."
+        "message": "Poskytnuté XML data neodpovídají požadavkům protokolu (EAS chyba 103)."
     },
     "status.global.110": {
         "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
