@@ -54,7 +54,7 @@
         "message": "Manžel(ka):"
     },
     "abCard.header.eas": {
-        "message": "Další pole (EAS)"
+        "message": "Další údaje (EAS)"
     },
     "abCard.header.homenumbers": {
         "message": "Další čísla domů:"
@@ -63,7 +63,7 @@
         "message": "Zprávy:"
     },
     "abCard.header.otheraddress": {
-        "message": "Jiná adresa (EAS)"
+        "message": "Další adresa (EAS)"
     },
     "abCard.header.othernumbers": {
         "message": "Další čísla:"
