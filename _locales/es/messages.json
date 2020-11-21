@@ -1,96 +1,96 @@
 {
     "abCard.Anniversary": {
-        "message": "Anniversary:"
+        "message": "Aniversario:"
     },
     "abCard.AssistantName": {
-        "message": "Assistant:"
+        "message": "Asistente:"
     },
     "abCard.AssistantPhoneNumber": {
-        "message": "Assistant Phone:"
+        "message": "Teléfono de asistente:"
     },
     "abCard.Business2PhoneNumber": {
-        "message": "Work Alternative Phone:"
+        "message": "Teléfono de trabajo alternativo:"
     },
     "abCard.BusinessFaxNumber": {
-        "message": "Work Fax:"
+        "message": "Fax de trabajo:"
     },
     "abCard.CarPhoneNumber": {
-        "message": "Car Phone:"
+        "message": "Teléfono del coche:"
     },
     "abCard.CompanyMainPhone": {
-        "message": "Work Main Phone:"
+        "message": "Teléfono del trabajo:"
     },
     "abCard.Email3Address": {
-        "message": "Alternative Email:"
+        "message": "Correo electrónico alternativo:"
     },
     "abCard.Home2PhoneNumber": {
-        "message": "Home Alternative Phone:"
+        "message": "Teléfono de casa alternativo:"
     },
     "abCard.ManagerName": {
-        "message": "Manager:"
+        "message": "Jefe:"
     },
     "abCard.MiddleName": {
-        "message": "Middle name:"
+        "message": "Segundo nombre:"
     },
     "abCard.OtherAddress": {
-        "message": "Address:"
+        "message": "Dirección:"
     },
     "abCard.OtherCity": {
-        "message": "City:"
+        "message": "Ciudad:"
     },
     "abCard.OtherCountry": {
-        "message": "Country:"
+        "message": "País:"
     },
     "abCard.OtherState": {
-        "message": "State:"
+        "message": "Estado:"
     },
     "abCard.OtherZip": {
-        "message": "ZIP Code:"
+        "message": "Código postal:"
     },
     "abCard.RadioPhoneNumber": {
-        "message": "Radio Phone:"
+        "message": "Radioteléfono:"
     },
     "abCard.Spouse": {
-        "message": "Spouse:"
+        "message": "Pareja:"
     },
     "abCard.header.eas": {
-        "message": "Other Fields (EAS)"
+        "message": "Otros campos (EAS)"
     },
     "abCard.header.homenumbers": {
-        "message": "Additional home numbers:"
+        "message": "Números de casa adicionales:"
     },
     "abCard.header.messaging": {
-        "message": "Messaging:"
+        "message": "Mensajes:"
     },
     "abCard.header.otheraddress": {
-        "message": "Other Address (EAS)"
+        "message": "Otra dirección (EAS)"
     },
     "abCard.header.othernumbers": {
-        "message": "Additional numbers:"
+        "message": "Números adicionales:"
     },
     "abCard.header.people": {
-        "message": "People:"
+        "message": "Personas:"
     },
     "abCard.header.worknumbers": {
-        "message": "Additional work numbers:"
+        "message": "Números de trabajo adicionales:"
     },
     "acl.readonly": {
-        "message": "Read-only server access (revert local changes)"
+        "message": "Acceso de solo lectura al servidor (descartar cambios locales)"
     },
     "acl.readwrite": {
-        "message": "Read from and write to server"
+        "message": "Leer y escribir en el servidor"
     },
     "add.description": {
-        "message": "Please select one of the available server configuration options and enter the requested details. "
+        "message": "Seleccione una de las opciones de configuración del servidor disponibles y escriba los detalles solicitados. "
     },
     "add.name": {
-        "message": "Account name:"
+        "message": "Nombre de cuenta:"
     },
     "add.ok": {
-        "message": "Add account"
+        "message": "Añadir cuenta"
     },
     "add.password": {
-        "message": "Password:"
+        "message": "Contraseña:"
     },
     "add.server": {
         "message": "Server configuration:"
@@ -168,7 +168,7 @@
         "message": "Autodiscover settings and add account"
     },
     "newaccount.add_custom": {
-        "message": "Add account"
+        "message": "Añadir cuenta"
     },
     "pref.AccountName": {
         "message": "Description"
