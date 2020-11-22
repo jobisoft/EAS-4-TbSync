@@ -75,7 +75,7 @@
         "message": "Números de trabajo adicionales:"
     },
     "acl.readonly": {
-        "message": "Acceso de solo lectura al servidor (descartar cambios locales)"
+        "message": "Acceso de solo lectura al servidor (revertir cambios locales)"
     },
     "acl.readwrite": {
         "message": "Leer y escribir en el servidor"
@@ -207,7 +207,7 @@
         "message": "Opciones de contactos"
     },
     "pref.displayoverride": {
-        "message": "Sustituir nombre de pantalla con «Nombre» + «Segundo nombre»"
+        "message": "Reemplazar nombre de pantalla con «Nombre» + «Segundo nombre»"
     },
     "pref.galautocomplete": {
         "message": "Incluir los resultados de la libreta de direcciones global (GAL) en el autocompletado del correo electrónico"
@@ -273,7 +273,7 @@
         "message": "Haga doble clic para desbloquear todos los ajustes predefinidos del servidor."
     },
     "status.401": {
-        "message": "No ha sido posible autenticar, compruebe el nombre de usuario y contraseña (error HTTP 401)."
+        "message": "No ha sido posible autentificar, compruebe el nombre de usuario y contraseña (error HTTP 401)."
     },
     "status.403": {
         "message": "El servidor rechazó la conexión (prohibida) (error HTTP 403)."
@@ -366,7 +366,7 @@
         "message": "El servidor informó de un error interno y no deberíamos volver a intentarlo inmediatamente. La sincronización periódica automática se ha desactivado durante 30 minutos (error EAS 110)."
     },
     "status.global.clientdenied": {
-        "message": "El servidor de EAS informa <##replace.2##> (estado ##replace.1##) y no permite a TbSync acceder a tu cuenta."
+        "message": "El servidor de EAS notifica <##replace.2##> (estado ##replace.1##) y no permite a TbSync acceder a tu cuenta."
     },
     "status.httperror": {
         "message": "Error de comunicación (estado HTTP ##replace.1##)."
@@ -480,7 +480,7 @@
         "message": "Procesando los cambios remotos"
     },
     "syncstate.eval.response.revertlocalchanges": {
-        "message": "Descartando los cambios locales"
+        "message": "Revirtiendo los cambios locales"
     },
     "syncstate.eval.response.setdeviceinfo": {
         "message": "Enviando información del dispositivo"
