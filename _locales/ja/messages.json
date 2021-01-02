@@ -249,7 +249,7 @@
         "message": "安全な接続を利用する (https を使用して接続)"
     },
     "recyclebin": {
-        "message": "Trash"
+        "message": "ごみ箱"
     },
     "servertype.auto": {
         "message": "自動設定"
