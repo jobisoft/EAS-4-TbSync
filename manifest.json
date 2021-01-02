@@ -8,7 +8,7 @@
   },
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "version": "1.20",
+  "version": "1.20.1",
   "author": "John Bieling",
   "homepage_url": "https://github.com/jobisoft/EAS-4-TbSync/",
   "default_locale": "en-US",
