@@ -111,7 +111,7 @@
         "message": "ユーザー名 (電子メールアドレス):"
     },
     "autocomplete.serverdirectory": {
-        "message": " global server directory"
+        "message": "global server directory"
     },
     "autodiscover.Failed": {
         "message": "ユーザー <##user##> の自動検出に失敗しました。指定された資格情報が間違っているか、ActiveSyncプロバイダに一時的な問題があるか、自動検出をサポートしていません。"
@@ -249,7 +249,7 @@
         "message": "安全な接続を利用する (https を使用して接続)"
     },
     "recyclebin": {
-        "message": " ごみ箱"
+        "message": "ごみ箱"
     },
     "servertype.auto": {
         "message": "自動設定"

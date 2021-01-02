@@ -1,150 +1,150 @@
 {
     "abCard.Anniversary": {
-        "message": "Anniversary:"
+        "message": "Výročí:"
     },
     "abCard.AssistantName": {
-        "message": "Assistant:"
+        "message": "Asistent:"
     },
     "abCard.AssistantPhoneNumber": {
-        "message": "Assistant Phone:"
+        "message": "Telefon asistenta:"
     },
     "abCard.Business2PhoneNumber": {
-        "message": "Work Alternative Phone:"
+        "message": "Alternativní telefon do práce:"
     },
     "abCard.BusinessFaxNumber": {
-        "message": "Work Fax:"
+        "message": "Fax do práce:"
     },
     "abCard.CarPhoneNumber": {
-        "message": "Car Phone:"
+        "message": "Telefon do auta:"
     },
     "abCard.CompanyMainPhone": {
-        "message": "Work Main Phone:"
+        "message": "Hlavní pracovní telefon:"
     },
     "abCard.Email3Address": {
-        "message": "Alternative Email:"
+        "message": "Alternativní e-mail:"
     },
     "abCard.Home2PhoneNumber": {
-        "message": "Home Alternative Phone:"
+        "message": "Alternativní telefon domů:"
     },
     "abCard.ManagerName": {
-        "message": "Manager:"
+        "message": "Manažer:"
     },
     "abCard.MiddleName": {
-        "message": "Middle name:"
+        "message": "Prostřední jméno:"
     },
     "abCard.OtherAddress": {
-        "message": "Address:"
+        "message": "Adresa:"
     },
     "abCard.OtherCity": {
-        "message": "City:"
+        "message": "Město:"
     },
     "abCard.OtherCountry": {
-        "message": "Country:"
+        "message": "Země:"
     },
     "abCard.OtherState": {
-        "message": "State:"
+        "message": "Stát:"
     },
     "abCard.OtherZip": {
-        "message": "ZIP Code:"
+        "message": "PSČ:"
     },
     "abCard.RadioPhoneNumber": {
-        "message": "Radio Phone:"
+        "message": "Radiotelefon:"
     },
     "abCard.Spouse": {
-        "message": "Spouse:"
+        "message": "Manžel(ka):"
     },
     "abCard.header.eas": {
-        "message": "Other Fields (EAS)"
+        "message": "Další údaje (EAS)"
     },
     "abCard.header.homenumbers": {
-        "message": "Additional home numbers:"
+        "message": "Další čísla domů:"
     },
     "abCard.header.messaging": {
-        "message": "Messaging:"
+        "message": "Zprávy:"
     },
     "abCard.header.otheraddress": {
-        "message": "Other Address (EAS)"
+        "message": "Další adresa (EAS)"
     },
     "abCard.header.othernumbers": {
-        "message": "Additional numbers:"
+        "message": "Další čísla:"
     },
     "abCard.header.people": {
-        "message": "People:"
+        "message": "Lidé:"
     },
     "abCard.header.worknumbers": {
-        "message": "Additional work numbers:"
+        "message": "Další čísla do práce:"
     },
     "acl.readonly": {
-        "message": "Read-only server access (revert local changes)"
+        "message": "Přistup na server pouze pro čtení (odstranit místní změny)"
     },
     "acl.readwrite": {
-        "message": "Read from and write to server"
+        "message": "Přístup na server pro čtení i zápis"
     },
     "add.description": {
-        "message": "Please select one of the available server configuration options and enter the requested details. "
+        "message": "Vyberte prosím jednu z dostupných možností konfigurace serveru a zadejte požadované podrobnosti. "
     },
     "add.name": {
-        "message": "Account name:"
+        "message": "Název účtu:"
     },
     "add.ok": {
-        "message": "Add account"
+        "message": "Přidat účet"
     },
     "add.password": {
-        "message": "Password:"
+        "message": "Heslo:"
     },
     "add.server": {
-        "message": "Server configuration:"
+        "message": "Nastavení serveru:"
     },
     "add.shortdescription": {
-        "message": "Account information"
+        "message": "Informace o účtu"
     },
     "add.title": {
-        "message": "Adding an Exchange ActiveSync account to TbSync"
+        "message": "Přidání nového účtu Exchange ActiveSync do TbSync"
     },
     "add.url": {
-        "message": "Server address:"
+        "message": "Adresa serveru:"
     },
     "add.urldescription": {
-        "message": "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync)."
+        "message": "Mělo by stačit zadat pouze adresu serveru (např. mail.mujmail.cz). Nicméně můžete zadat i celou URL (např. https://mail.mujmail.cz/Microsoft-Server-ActiveSync)."
     },
     "add.user": {
-        "message": "User name (email address):"
+        "message": "Uživatelské jméno (e-mailová adresa):"
     },
     "autocomplete.serverdirectory": {
-        "message": " global server directory"
+        "message": "globální adresář serveru"
     },
     "autodiscover.Failed": {
-        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
+        "message": "Automatické nastavení pro uživatele <##user##> selhalo. Buď nejsou zadané přihlašovací údaje správné, nebo má váš poskytovatel ActiveSync dočasný problém, anebo nepodporuje automatické nastavení."
     },
     "autodiscover.NeedEmail": {
-        "message": "Autodiscover needs a valid email address as user name."
+        "message": "Funkce automatického nastavení Autodiscover vyžaduje zadání platné e-mailové adresy jako uživatelského jména."
     },
     "autodiscover.Ok": {
-        "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
+        "message": "Automatické nastavení bylo úspěšně dokončeno. Nyní si můžete projít volitelné nastavení a vytvořit synchronizační připojení."
     },
     "autodiscover.Querying": {
-        "message": "Searching for settings…"
+        "message": "Hledám nastavení…"
     },
     "config.auto": {
-        "message": "ActiveSync server configuration (Autodiscover)"
+        "message": "Konfigurace serveru ActiveSync (Autodiscover)"
     },
     "config.custom": {
-        "message": "ActiveSync server configuration"
+        "message": "Konfigurace serveru ActiveSync"
     },
     "deletefolder.confirm": {
-        "message": "Do you really want to PERMANENTLY PURGE folder “##replace.1##” from trash?"
+        "message": "Opravdu chcete z koše TRVALE vymazat složku “##replace.1##”?"
     },
     "deletefolder.menuentry": {
-        "message": "Permanently purge folder “##replace.1##” from trash"
+        "message": "Trvale z koše vymazat složku “##replace.1##”"
     },
     "deletefolder.notallowed": {
-        "message": "Please unsubscribe folder “##replace.1##” before trying to purge it from trash."
+        "message": "Prosím, odhlašte odběr složky “##replace.1##“ předtím, než se ji pokusíte odstranit z koše."
     },
     "extensionDescription": {
-        "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
+        "message": "Přidává do TbSync podporu synchronizace pro účty Exchange ActiveSync (kontakty, úkoly a kalendáře)."
     },
     "extensionName": {
-        "message": "Provider for Exchange ActiveSync"
+        "message": "Modul poskytovatele pro Exchange ActiveSync"
     },
     "helplink.BadItemSkipped": {
         "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
@@ -156,414 +156,414 @@
         "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
     },
     "manager.tabs.accountsettings": {
-        "message": "Account settings"
+        "message": "Nastavení účtu"
     },
     "manager.tabs.outOfOffice": {
-        "message": "Auto responder"
+        "message": "Automatická odpověď"
     },
     "manager.tabs.syncsettings": {
-        "message": "Options"
+        "message": "Volby"
     },
     "newaccount.add_auto": {
-        "message": "Autodiscover settings and add account"
+        "message": "Vyhledat nastavení a přidat účet"
     },
     "newaccount.add_custom": {
-        "message": "Add account"
+        "message": "Přidat účet"
     },
     "pref.AccountName": {
-        "message": "Description"
+        "message": "Pojmenování"
     },
     "pref.ActiveSyncVersion": {
-        "message": "ActiveSync version"
+        "message": "Verze ActiveSync"
     },
     "pref.DeviceId": {
-        "message": "ActiveSync device ID"
+        "message": "ID zařízení ActiveSync"
     },
     "pref.ServerName": {
-        "message": "Server address"
+        "message": "Adresa serveru"
     },
     "pref.ServerNameDescription": {
-        "message": "e.g. mail.yourserver.com"
+        "message": "např. mail.mujmail.cz"
     },
     "pref.ShowTrashedFolders": {
-        "message": "Show folders found in trash"
+        "message": "Zobrazit složky nalezené v koši"
     },
     "pref.UserName": {
-        "message": "User name"
+        "message": "Uživatelské jméno"
     },
     "pref.UserNameDescription": {
-        "message": "User name is usually the email address of your account."
+        "message": "Uživatelské jméno je obvykle e-mailová adresa vašeho účtu."
     },
     "pref.autodetect": {
-        "message": "best available"
+        "message": "nejlepší možná"
     },
     "pref.birthday": {
-        "message": "Send birthday information"
+        "message": "Odeslat informace o narozeninách"
     },
     "pref.calendaroptions": {
-        "message": "Calendar options"
+        "message": "Nastavení kalendáře"
     },
     "pref.contactoptions": {
-        "message": "Contact options"
+        "message": "Kontakty"
     },
     "pref.displayoverride": {
-        "message": "Override Display Name with “First Name” + “Second Name”"
+        "message": "Vynutit zobrazování jména jako “křestní” + “příjmení”"
     },
     "pref.galautocomplete": {
-        "message": "Include results from global address book (GAL) in email autocompletion"
+        "message": "Zahrnout výsledky z globálního adresáře (GAL) do našeptávače emailových adres"
     },
     "pref.generaloptions": {
-        "message": "General options"
+        "message": "Obecné"
     },
     "pref.provision": {
-        "message": "Enforce provisioning (required by Kerio)"
+        "message": "Vynutit provisioning (vyžaduje Kerio)"
     },
     "pref.seperator.comma": {
-        "message": "Comma"
+        "message": "Čárka"
     },
     "pref.seperator.description": {
-        "message": "Separator for multiline address field."
+        "message": "Oddělovač pro víceřádkové pole adres."
     },
     "pref.seperator.linebreak": {
-        "message": "Line break"
+        "message": "Nový řádek"
     },
     "pref.synclimit.1month": {
-        "message": "from 4 weeks ago"
+        "message": "poslední 4 týdny"
     },
     "pref.synclimit.2weeks": {
-        "message": "from 2 weeks ago"
+        "message": "poslední 2 týdny"
     },
     "pref.synclimit.3month": {
-        "message": "from 3 months ago"
+        "message": "poslední 3 měsíce"
     },
     "pref.synclimit.6month": {
-        "message": "from 6 months ago"
+        "message": "posledních 6 měsíců"
     },
     "pref.synclimit.all": {
-        "message": "everything"
+        "message": "vše"
     },
     "pref.synclimit.description": {
-        "message": "Synchronization period: "
+        "message": "Období pro synchronizaci: "
     },
     "pref.usehttps": {
-        "message": "Use secure connection (connect via https)"
+        "message": "Použít zabezpečené připojení (přes https)"
     },
     "recyclebin": {
-        "message": " Trash"
+        "message": "Koš"
     },
     "servertype.auto": {
-        "message": "Automatic configuration"
+        "message": "Automatické nastavení pomocí ActiveSync Autodiscover"
     },
     "servertype.custom": {
-        "message": "Custom configuration"
+        "message": "Ruční nastavení"
     },
     "servertype.description.auto": {
-        "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
+        "message": "Pro nastavení většiny ActiveSync serverů stačí zadat pouze e-mailovou adresu."
     },
     "servertype.description.custom": {
-        "message": "Setup your account by manually providing the address of the server you want to connect."
+        "message": "Nastavte si účet pomocí ručního zadání adresy serveru."
     },
     "servertype.description.office365": {
-        "message": "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA)."
+        "message": "Účty Office 365 používají moderní proces ověřování s názvem OAuth 2.0, který také podporuje vícefaktorové ověřování (MFA)."
     },
     "servertype.office365": {
         "message": "Microsoft Office 365"
     },
     "servertype.unlock": {
-        "message": "Double click to unlock all predefined server settings."
+        "message": "Dvojklikem odemknete všechna předdefinovaná nastavení serveru."
     },
     "status.401": {
-        "message": "Could not authenticate, check username and password (HTTP Error 401)."
+        "message": "Chyba ověření, zkontrolujte uživatelské jméno a heslo (HTTP chyba 401)."
     },
     "status.403": {
-        "message": "Server rejected connection (forbidden) (HTTP Error 403)."
+        "message": "Server odmítl spojení (HTTP chyba 403)."
     },
     "status.404": {
-        "message": "User not found (HTTP Error 404)."
+        "message": "Uživatel nebyl nalezen (HTTP chyba 404)."
     },
     "status.449": {
-        "message": "Server requests provisioning (HTTP Error 449)."
+        "message": "Server si vyžádal provisioning (HTTP chyba 449)."
     },
     "status.500": {
-        "message": "Unknown Server Error (HTTP Error 500)."
+        "message": "Neznámá chyba serveru (HTTP chyba 500)."
     },
     "status.503": {
-        "message": "Service unavailable (HTTP Error 503)."
+        "message": "Služba není dostupná (HTTP chyba 503)."
     },
     "status.BadItemSkipped": {
-        "message": "Bad Item Skipped: ##replace.1##"
+        "message": "Vynechána chybná položka: ##replace.1##"
     },
     "status.FolderDelete.3": {
-        "message": "Cannot delete a system folder (status 3)"
+        "message": "Systémovou složku nelze odstranit (status 3)"
     },
     "status.FolderDelete.4": {
-        "message": "Folder does not exist (status 4), resyncing"
+        "message": "Složka neexistuje (status 4), opětovně synchronizuji"
     },
     "status.FolderDelete.6": {
-        "message": "Command could not be completed, an error occurred on the server (status 6)"
+        "message": "Příkaz nemohl být dokončen, došlo k chybě na serveru (status 6)"
     },
     "status.FolderDelete.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Neplatný synchronizační klíč (status 9), opětovně synchronizuji"
     },
     "status.FolderSync.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Neplatný synchronizační klíč (status 9), opětovně synchronizuji"
     },
     "status.InvalidServerOptions": {
-        "message": "The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually."
+        "message": "Server neposkytuje informaci o podporovaných verzích ActiveSync. Je pro tohoto uživatele nebo tohoto klienta (TbSync) EAS blokován? Můžete zkusit nastavit verzi ActiveSync ručně."
     },
     "status.OK": {
         "message": "OK"
     },
     "status.ServerRejectedRequest": {
-        "message": "The EAS Server rejected the last request."
+        "message": "EAS Server poslední požadavek odmítl."
     },
     "status.ServerRejectedSomeItems": {
-        "message": "The EAS server did not accept ##replace.1## elements."
+        "message": "Server EAS nepřijal ##replace.1## položek."
     },
     "status.Sync.12": {
-        "message": "Folder hierarchy changed (status 12), resyncing"
+        "message": "Změnila se struktura složky (status 12), opětovně synchronizuji"
     },
     "status.Sync.3": {
-        "message": "Invalid synchronization key (status 3), resyncing"
+        "message": "Neplatný synchronizační klíč (status 3), opětovně synchronizuji"
     },
     "status.Sync.4": {
-        "message": "Malformed request (status 4)"
+        "message": "Chybný požadavek (status 4)"
     },
     "status.Sync.5": {
-        "message": "Temporary server issues or invalid item (status 5)"
+        "message": "Dočasné potíže na serveru nebo neplatná položka (status 5)"
     },
     "status.Sync.6": {
-        "message": "Invalid item (status 6)"
+        "message": "Neplatná položka (status 6)"
     },
     "status.Sync.8": {
-        "message": "Object not found (status 8)"
+        "message": "Objekt nebyl nalezen (status 8)"
     },
     "status.aborted": {
-        "message": "Not synchronized"
+        "message": "Není synchronizováno"
     },
     "status.disabled": {
-        "message": "Disabled"
+        "message": "Zakázáno"
     },
     "status.empty-response": {
-        "message": "Server sends unexpected empty response."
+        "message": "Server zaslal odpověď bez obsahu."
     },
     "status.forbiddenCalendarItemInTasksFolder": {
-        "message": "Forbidden calendar item in a task folder (please resort)"
+        "message": "V seznamu úkolů máte uložený záznam, který má patřit do kalendáře (prosím, přesuňte jej)"
     },
     "status.forbiddenTasksItemInCalendarFolder": {
-        "message": "Forbidden task item in a calendar folder (please resort)"
+        "message": "V kalendáři máte uložený záznam, který má patřit mezi úkoly (prosím, přesuňte jej)"
     },
     "status.global.101": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 101)."
+        "message": "Požadavek obsahuje WBXML, ale nemohl být dekódován do XML (EAS chyba 101)."
     },
     "status.global.102": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 102)."
+        "message": "Požadavek obsahuje WBXML, ale nemohl být dekódován do XML (EAS chyba 102)."
     },
     "status.global.103": {
-        "message": "The XML provided in the request does not follow the protocol requirements (EAS Error 103)."
+        "message": "Poskytnuté XML data neodpovídají požadavkům protokolu (EAS chyba 103)."
     },
     "status.global.110": {
-        "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
+        "message": "Server nahlásil interní chybu, automatická synchronizace byla pozastavena na 30 minut (EAS chyba 110)."
     },
     "status.global.clientdenied": {
-        "message": "The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account."
+        "message": "EAS server nahlásil <##replace.2##> (status ##replace.1##) a nepovolil pro TbSync přístup k účtu."
     },
     "status.httperror": {
-        "message": "Communication error (HTTP status ##replace.1##)."
+        "message": "Chyba komunikace (HTTP status ##replace.1##)."
     },
     "status.invalid": {
-        "message": "Invalid server response (junk)."
+        "message": "Neplatná odpověď serveru."
     },
     "status.malformed-xml": {
-        "message": "Could not parse XML. Check event log for details."
+        "message": "Nelze zpracovat XML. Podrobnosti naleznete v protokolu událostí."
     },
     "status.modified": {
-        "message": "Local modifications"
+        "message": "Místní změny"
     },
     "status.network": {
-        "message": "Could not connect to server (##replace.1##)."
+        "message": "Nelze se připojit k serveru (##replace.1##)."
     },
     "status.networkerror": {
-        "message": "Could not connect to server."
+        "message": "Nelze se připojit k serveru."
     },
     "status.nosupportedeasversion": {
-        "message": "Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server."
+        "message": "Server nepodporuje ActiveSync v2.5 nebo v14.0 (pouze ##replace.1##). TbSync nepodporuje tento typ ActiveSync serveru."
     },
     "status.notargets": {
-        "message": "Aborting Sync, because sync targets could not be created."
+        "message": "Synchronizace byla přerušena, protože nebylo možné vytvořit cíle pro synchronizaci."
     },
     "status.notsupportedeasversion": {
-        "message": "Server does not support selected ActiveSync v##replace.1## (only ##replace.2##)."
+        "message": "Server nepodporuje vybranou verzi ActiveSync v##replace.1## (pouze ##replace.2##)."
     },
     "status.notsyncronized": {
-        "message": "Account needs to be synchronized, at least one item is out of sync."
+        "message": "Účet musí být synchronizován, alespoň jedna položka není synchronizována."
     },
     "status.nouserhost": {
-        "message": "Missing username and/or server. Please provide those values."
+        "message": "Uživatel a/nebo server nebyl zadán. Prosím, doplňte chybějící hodnoty."
     },
     "status.pending": {
-        "message": "Waiting to be synchronized"
+        "message": "Čeká se na synchronizaci"
     },
     "status.policy.2": {
-        "message": "There is no policy for this client. Contact your server administrator or disable provisioning for this account."
+        "message": "Chybí zásady pro tohoto klienta. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.policy.3": {
-        "message": "Unknown PolicyType value. Contact your server administrator or disable provisioning for this account."
+        "message": "Neznámá hodnota PolicyType. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.policy.4": {
-        "message": "The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account."
+        "message": "Data zásad na serveru jsou porušená. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.policy.5": {
-        "message": "The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account."
+        "message": "Klient přijal špatný klíč zásad. Kontaktujte administrátora nebo zakažte provisioning pro tento účet."
     },
     "status.provision": {
-        "message": "Provisioning failed with status <##replace.1##>"
+        "message": "Provisioning skončil chybou <##replace.1##>"
     },
     "status.response-contains-no-data": {
-        "message": "Response from the server contains no data."
+        "message": "Odpověď serveru neobsahovala data."
     },
     "status.resync-loop": {
-        "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
+        "message": "Nastala chyba, kterou není možné napravit pouze opětovnou synchronizací. Prosím, zakažte tento účet a zkuste to znovu. (Chyba: zacyklená synchronizace)"
     },
     "status.security": {
-        "message": "Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)"
+        "message": "Nelze navázat zabezpečené spojení. Používáte samopodepsaný nebo jinak nedůvěryhodný certifikát, aniž byste jej importovali do Thunderbirdu? (##replace.1##)"
     },
     "status.skipped": {
-        "message": "Not yet supported, skipped"
+        "message": "Ještě není podporováno, přeskočeno"
     },
     "status.syncing": {
-        "message": "Synchronizing"
+        "message": "Probíhá synchronizace"
     },
     "status.timeout": {
-        "message": "Communication timeout."
+        "message": "Časový limit komunikace vypršel."
     },
     "status.wbxml-parse-error": {
-        "message": "Server sends unreadable response."
+        "message": "Odpověď serveru byla nečitelná."
     },
     "status.wbxmlerror": {
-        "message": "Sync failed. Server responded with status <##replace.1##>."
+        "message": "Chyba synchronizace. Server hlásí status <##replace.1##>."
     },
     "status.wbxmlmissingfield": {
-        "message": "ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response."
+        "message": "Porušení protokolu ActiveSync: Vyžadované pole <##replace.1##> v odpovědi serveru chybí."
     },
     "syncstate.accountdone": {
-        "message": "Finished account"
+        "message": "Synchronizace účtu dokončena"
     },
     "syncstate.done": {
-        "message": "Preparing next item for synchronization"
+        "message": "Příprava další položky na synchronizaci"
     },
     "syncstate.eval.response.autodiscover": {
-        "message": "Processing updated server settings"
+        "message": "Zpracovávám aktualizované nastavení serveru"
     },
     "syncstate.eval.response.deletefolder": {
-        "message": "Folder deleted"
+        "message": "Složka smazána"
     },
     "syncstate.eval.response.estimate": {
-        "message": "Processing change estimate"
+        "message": "Zpracovávám změnu odhadu"
     },
     "syncstate.eval.response.folders": {
-        "message": "Processing folder list update"
+        "message": "Zpracovávám aktualizaci seznamu složek"
     },
     "syncstate.eval.response.localchanges": {
-        "message": "Processing acknowledgment of local changes"
+        "message": "Zpracovávám potvrzení místních změn"
     },
     "syncstate.eval.response.localdeletes": {
-        "message": "Processing acknowledgment of local deletes"
+        "message": "Zpracovávám potvrzení místních výmazů"
     },
     "syncstate.eval.response.options": {
-        "message": "Processing server options"
+        "message": "Zpracovávám možnosti serveru"
     },
     "syncstate.eval.response.provision": {
-        "message": "Processing provision"
+        "message": "Zpracovávám provision"
     },
     "syncstate.eval.response.remotechanges": {
-        "message": "Processing remote changes"
+        "message": "Zpracovávám změny ze serveru"
     },
     "syncstate.eval.response.revertlocalchanges": {
-        "message": "Reverting local changes"
+        "message": "Vracím zpět místní změny"
     },
     "syncstate.eval.response.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Odesílám informace o zařízení"
     },
     "syncstate.eval.response.synckey": {
-        "message": "Processing SyncKey"
+        "message": "Zpracovávám SyncKey"
     },
     "syncstate.prepare.request.autodiscover": {
-        "message": "Requesting updated server settings"
+        "message": "Žádám o aktualizované nastavení serveru"
     },
     "syncstate.prepare.request.deletefolder": {
-        "message": "Preparing to delete folder"
+        "message": "Připravuji vymazání složky"
     },
     "syncstate.prepare.request.estimate": {
-        "message": "Requesting change estimate"
+        "message": "Žádám o změnu odhadu"
     },
     "syncstate.prepare.request.folders": {
-        "message": "Sending folder list update"
+        "message": "Odesílám aktualizaci seznamu složek"
     },
     "syncstate.prepare.request.localchanges": {
-        "message": "Sending local changes"
+        "message": "Odesílám místní změny"
     },
     "syncstate.prepare.request.localdeletes": {
-        "message": "Sending local deletes"
+        "message": "Odesílám místní výmazy"
     },
     "syncstate.prepare.request.options": {
-        "message": "Requesting server options"
+        "message": "Posílám požadavek na zaslání možností serveru"
     },
     "syncstate.prepare.request.provision": {
-        "message": "Requesting provision"
+        "message": "Žádám o provision"
     },
     "syncstate.prepare.request.remotechanges": {
-        "message": "Requesting remote changes"
+        "message": "Žádám o změny na serveru"
     },
     "syncstate.prepare.request.revertlocalchanges": {
-        "message": "Collecting local changes"
+        "message": "Shromažďuji místní změny"
     },
     "syncstate.prepare.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Odesílám informace o zařízení"
     },
     "syncstate.prepare.request.synckey": {
-        "message": "Requesting SyncKey"
+        "message": "Žádám o SyncKey"
     },
     "syncstate.preparing": {
-        "message": "Preparing next item for synchronization"
+        "message": "Příprava další položky na synchronizaci"
     },
     "syncstate.send.request.autodiscover": {
-        "message": "Waiting for updated server settings"
+        "message": "Čekám na aktualizované nastavení serveru"
     },
     "syncstate.send.request.deletefolder": {
-        "message": "Waiting for folder to be deleted"
+        "message": "Čekám na vymazání složky"
     },
     "syncstate.send.request.estimate": {
-        "message": "Waiting for change estimate"
+        "message": "Čekám na změnu odhadu"
     },
     "syncstate.send.request.folders": {
-        "message": "Waiting for folder list update"
+        "message": "Čekám na aktualizaci seznamu složek"
     },
     "syncstate.send.request.localchanges": {
-        "message": "Waiting for acknowledgment of local changes"
+        "message": "Čekám na potvrzení místních změn"
     },
     "syncstate.send.request.localdeletes": {
-        "message": "Waiting for acknowledgment of local deletes"
+        "message": "Čekám na potvrzení místních výmazů"
     },
     "syncstate.send.request.options": {
-        "message": "Waiting for server options"
+        "message": "Čekám na možnosti serveru"
     },
     "syncstate.send.request.provision": {
-        "message": "Waiting for provision"
+        "message": "Čekám na provision"
     },
     "syncstate.send.request.remotechanges": {
-        "message": "Waiting for remote changes"
+        "message": "Čekám na změny ze serveru"
     },
     "syncstate.send.request.revertlocalchanges": {
-        "message": "Waiting for most recent versions"
+        "message": "Čekám na nejnovější verze"
     },
     "syncstate.send.request.setdeviceinfo": {
-        "message": "Sending device information"
+        "message": "Odesílám informace o zařízení"
     },
     "syncstate.send.request.synckey": {
-        "message": "Waiting for SyncKey"
+        "message": "Čekám na SyncKey"
     },
     "syncstate.syncing": {
-        "message": "Initialize synchronization"
+        "message": "Inicializuji synchronizaci"
     }
 }

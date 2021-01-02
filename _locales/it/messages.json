@@ -111,7 +111,7 @@
         "message": "Nome utente (indirizzo di posta elettronica):"
     },
     "autocomplete.serverdirectory": {
-        "message": " directory globale del server"
+        "message": "directory globale del server"
     },
     "autodiscover.Failed": {
         "message": "Rilevamento automatico non riuscito per l'utente <##user##>. Le credenziali fornite sono errate o il proprio provider ActiveSync ha un problema temporaneo o non supporta il rilevamento automatico impostazioni."
@@ -249,7 +249,7 @@
         "message": "Utilizza connessione sicura (connettiti tramite HTTPS)"
     },
     "recyclebin": {
-        "message": " Cestino"
+        "message": "Cestino"
     },
     "servertype.auto": {
         "message": "Configurazione automatica"

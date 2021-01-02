@@ -111,7 +111,7 @@
         "message": "Usuário:"
     },
     "autocomplete.serverdirectory": {
-        "message": " diretório global do servidor"
+        "message": "servidor de diretório global"
     },
     "autodiscover.Failed": {
         "message": "Descoberta automática para usuário <##user##> falhou. As credenciais fornecidas estavam erradas ou seu provedor do ActiveSync tem um problema temporário ou não oferece suporte à descoberta automática."
@@ -249,7 +249,7 @@
         "message": "Utilizar conexão segura (conectar via https)"
     },
     "recyclebin": {
-        "message": " Lixeira"
+        "message": "Lixeira"
     },
     "servertype.auto": {
         "message": "Configuração automática"

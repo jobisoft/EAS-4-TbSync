@@ -111,7 +111,7 @@
         "message": "Nazwa użytkownika (adres e-mail):"
     },
     "autocomplete.serverdirectory": {
-        "message": " globalny katalog serwera"
+        "message": "globalny katalog serwera"
     },
     "autodiscover.Failed": {
         "message": "Auto-wykrywanie dla użytkownika <##user##> nie powiodło się. Podane dane uwierzytelniające były nieprawidłowe lub dostawca ActiveSync ma tymczasowy problem lub nie obsługuje funkcji automatycznego wykrywania."
@@ -249,7 +249,7 @@
         "message": "Użyj bezpiecznego połączenia (połącz przez https)"
     },
     "recyclebin": {
-        "message": " Kosz"
+        "message": "Kosz"
     },
     "servertype.auto": {
         "message": "Automatyczna konfiguracja"
