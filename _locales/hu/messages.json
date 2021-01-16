@@ -3,10 +3,10 @@
         "message": "Évforduló:"
     },
     "abCard.AssistantName": {
-        "message": "Segítő:"
+        "message": "Asszisztens:"
     },
     "abCard.AssistantPhoneNumber": {
-        "message": "Segítői telefon:"
+        "message": "Asszisztensi telefon:"
     },
     "abCard.Business2PhoneNumber": {
         "message": "2. munkahelyi telefon:"
@@ -48,7 +48,7 @@
         "message": "Irányítószám:"
     },
     "abCard.RadioPhoneNumber": {
-        "message": "Rádiótávbeszélő:"
+        "message": "Rádió-távbeszélő:"
     },
     "abCard.Spouse": {
         "message": "Házastárs:"
@@ -75,10 +75,10 @@
         "message": "További munkahelyi számok:"
     },
     "acl.readonly": {
-        "message": "Read-only server access (revert local changes)"
+        "message": "Csak olvasható hozzáférés (helyi változások visszavonása)"
     },
     "acl.readwrite": {
-        "message": "Read from and write to server"
+        "message": "Olvasás és írás a kiszolgálón"
     },
     "add.description": {
         "message": "Please select one of the available server configuration options and enter the requested details. "
@@ -93,28 +93,28 @@
         "message": "Jelszó:"
     },
     "add.server": {
-        "message": "Kiszolgáló beállítások:"
+        "message": "Kiszolgálóbeállítások:"
     },
     "add.shortdescription": {
-        "message": "Fiók adatait"
+        "message": "Fiókadatok"
     },
     "add.title": {
-        "message": "Exchange ActiveSync-fiók hozzáadása a Thunderbird-összehangoláshoz"
+        "message": "Exchange ActiveSync-fiók hozzáadása a TbSynchez"
     },
     "add.url": {
         "message": "Kiszolgáló címe:"
     },
     "add.urldescription": {
-        "message": "Megfelelőnek kell lennie ahhoz, hogy csak az alapkiszolgáló címét adja meg (például: posta.kiszolgálód.hu). Azonban a teljes URL-címet is megadhatjuk (például: https://posta.kiszolgálód.hu/Microsoft-Server-ActiveSync)."
+        "message": "Elégséges, ha csak az alap kiszolgálócímet adja meg (például: posta.kiszolgálód.hu). De a teljes URL-t is megadhatja (például: https://posta.kiszolgálód.hu/Microsoft-Server-ActiveSync)."
     },
     "add.user": {
-        "message": "Felhasználónév (e-mail cím):"
+        "message": "Felhasználónév (e-mail-cím):"
     },
     "autocomplete.serverdirectory": {
-        "message": "global server directory"
+        "message": "globális kiszolgálójegyzék"
     },
     "autodiscover.Failed": {
-        "message": "A felhasználó <##user##> önműködő felderítése sikertelen. Vagy a megadott hitelesítő adatok hibásak voltak, vagy az ActiveSync szolgáltató ideiglenes problémát okozott, vagy nem támogatja az önműködő felderítést."
+        "message": "A(z) <##user##> felhasználó automatikus felderítése sikertelen. Vagy hibásak voltak a megadott hitelesítő adatok, vagy az ActiveSync szolgáltató ideiglenes problémákat tapasztal, vagy nem támogatja az automatikus felderítést."
     },
     "autodiscover.NeedEmail": {
         "message": "Az önműködő felismerésnek érvényes e-mail címnek kell lennie felhasználói névként."
@@ -141,10 +141,10 @@
         "message": "Kérjük, törölje le a(z) „##replace.1##” mappát, mielőtt megpróbálnánk kuka ürítése."
     },
     "extensionDescription": {
-        "message": "Az Exchange ActiveSync-fiókok összehangolás támogatásának hozzáadása a Thunderbird-összehangoláshoz (TbSync) (névjegyzék, feladatok és naptárak)."
+        "message": "Az Exchange ActiveSync-fiókok szinkronizálásának támogatása a TbSyncben (névjegyek, feladatok és naptárak)."
     },
     "extensionName": {
-        "message": "Az Exchange ActiveSync szolgáltató"
+        "message": "Exchange ActiveSync-szolgáltató"
     },
     "helplink.BadItemSkipped": {
         "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
@@ -156,22 +156,22 @@
         "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
     },
     "manager.tabs.accountsettings": {
-        "message": "Fiók beállításai"
+        "message": "Fiókbeállítások"
     },
     "manager.tabs.outOfOffice": {
-        "message": "Önműködő válasz"
+        "message": "Automatikus válasz"
     },
     "manager.tabs.syncsettings": {
         "message": "Beállítások"
     },
     "newaccount.add_auto": {
-        "message": "Az önműködő felismerés beállításai és fiók hozzáadása"
+        "message": "Automatikus felfedezés beállításai és fiók hozzáadása"
     },
     "newaccount.add_custom": {
         "message": "Fiók hozzáadása"
     },
     "pref.AccountName": {
-        "message": "Fióknév"
+        "message": "Leírás"
     },
     "pref.ActiveSyncVersion": {
         "message": "ActiveSync verzió"
@@ -192,7 +192,7 @@
         "message": "Felhasználónév"
     },
     "pref.UserNameDescription": {
-        "message": "A felhasználónév általában a fiókod e-mail címe."
+        "message": "A felhasználónév általában a fiókja e-mail-címe."
     },
     "pref.autodetect": {
         "message": "az elérhető legjobb"
@@ -201,16 +201,16 @@
         "message": "Születésnapi információk küldése"
     },
     "pref.calendaroptions": {
-        "message": "Naptárbeállítások"
+        "message": "Naptár beállításai"
     },
     "pref.contactoptions": {
-        "message": "Kapcsolat opciók"
+        "message": "Névjegyzék beállításai"
     },
     "pref.displayoverride": {
-        "message": "A megjelenítési név felülbírálása „keresztnév” és „második keresztnév”"
+        "message": "Megjelenítési név felülbírálása ezzel: „keresztnév” + „második keresztnév”"
     },
     "pref.galautocomplete": {
-        "message": "A globális címjegyzékből (GAL) kapott eredményeket e-mailben töltse ki automatikusan"
+        "message": "A globális címjegyzékből (GAL) kapott eredmények használata az e-mailek automatikus kitöltésekor"
     },
     "pref.generaloptions": {
         "message": "Általános beállítások"
@@ -222,7 +222,7 @@
         "message": "Vessző"
     },
     "pref.seperator.description": {
-        "message": "Több címsort tartalmazó elválasztó."
+        "message": "A többsoros címmező elválasztója."
     },
     "pref.seperator.linebreak": {
         "message": "Sortörés"
@@ -243,19 +243,19 @@
         "message": "mindent"
     },
     "pref.synclimit.description": {
-        "message": "Szinkronizálási időszak:"
+        "message": "Szinkronizálási időszak: "
     },
     "pref.usehttps": {
-        "message": "Biztonságos kapcsolat használata (https-kapcsolaton keresztül)"
+        "message": "Biztonságos kapcsolat használata (kapcsolódás https-n keresztül)"
     },
     "recyclebin": {
         "message": "Kuka"
     },
     "servertype.auto": {
-        "message": "Automatic configuration"
+        "message": "Automatikus beállítás"
     },
     "servertype.custom": {
-        "message": "Egyéni beállítások"
+        "message": "Egyéni beállítás"
     },
     "servertype.description.auto": {
         "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
@@ -270,13 +270,13 @@
         "message": "Microsoft Office 365"
     },
     "servertype.unlock": {
-        "message": "Dupla kattintson az összes előre meghatározott kiszolgáló beállításának feloldásához."
+        "message": "Kattintson duplán az összes előre megadott kiszolgálóbeállítás feloldásához."
     },
     "status.401": {
-        "message": "Nem sikerült hitelesíteni, ellenőrizni a felhasználónevet és a jelszót (401-es HTTP-hiba)."
+        "message": "A hitelesítés nem sikerült, ellenőrizze a felhasználónevet és a jelszót (401-es HTTP-hiba)."
     },
     "status.403": {
-        "message": "Kiszolgáló elutasította a kapcsolatot (tiltott) (403-ás HTTP-hiba)."
+        "message": "A kiszolgáló elutasította a kapcsolatot (403-as HTTP-hiba)."
     },
     "status.404": {
         "message": "A felhasználó nem található (404-es HTTP-hiba)."
@@ -291,7 +291,7 @@
         "message": "A szolgáltatás nem elérhető (503-ás HTTP-hiba)."
     },
     "status.BadItemSkipped": {
-        "message": "Bad Item Skipped: ##replace.1##"
+        "message": "Hibás elem kihagyva: ##replace.1##"
     },
     "status.FolderDelete.3": {
         "message": "Nem lehet törölni egy rendszermappát."
@@ -363,7 +363,7 @@
         "message": "A kérésben megadott XML nem követi a egyezménykövetelményeket (103-ás HTTP-hiba)."
     },
     "status.global.110": {
-        "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
+        "message": "A kiszolgáló belső hibát jelentett, és nem szabad azonnal újrapróbálkozni. Az automatikus szinkronizálás 30 percre felfüggesztésre került (110-es EAS hiba)."
     },
     "status.global.clientdenied": {
         "message": "Az EAS kiszolgáló jelentése <##replace.2##> (állapota ##replace.1##), és nem engedélyezi a Thunderbird-összehangolás számára a fiók elérését."
