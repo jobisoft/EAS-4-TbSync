@@ -81,7 +81,7 @@
         "message": "Olvasás és írás a kiszolgálón"
     },
     "add.description": {
-        "message": "Please select one of the available server configuration options and enter the requested details. "
+        "message": "Válasszon az elérhető kiszolgálóbeállítások közül, és adja meg a kért részleteket. "
     },
     "add.name": {
         "message": "Felhasználónév:"
@@ -216,7 +216,7 @@
         "message": "Általános beállítások"
     },
     "pref.provision": {
-        "message": "Ellátás végrehajtása (Kerio követelmény)"
+        "message": "Lekötés megkövetelése (a Kerio követelménye)"
     },
     "pref.seperator.comma": {
         "message": "Vessző"
@@ -258,13 +258,13 @@
         "message": "Egyéni beállítás"
     },
     "servertype.description.auto": {
-        "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
+        "message": "Számos ActiveSync-kiszolgáló beállítása automatikusan felfedezhető pusztán az e-mail-címe megadásával."
     },
     "servertype.description.custom": {
-        "message": "Setup your account by manually providing the address of the server you want to connect."
+        "message": "Fiók beállítása a használandó kiszolgáló címének kézi megadásával."
     },
     "servertype.description.office365": {
-        "message": "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA)."
+        "message": "Az Office 365-höz kapcsolódó fiókok az OAuth 2.0 nevű modern hitelesítési folyamatot használják, amely támogatja a többfaktoros hitelesítést (MFA) is."
     },
     "servertype.office365": {
         "message": "Microsoft Office 365"
@@ -282,7 +282,7 @@
         "message": "A felhasználó nem található (404-es HTTP-hiba)."
     },
     "status.449": {
-        "message": "Kiszolgáló kérések készítése (449-es HTTP-hiba)."
+        "message": "A kiszolgáló lekötést két (449-es HTTP-hiba)."
     },
     "status.500": {
         "message": "Ismeretlen kiszolgálóhiba (500-as HTTP-hiba)."
@@ -405,19 +405,19 @@
         "message": "Várakozás a szinkronizálásra"
     },
     "status.policy.2": {
-        "message": "Nincs házirend ehhez a klienshez. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+        "message": "Nincs házirend ehhez a klienshez. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiók lekötését."
     },
     "status.policy.3": {
-        "message": "Ismeretlen házirendtípus érték. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+        "message": "Ismeretlen házirendtípus érték. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiók lekötését."
     },
     "status.policy.4": {
-        "message": "A kiszolgáló házirendadatai sérültek (esetleg meghamisították). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+        "message": "A kiszolgáló házirendadatai sérültek (esetleg meghamisították). Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiók lekötését."
     },
     "status.policy.5": {
-        "message": "A kliens nyugtázza a hibás házirendkulcsot. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiókhoz való hozzáférést."
+        "message": "A kliens nyugtázza a hibás házirendkulcsot. Vegye fel a kapcsolatot a kiszolgáló rendszergazdájával, vagy tiltsa le a fiók lekötését."
     },
     "status.provision": {
-        "message": "A hozzáférés sikertelen, állapot: <##replace.1##>"
+        "message": "A lekötés sikertelen, állapot: <##replace.1##>"
     },
     "status.response-contains-no-data": {
         "message": "A kiszolgáló válasza nem tartalmaz adatokat."
@@ -474,7 +474,7 @@
         "message": "A kiszolgáló beállításainak feldolgozása"
     },
     "syncstate.eval.response.provision": {
-        "message": "Feldolgozási rendelkezés"
+        "message": "Lekötés feldolgozása"
     },
     "syncstate.eval.response.remotechanges": {
         "message": "A távoli módosítások feldolgozása"
@@ -510,7 +510,7 @@
         "message": "A kiszolgálóbeállítások kérése"
     },
     "syncstate.prepare.request.provision": {
-        "message": "A rendelkezés igénylése"
+        "message": "Lekötés kérése"
     },
     "syncstate.prepare.request.remotechanges": {
         "message": "Távoli módosítások kérése"
@@ -549,7 +549,7 @@
         "message": "Várakozás a kiszolgálóbeállításokra"
     },
     "syncstate.send.request.provision": {
-        "message": "Várakozás a rendelkezésre"
+        "message": "Várakozás a lekötésre"
     },
     "syncstate.send.request.remotechanges": {
         "message": "Várakozás a távoli módosításokra"
