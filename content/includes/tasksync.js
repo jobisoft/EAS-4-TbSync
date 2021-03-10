@@ -63,14 +63,38 @@ var Tasks = {
         eas.sync.mapEasPropertyToThunderbird ("Sensitivity", "CLASS", data, item);
         eas.sync.mapEasPropertyToThunderbird ("Importance", "PRIORITY", data, item);
 
+        let msTodoCompat = eas.prefs.getBoolPref("msTodoCompat");
+        
         item.clearAlarms();
-        if (data.ReminderSet && data.ReminderTime && data.UtcStartDate) {        
-            let UtcDate = eas.tools.createDateTime(data.UtcStartDate);
+        if (data.ReminderSet && data.ReminderTime) {
             let UtcAlarmDate = eas.tools.createDateTime(data.ReminderTime);
             let alarm = cal.createAlarm();
-            alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START; //TB saves new alarms as offsets, so we add them as such as well
-            alarm.offset = UtcAlarmDate.subtractDate(UtcDate);
             alarm.action = "DISPLAY";
+            
+            if (msTodoCompat)
+            {
+                // Microsoft To-Do only uses due dates (no start dates) an doesn't have a time part in the due date
+                // dirty hack: Use the reminder date as due date and set a reminder exactly to the due date
+                // drawback: only works if due date and reminder is set to the same day - this could maybe checked here but I don't know how
+                item.entryDate = UtcAlarmDate;
+                item.dueDate = UtcAlarmDate;
+                alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_END;
+                alarm.offset = TbSync.lightning.cal.createDuration();
+                alarm.offset.inSeconds = 0;
+            }
+            else if (data.UtcStartDate)
+            {
+                let UtcDate = eas.tools.createDateTime(data.UtcStartDate);
+                alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START;
+		alarm.offset = UtcAlarmDate.subtractDate(UtcDate);
+            }
+            else
+            {
+                // Alternative solution for Microsoft To-Do:
+                // alarm correctly set but because time part of due date is always "0:00", all tasks for today are shown as overdue
+                alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_ABSOLUTE;
+                alarm.alarmDate = UtcAlarmDate;
+            }
             item.addAlarm(alarm);
         }
         
