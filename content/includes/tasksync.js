@@ -78,7 +78,7 @@ var Tasks = {
                 // drawback: only works if due date and reminder is set to the same day - this could maybe checked here but I don't know how
                 item.entryDate = UtcAlarmDate;
                 item.dueDate = UtcAlarmDate;
-                alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_END;
+                alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START;
                 alarm.offset = TbSync.lightning.cal.createDuration();
                 alarm.offset.inSeconds = 0;
             }
@@ -86,7 +86,7 @@ var Tasks = {
             {
                 let UtcDate = eas.tools.createDateTime(data.UtcStartDate);
                 alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START;
-		alarm.offset = UtcAlarmDate.subtractDate(UtcDate);
+                alarm.offset = UtcAlarmDate.subtractDate(UtcDate);
             }
             else
             {
