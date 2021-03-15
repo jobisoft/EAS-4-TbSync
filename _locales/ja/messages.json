@@ -126,10 +126,10 @@
         "message": "設定を検索中…"
     },
     "config.auto": {
-        "message": "ActiveSync server configuration (Autodiscover)"
+        "message": "ActiveSync サーバー設定 (自動検出)"
     },
     "config.custom": {
-        "message": "ActiveSync server configuration"
+        "message": "ActiveSync サーバー設定"
     },
     "deletefolder.confirm": {
         "message": "本当にごみ箱からフォルダ '## replace.1 ##' を完全に削除しますか？"
@@ -249,7 +249,7 @@
         "message": "安全な接続を利用する (https を使用して接続)"
     },
     "recyclebin": {
-        "message": "ごみ箱"
+        "message": "Trash"
     },
     "servertype.auto": {
         "message": "自動設定"
