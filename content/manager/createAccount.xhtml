@@ -50,36 +50,29 @@
                 </richlistitem>        
             </richlistbox>
 
-            <grid style="margin-top:1em">
-                <columns>
-                    <column flex="1" />
-                    <column flex="2" />
-                </columns>
-                <rows>
-                    <row>
-                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.name__" /></vbox>
-                        <html:input id="tbsync.newaccount.name" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
-                    </row>
-                    <row id="tbsync.newaccount.user.box">
-                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.user__" /></vbox>
-                        <html:input id="tbsync.newaccount.user" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
-                    </row>
-                    <row id="tbsync.newaccount.password.box">
-                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.password__" /></vbox>
-                        <html:input id="tbsync.newaccount.password" type="password" oninput="tbSyncEasNewAccount.onUserTextInput();"/>
-                    </row>
-                    <row id="tbsync.newaccount.url.box">
-                        <vbox pack="center"><label value="__EAS4TBSYNCMSG_add.url__" /></vbox>
-                        <html:input id="tbsync.newaccount.url" oninput="tbSyncEasNewAccount.onUserTextInput();" tooltiptext="__EAS4TBSYNCMSG_add.urldescription__"/>
-                    </row>
+            <html:table style="margin-top:1em">
+                <html:tr>
+                    <html:td width="33%"><vbox pack="center"><label value="__EAS4TBSYNCMSG_add.name__" /></vbox></html:td>
+                    <html:td width="67%"><html:input id="tbsync.newaccount.name" oninput="tbSyncEasNewAccount.onUserTextInput();"/></html:td>
+                </html:tr>
+                <html:tr id="tbsync.newaccount.user.box">
+                    <html:td><vbox pack="center"><label value="__EAS4TBSYNCMSG_add.user__" /></vbox></html:td>
+                    <html:td><html:input id="tbsync.newaccount.user" oninput="tbSyncEasNewAccount.onUserTextInput();"/></html:td>
+                </html:tr>
+                <html:tr id="tbsync.newaccount.password.box">
+                    <html:td><vbox pack="center"><label value="__EAS4TBSYNCMSG_add.password__" /></vbox></html:td>
+                    <html:td><html:input id="tbsync.newaccount.password" type="password" oninput="tbSyncEasNewAccount.onUserTextInput();"/></html:td>
+                </html:tr>
+                <html:tr id="tbsync.newaccount.url.box">
+                    <html:td><vbox pack="center"><label value="__EAS4TBSYNCMSG_add.url__" /></vbox></html:td>
+                    <html:td><html:input id="tbsync.newaccount.url" oninput="tbSyncEasNewAccount.onUserTextInput();" tooltiptext="__EAS4TBSYNCMSG_add.urldescription__"/></html:td>
+                </html:tr>
 
-                    <!--row style="height:40px; margin-top:1ex;margin-bottom:1ex;">
-                        <vbox pack="center"></vbox>
-                        <vbox pack="center"></vbox>
-                    </row-->
-
-                </rows>
-            </grid>
+                <!--html:tr style="height:40px; margin-top:1ex;margin-bottom:1ex;">
+                    <html:td><vbox pack="center"></vbox></html:td>
+                    <html:td><vbox pack="center"></vbox></html:td>
+                </html:tr-->
+            </html:table>
 
             <vbox flex="1">
             </vbox>
