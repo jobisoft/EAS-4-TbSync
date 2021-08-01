@@ -54,8 +54,7 @@ var tools = {
     
     getUriFromDirectoryId: function(ownerId) {
         let directories = MailServices.ab.directories;
-        while (directories.hasMoreElements()) {
-          let directory = directories.getNext();
+        for (let directory of directories) {
           if (directory instanceof Components.interfaces.nsIAbDirectory) {
                 if (ownerId.startsWith(directory.dirPrefId)) return directory.URI;
           }
