@@ -144,8 +144,8 @@ var tbSyncAbServerSearch = {
 
       try {
         let oldresults = addressbook.getCardsFromProperty("X-Server-Searchresult", "TbSync/EAS", true);
-        while (oldresults.hasMoreElements()) {
-          let card = new TbSync.addressbook.AbItem(abDirectory, oldresults.getNext().QueryInterface(Components.interfaces.nsIAbCard));
+        for (let oldresult of oldresults) {
+          let card = new TbSync.addressbook.AbItem(abDirectory, oldresult);
           abDirectory.deleteItem(card);
         }
       } catch (e) {
