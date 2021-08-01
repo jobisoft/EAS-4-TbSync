@@ -408,17 +408,5 @@ var Calendar = {
         //TbSync.dump("ALARM ("+i+")", [, alarms[i].related, alarms[i].repeat, alarms[i].repeatOffset, alarms[i].repeatDate, alarms[i].action].join("|"));
 
         return wbxml.getBytes();
-    }
-    
-    
-        /*
-        //loop over all properties
-        let propEnum = item.propertyEnumerator;
-        while (propEnum.hasMoreElements()) {
-            let prop = propEnum.getNext().QueryInterface(Components.interfaces.nsIProperty);
-            let pname = prop.name;
-            TbSync.dump("PROP", pname + " = " + prop.value);
-        }
-        */
-    
+    }    
 }
