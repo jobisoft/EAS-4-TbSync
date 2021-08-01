@@ -2,13 +2,12 @@
   "applications": {
     "gecko": {
       "id": "eas4tbsync@jobisoft.de",
-      "strict_min_version": "78.0",
-      "strict_max_version": "78.*"
+      "strict_min_version": "91.0a1"
     }
   },
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "version": "1.20.1",
+  "version": "2.0",
   "author": "John Bieling",
   "homepage_url": "https://github.com/jobisoft/EAS-4-TbSync/",
   "default_locale": "en-US",
