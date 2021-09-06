@@ -54,8 +54,7 @@ var tools = {
     
     getUriFromDirectoryId: function(ownerId) {
         let directories = MailServices.ab.directories;
-        while (directories.hasMoreElements()) {
-          let directory = directories.getNext();
+        for (let directory of directories) {
           if (directory instanceof Components.interfaces.nsIAbDirectory) {
                 if (ownerId.startsWith(directory.dirPrefId)) return directory.URI;
           }
@@ -84,7 +83,7 @@ var tools = {
                                  null,
                                  Services.scriptSecurityManager.getSystemPrincipal(),
                                  null,
-                                 Components.interfaces.nsILoadInfo.SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
+                                 Components.interfaces.nsILoadInfo.SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT,
                                  Components.interfaces.nsIContentPolicy.TYPE_OTHER);
 
             NetUtil.asyncFetch(channel, (inputStream, status) => {

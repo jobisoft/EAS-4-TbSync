@@ -22,42 +22,56 @@
     <tabpanel id="manager.tabpanels.accountsettings" appendto="manager.tabpanels" flex="1" orient="vertical"><!-- ACCOUNT SETTINGS -->
           <vbox flex="1">
                 <label class="header lockIfConnected" style="margin-left:0; margin-bottom:1ex;" value="" id="tbsync.accountsettings.label.config" />                
-                <grid flex="1">
-                   <columns>
-                        <column flex="0" style="margin-right:1ex;" />
-                        <column flex="1" />
-                   </columns>
-
-                    <rows>
-                        <row>
+                <html:table flex="1">
+                    <html:tr>
+                        <html:td style="margin-right:1ex;">
                             <vbox pack="center">
                                 <label style="text-align:left" control="tbsync.accountsettings.pref.accountname" value="__EAS4TBSYNCMSG_pref.AccountName__" />
                             </vbox>
+                        </html:td>
+                        <html:td width="100%">
                             <html:input id="tbsync.accountsettings.pref.accountname" />
-                        </row>
-                        
-                        <row>
+                        </html:td>
+                    </html:tr>
+                    
+                    <html:tr>
+                        <html:td style="margin-right:1ex;" >
                             <vbox pack="center">
                                 <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.user" value="__EAS4TBSYNCMSG_pref.UserName__" />
                             </vbox>
+                        </html:td>
+                        <html:td>
                             <html:input class="lockIfConnected" tooltiptext="__EAS4TBSYNCMSG_pref.UserNameDescription__" id="tbsync.accountsettings.pref.user" />
-                        </row>
-                        
-                        <row>
+                        </html:td>
+                    </html:tr>
+                    
+                    <html:tr>
+                        <html:td style="margin-right:1ex;" >
                             <vbox pack="center">
                                 <label class="lockIfConnected" style="text-align:left" control="tbsync.accountsettings.pref.host" value="__EAS4TBSYNCMSG_pref.ServerName__" />
                             </vbox>
+                        </html:td>
+                        <html:td>
                             <html:input class="lockIfConnected"  tooltiptext="__EAS4TBSYNCMSG_pref.ServerNameDescription__" id="tbsync.accountsettings.pref.host" onblur="tbSyncEditAccountOverlay.stripHost(document);" />
-                        </row>
-                        <row>
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td style="margin-right:1ex;" >
                             <hbox/>
+                        </html:td>
+                        <html:td>
                             <checkbox class="lockIfConnected" style="margin-bottom:1ex" id="tbsync.accountsettings.pref.https" label="__EAS4TBSYNCMSG_pref.usehttps__"  />
-                        </row>
-                        
-                        <row>
+                        </html:td>
+                    </html:tr>
+                    
+                    <html:tr>
+                        <html:td style="margin-right:1ex;" >
                             <vbox id="asversion.hook" pack="center">
                                 <label class="lockIfConnected"  style="text-align:left" control="tbsync.accountsettings.pref.asversionselected" value="__EAS4TBSYNCMSG_pref.ActiveSyncVersion__" />
                             </vbox>
+                        </html:td>
+                        <html:td>
                             <menulist flex="0" id="tbsync.accountsettings.pref.asversionselected" class="lockIfConnected">
                                 <menupopup id="asversion.popup">
                                     <menuitem label="__EAS4TBSYNCMSG_pref.autodetect__" value="auto" />
@@ -65,13 +79,18 @@
                                     <menuitem label="v14.0" value="14.0" />
                                 </menupopup>
                             </menulist>
-                        </row>
-                        <row>
+                        </html:td>
+                    </html:tr>
+
+                    <html:tr>
+                        <html:td style="margin-right:1ex;" >
                             <label class="lockIfConnected" style="text-align:left" value="__EAS4TBSYNCMSG_pref.DeviceId__" />
+                        </html:td>
+                        <html:td>
                             <label value="" disabled="true" id="tbsync.accountsettings.pref.deviceId" />
-                        </row>
-                   </rows>
-                </grid>
+                        </html:td>
+                    </html:tr>
+                </html:table>
 
                 <vbox flex="1" />
                 <vbox class="showIfConnected">

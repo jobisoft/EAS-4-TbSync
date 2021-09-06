@@ -68,7 +68,7 @@ var Tasks = {
         item.clearAlarms();
         if (data.ReminderSet && data.ReminderTime) {
             let UtcAlarmDate = eas.tools.createDateTime(data.ReminderTime);
-            let alarm = cal.createAlarm();
+            let alarm = new CalAlarm();
             alarm.action = "DISPLAY";
             
             if (msTodoCompat)
@@ -168,7 +168,7 @@ var Tasks = {
         //Complete
         if (item.isCompleted) {
                 wbxml.atag("Complete", "1");
-                wbxml.atag("DateCompleted", eas.tools.getIsoUtcString(item.completedDate, true));		
+                wbxml.atag("DateCompleted", eas.tools.getIsoUtcString(item.completedDate, true));   
         } else {
                 wbxml.atag("Complete", "0");
         }

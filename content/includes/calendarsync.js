@@ -6,7 +6,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
  */
  
- "use strict";
+"use strict";
+
+var { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+ CalAlarm: "resource:///modules/CalAlarm.jsm",
+ CalAttachment: "resource:///modules/CalAttachment.jsm",
+ CalAttendee: "resource:///modules/CalAttendee.jsm",
+ CalEvent: "resource:///modules/CalEvent.jsm",
+ CalTodo: "resource:///modules/CalTodo.jsm",
+}); 
 
 const cal = TbSync.lightning.cal;
 const ICAL = TbSync.lightning.ICAL;
@@ -70,7 +80,7 @@ var Calendar = {
         //EAS Reminder
         item.clearAlarms();
         if (data.Reminder && data.StartTime) {
-            let alarm = cal.createAlarm();
+            let alarm = new CalAlarm();
             alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START;
             alarm.offset = cal.createDuration();
             alarm.offset.inSeconds = (0-parseInt(data.Reminder)*60);
@@ -103,7 +113,7 @@ var Calendar = {
             for (let i = 0; i < att.length; i++) {
                 if (att[i].Email && eas.tools.isString(att[i].Email) && att[i].Name) { //req.
 
-                    let attendee = cal.createAttendee();
+                    let attendee = new CalAttendee();
 
                     //is this attendee the local EAS user?
                     let isSelf = (att[i].Email == syncdata.accountData.getAccountProperty("user"));
@@ -151,7 +161,7 @@ var Calendar = {
         
         if (data.OrganizerName && data.OrganizerEmail && eas.tools.isString(data.OrganizerEmail)) {
             //Organizer
-            let organizer = cal.createAttendee();
+            let organizer = new CalAttendee();
             organizer.id = cal.email.prependMailTo(data.OrganizerEmail);
             organizer.commonName = data.OrganizerName;
             organizer.rsvp = "FALSE";
@@ -408,17 +418,5 @@ var Calendar = {
         //TbSync.dump("ALARM ("+i+")", [, alarms[i].related, alarms[i].repeat, alarms[i].repeatOffset, alarms[i].repeatDate, alarms[i].action].join("|"));
 
         return wbxml.getBytes();
-    }
-    
-    
-        /*
-        //loop over all properties
-        let propEnum = item.propertyEnumerator;
-        while (propEnum.hasMoreElements()) {
-            let prop = propEnum.getNext().QueryInterface(Components.interfaces.nsIProperty);
-            let pname = prop.name;
-            TbSync.dump("PROP", pname + " = " + prop.value);
-        }
-        */
-    
+    }    
 }

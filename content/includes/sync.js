@@ -6,7 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
  */
  
- "use strict";
+"use strict";
+
+var { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+    CalRecurrenceInfo: "resource:///modules/CalRecurrenceInfo.jsm",
+}); 
 
 // - https://dxr.mozilla.org/comm-central/source/calendar/base/public/calIEvent.idl
 // - https://dxr.mozilla.org/comm-central/source/calendar/base/public/calIItemBase.idl
@@ -1205,7 +1211,7 @@ wbxml.ctag();*/
     //item is a native lightning item
     setItemRecurrence: function (item, syncData, data, timezone) {
         if (data.Recurrence) {
-            item.recurrenceInfo = TbSync.lightning.cal.createRecurrenceInfo();
+            item.recurrenceInfo = new CalRecurrenceInfo();
             item.recurrenceInfo.item = item;
             let recRule = TbSync.lightning.cal.createRecurrenceRule();
             switch (data.Recurrence.Type) {
