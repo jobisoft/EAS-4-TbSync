@@ -8,6 +8,16 @@
  
  "use strict";
 
+var { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+ CalAlarm: "resource:///modules/CalAlarm.jsm",
+ CalAttachment: "resource:///modules/CalAttachment.jsm",
+ CalAttendee: "resource:///modules/CalAttendee.jsm",
+ CalEvent: "resource:///modules/CalEvent.jsm",
+ CalTodo: "resource:///modules/CalTodo.jsm",
+}); 
+
 var Tasks = {
 
     // --------------------------------------------------------------------------- //
