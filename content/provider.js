@@ -38,7 +38,6 @@ var Base = class {
         let branch = Services.prefs.getDefaultBranch("extensions.eas4tbsync.");
         branch.setIntPref("timeout", 90000);
         branch.setIntPref("maxitems", 50);
-        branch.setBoolPref("msTodoCompat", false);
         branch.setCharPref("clientID.type", "TbSync");
         branch.setCharPref("clientID.useragent", "Thunderbird ActiveSync");    
 
