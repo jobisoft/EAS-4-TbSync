@@ -1,36 +1,36 @@
 {
     "abCard.Anniversary": {
-        "message": "Anniversary:"
+        "message": "Aniversario:"
     },
     "abCard.AssistantName": {
-        "message": "Assistant:"
+        "message": "Asistente:"
     },
     "abCard.AssistantPhoneNumber": {
-        "message": "Assistant Phone:"
+        "message": "Teléfono do asistente:"
     },
     "abCard.Business2PhoneNumber": {
-        "message": "Work Alternative Phone:"
+        "message": "Teléfono alternativo do traballo:"
     },
     "abCard.BusinessFaxNumber": {
-        "message": "Work Fax:"
+        "message": "Fax do traballo:"
     },
     "abCard.CarPhoneNumber": {
-        "message": "Car Phone:"
+        "message": "Teléfono do coche:"
     },
     "abCard.CompanyMainPhone": {
-        "message": "Work Main Phone:"
+        "message": "Teléfono principal do traballo:"
     },
     "abCard.Email3Address": {
-        "message": "Alternative Email:"
+        "message": "Correo electrónico alternativo:"
     },
     "abCard.Home2PhoneNumber": {
-        "message": "Home Alternative Phone:"
+        "message": "Teléfono de casa alternativo:"
     },
     "abCard.ManagerName": {
-        "message": "Manager:"
+        "message": "Supervisor:"
     },
     "abCard.MiddleName": {
-        "message": "Middle name:"
+        "message": "Segundo nome:"
     },
     "abCard.OtherAddress": {
         "message": "Address:"
