@@ -1,0 +1,569 @@
+{
+    "abCard.Anniversary": {
+        "message": "Anniversary:"
+    },
+    "abCard.AssistantName": {
+        "message": "Assistant:"
+    },
+    "abCard.AssistantPhoneNumber": {
+        "message": "Assistant Phone:"
+    },
+    "abCard.Business2PhoneNumber": {
+        "message": "Work Alternative Phone:"
+    },
+    "abCard.BusinessFaxNumber": {
+        "message": "Work Fax:"
+    },
+    "abCard.CarPhoneNumber": {
+        "message": "Car Phone:"
+    },
+    "abCard.CompanyMainPhone": {
+        "message": "Work Main Phone:"
+    },
+    "abCard.Email3Address": {
+        "message": "Alternative Email:"
+    },
+    "abCard.Home2PhoneNumber": {
+        "message": "Home Alternative Phone:"
+    },
+    "abCard.ManagerName": {
+        "message": "Manager:"
+    },
+    "abCard.MiddleName": {
+        "message": "Middle name:"
+    },
+    "abCard.OtherAddress": {
+        "message": "Address:"
+    },
+    "abCard.OtherCity": {
+        "message": "City:"
+    },
+    "abCard.OtherCountry": {
+        "message": "Country:"
+    },
+    "abCard.OtherState": {
+        "message": "State:"
+    },
+    "abCard.OtherZip": {
+        "message": "ZIP Code:"
+    },
+    "abCard.RadioPhoneNumber": {
+        "message": "Radio Phone:"
+    },
+    "abCard.Spouse": {
+        "message": "Spouse:"
+    },
+    "abCard.header.eas": {
+        "message": "Other Fields (EAS)"
+    },
+    "abCard.header.homenumbers": {
+        "message": "Additional home numbers:"
+    },
+    "abCard.header.messaging": {
+        "message": "Messaging:"
+    },
+    "abCard.header.otheraddress": {
+        "message": "Other Address (EAS)"
+    },
+    "abCard.header.othernumbers": {
+        "message": "Additional numbers:"
+    },
+    "abCard.header.people": {
+        "message": "People:"
+    },
+    "abCard.header.worknumbers": {
+        "message": "Additional work numbers:"
+    },
+    "acl.readonly": {
+        "message": "Read-only server access (revert local changes)"
+    },
+    "acl.readwrite": {
+        "message": "Read from and write to server"
+    },
+    "add.description": {
+        "message": "Please select one of the available server configuration options and enter the requested details. "
+    },
+    "add.name": {
+        "message": "Account name:"
+    },
+    "add.ok": {
+        "message": "Add account"
+    },
+    "add.password": {
+        "message": "Password:"
+    },
+    "add.server": {
+        "message": "Server configuration:"
+    },
+    "add.shortdescription": {
+        "message": "Account information"
+    },
+    "add.title": {
+        "message": "Adding an Exchange ActiveSync account to TbSync"
+    },
+    "add.url": {
+        "message": "Server address:"
+    },
+    "add.urldescription": {
+        "message": "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync)."
+    },
+    "add.user": {
+        "message": "User name (email address):"
+    },
+    "autocomplete.serverdirectory": {
+        "message": "global server directory"
+    },
+    "autodiscover.Failed": {
+        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
+    },
+    "autodiscover.NeedEmail": {
+        "message": "Autodiscover needs a valid email address as user name."
+    },
+    "autodiscover.Ok": {
+        "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
+    },
+    "autodiscover.Querying": {
+        "message": "Searching for settings…"
+    },
+    "config.auto": {
+        "message": "ActiveSync server configuration (Autodiscover)"
+    },
+    "config.custom": {
+        "message": "ActiveSync server configuration"
+    },
+    "deletefolder.confirm": {
+        "message": "Do you really want to PERMANENTLY PURGE folder “##replace.1##” from trash?"
+    },
+    "deletefolder.menuentry": {
+        "message": "Permanently purge folder “##replace.1##” from trash"
+    },
+    "deletefolder.notallowed": {
+        "message": "Please unsubscribe folder “##replace.1##” before trying to purge it from trash."
+    },
+    "extensionDescription": {
+        "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
+    },
+    "extensionName": {
+        "message": "Provider for Exchange ActiveSync"
+    },
+    "helplink.BadItemSkipped": {
+        "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
+    },
+    "helplink.global.clientdenied": {
+        "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/What-if-TbSync-is-blocked-by-my-server%3F"
+    },
+    "helplink.security": {
+        "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
+    },
+    "manager.tabs.accountsettings": {
+        "message": "Account settings"
+    },
+    "manager.tabs.outOfOffice": {
+        "message": "Auto responder"
+    },
+    "manager.tabs.syncsettings": {
+        "message": "Options"
+    },
+    "newaccount.add_auto": {
+        "message": "Autodiscover settings and add account"
+    },
+    "newaccount.add_custom": {
+        "message": "Add account"
+    },
+    "pref.AccountName": {
+        "message": "Description"
+    },
+    "pref.ActiveSyncVersion": {
+        "message": "ActiveSync version"
+    },
+    "pref.DeviceId": {
+        "message": "ActiveSync device ID"
+    },
+    "pref.ServerName": {
+        "message": "Server address"
+    },
+    "pref.ServerNameDescription": {
+        "message": "e.g. mail.yourserver.com"
+    },
+    "pref.ShowTrashedFolders": {
+        "message": "Show folders found in trash"
+    },
+    "pref.UserName": {
+        "message": "User name"
+    },
+    "pref.UserNameDescription": {
+        "message": "User name is usually the email address of your account."
+    },
+    "pref.autodetect": {
+        "message": "best available"
+    },
+    "pref.birthday": {
+        "message": "Send birthday information"
+    },
+    "pref.calendaroptions": {
+        "message": "Calendar options"
+    },
+    "pref.contactoptions": {
+        "message": "Contact options"
+    },
+    "pref.displayoverride": {
+        "message": "Override Display Name with “First Name” + “Second Name”"
+    },
+    "pref.galautocomplete": {
+        "message": "Include results from global address book (GAL) in email autocompletion"
+    },
+    "pref.generaloptions": {
+        "message": "General options"
+    },
+    "pref.provision": {
+        "message": "Enforce provisioning (required by Kerio)"
+    },
+    "pref.seperator.comma": {
+        "message": "Comma"
+    },
+    "pref.seperator.description": {
+        "message": "Separator for multiline address field."
+    },
+    "pref.seperator.linebreak": {
+        "message": "Line break"
+    },
+    "pref.synclimit.1month": {
+        "message": "from 4 weeks ago"
+    },
+    "pref.synclimit.2weeks": {
+        "message": "from 2 weeks ago"
+    },
+    "pref.synclimit.3month": {
+        "message": "from 3 months ago"
+    },
+    "pref.synclimit.6month": {
+        "message": "from 6 months ago"
+    },
+    "pref.synclimit.all": {
+        "message": "everything"
+    },
+    "pref.synclimit.description": {
+        "message": "Synchronization period: "
+    },
+    "pref.usehttps": {
+        "message": "Use secure connection (connect via https)"
+    },
+    "recyclebin": {
+        "message": "Trash"
+    },
+    "servertype.auto": {
+        "message": "Automatic configuration"
+    },
+    "servertype.custom": {
+        "message": "Custom configuration"
+    },
+    "servertype.description.auto": {
+        "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
+    },
+    "servertype.description.custom": {
+        "message": "Setup your account by manually providing the address of the server you want to connect."
+    },
+    "servertype.description.office365": {
+        "message": "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA)."
+    },
+    "servertype.office365": {
+        "message": "Microsoft Office 365"
+    },
+    "servertype.unlock": {
+        "message": "Double click to unlock all predefined server settings."
+    },
+    "status.401": {
+        "message": "Could not authenticate, check username and password (HTTP Error 401)."
+    },
+    "status.403": {
+        "message": "Server rejected connection (forbidden) (HTTP Error 403)."
+    },
+    "status.404": {
+        "message": "User not found (HTTP Error 404)."
+    },
+    "status.449": {
+        "message": "Server requests provisioning (HTTP Error 449)."
+    },
+    "status.500": {
+        "message": "Unknown Server Error (HTTP Error 500)."
+    },
+    "status.503": {
+        "message": "Service unavailable (HTTP Error 503)."
+    },
+    "status.BadItemSkipped": {
+        "message": "Bad Item Skipped: ##replace.1##"
+    },
+    "status.FolderDelete.3": {
+        "message": "Cannot delete a system folder (status 3)"
+    },
+    "status.FolderDelete.4": {
+        "message": "Folder does not exist (status 4), resyncing"
+    },
+    "status.FolderDelete.6": {
+        "message": "Command could not be completed, an error occurred on the server (status 6)"
+    },
+    "status.FolderDelete.9": {
+        "message": "Invalid synchronization key (status 9), resyncing"
+    },
+    "status.FolderSync.9": {
+        "message": "Invalid synchronization key (status 9), resyncing"
+    },
+    "status.InvalidServerOptions": {
+        "message": "The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually."
+    },
+    "status.OK": {
+        "message": "OK"
+    },
+    "status.ServerRejectedRequest": {
+        "message": "The EAS Server rejected the last request."
+    },
+    "status.ServerRejectedSomeItems": {
+        "message": "The EAS server did not accept ##replace.1## elements."
+    },
+    "status.Sync.12": {
+        "message": "Folder hierarchy changed (status 12), resyncing"
+    },
+    "status.Sync.3": {
+        "message": "Invalid synchronization key (status 3), resyncing"
+    },
+    "status.Sync.4": {
+        "message": "Malformed request (status 4)"
+    },
+    "status.Sync.5": {
+        "message": "Temporary server issues or invalid item (status 5)"
+    },
+    "status.Sync.6": {
+        "message": "Invalid item (status 6)"
+    },
+    "status.Sync.8": {
+        "message": "Object not found (status 8)"
+    },
+    "status.aborted": {
+        "message": "Not synchronized"
+    },
+    "status.disabled": {
+        "message": "Disabled"
+    },
+    "status.empty-response": {
+        "message": "Server sends unexpected empty response."
+    },
+    "status.forbiddenCalendarItemInTasksFolder": {
+        "message": "Forbidden calendar item in a task folder (please resort)"
+    },
+    "status.forbiddenTasksItemInCalendarFolder": {
+        "message": "Forbidden task item in a calendar folder (please resort)"
+    },
+    "status.global.101": {
+        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 101)."
+    },
+    "status.global.102": {
+        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 102)."
+    },
+    "status.global.103": {
+        "message": "The XML provided in the request does not follow the protocol requirements (EAS Error 103)."
+    },
+    "status.global.110": {
+        "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
+    },
+    "status.global.clientdenied": {
+        "message": "The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account."
+    },
+    "status.httperror": {
+        "message": "Communication error (HTTP status ##replace.1##)."
+    },
+    "status.invalid": {
+        "message": "Invalid server response (junk)."
+    },
+    "status.malformed-xml": {
+        "message": "Could not parse XML. Check event log for details."
+    },
+    "status.modified": {
+        "message": "Local modifications"
+    },
+    "status.network": {
+        "message": "Could not connect to server (##replace.1##)."
+    },
+    "status.networkerror": {
+        "message": "Could not connect to server."
+    },
+    "status.nosupportedeasversion": {
+        "message": "Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server."
+    },
+    "status.notargets": {
+        "message": "Aborting Sync, because sync targets could not be created."
+    },
+    "status.notsupportedeasversion": {
+        "message": "Server does not support selected ActiveSync v##replace.1## (only ##replace.2##)."
+    },
+    "status.notsyncronized": {
+        "message": "Account needs to be synchronized, at least one item is out of sync."
+    },
+    "status.nouserhost": {
+        "message": "Missing username and/or server. Please provide those values."
+    },
+    "status.pending": {
+        "message": "Waiting to be synchronized"
+    },
+    "status.policy.2": {
+        "message": "There is no policy for this client. Contact your server administrator or disable provisioning for this account."
+    },
+    "status.policy.3": {
+        "message": "Unknown PolicyType value. Contact your server administrator or disable provisioning for this account."
+    },
+    "status.policy.4": {
+        "message": "The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account."
+    },
+    "status.policy.5": {
+        "message": "The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account."
+    },
+    "status.provision": {
+        "message": "Provisioning failed with status <##replace.1##>"
+    },
+    "status.response-contains-no-data": {
+        "message": "Response from the server contains no data."
+    },
+    "status.resync-loop": {
+        "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
+    },
+    "status.security": {
+        "message": "Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)"
+    },
+    "status.skipped": {
+        "message": "Not yet supported, skipped"
+    },
+    "status.syncing": {
+        "message": "Synchronizing"
+    },
+    "status.timeout": {
+        "message": "Communication timeout."
+    },
+    "status.wbxml-parse-error": {
+        "message": "Server sends unreadable response."
+    },
+    "status.wbxmlerror": {
+        "message": "Sync failed. Server responded with status <##replace.1##>."
+    },
+    "status.wbxmlmissingfield": {
+        "message": "ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response."
+    },
+    "syncstate.accountdone": {
+        "message": "Finished account"
+    },
+    "syncstate.done": {
+        "message": "Preparing next item for synchronization"
+    },
+    "syncstate.eval.response.autodiscover": {
+        "message": "Processing updated server settings"
+    },
+    "syncstate.eval.response.deletefolder": {
+        "message": "Folder deleted"
+    },
+    "syncstate.eval.response.estimate": {
+        "message": "Processing change estimate"
+    },
+    "syncstate.eval.response.folders": {
+        "message": "Processing folder list update"
+    },
+    "syncstate.eval.response.localchanges": {
+        "message": "Processing acknowledgment of local changes"
+    },
+    "syncstate.eval.response.localdeletes": {
+        "message": "Processing acknowledgment of local deletes"
+    },
+    "syncstate.eval.response.options": {
+        "message": "Processing server options"
+    },
+    "syncstate.eval.response.provision": {
+        "message": "Processing provision"
+    },
+    "syncstate.eval.response.remotechanges": {
+        "message": "Processing remote changes"
+    },
+    "syncstate.eval.response.revertlocalchanges": {
+        "message": "Reverting local changes"
+    },
+    "syncstate.eval.response.setdeviceinfo": {
+        "message": "Sending device information"
+    },
+    "syncstate.eval.response.synckey": {
+        "message": "Processing SyncKey"
+    },
+    "syncstate.prepare.request.autodiscover": {
+        "message": "Requesting updated server settings"
+    },
+    "syncstate.prepare.request.deletefolder": {
+        "message": "Preparing to delete folder"
+    },
+    "syncstate.prepare.request.estimate": {
+        "message": "Requesting change estimate"
+    },
+    "syncstate.prepare.request.folders": {
+        "message": "Sending folder list update"
+    },
+    "syncstate.prepare.request.localchanges": {
+        "message": "Sending local changes"
+    },
+    "syncstate.prepare.request.localdeletes": {
+        "message": "Sending local deletes"
+    },
+    "syncstate.prepare.request.options": {
+        "message": "Requesting server options"
+    },
+    "syncstate.prepare.request.provision": {
+        "message": "Requesting provision"
+    },
+    "syncstate.prepare.request.remotechanges": {
+        "message": "Requesting remote changes"
+    },
+    "syncstate.prepare.request.revertlocalchanges": {
+        "message": "Collecting local changes"
+    },
+    "syncstate.prepare.request.setdeviceinfo": {
+        "message": "Sending device information"
+    },
+    "syncstate.prepare.request.synckey": {
+        "message": "Requesting SyncKey"
+    },
+    "syncstate.preparing": {
+        "message": "Preparing next item for synchronization"
+    },
+    "syncstate.send.request.autodiscover": {
+        "message": "Waiting for updated server settings"
+    },
+    "syncstate.send.request.deletefolder": {
+        "message": "Waiting for folder to be deleted"
+    },
+    "syncstate.send.request.estimate": {
+        "message": "Waiting for change estimate"
+    },
+    "syncstate.send.request.folders": {
+        "message": "Waiting for folder list update"
+    },
+    "syncstate.send.request.localchanges": {
+        "message": "Waiting for acknowledgment of local changes"
+    },
+    "syncstate.send.request.localdeletes": {
+        "message": "Waiting for acknowledgment of local deletes"
+    },
+    "syncstate.send.request.options": {
+        "message": "Waiting for server options"
+    },
+    "syncstate.send.request.provision": {
+        "message": "Waiting for provision"
+    },
+    "syncstate.send.request.remotechanges": {
+        "message": "Waiting for remote changes"
+    },
+    "syncstate.send.request.revertlocalchanges": {
+        "message": "Waiting for most recent versions"
+    },
+    "syncstate.send.request.setdeviceinfo": {
+        "message": "Sending device information"
+    },
+    "syncstate.send.request.synckey": {
+        "message": "Waiting for SyncKey"
+    },
+    "syncstate.syncing": {
+        "message": "Initialize synchronization"
+    }
+}
