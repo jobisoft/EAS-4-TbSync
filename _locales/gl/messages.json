@@ -33,70 +33,70 @@
         "message": "Segundo nome:"
     },
     "abCard.OtherAddress": {
-        "message": "Address:"
+        "message": "Enderezo:"
     },
     "abCard.OtherCity": {
-        "message": "City:"
+        "message": "Cidade:"
     },
     "abCard.OtherCountry": {
-        "message": "Country:"
+        "message": "País:"
     },
     "abCard.OtherState": {
-        "message": "State:"
+        "message": "Estado:"
     },
     "abCard.OtherZip": {
-        "message": "ZIP Code:"
+        "message": "Código postal:"
     },
     "abCard.RadioPhoneNumber": {
-        "message": "Radio Phone:"
+        "message": "Radioteléfóno:"
     },
     "abCard.Spouse": {
-        "message": "Spouse:"
+        "message": "Cónxuxe:"
     },
     "abCard.header.eas": {
-        "message": "Other Fields (EAS)"
+        "message": "Outros campos (EAS)"
     },
     "abCard.header.homenumbers": {
-        "message": "Additional home numbers:"
+        "message": "Números de casa adicionais:"
     },
     "abCard.header.messaging": {
-        "message": "Messaging:"
+        "message": "Mensaxería:"
     },
     "abCard.header.otheraddress": {
-        "message": "Other Address (EAS)"
+        "message": "Outros enderezos (EAS)"
     },
     "abCard.header.othernumbers": {
-        "message": "Additional numbers:"
+        "message": "Números adicionais:"
     },
     "abCard.header.people": {
-        "message": "People:"
+        "message": "Persoas:"
     },
     "abCard.header.worknumbers": {
-        "message": "Additional work numbers:"
+        "message": "Números adicionais do traballo:"
     },
     "acl.readonly": {
-        "message": "Read-only server access (revert local changes)"
+        "message": "Acceso ao servidor só de lectura (reverter cambios locais)"
     },
     "acl.readwrite": {
-        "message": "Read from and write to server"
+        "message": "Leer e escribir no servidor"
     },
     "add.description": {
-        "message": "Please select one of the available server configuration options and enter the requested details. "
+        "message": "Por favor, selecciona unha das opcións de configuración do servidor e insire os detalles solicitados. "
     },
     "add.name": {
-        "message": "Account name:"
+        "message": "Nome da conta:"
     },
     "add.ok": {
-        "message": "Add account"
+        "message": "Engadir conta"
     },
     "add.password": {
-        "message": "Password:"
+        "message": "Contrasinal:"
     },
     "add.server": {
-        "message": "Server configuration:"
+        "message": "Configuración do servidor:"
     },
     "add.shortdescription": {
-        "message": "Account information"
+        "message": "Información da conta"
     },
     "add.title": {
         "message": "Adding an Exchange ActiveSync account to TbSync"
@@ -168,7 +168,7 @@
         "message": "Autodiscover settings and add account"
     },
     "newaccount.add_custom": {
-        "message": "Add account"
+        "message": "Engadir conta"
     },
     "pref.AccountName": {
         "message": "Description"
