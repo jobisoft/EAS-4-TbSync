@@ -99,46 +99,46 @@
         "message": "Información da conta"
     },
     "add.title": {
-        "message": "Adding an Exchange ActiveSync account to TbSync"
+        "message": "Engadindo unha conta Exchange ActiveSync a TbSync"
     },
     "add.url": {
-        "message": "Server address:"
+        "message": "Enderezo do servidor:"
     },
     "add.urldescription": {
-        "message": "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync)."
+        "message": "Debería de ser suficiente con facilitar só o enderezo básico do servidor (por exemplo correo.dominio.gal). Nembargantes, tamén é posible facilitar o URL completo (por exemplo, https://correo.dominio.gal/Servidor-Microsoft-ActiveSync)."
     },
     "add.user": {
-        "message": "User name (email address):"
+        "message": "Nome de usuario (enderezo de correo):"
     },
     "autocomplete.serverdirectory": {
-        "message": "global server directory"
+        "message": "directorio global de servidores"
     },
     "autodiscover.Failed": {
-        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
+        "message": "Fallou o Autodiscover para o usuario <##user##>. Ou ben facilitaches unha credenciais erróneas ou ben o teu provedor de ActiveSync ten un problema temporal, ou ben non admita o Autodiscover."
     },
     "autodiscover.NeedEmail": {
-        "message": "Autodiscover needs a valid email address as user name."
+        "message": "Autodiscover precisa dun enderezo de correo válido como nome de usuario."
     },
     "autodiscover.Ok": {
-        "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
+        "message": "Autodiscover completouse satisfactoriamente; agora podes revisar os axustes opcionais e establecer a conexión de sincronización."
     },
     "autodiscover.Querying": {
-        "message": "Searching for settings…"
+        "message": "Buscando os axustes…"
     },
     "config.auto": {
-        "message": "ActiveSync server configuration (Autodiscover)"
+        "message": "Configuración do servidor de ActiveSync (Autodiscover)"
     },
     "config.custom": {
-        "message": "ActiveSync server configuration"
+        "message": "Configuración do servidor de ActiveSync"
     },
     "deletefolder.confirm": {
-        "message": "Do you really want to PERMANENTLY PURGE folder “##replace.1##” from trash?"
+        "message": "Queres ELIMINAR DEFINITIVAMENTE o cartafol “##replace.1##” da papeleira?"
     },
     "deletefolder.menuentry": {
-        "message": "Permanently purge folder “##replace.1##” from trash"
+        "message": "Eliminar definitivamente o cartafol “##replace.1##” da papeleira"
     },
     "deletefolder.notallowed": {
-        "message": "Please unsubscribe folder “##replace.1##” before trying to purge it from trash."
+        "message": "Por favor, cancela a subscrición ao cartafol “##replace.1##” antes de intentar eliminalo da papeleira."
     },
     "extensionDescription": {
         "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
@@ -228,19 +228,19 @@
         "message": "Line break"
     },
     "pref.synclimit.1month": {
-        "message": "from 4 weeks ago"
+        "message": "desde hai 4 semanas"
     },
     "pref.synclimit.2weeks": {
-        "message": "from 2 weeks ago"
+        "message": "desde hai 2 semanas"
     },
     "pref.synclimit.3month": {
-        "message": "from 3 months ago"
+        "message": "desde hai 3 meses"
     },
     "pref.synclimit.6month": {
-        "message": "from 6 months ago"
+        "message": "desde hai 6 meses"
     },
     "pref.synclimit.all": {
-        "message": "everything"
+        "message": "todo"
     },
     "pref.synclimit.description": {
         "message": "Synchronization period: "
