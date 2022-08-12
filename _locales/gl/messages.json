@@ -447,7 +447,7 @@
         "message": "Violación do protocolo de ActiveSync: falta o campo obrigatorio <##replace.1##> na respuesta do servidor."
     },
     "syncstate.accountdone": {
-        "message": "Conta finalizada"
+        "message": "Conta rematada"
     },
     "syncstate.done": {
         "message": "Preparando o seguinte elemento para a sincronización"
