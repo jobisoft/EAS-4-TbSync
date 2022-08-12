@@ -57,7 +57,7 @@
         "message": "Outros campos (EAS)"
     },
     "abCard.header.homenumbers": {
-        "message": "Números de casa adicionais:"
+        "message": "Números adicionais de casa:"
     },
     "abCard.header.messaging": {
         "message": "Mensaxería:"
@@ -75,7 +75,7 @@
         "message": "Números adicionais do traballo:"
     },
     "acl.readonly": {
-        "message": "Acceso ao servidor só de lectura (reverter cambios locais)"
+        "message": "Acceso só de lectura ao servidor (reverter cambios locais)"
     },
     "acl.readwrite": {
         "message": "Leer e escribir no servidor"
@@ -105,22 +105,22 @@
         "message": "Enderezo do servidor:"
     },
     "add.urldescription": {
-        "message": "Debería de ser suficiente con facilitar só o enderezo básico do servidor (por exemplo correo.dominio.gal). Nembargantes, tamén é posible facilitar o URL completo (por exemplo, https://correo.dominio.gal/Servidor-Microsoft-ActiveSync)."
+        "message": "Debería de ser suficiente con proporcionar só o enderezo básico do servidor (por exemplo, correo.dominio.gal). Con todo, tamén é posible facilitar o URL completo (por exemplo, https://correo.dominio.gal/Servidor-Microsoft-ActiveSync)."
     },
     "add.user": {
-        "message": "Nome de usuario (enderezo de correo):"
+        "message": "Nome de usuario (enderezo de correo electrónico):"
     },
     "autocomplete.serverdirectory": {
         "message": "directorio global de servidores"
     },
     "autodiscover.Failed": {
-        "message": "Fallou o Autodiscover para o usuario <##user##>. Ou ben facilitaches unha credenciais erróneas ou ben o teu provedor de ActiveSync ten un problema temporal, ou ben non admita o Autodiscover."
+        "message": "Fallou o Autodiscover para o usuario <##user##>. Ou ben proporcionaches unhas credenciais erróneas ou ben o teu provedor de ActiveSync ten un problema temporal, ou ben non admite o Autodiscover."
     },
     "autodiscover.NeedEmail": {
-        "message": "Autodiscover precisa dun enderezo de correo válido como nome de usuario."
+        "message": "Autodiscover precisa dun enderezo de correo electónico válido como nome de usuario."
     },
     "autodiscover.Ok": {
-        "message": "Autodiscover completouse satisfactoriamente; agora podes revisar os axustes opcionais e establecer a conexión de sincronización."
+        "message": "Autodiscover completouse correctamente; agora podes revisar os axustes opcionais e establecer a conexión de sincronización."
     },
     "autodiscover.Querying": {
         "message": "Buscando os axustes…"
@@ -249,97 +249,97 @@
         "message": "Usar conexión segura (conectar mediante https)"
     },
     "recyclebin": {
-        "message": "Trash"
+        "message": "Papeleira"
     },
     "servertype.auto": {
-        "message": "Automatic configuration"
+        "message": "Configuración automática"
     },
     "servertype.custom": {
-        "message": "Custom configuration"
+        "message": "Configuración personalizada"
     },
     "servertype.description.auto": {
-        "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
+        "message": "É posible detectar a configuración de moitos servidores ActiveSync con só proporcionar o teu enderezo de correo electrónico."
     },
     "servertype.description.custom": {
-        "message": "Setup your account by manually providing the address of the server you want to connect."
+        "message": "Configura a conta proporciando manualmente o enderezo do servidor al que queres conectar."
     },
     "servertype.description.office365": {
-        "message": "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA)."
+        "message": "As contas conectadas a Office 365 utilizan un proceso de autenticación moderno, chamado OAuth 2.0, que tamén admite autenticación multifactor (MFA)."
     },
     "servertype.office365": {
         "message": "Microsoft Office 365"
     },
     "servertype.unlock": {
-        "message": "Double click to unlock all predefined server settings."
+        "message": "Fai dobre clic para desbloquear todos os axustes predefinidos do servidor."
     },
     "status.401": {
-        "message": "Could not authenticate, check username and password (HTTP Error 401)."
+        "message": "Non foi posible autenticarse, comproba o nome de usuario e o contrasinal (erro HTTP 401)."
     },
     "status.403": {
-        "message": "Server rejected connection (forbidden) (HTTP Error 403)."
+        "message": "O servidor rexeitou a conexión (prohibida) (erro HTTP 403)."
     },
     "status.404": {
-        "message": "User not found (HTTP Error 404)."
+        "message": "Usuario non atopado (erro HTTP 404)."
     },
     "status.449": {
-        "message": "Server requests provisioning (HTTP Error 449)."
+        "message": "O servidor solicita aprovisionamento (erro HTTP 449)."
     },
     "status.500": {
-        "message": "Unknown Server Error (HTTP Error 500)."
+        "message": "Erro descoñecido do servidor (erro HTTP 500)."
     },
     "status.503": {
-        "message": "Service unavailable (HTTP Error 503)."
+        "message": "Servicio non dispoñible (erro HTTP 503)."
     },
     "status.BadItemSkipped": {
-        "message": "Bad Item Skipped: ##replace.1##"
+        "message": "Omitido obxecto incorrecto: ##replace.1##"
     },
     "status.FolderDelete.3": {
         "message": "Non é posible eliminar un cartafol do sistema (estado 3)"
     },
     "status.FolderDelete.4": {
-        "message": "Folder does not exist (status 4), resyncing"
+        "message": "O cartafol non existe (estado 4), resincronizando"
     },
     "status.FolderDelete.6": {
-        "message": "Command could not be completed, an error occurred on the server (status 6)"
+        "message": "O comando non se completou, produciuse un erro no servidor (estado 6)"
     },
     "status.FolderDelete.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Clave de sincronización non válida (estado 9), resincronizando"
     },
     "status.FolderSync.9": {
-        "message": "Invalid synchronization key (status 9), resyncing"
+        "message": "Clave de sincronización non válida (estado 9), resincronizando"
     },
     "status.InvalidServerOptions": {
-        "message": "The server does not provide information about the supported ActiveSync versions. Is EAS blocked for this user or this client (TbSync)? You could try to set the ActiveSync version manually."
+        "message": "El servidor non proporciona información sobre as versións de ActiveSync compatibles. Está EAS bloqueado para este usuario ou para este cliente (TbSync)? Pode intentar establecer a versión de ActiveSync manualmente."
     },
     "status.OK": {
         "message": "OK"
     },
     "status.ServerRejectedRequest": {
-        "message": "The EAS Server rejected the last request."
+        "message": "O servidor de EAS rexeitou a última petición."
     },
     "status.ServerRejectedSomeItems": {
-        "message": "The EAS server did not accept ##replace.1## elements."
+        "message": "O servidor de EAS non aceptou ##replace.1## elementos."
     },
     "status.Sync.12": {
-        "message": "Folder hierarchy changed (status 12), resyncing"
+        "message": "Cambiou a xerarquía de cartafoles (estado 12), resincronizando"
     },
     "status.Sync.3": {
-        "message": "Invalid synchronization key (status 3), resyncing"
+        "message": "Chave de sincronización non válida (estado 3), resincronizando"
     },
     "status.Sync.4": {
-        "message": "Malformed request (status 4)"
+        "message": "Solicitude mal formada (estado 4)"
     },
     "status.Sync.5": {
-        "message": "Temporary server issues or invalid item (status 5)"
+        "message": "Problemas temporais do servidor ou elemento non válido (estado 5)"
     },
     "status.Sync.6": {
-        "message": "Invalid item (status 6)"
+        "message": "Elemento non válido (estado 6)"
     },
     "status.Sync.8": {
-        "message": "Object not found (status 8)"
+        "message": "Obxecto non atopado (estado 8)"
     },
     "status.aborted": {
-        "message": "Not synchronized"
+        "message": "Sen sincronizar"
     },
     "status.disabled": {
         "message": "Disabled"
@@ -354,10 +354,10 @@
         "message": "Forbidden task item in a calendar folder (please resort)"
     },
     "status.global.101": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 101)."
+        "message": "A solicitude contén WBXML pero non puido ser descodificado a XML (Erro EAS 101)."
     },
     "status.global.102": {
-        "message": "The request contains WBXML but it could not be decoded into XML (EAS Error 102)."
+        "message": "A solicitude contén WBXML pero non puido ser descodificado a XML (Erro EAS 102)."
     },
     "status.global.103": {
         "message": "The XML provided in the request does not follow the protocol requirements (EAS Error 103)."
@@ -387,94 +387,94 @@
         "message": "Could not connect to server."
     },
     "status.nosupportedeasversion": {
-        "message": "Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server."
+        "message": "O servidor non é compatible con ActiveSync v2.5 ou v14.0 (só ##replace.1##). TbSync non funcionará con este servidor de ActiveSync."
     },
     "status.notargets": {
-        "message": "Aborting Sync, because sync targets could not be created."
+        "message": "Sincronización interrompida porque no se puideron crear os destinos da sincronización."
     },
     "status.notsupportedeasversion": {
-        "message": "Server does not support selected ActiveSync v##replace.1## (only ##replace.2##)."
+        "message": "O servidor non é compatible con ActiveSync v##replace.1## (só ##replace.2##)."
     },
     "status.notsyncronized": {
-        "message": "Account needs to be synchronized, at least one item is out of sync."
+        "message": "É preciso sincronizar a conta: polo menos un elemento está sen sincronizar."
     },
     "status.nouserhost": {
-        "message": "Missing username and/or server. Please provide those values."
+        "message": "Falta o nombre de usuario ou o servidor. Por favor, proporciona eses datos."
     },
     "status.pending": {
-        "message": "Waiting to be synchronized"
+        "message": "Agardando pola sincronización"
     },
     "status.policy.2": {
-        "message": "There is no policy for this client. Contact your server administrator or disable provisioning for this account."
+        "message": "Non hai ninguna directiva para este cliente. Contacta co administrador do servidor ou deshabilita o aprovisionamento desta conta."
     },
     "status.policy.3": {
-        "message": "Unknown PolicyType value. Contact your server administrator or disable provisioning for this account."
+        "message": "Valor de PolicyType descoñecido. Contacta co administrador do servidor ou deshabilita o aprovisionamento desta conta."
     },
     "status.policy.4": {
-        "message": "The policy data on the server is corrupted (possibly tampered with). Contact your server administrator or disable provisioning for this account."
+        "message": "Os datos de directivas do servidor están danados (posiblemente manipulados). Contacta co administrador do servidor ou deshabilita o aprovisionamento desta conta."
     },
     "status.policy.5": {
-        "message": "The client is acknowledging the wrong policy key. Contact your server administrator or disable provisioning for this account."
+        "message": "O cliente está a recoñecer a chave de directiva incorrecta. Contacta co administrador do servidor ou deshabilita o aprovisionamento desta conta."
     },
     "status.provision": {
-        "message": "Provisioning failed with status <##replace.1##>"
+        "message": "O aprovisionamento fallou co estado <##replace.1##>"
     },
     "status.response-contains-no-data": {
-        "message": "Response from the server contains no data."
+        "message": "A resposta do servidor non contén datos."
     },
     "status.resync-loop": {
-        "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
+        "message": "Produciuse un erro que non se puido corrixir volvendo a sincronizar a conta. Desactiva a conta e inténtao outra vez (erro: bucle de resincronización)"
     },
     "status.security": {
-        "message": "Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)"
+        "message": "No se puido establecer unha conexión segura. Estás a usar un certificado autofirmado, ou que non é de confianza, sen importarlo a Thunderbird? (##replace.1##)"
     },
     "status.skipped": {
-        "message": "Not yet supported, skipped"
+        "message": "Aínda non soportado, omitido"
     },
     "status.syncing": {
-        "message": "Synchronizing"
+        "message": "Sincronizando"
     },
     "status.timeout": {
-        "message": "Communication timeout."
+        "message": "Tempo de comunicación esgotado."
     },
     "status.wbxml-parse-error": {
-        "message": "Server sends unreadable response."
+        "message": "O servidor envía unha resposta ilexible."
     },
     "status.wbxmlerror": {
-        "message": "Sync failed. Server responded with status <##replace.1##>."
+        "message": "Erro ao sincronizar. O servidor respondeu co estado <##replace.1##>."
     },
     "status.wbxmlmissingfield": {
-        "message": "ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response."
+        "message": "Violación do protocolo de ActiveSync: falta o campo obrigatorio <##replace.1##> na respuesta do servidor."
     },
     "syncstate.accountdone": {
-        "message": "Finished account"
+        "message": "Conta finalizada"
     },
     "syncstate.done": {
-        "message": "Preparing next item for synchronization"
+        "message": "Preparando o seguinte elemento para a sincronización"
     },
     "syncstate.eval.response.autodiscover": {
-        "message": "Processing updated server settings"
+        "message": "Procesando os axustes actualizados do servidor"
     },
     "syncstate.eval.response.deletefolder": {
-        "message": "Folder deleted"
+        "message": "Cartafol eliminado"
     },
     "syncstate.eval.response.estimate": {
-        "message": "Processing change estimate"
+        "message": "Procesando a estimación do cambio"
     },
     "syncstate.eval.response.folders": {
-        "message": "Processing folder list update"
+        "message": "Procesando a lista de cartafoles actualizada"
     },
     "syncstate.eval.response.localchanges": {
-        "message": "Processing acknowledgment of local changes"
+        "message": "Procesando o recoñecemento de cambios locais"
     },
     "syncstate.eval.response.localdeletes": {
-        "message": "Processing acknowledgment of local deletes"
+        "message": "Procesando o recoñecemento de eliminacións locais"
     },
     "syncstate.eval.response.options": {
-        "message": "Processing server options"
+        "message": "Procesando as opcións do servidor"
     },
     "syncstate.eval.response.provision": {
-        "message": "Processing provision"
+        "message": "Procesando o aprovisionamento"
     },
     "syncstate.eval.response.remotechanges": {
         "message": "Processing remote changes"
@@ -525,45 +525,45 @@
         "message": "Requesting SyncKey"
     },
     "syncstate.preparing": {
-        "message": "Preparing next item for synchronization"
+        "message": "Preparando o seguinte elemento para a sincronización"
     },
     "syncstate.send.request.autodiscover": {
-        "message": "Waiting for updated server settings"
+        "message": "Agardando pola configuración actualizada do servidor"
     },
     "syncstate.send.request.deletefolder": {
-        "message": "Waiting for folder to be deleted"
+        "message": "Agardando pola eliminación do cartafol"
     },
     "syncstate.send.request.estimate": {
-        "message": "Waiting for change estimate"
+        "message": "Agardando pola estimación de cambios"
     },
     "syncstate.send.request.folders": {
-        "message": "Waiting for folder list update"
+        "message": "Agardando pola actualización da lista de cartafoles"
     },
     "syncstate.send.request.localchanges": {
-        "message": "Waiting for acknowledgment of local changes"
+        "message": "Agardando polo recoñecemento de cambios locais"
     },
     "syncstate.send.request.localdeletes": {
-        "message": "Waiting for acknowledgment of local deletes"
+        "message": "Agardando polo recoñecemento de eliminacións locais"
     },
     "syncstate.send.request.options": {
-        "message": "Waiting for server options"
+        "message": "Agardando polas opcións do servidor"
     },
     "syncstate.send.request.provision": {
-        "message": "Waiting for provision"
+        "message": "Agardando polo aprovisionamento"
     },
     "syncstate.send.request.remotechanges": {
-        "message": "Waiting for remote changes"
+        "message": "Agardando polos cambios remotos"
     },
     "syncstate.send.request.revertlocalchanges": {
-        "message": "Waiting for most recent versions"
+        "message": "Agardando polas versións máis recentes"
     },
     "syncstate.send.request.setdeviceinfo": {
         "message": "Sending device information"
     },
     "syncstate.send.request.synckey": {
-        "message": "Waiting for SyncKey"
+        "message": "Agardando por SyncKey"
     },
     "syncstate.syncing": {
-        "message": "Initialize synchronization"
+        "message": "Iniciar sincronización"
     }
 }
