@@ -141,10 +141,10 @@
         "message": "Por favor, cancela a subscrición ao cartafol “##replace.1##” antes de intentar eliminalo da papeleira."
     },
     "extensionDescription": {
-        "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
+        "message": "Engade soporte a TbSync para a sincronización de contas de Exchange ActiveSync (contactos, tareas e calendarios)."
     },
     "extensionName": {
-        "message": "Provider for Exchange ActiveSync"
+        "message": "Provedor de Exchange ActiveSync"
     },
     "helplink.BadItemSkipped": {
         "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
@@ -156,22 +156,22 @@
         "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
     },
     "manager.tabs.accountsettings": {
-        "message": "Account settings"
+        "message": "Axustes da conta"
     },
     "manager.tabs.outOfOffice": {
-        "message": "Auto responder"
+        "message": "Resposta automática"
     },
     "manager.tabs.syncsettings": {
-        "message": "Options"
+        "message": "Opcións"
     },
     "newaccount.add_auto": {
-        "message": "Autodiscover settings and add account"
+        "message": "Axustes de Autodiscover e engadir conta"
     },
     "newaccount.add_custom": {
         "message": "Engadir conta"
     },
     "pref.AccountName": {
-        "message": "Description"
+        "message": "Descrición"
     },
     "pref.ActiveSyncVersion": {
         "message": "ActiveSync version"
@@ -180,52 +180,52 @@
         "message": "ActiveSync device ID"
     },
     "pref.ServerName": {
-        "message": "Server address"
+        "message": "Enderezo do servidor"
     },
     "pref.ServerNameDescription": {
-        "message": "e.g. mail.yourserver.com"
+        "message": "por exemplo, correo.dominio.gal"
     },
     "pref.ShowTrashedFolders": {
-        "message": "Show folders found in trash"
+        "message": "Amosar cartafoles atopados na papeleira"
     },
     "pref.UserName": {
-        "message": "User name"
+        "message": "Nome de usuario"
     },
     "pref.UserNameDescription": {
-        "message": "User name is usually the email address of your account."
+        "message": "O nome de usuario adoita ser o enderezo de correo electrónico da túa conta."
     },
     "pref.autodetect": {
-        "message": "best available"
+        "message": "mellor dispoñible"
     },
     "pref.birthday": {
-        "message": "Send birthday information"
+        "message": "Enviar información do aniversario"
     },
     "pref.calendaroptions": {
-        "message": "Calendar options"
+        "message": "Opcións do calendario"
     },
     "pref.contactoptions": {
-        "message": "Contact options"
+        "message": "Opcións dos contactos"
     },
     "pref.displayoverride": {
-        "message": "Override Display Name with “First Name” + “Second Name”"
+        "message": "Substituír o nome amosado por «Nome» + «Segundo nome»"
     },
     "pref.galautocomplete": {
-        "message": "Include results from global address book (GAL) in email autocompletion"
+        "message": "Incluír os resultados da libreta global de enderezos (GAL) no autocompletado do correo electrónico"
     },
     "pref.generaloptions": {
-        "message": "General options"
+        "message": "Opcións xerais"
     },
     "pref.provision": {
-        "message": "Enforce provisioning (required by Kerio)"
+        "message": "Forzar aprovisionamento (requirido por Kerio)"
     },
     "pref.seperator.comma": {
-        "message": "Comma"
+        "message": "Coma"
     },
     "pref.seperator.description": {
-        "message": "Separator for multiline address field."
+        "message": "Separador de campo de enderezo en varias liñas."
     },
     "pref.seperator.linebreak": {
-        "message": "Line break"
+        "message": "Salto de liña"
     },
     "pref.synclimit.1month": {
         "message": "desde hai 4 semanas"
@@ -243,10 +243,10 @@
         "message": "todo"
     },
     "pref.synclimit.description": {
-        "message": "Synchronization period: "
+        "message": "Período de sincronización: "
     },
     "pref.usehttps": {
-        "message": "Use secure connection (connect via https)"
+        "message": "Usar conexión segura (conectar mediante https)"
     },
     "recyclebin": {
         "message": "Trash"
@@ -294,7 +294,7 @@
         "message": "Bad Item Skipped: ##replace.1##"
     },
     "status.FolderDelete.3": {
-        "message": "Cannot delete a system folder (status 3)"
+        "message": "Non é posible eliminar un cartafol do sistema (estado 3)"
     },
     "status.FolderDelete.4": {
         "message": "Folder does not exist (status 4), resyncing"
