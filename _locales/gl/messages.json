@@ -396,7 +396,7 @@
         "message": "O servidor non é compatible con ActiveSync v##replace.1## (só ##replace.2##)."
     },
     "status.notsyncronized": {
-        "message": "É preciso sincronizar a conta: polo menos un elemento está sen sincronizar."
+        "message": "É preciso sincronizar a conta: hai algún un elemento sen sincronizar."
     },
     "status.nouserhost": {
         "message": "Falta o nome de usuario ou o servidor. Por favor, proporciona eses datos."
