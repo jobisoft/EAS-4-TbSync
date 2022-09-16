@@ -1,69 +1,69 @@
 {
     "abCard.Anniversary": {
-        "message": "記念日:"
+        "message": "Anniversary:"
     },
     "abCard.AssistantName": {
-        "message": "アシスタント:"
+        "message": "Assistant:"
     },
     "abCard.AssistantPhoneNumber": {
-        "message": "アシスタントの電話番号:"
+        "message": "Assistant Phone:"
     },
     "abCard.Business2PhoneNumber": {
-        "message": "勤務先電話番号 2:"
+        "message": "Work Alternative Phone:"
     },
     "abCard.BusinessFaxNumber": {
-        "message": "勤務先 FAX:"
+        "message": "Work Fax:"
     },
     "abCard.CarPhoneNumber": {
-        "message": "自動車電話番号:"
+        "message": "Car Phone:"
     },
     "abCard.CompanyMainPhone": {
-        "message": "勤務先電話番号:"
+        "message": "Work Main Phone:"
     },
     "abCard.Email3Address": {
-        "message": "電子メール 2:"
+        "message": "Alternative Email:"
     },
     "abCard.Home2PhoneNumber": {
-        "message": "自宅電話番号 2:"
+        "message": "Home Alternative Phone:"
     },
     "abCard.ManagerName": {
-        "message": "マネージャー:"
+        "message": "Manager:"
     },
     "abCard.MiddleName": {
-        "message": "ミドルネーム:"
+        "message": "Middle name:"
     },
     "abCard.OtherAddress": {
-        "message": "住所:"
+        "message": "Address:"
     },
     "abCard.OtherCity": {
-        "message": "町:"
+        "message": "City:"
     },
     "abCard.OtherCountry": {
-        "message": "国:"
+        "message": "Country:"
     },
     "abCard.OtherState": {
-        "message": "都道府県:"
+        "message": "State:"
     },
     "abCard.OtherZip": {
-        "message": "郵便番号:"
+        "message": "ZIP Code:"
     },
     "abCard.RadioPhoneNumber": {
-        "message": "無線電話の番号:"
+        "message": "Radio Phone:"
     },
     "abCard.Spouse": {
-        "message": "配偶者/パートナー:"
+        "message": "Spouse:"
     },
     "abCard.header.eas": {
-        "message": "その他の項目 (EAS)"
+        "message": "Other Fields (EAS)"
     },
     "abCard.header.homenumbers": {
-        "message": "自宅電話番号 3:"
+        "message": "Additional home numbers:"
     },
     "abCard.header.messaging": {
         "message": "Messaging:"
     },
     "abCard.header.otheraddress": {
-        "message": "その他のアドレス (EAS)"
+        "message": "Other Address (EAS)"
     },
     "abCard.header.othernumbers": {
         "message": "Additional numbers:"
@@ -72,7 +72,7 @@
         "message": "People:"
     },
     "abCard.header.worknumbers": {
-        "message": "勤務先電話番号 3:"
+        "message": "Additional work numbers:"
     },
     "acl.readonly": {
         "message": "Read-only server access (revert local changes)"
@@ -81,70 +81,70 @@
         "message": "Read from and write to server"
     },
     "add.description": {
-        "message": "利用可能なサーバー構成オプションのいずれかを選択し、要求された詳細を入力してください。 "
+        "message": "Please select one of the available server configuration options and enter the requested details. "
     },
     "add.name": {
-        "message": "アカウント名:"
+        "message": "Account name:"
     },
     "add.ok": {
-        "message": "アカウントを追加"
+        "message": "Add account"
     },
     "add.password": {
-        "message": "パスワード:"
+        "message": "Password:"
     },
     "add.server": {
-        "message": "サーバー設定:"
+        "message": "Server configuration:"
     },
     "add.shortdescription": {
-        "message": "アカウント情報"
+        "message": "Account information"
     },
     "add.title": {
         "message": "Adding an Exchange ActiveSync account to TbSync"
     },
     "add.url": {
-        "message": "サーバー アドレス:"
+        "message": "Server address:"
     },
     "add.urldescription": {
-        "message": "基本的なサーバーアドレスだけを提供するだけで十分です (例: mail.yourserver.com)。 ただし、完全な URL を提供することもできます (例: https://mail.yourserver.com/Microsoft-Server-ActiveSync)。"
+        "message": "It should be sufficient to provide just the basic server address (e.g.: mail.yourserver.com). However, it is also possible to provide the full URL (e.g.: https://mail.yourserver.com/Microsoft-Server-ActiveSync)."
     },
     "add.user": {
-        "message": "ユーザー名 (電子メールアドレス):"
+        "message": "User name (email address):"
     },
     "autocomplete.serverdirectory": {
         "message": "global server directory"
     },
     "autodiscover.Failed": {
-        "message": "ユーザー <##user##> の自動検出に失敗しました。指定された資格情報が間違っているか、ActiveSyncプロバイダに一時的な問題があるか、自動検出をサポートしていません。"
+        "message": "Autodiscover for user <##user##> failed. Either the provided credentials were wrong or your ActiveSync provider has a temporary issue, or does not support Autodiscover."
     },
     "autodiscover.NeedEmail": {
-        "message": "自動検出にはユーザー名として有効なメールアドレスが必要です。"
+        "message": "Autodiscover needs a valid email address as user name."
     },
     "autodiscover.Ok": {
         "message": "Autodiscover completed successfully, you can now check the optional settings and establish the synchronization connection."
     },
     "autodiscover.Querying": {
-        "message": "設定を検索中…"
+        "message": "Searching for settings…"
     },
     "config.auto": {
-        "message": "ActiveSync サーバー設定 (自動検出)"
+        "message": "ActiveSync server configuration (Autodiscover)"
     },
     "config.custom": {
-        "message": "ActiveSync サーバー設定"
+        "message": "ActiveSync server configuration"
     },
     "deletefolder.confirm": {
-        "message": "本当にごみ箱からフォルダ '## replace.1 ##' を完全に削除しますか？"
+        "message": "Do you really want to PERMANENTLY PURGE folder “##replace.1##” from trash?"
     },
     "deletefolder.menuentry": {
-        "message": "ごみ箱からフォルダ '## replace.1 ##' を完全に削除"
+        "message": "Permanently purge folder “##replace.1##” from trash"
     },
     "deletefolder.notallowed": {
-        "message": "ゴミ箱から削除する前に、フォルダ “##replace.1##” の登録を解除してください。"
+        "message": "Please unsubscribe folder “##replace.1##” before trying to purge it from trash."
     },
     "extensionDescription": {
-        "message": "TbSync に Exchange ActiveSync アカウントの同期サポートを追加します (連絡先、タスクとカレンダー)。"
+        "message": "Add sync support for Exchange ActiveSync accounts to TbSync (contacts, tasks and calendars)."
     },
     "extensionName": {
-        "message": "Exchange ActiveSync 用プロバイダ"
+        "message": "Provider for Exchange ActiveSync"
     },
     "helplink.BadItemSkipped": {
         "message": "https://github.com/jobisoft/EAS-4-TbSync/wiki/Error:-Bad-item-skipped"
@@ -156,115 +156,115 @@
         "message": "https://github.com/jobisoft/TbSync/wiki/How-to-use-TbSync-with-self-signed-or-otherwise-untrusted-certificates%3F"
     },
     "manager.tabs.accountsettings": {
-        "message": "アカウント設定"
+        "message": "Account settings"
     },
     "manager.tabs.outOfOffice": {
         "message": "Auto responder"
     },
     "manager.tabs.syncsettings": {
-        "message": "オプション"
+        "message": "Options"
     },
     "newaccount.add_auto": {
-        "message": "設定を自動検出してアカウントを追加"
+        "message": "Autodiscover settings and add account"
     },
     "newaccount.add_custom": {
-        "message": "アカウントを追加"
+        "message": "Add account"
     },
     "pref.AccountName": {
-        "message": "説明"
+        "message": "Description"
     },
     "pref.ActiveSyncVersion": {
-        "message": "ActiveSync バージョン"
+        "message": "ActiveSync version"
     },
     "pref.DeviceId": {
-        "message": "ActiveSync デバイス ID"
+        "message": "ActiveSync device ID"
     },
     "pref.ServerName": {
-        "message": "サーバー アドレス"
+        "message": "Server address"
     },
     "pref.ServerNameDescription": {
-        "message": "例: mail.yourserver.com"
+        "message": "e.g. mail.yourserver.com"
     },
     "pref.ShowTrashedFolders": {
         "message": "Show folders found in trash"
     },
     "pref.UserName": {
-        "message": "ユーザー名"
+        "message": "User name"
     },
     "pref.UserNameDescription": {
-        "message": "ユーザー名は通常、あなたのアカウントの電子メールアドレスです。"
+        "message": "User name is usually the email address of your account."
     },
     "pref.autodetect": {
-        "message": "利用可能な最新のバージョン"
+        "message": "best available"
     },
     "pref.birthday": {
         "message": "Send birthday information"
     },
     "pref.calendaroptions": {
-        "message": "カレンダー設定"
+        "message": "Calendar options"
     },
     "pref.contactoptions": {
-        "message": "連絡先設定"
+        "message": "Contact options"
     },
     "pref.displayoverride": {
-        "message": "表示名を「名」+「姓」で上書き"
+        "message": "Override Display Name with “First Name” + “Second Name”"
     },
     "pref.galautocomplete": {
         "message": "Include results from global address book (GAL) in email autocompletion"
     },
     "pref.generaloptions": {
-        "message": "一般設定"
+        "message": "General options"
     },
     "pref.provision": {
-        "message": "プロビジョニングを強制 (Kerio で必要)"
+        "message": "Enforce provisioning (required by Kerio)"
     },
     "pref.seperator.comma": {
-        "message": "カンマ"
+        "message": "Comma"
     },
     "pref.seperator.description": {
         "message": "Separator for multiline address field."
     },
     "pref.seperator.linebreak": {
-        "message": "改行"
+        "message": "Line break"
     },
     "pref.synclimit.1month": {
-        "message": "4 週間前まで"
+        "message": "from 4 weeks ago"
     },
     "pref.synclimit.2weeks": {
-        "message": "2 週間前まで"
+        "message": "from 2 weeks ago"
     },
     "pref.synclimit.3month": {
-        "message": "3 ヶ月前まで"
+        "message": "from 3 months ago"
     },
     "pref.synclimit.6month": {
-        "message": "6 ヶ月前まで"
+        "message": "from 6 months ago"
     },
     "pref.synclimit.all": {
-        "message": "全て"
+        "message": "everything"
     },
     "pref.synclimit.description": {
-        "message": "同期する期間: "
+        "message": "Synchronization period: "
     },
     "pref.usehttps": {
-        "message": "安全な接続を利用する (https を使用して接続)"
+        "message": "Use secure connection (connect via https)"
     },
     "recyclebin": {
-        "message": "ごみ箱"
+        "message": "Trash"
     },
     "servertype.auto": {
-        "message": "自動設定"
+        "message": "Automatic configuration"
     },
     "servertype.custom": {
-        "message": "カスタム設定"
+        "message": "Custom configuration"
     },
     "servertype.description.auto": {
-        "message": "多くの ActiveSync サーバーの構成は、電子メールアドレスを提供するだけで検出できます。"
+        "message": "The configuration for many ActiveSync servers can be discovered by providing just your email address."
     },
     "servertype.description.custom": {
-        "message": "接続するサーバーのアドレスを手動で入力することにより、アカウントを設定します。"
+        "message": "Setup your account by manually providing the address of the server you want to connect."
     },
     "servertype.description.office365": {
-        "message": "Office 365に接続されたアカウントは、OAuth 2.0 と呼ばれる最新の認証プロセスを使用します。これは、Multi-Factor-Authentication (MFA、多要素認証) もサポートしています。"
+        "message": "Accounts connected to Office 365 use a modern authentication process called OAuth 2.0 which also supports Multi-Factor-Authentication (MFA)."
     },
     "servertype.office365": {
         "message": "Microsoft Office 365"
@@ -273,34 +273,34 @@
         "message": "Double click to unlock all predefined server settings."
     },
     "status.401": {
-        "message": "認証できません。ユーザー名とパスワードを確認してください (HTTP エラー 401)。"
+        "message": "Could not authenticate, check username and password (HTTP Error 401)."
     },
     "status.403": {
-        "message": "サーバーが接続を拒否しました (禁止) (HTTP エラー 403)。"
+        "message": "Server rejected connection (forbidden) (HTTP Error 403)."
     },
     "status.404": {
-        "message": "ユーザーが見つかりません (HTTP エラー 404)。"
+        "message": "User not found (HTTP Error 404)."
     },
     "status.449": {
         "message": "Server requests provisioning (HTTP Error 449)."
     },
     "status.500": {
-        "message": "不明なサーバー エラー (HTTP エラー 500)。"
+        "message": "Unknown Server Error (HTTP Error 500)."
     },
     "status.503": {
-        "message": "サービスが利用できません (HTTP エラー 503)。"
+        "message": "Service unavailable (HTTP Error 503)."
     },
     "status.BadItemSkipped": {
-        "message": "不良アイテムがスキップされました: ##replace.1##"
+        "message": "Bad Item Skipped: ##replace.1##"
     },
     "status.FolderDelete.3": {
-        "message": "システムフォルダを削除できません (ステータス 3)"
+        "message": "Cannot delete a system folder (status 3)"
     },
     "status.FolderDelete.4": {
-        "message": "フォルダが見つかりません (ステータス 4)。再同期中"
+        "message": "Folder does not exist (status 4), resyncing"
     },
     "status.FolderDelete.6": {
-        "message": "コマンドを完了できません。サーバーでエラーが発生しました (ステータス 6)"
+        "message": "Command could not be completed, an error occurred on the server (status 6)"
     },
     "status.FolderDelete.9": {
         "message": "Invalid synchronization key (status 9), resyncing"
@@ -321,28 +321,28 @@
         "message": "The EAS server did not accept ##replace.1## elements."
     },
     "status.Sync.12": {
-        "message": "フォルダの階層構造が変更されました (ステータス 12)。再同期中"
+        "message": "Folder hierarchy changed (status 12), resyncing"
     },
     "status.Sync.3": {
         "message": "Invalid synchronization key (status 3), resyncing"
     },
     "status.Sync.4": {
-        "message": "不正なリクエストです (ステータス 4)"
+        "message": "Malformed request (status 4)"
     },
     "status.Sync.5": {
-        "message": "一時的なサーバーの問題、または無効なアイテムです (ステータス 5)"
+        "message": "Temporary server issues or invalid item (status 5)"
     },
     "status.Sync.6": {
-        "message": "無効なアイテムです (ステータス 6)"
+        "message": "Invalid item (status 6)"
     },
     "status.Sync.8": {
-        "message": "オブジェクトが見つかりません (ステータス 8)"
+        "message": "Object not found (status 8)"
     },
     "status.aborted": {
-        "message": "同期されていません"
+        "message": "Not synchronized"
     },
     "status.disabled": {
-        "message": "無効"
+        "message": "Disabled"
     },
     "status.empty-response": {
         "message": "Server sends unexpected empty response."
@@ -366,34 +366,34 @@
         "message": "The server reported an internal error and we should not retry immediately. Automatic periodic sync has been disabled for 30 minutes (EAS Error 110)."
     },
     "status.global.clientdenied": {
-        "message": "EAS サーバーは <## replace.2 ##> (ステータス ## replace.1 ##) を報告し、TbSync がアカウントにアクセスすることを許可しませんでした。"
+        "message": "The EAS server reports <##replace.2##> (status ##replace.1##) and does not allow TbSync to access your account."
     },
     "status.httperror": {
-        "message": "コミュニケーション エラー (HTTP ステータス ##replace.1##)。"
+        "message": "Communication error (HTTP status ##replace.1##)."
     },
     "status.invalid": {
         "message": "Invalid server response (junk)."
     },
     "status.malformed-xml": {
-        "message": "XML を解析できません。詳細はイベントログをご確認ください。"
+        "message": "Could not parse XML. Check event log for details."
     },
     "status.modified": {
-        "message": "ローカルの変更"
+        "message": "Local modifications"
     },
     "status.network": {
-        "message": "サーバーに接続できません (##replace.1##)。"
+        "message": "Could not connect to server (##replace.1##)."
     },
     "status.networkerror": {
-        "message": "サーバーに接続できません。"
+        "message": "Could not connect to server."
     },
     "status.nosupportedeasversion": {
-        "message": "サーバーは ActiveSync v2.5 または v14.0 をサポートしていません (##replace.1## のみ)。TbSync は、この ActiveSync サーバーでは機能しません。"
+        "message": "Server does not support ActiveSync v2.5 or v14.0 (only ##replace.1##). TbSync will not work with this ActiveSync server."
     },
     "status.notargets": {
         "message": "Aborting Sync, because sync targets could not be created."
     },
     "status.notsupportedeasversion": {
-        "message": "サーバーは選択された ActiveSync v##replace.1## をサポートしていません (##replace.2## のみ)。"
+        "message": "Server does not support selected ActiveSync v##replace.1## (only ##replace.2##)."
     },
     "status.notsyncronized": {
         "message": "Account needs to be synchronized, at least one item is out of sync."
@@ -402,7 +402,7 @@
         "message": "Missing username and/or server. Please provide those values."
     },
     "status.pending": {
-        "message": "同期待ち"
+        "message": "Waiting to be synchronized"
     },
     "status.policy.2": {
         "message": "There is no policy for this client. Contact your server administrator or disable provisioning for this account."
@@ -426,16 +426,16 @@
         "message": "There was an error from which we could not recover by resyncing the account. Please disable the account and try again. (Error: resync loop)"
     },
     "status.security": {
-        "message": "安全な接続を確立できませんでした。Thunderbird にインポートせずに、自己署名証明書または信頼できない証明書を使用していますか？ (##replace.1##)"
+        "message": "Could not establish a secure connection. Are you using a self-signed or otherwise untrusted certificate without importing it into Thunderbird? (##replace.1##)"
     },
     "status.skipped": {
-        "message": "サポートされていません。スキップします。"
+        "message": "Not yet supported, skipped"
     },
     "status.syncing": {
-        "message": "同期中"
+        "message": "Synchronizing"
     },
     "status.timeout": {
-        "message": "接続がタイムアウトしました。"
+        "message": "Communication timeout."
     },
     "status.wbxml-parse-error": {
         "message": "Server sends unreadable response."
@@ -483,7 +483,7 @@
         "message": "Reverting local changes"
     },
     "syncstate.eval.response.setdeviceinfo": {
-        "message": "デバイス情報を送信中"
+        "message": "Sending device information"
     },
     "syncstate.eval.response.synckey": {
         "message": "Processing SyncKey"
@@ -492,19 +492,19 @@
         "message": "Requesting updated server settings"
     },
     "syncstate.prepare.request.deletefolder": {
-        "message": "フォルダ削除の準備中"
+        "message": "Preparing to delete folder"
     },
     "syncstate.prepare.request.estimate": {
         "message": "Requesting change estimate"
     },
     "syncstate.prepare.request.folders": {
-        "message": "フォルダリストの更新を送信中"
+        "message": "Sending folder list update"
     },
     "syncstate.prepare.request.localchanges": {
-        "message": "ローカルの変更を送信中"
+        "message": "Sending local changes"
     },
     "syncstate.prepare.request.localdeletes": {
-        "message": "ローカルの削除を送信中"
+        "message": "Sending local deletes"
     },
     "syncstate.prepare.request.options": {
         "message": "Requesting server options"
@@ -519,10 +519,10 @@
         "message": "Collecting local changes"
     },
     "syncstate.prepare.request.setdeviceinfo": {
-        "message": "デバイス情報を送信中"
+        "message": "Sending device information"
     },
     "syncstate.prepare.request.synckey": {
-        "message": "同期キーをリクエスト中"
+        "message": "Requesting SyncKey"
     },
     "syncstate.preparing": {
         "message": "Preparing next item for synchronization"
@@ -531,7 +531,7 @@
         "message": "Waiting for updated server settings"
     },
     "syncstate.send.request.deletefolder": {
-        "message": "フォルダが削除されるのを待機中"
+        "message": "Waiting for folder to be deleted"
     },
     "syncstate.send.request.estimate": {
         "message": "Waiting for change estimate"
@@ -558,7 +558,7 @@
         "message": "Waiting for most recent versions"
     },
     "syncstate.send.request.setdeviceinfo": {
-        "message": "デバイス情報を送信中"
+        "message": "Sending device information"
     },
     "syncstate.send.request.synckey": {
         "message": "Waiting for SyncKey"
