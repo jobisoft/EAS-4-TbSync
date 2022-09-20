@@ -11,19 +11,19 @@ Aleutian Standard Time,US,America/Adak
 Altai Standard Time,001,Asia/Barnaul
 Altai Standard Time,RU,Asia/Barnaul
 Arab Standard Time,001,Asia/Riyadh
-Arab Standard Time,BH,Asia/Qatar
-Arab Standard Time,KW,Asia/Riyadh
+Arab Standard Time,BH,Asia/Bahrain
+Arab Standard Time,KW,Asia/Kuwait
 Arab Standard Time,QA,Asia/Qatar
 Arab Standard Time,SA,Asia/Riyadh
-Arab Standard Time,YE,Asia/Riyadh
+Arab Standard Time,YE,Asia/Aden
 Arabian Standard Time,001,Asia/Dubai
 Arabian Standard Time,AE,Asia/Dubai
-Arabian Standard Time,OM,Asia/Dubai
+Arabian Standard Time,OM,Asia/Muscat
 Arabian Standard Time,ZZ,Etc/GMT-4
 Arabic Standard Time,001,Asia/Baghdad
 Arabic Standard Time,IQ,Asia/Baghdad
-Argentina Standard Time,001,America/Argentina/Buenos_Aires
-Argentina Standard Time,AR,America/Argentina/Buenos_Aires America/Argentina/La_Rioja America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Argentina/Catamarca America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/Mendoza
+Argentina Standard Time,001,America/Buenos_Aires
+Argentina Standard Time,AR,America/Buenos_Aires America/Argentina/La_Rioja America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Catamarca America/Cordoba America/Jujuy America/Mendoza
 Astrakhan Standard Time,001,Europe/Astrakhan
 Astrakhan Standard Time,RU,Europe/Astrakhan Europe/Ulyanovsk
 Atlantic Standard Time,001,America/Halifax
@@ -78,19 +78,19 @@ Central Europe Standard Time,001,Europe/Budapest
 Central Europe Standard Time,AL,Europe/Tirane
 Central Europe Standard Time,CZ,Europe/Prague
 Central Europe Standard Time,HU,Europe/Budapest
-Central Europe Standard Time,ME,Europe/Belgrade
+Central Europe Standard Time,ME,Europe/Podgorica
 Central Europe Standard Time,RS,Europe/Belgrade
-Central Europe Standard Time,SI,Europe/Belgrade
-Central Europe Standard Time,SK,Europe/Prague
+Central Europe Standard Time,SI,Europe/Ljubljana
+Central Europe Standard Time,SK,Europe/Bratislava
 Central Europe Standard Time,XK,Europe/Belgrade
 Central European Standard Time,001,Europe/Warsaw
-Central European Standard Time,BA,Europe/Belgrade
-Central European Standard Time,HR,Europe/Belgrade
-Central European Standard Time,MK,Europe/Belgrade
+Central European Standard Time,BA,Europe/Sarajevo
+Central European Standard Time,HR,Europe/Zagreb
+Central European Standard Time,MK,Europe/Skopje
 Central European Standard Time,PL,Europe/Warsaw
 Central Pacific Standard Time,001,Pacific/Guadalcanal
-Central Pacific Standard Time,AU,Antarctica/Macquarie
-Central Pacific Standard Time,FM,Pacific/Pohnpei Pacific/Kosrae
+Central Pacific Standard Time,AQ,Antarctica/Casey
+Central Pacific Standard Time,FM,Pacific/Ponape Pacific/Kosrae
 Central Pacific Standard Time,NC,Pacific/Noumea
 Central Pacific Standard Time,SB,Pacific/Guadalcanal
 Central Pacific Standard Time,VU,Pacific/Efate
@@ -114,17 +114,16 @@ Dateline Standard Time,001,Etc/GMT+12
 Dateline Standard Time,ZZ,Etc/GMT+12
 E. Africa Standard Time,001,Africa/Nairobi
 E. Africa Standard Time,AQ,Antarctica/Syowa
-E. Africa Standard Time,DJ,Africa/Nairobi
-E. Africa Standard Time,ER,Africa/Nairobi
-E. Africa Standard Time,ET,Africa/Nairobi
+E. Africa Standard Time,DJ,Africa/Djibouti
+E. Africa Standard Time,ER,Africa/Asmera
+E. Africa Standard Time,ET,Africa/Addis_Ababa
 E. Africa Standard Time,KE,Africa/Nairobi
-E. Africa Standard Time,KM,Africa/Nairobi
-E. Africa Standard Time,MG,Africa/Nairobi
-E. Africa Standard Time,SO,Africa/Nairobi
-E. Africa Standard Time,SS,Africa/Juba
-E. Africa Standard Time,TZ,Africa/Nairobi
-E. Africa Standard Time,UG,Africa/Nairobi
-E. Africa Standard Time,YT,Africa/Nairobi
+E. Africa Standard Time,KM,Indian/Comoro
+E. Africa Standard Time,MG,Indian/Antananarivo
+E. Africa Standard Time,SO,Africa/Mogadishu
+E. Africa Standard Time,TZ,Africa/Dar_es_Salaam
+E. Africa Standard Time,UG,Africa/Kampala
+E. Africa Standard Time,YT,Indian/Mayotte
 E. Africa Standard Time,ZZ,Etc/GMT-3
 E. Australia Standard Time,001,Australia/Brisbane
 E. Australia Standard Time,AU,Australia/Brisbane Australia/Lindeman
@@ -138,15 +137,15 @@ Eastern Standard Time (Mexico),001,America/Cancun
 Eastern Standard Time (Mexico),MX,America/Cancun
 Eastern Standard Time,001,America/New_York
 Eastern Standard Time,BS,America/Nassau
-Eastern Standard Time,CA,America/Toronto America/Iqaluit America/Nipigon America/Pangnirtung America/Thunder_Bay
-Eastern Standard Time,US,America/New_York America/Detroit America/Indiana/Petersburg America/Indiana/Vincennes America/Indiana/Winamac America/Kentucky/Monticello America/Kentucky/Louisville
+Eastern Standard Time,CA,America/Toronto America/Iqaluit America/Montreal America/Nipigon America/Pangnirtung America/Thunder_Bay
+Eastern Standard Time,US,America/New_York America/Detroit America/Indiana/Petersburg America/Indiana/Vincennes America/Indiana/Winamac America/Kentucky/Monticello America/Louisville
 Eastern Standard Time,ZZ,EST5EDT
 Egypt Standard Time,001,Africa/Cairo
 Egypt Standard Time,EG,Africa/Cairo
 Ekaterinburg Standard Time,001,Asia/Yekaterinburg
 Ekaterinburg Standard Time,RU,Asia/Yekaterinburg
 FLE Standard Time,001,Europe/Kiev
-FLE Standard Time,AX,Europe/Helsinki
+FLE Standard Time,AX,Europe/Mariehamn
 FLE Standard Time,BG,Europe/Sofia
 FLE Standard Time,EE,Europe/Tallinn
 FLE Standard Time,FI,Europe/Helsinki
@@ -157,16 +156,16 @@ Fiji Standard Time,001,Pacific/Fiji
 Fiji Standard Time,FJ,Pacific/Fiji
 GMT Standard Time,001,Europe/London
 GMT Standard Time,ES,Atlantic/Canary
-GMT Standard Time,FO,Atlantic/Faroe
+GMT Standard Time,FO,Atlantic/Faeroe
 GMT Standard Time,GB,Europe/London
-GMT Standard Time,GG,Europe/London
+GMT Standard Time,GG,Europe/Guernsey
 GMT Standard Time,IC,Atlantic/Canary
 GMT Standard Time,IE,Europe/Dublin
-GMT Standard Time,IM,Europe/London
-GMT Standard Time,JE,Europe/London
+GMT Standard Time,IM,Europe/Isle_of_Man
+GMT Standard Time,JE,Europe/Jersey
 GMT Standard Time,PT,Europe/Lisbon Atlantic/Madeira
 GTB Standard Time,001,Europe/Bucharest
-GTB Standard Time,CY,Asia/Famagusta Asia/Nicosia
+GTB Standard Time,CY,Asia/Nicosia Asia/Famagusta
 GTB Standard Time,GR,Europe/Athens
 GTB Standard Time,RO,Europe/Bucharest
 Georgian Standard Time,001,Asia/Tbilisi
@@ -175,31 +174,32 @@ Greenland Standard Time,001,America/Godthab
 Greenland Standard Time,GL,America/Godthab
 Greenwich Standard Time,001,Atlantic/Reykjavik
 Greenwich Standard Time,AC,Atlantic/St_Helena
-Greenwich Standard Time,BF,Africa/Abidjan
+Greenwich Standard Time,BF,Africa/Ouagadougou
 Greenwich Standard Time,CI,Africa/Abidjan
 Greenwich Standard Time,GH,Africa/Accra
-Greenwich Standard Time,GM,Africa/Abidjan
-Greenwich Standard Time,GN,Africa/Abidjan
+Greenwich Standard Time,GL,America/Danmarkshavn
+Greenwich Standard Time,GM,Africa/Banjul
+Greenwich Standard Time,GN,Africa/Conakry
 Greenwich Standard Time,GW,Africa/Bissau
 Greenwich Standard Time,IS,Atlantic/Reykjavik
 Greenwich Standard Time,LR,Africa/Monrovia
-Greenwich Standard Time,ML,Africa/Abidjan
-Greenwich Standard Time,MR,Africa/Abidjan
-Greenwich Standard Time,SH,Africa/Abidjan
-Greenwich Standard Time,SL,Africa/Abidjan
-Greenwich Standard Time,SN,Africa/Abidjan
+Greenwich Standard Time,ML,Africa/Bamako
+Greenwich Standard Time,MR,Africa/Nouakchott
+Greenwich Standard Time,SH,Atlantic/St_Helena
+Greenwich Standard Time,SL,Africa/Freetown
+Greenwich Standard Time,SN,Africa/Dakar
 Greenwich Standard Time,TA,Atlantic/St_Helena
-Greenwich Standard Time,TG,Africa/Abidjan
+Greenwich Standard Time,TG,Africa/Lome
 Haiti Standard Time,001,America/Port-au-Prince
 Haiti Standard Time,HT,America/Port-au-Prince
 Hawaiian Standard Time,001,Pacific/Honolulu
 Hawaiian Standard Time,CK,Pacific/Rarotonga
 Hawaiian Standard Time,PF,Pacific/Tahiti
-Hawaiian Standard Time,UM,Pacific/Honolulu
+Hawaiian Standard Time,UM,Pacific/Johnston
 Hawaiian Standard Time,US,Pacific/Honolulu
 Hawaiian Standard Time,ZZ,Etc/GMT+10
-India Standard Time,001,Asia/Kolkata
-India Standard Time,IN,Asia/Kolkata
+India Standard Time,001,Asia/Calcutta
+India Standard Time,IN,Asia/Calcutta
 Iran Standard Time,001,Asia/Tehran
 Iran Standard Time,IR,Asia/Tehran
 Israel Standard Time,001,Asia/Jerusalem
@@ -220,7 +220,6 @@ Lord Howe Standard Time,AU,Australia/Lord_Howe
 Magadan Standard Time,001,Asia/Magadan
 Magadan Standard Time,RU,Asia/Magadan
 Magallanes Standard Time,001,America/Punta_Arenas
-Magallanes Standard Time,AQ,Antarctica/Palmer
 Magallanes Standard Time,CL,America/Punta_Arenas
 Marquesas Standard Time,001,Pacific/Marquesas
 Marquesas Standard Time,PF,Pacific/Marquesas
@@ -242,17 +241,17 @@ Mountain Standard Time,CA,America/Edmonton America/Cambridge_Bay America/Inuvik 
 Mountain Standard Time,MX,America/Ojinaga
 Mountain Standard Time,US,America/Denver America/Boise
 Mountain Standard Time,ZZ,MST7MDT
-Myanmar Standard Time,001,Asia/Yangon
+Myanmar Standard Time,001,Asia/Rangoon
 Myanmar Standard Time,CC,Indian/Cocos
-Myanmar Standard Time,MM,Asia/Yangon
+Myanmar Standard Time,MM,Asia/Rangoon
 N. Central Asia Standard Time,001,Asia/Novosibirsk
 N. Central Asia Standard Time,RU,Asia/Novosibirsk
 Namibia Standard Time,001,Africa/Windhoek
 Namibia Standard Time,NA,Africa/Windhoek
-Nepal Standard Time,001,Asia/Kathmandu
-Nepal Standard Time,NP,Asia/Kathmandu
+Nepal Standard Time,001,Asia/Katmandu
+Nepal Standard Time,NP,Asia/Katmandu
 New Zealand Standard Time,001,Pacific/Auckland
-New Zealand Standard Time,AQ,Pacific/Auckland
+New Zealand Standard Time,AQ,Antarctica/McMurdo
 New Zealand Standard Time,NZ,Pacific/Auckland
 Newfoundland Standard Time,001,America/St_Johns
 Newfoundland Standard Time,CA,America/St_Johns
@@ -269,9 +268,9 @@ Omsk Standard Time,RU,Asia/Omsk
 Pacific SA Standard Time,001,America/Santiago
 Pacific SA Standard Time,CL,America/Santiago
 Pacific Standard Time (Mexico),001,America/Tijuana
-Pacific Standard Time (Mexico),MX,America/Tijuana
+Pacific Standard Time (Mexico),MX,America/Tijuana America/Santa_Isabel
 Pacific Standard Time,001,America/Los_Angeles
-Pacific Standard Time,CA,America/Vancouver America/Dawson America/Whitehorse
+Pacific Standard Time,CA,America/Vancouver
 Pacific Standard Time,US,America/Los_Angeles
 Pacific Standard Time,ZZ,PST8PDT
 Pakistan Standard Time,001,Asia/Karachi
@@ -296,7 +295,7 @@ Russian Standard Time,001,Europe/Moscow
 Russian Standard Time,RU,Europe/Moscow Europe/Kirov
 Russian Standard Time,UA,Europe/Simferopol
 SA Eastern Standard Time,001,America/Cayenne
-SA Eastern Standard Time,AQ,Antarctica/Rothera
+SA Eastern Standard Time,AQ,Antarctica/Rothera Antarctica/Palmer
 SA Eastern Standard Time,BR,America/Fortaleza America/Belem America/Maceio America/Recife America/Santarem
 SA Eastern Standard Time,FK,Atlantic/Stanley
 SA Eastern Standard Time,GF,America/Cayenne
@@ -304,50 +303,50 @@ SA Eastern Standard Time,SR,America/Paramaribo
 SA Eastern Standard Time,ZZ,Etc/GMT+3
 SA Pacific Standard Time,001,America/Bogota
 SA Pacific Standard Time,BR,America/Rio_Branco America/Eirunepe
-SA Pacific Standard Time,CA,America/Atikokan
+SA Pacific Standard Time,CA,America/Coral_Harbour
 SA Pacific Standard Time,CO,America/Bogota
 SA Pacific Standard Time,EC,America/Guayaquil
 SA Pacific Standard Time,JM,America/Jamaica
-SA Pacific Standard Time,KY,America/Panama
+SA Pacific Standard Time,KY,America/Cayman
 SA Pacific Standard Time,PA,America/Panama
 SA Pacific Standard Time,PE,America/Lima
 SA Pacific Standard Time,ZZ,Etc/GMT+5
 SA Western Standard Time,001,America/La_Paz
-SA Western Standard Time,AG,America/Port_of_Spain
-SA Western Standard Time,AI,America/Port_of_Spain
-SA Western Standard Time,AW,America/Curacao
+SA Western Standard Time,AG,America/Antigua
+SA Western Standard Time,AI,America/Anguilla
+SA Western Standard Time,AW,America/Aruba
 SA Western Standard Time,BB,America/Barbados
-SA Western Standard Time,BL,America/Port_of_Spain
+SA Western Standard Time,BL,America/St_Barthelemy
 SA Western Standard Time,BO,America/La_Paz
-SA Western Standard Time,BQ,America/Curacao
+SA Western Standard Time,BQ,America/Kralendijk
 SA Western Standard Time,BR,America/Manaus America/Boa_Vista America/Porto_Velho
 SA Western Standard Time,CA,America/Blanc-Sablon
 SA Western Standard Time,CW,America/Curacao
-SA Western Standard Time,DM,America/Port_of_Spain
+SA Western Standard Time,DM,America/Dominica
 SA Western Standard Time,DO,America/Santo_Domingo
-SA Western Standard Time,GD,America/Port_of_Spain
-SA Western Standard Time,GP,America/Port_of_Spain
+SA Western Standard Time,GD,America/Grenada
+SA Western Standard Time,GP,America/Guadeloupe
 SA Western Standard Time,GY,America/Guyana
-SA Western Standard Time,KN,America/Port_of_Spain
-SA Western Standard Time,LC,America/Port_of_Spain
-SA Western Standard Time,MF,America/Port_of_Spain
+SA Western Standard Time,KN,America/St_Kitts
+SA Western Standard Time,LC,America/St_Lucia
+SA Western Standard Time,MF,America/Marigot
 SA Western Standard Time,MQ,America/Martinique
-SA Western Standard Time,MS,America/Port_of_Spain
+SA Western Standard Time,MS,America/Montserrat
 SA Western Standard Time,PR,America/Puerto_Rico
-SA Western Standard Time,SX,America/Curacao
+SA Western Standard Time,SX,America/Lower_Princes
 SA Western Standard Time,TT,America/Port_of_Spain
-SA Western Standard Time,VC,America/Port_of_Spain
-SA Western Standard Time,VG,America/Port_of_Spain
-SA Western Standard Time,VI,America/Port_of_Spain
+SA Western Standard Time,VC,America/St_Vincent
+SA Western Standard Time,VG,America/Tortola
+SA Western Standard Time,VI,America/St_Thomas
 SA Western Standard Time,ZZ,Etc/GMT+4
 SE Asia Standard Time,001,Asia/Bangkok
 SE Asia Standard Time,AQ,Antarctica/Davis
 SE Asia Standard Time,CX,Indian/Christmas
 SE Asia Standard Time,ID,Asia/Jakarta Asia/Pontianak
-SE Asia Standard Time,KH,Asia/Bangkok
-SE Asia Standard Time,LA,Asia/Bangkok
+SE Asia Standard Time,KH,Asia/Phnom_Penh
+SE Asia Standard Time,LA,Asia/Vientiane
 SE Asia Standard Time,TH,Asia/Bangkok
-SE Asia Standard Time,VN,Asia/Ho_Chi_Minh
+SE Asia Standard Time,VN,Asia/Saigon
 SE Asia Standard Time,ZZ,Etc/GMT-7
 Saint Pierre Standard Time,001,America/Miquelon
 Saint Pierre Standard Time,PM,America/Miquelon
@@ -367,18 +366,20 @@ Singapore Standard Time,PH,Asia/Manila
 Singapore Standard Time,SG,Asia/Singapore
 Singapore Standard Time,ZZ,Etc/GMT-8
 South Africa Standard Time,001,Africa/Johannesburg
-South Africa Standard Time,BI,Africa/Maputo
-South Africa Standard Time,BW,Africa/Maputo
-South Africa Standard Time,CD,Africa/Maputo
-South Africa Standard Time,LS,Africa/Johannesburg
-South Africa Standard Time,MW,Africa/Maputo
+South Africa Standard Time,BI,Africa/Bujumbura
+South Africa Standard Time,BW,Africa/Gaborone
+South Africa Standard Time,CD,Africa/Lubumbashi
+South Africa Standard Time,LS,Africa/Maseru
+South Africa Standard Time,MW,Africa/Blantyre
 South Africa Standard Time,MZ,Africa/Maputo
-South Africa Standard Time,RW,Africa/Maputo
-South Africa Standard Time,SZ,Africa/Johannesburg
+South Africa Standard Time,RW,Africa/Kigali
+South Africa Standard Time,SZ,Africa/Mbabane
 South Africa Standard Time,ZA,Africa/Johannesburg
-South Africa Standard Time,ZM,Africa/Maputo
-South Africa Standard Time,ZW,Africa/Maputo
+South Africa Standard Time,ZM,Africa/Lusaka
+South Africa Standard Time,ZW,Africa/Harare
 South Africa Standard Time,ZZ,Etc/GMT-2
+South Sudan Standard Time,001,Africa/Juba
+South Sudan Standard Time,SS,Africa/Juba
 Sri Lanka Standard Time,001,Asia/Colombo
 Sri Lanka Standard Time,LK,Asia/Colombo
 Sudan Standard Time,001,Africa/Khartoum
@@ -388,7 +389,7 @@ Syria Standard Time,SY,Asia/Damascus
 Taipei Standard Time,001,Asia/Taipei
 Taipei Standard Time,TW,Asia/Taipei
 Tasmania Standard Time,001,Australia/Hobart
-Tasmania Standard Time,AU,Australia/Hobart Australia/Currie
+Tasmania Standard Time,AU,Australia/Hobart Australia/Currie Antarctica/Macquarie
 Tocantins Standard Time,001,America/Araguaina
 Tocantins Standard Time,BR,America/Araguaina
 Tokyo Standard Time,001,Asia/Tokyo
@@ -407,10 +408,10 @@ Turkey Standard Time,001,Europe/Istanbul
 Turkey Standard Time,TR,Europe/Istanbul
 Turks And Caicos Standard Time,001,America/Grand_Turk
 Turks And Caicos Standard Time,TC,America/Grand_Turk
-US Eastern Standard Time,001,America/Indiana/Indianapolis
-US Eastern Standard Time,US,America/Indiana/Indianapolis America/Indiana/Marengo America/Indiana/Vevay
+US Eastern Standard Time,001,America/Indianapolis
+US Eastern Standard Time,US,America/Indianapolis America/Indiana/Marengo America/Indiana/Vevay
 US Mountain Standard Time,001,America/Phoenix
-US Mountain Standard Time,CA,America/Dawson_Creek America/Creston America/Fort_Nelson
+US Mountain Standard Time,CA,America/Creston America/Dawson_Creek America/Fort_Nelson
 US Mountain Standard Time,MX,America/Hermosillo
 US Mountain Standard Time,US,America/Phoenix
 US Mountain Standard Time,ZZ,Etc/GMT+7
@@ -427,8 +428,7 @@ UTC+13,KI,Pacific/Enderbury
 UTC+13,TK,Pacific/Fakaofo
 UTC+13,ZZ,Etc/GMT-13
 UTC,001,Etc/UTC
-UTC,GL,America/Danmarkshavn
-UTC,ZZ,Etc/UTC
+UTC,ZZ,Etc/UTC Etc/GMT
 UTC-02,001,Etc/GMT+2
 UTC-02,BR,America/Noronha
 UTC-02,GS,Atlantic/South_Georgia
@@ -442,7 +442,7 @@ UTC-09,ZZ,Etc/GMT+9
 UTC-11,001,Etc/GMT+11
 UTC-11,AS,Pacific/Pago_Pago
 UTC-11,NU,Pacific/Niue
-UTC-11,UM,Pacific/Pago_Pago
+UTC-11,UM,Pacific/Midway
 UTC-11,ZZ,Etc/GMT+11
 Ulaanbaatar Standard Time,001,Asia/Ulaanbaatar
 Ulaanbaatar Standard Time,MN,Asia/Ulaanbaatar Asia/Choibalsan
@@ -453,19 +453,18 @@ Vladivostok Standard Time,RU,Asia/Vladivostok Asia/Ust-Nera
 Volgograd Standard Time,001,Europe/Volgograd
 Volgograd Standard Time,RU,Europe/Volgograd
 W. Australia Standard Time,001,Australia/Perth
-W. Australia Standard Time,AQ,Antarctica/Casey
 W. Australia Standard Time,AU,Australia/Perth
 W. Central Africa Standard Time,001,Africa/Lagos
-W. Central Africa Standard Time,AO,Africa/Lagos
-W. Central Africa Standard Time,BJ,Africa/Lagos
-W. Central Africa Standard Time,CD,Africa/Lagos
-W. Central Africa Standard Time,CF,Africa/Lagos
-W. Central Africa Standard Time,CG,Africa/Lagos
-W. Central Africa Standard Time,CM,Africa/Lagos
+W. Central Africa Standard Time,AO,Africa/Luanda
+W. Central Africa Standard Time,BJ,Africa/Porto-Novo
+W. Central Africa Standard Time,CD,Africa/Kinshasa
+W. Central Africa Standard Time,CF,Africa/Bangui
+W. Central Africa Standard Time,CG,Africa/Brazzaville
+W. Central Africa Standard Time,CM,Africa/Douala
 W. Central Africa Standard Time,DZ,Africa/Algiers
-W. Central Africa Standard Time,GA,Africa/Lagos
-W. Central Africa Standard Time,GQ,Africa/Lagos
-W. Central Africa Standard Time,NE,Africa/Lagos
+W. Central Africa Standard Time,GA,Africa/Libreville
+W. Central Africa Standard Time,GQ,Africa/Malabo
+W. Central Africa Standard Time,NE,Africa/Niamey
 W. Central Africa Standard Time,NG,Africa/Lagos
 W. Central Africa Standard Time,TD,Africa/Ndjamena
 W. Central Africa Standard Time,TN,Africa/Tunis
@@ -474,19 +473,19 @@ W. Europe Standard Time,001,Europe/Berlin
 W. Europe Standard Time,AD,Europe/Andorra
 W. Europe Standard Time,AT,Europe/Vienna
 W. Europe Standard Time,CH,Europe/Zurich
-W. Europe Standard Time,DE,Europe/Berlin Europe/Zurich
+W. Europe Standard Time,DE,Europe/Berlin Europe/Busingen
 W. Europe Standard Time,GI,Europe/Gibraltar
 W. Europe Standard Time,IT,Europe/Rome
-W. Europe Standard Time,LI,Europe/Zurich
+W. Europe Standard Time,LI,Europe/Vaduz
 W. Europe Standard Time,LU,Europe/Luxembourg
 W. Europe Standard Time,MC,Europe/Monaco
 W. Europe Standard Time,MT,Europe/Malta
 W. Europe Standard Time,NL,Europe/Amsterdam
 W. Europe Standard Time,NO,Europe/Oslo
 W. Europe Standard Time,SE,Europe/Stockholm
-W. Europe Standard Time,SJ,Europe/Oslo
-W. Europe Standard Time,SM,Europe/Rome
-W. Europe Standard Time,VA,Europe/Rome
+W. Europe Standard Time,SJ,Arctic/Longyearbyen
+W. Europe Standard Time,SM,Europe/San_Marino
+W. Europe Standard Time,VA,Europe/Vatican
 W. Mongolia Standard Time,001,Asia/Hovd
 W. Mongolia Standard Time,MN,Asia/Hovd
 West Asia Standard Time,001,Asia/Tashkent
@@ -502,12 +501,14 @@ West Bank Standard Time,001,Asia/Hebron
 West Bank Standard Time,PS,Asia/Hebron Asia/Gaza
 West Pacific Standard Time,001,Pacific/Port_Moresby
 West Pacific Standard Time,AQ,Antarctica/DumontDUrville
-West Pacific Standard Time,FM,Pacific/Chuuk
+West Pacific Standard Time,FM,Pacific/Truk
 West Pacific Standard Time,GU,Pacific/Guam
-West Pacific Standard Time,MP,Pacific/Guam
+West Pacific Standard Time,MP,Pacific/Saipan
 West Pacific Standard Time,PG,Pacific/Port_Moresby
 West Pacific Standard Time,ZZ,Etc/GMT-10
 Yakutsk Standard Time,001,Asia/Yakutsk
 Yakutsk Standard Time,RU,Asia/Yakutsk Asia/Khandyga
+Yukon Standard Time,001,America/Whitehorse
+Yukon Standard Time,CA,America/Whitehorse America/Dawson
 Kamchatka Standard Time,001,Asia/Kamchatka
 Mid-Atlantic Standard Time,001,Etc/GMT+2
