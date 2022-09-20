@@ -118,7 +118,7 @@ var Base = class {
                 }
             }
 
-            let tzService = TbSync.lightning.cal.timezoneService ? TbSync.lightning.cal.timezoneService : TbSync.lightning.cal.getTimezoneService();
+            let tzService = TbSync.lightning.cal.timezoneService;
             let enumerator = tzService.timezoneIds;
             while (enumerator.hasMore()) {
                 let id = enumerator.getNext();
@@ -136,7 +136,7 @@ var Base = class {
             let providerData = new TbSync.ProviderData("eas");
             let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
             for (let folder of folders) {
-                let manager = TbSync.lightning.cal.manager ? TbSync.lightning.cal.manager : TbSync.lightning.cal.getCalendarManager();
+                let manager = TbSync.lightning.cal.manager;
                 let calendar = manager.getCalendarById(folder.getFolderProperty("target"));
                 if (calendar && calendar.getProperty("imip.identity.key") == "") {
                     //is there an email identity for this eas account?
@@ -634,7 +634,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
     }
 
     async createCalendar(newname) {
-        let calManager = TbSync.lightning.cal.manager ? TbSync.lightning.cal.manager : TbSync.lightning.cal.getCalendarManager();
+        let calManager = TbSync.lightning.cal.manager;
         //Alternative calendar, which uses calTbSyncCalendar
         //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
 

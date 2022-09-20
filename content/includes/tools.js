@@ -290,7 +290,7 @@ var tools = {
     //guess the IANA timezone (used by TB) based on the current offset (standard or daylight)
     guessTimezoneByCurrentOffset: function(curOffset, utcDateTime) {
         //if we only now the current offset and the current date, we need to actually try each TZ.
-        let tzService = TbSync.lightning.cal.timezoneService ? TbSync.lightning.cal.timezoneService : TbSync.lightning.cal.getTimezoneService();
+        let tzService = TbSync.lightning.cal.timezoneService;
 
         //first try default tz
         let test = utcDateTime.getInTimezone(eas.defaultTimezoneInfo.timezone);
