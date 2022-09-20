@@ -329,9 +329,9 @@ var tools = {
                 eas.cachedTimezoneData.iana = {};
                 eas.cachedTimezoneData.abbreviations = {};
                 eas.cachedTimezoneData.stdOffset = {};
-                eas.cachedTimezoneData.bothOffsets = {};                    
+                eas.cachedTimezoneData.bothOffsets = {};
                     
-                let tzService = TbSync.lightning.cal.timezoneService ? TbSync.lightning.cal.timezoneService : TbSync.lightning.cal.getTimezoneService();
+                let tzService = TbSync.lightning.cal.timezoneService;
 
                 //cache timezones data from internal IANA data
                 let enumerator = tzService.timezoneIds;
