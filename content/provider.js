@@ -47,23 +47,6 @@ var Base = class {
         eas.windowsToIanaTimezoneMap = {};
         eas.openWindows = {};
 
-        let providerData = new TbSync.ProviderData("eas");   
-        eas.overlayManager = new OverlayManager(providerData.extension, {verbose: 0});
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abNewCardWindow.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCardWindow.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCardWindow.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/addressbookoverlay.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/abServerSearch.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xhtml", "chrome://eas4tbsync/content/overlays/abServerSearch.xhtml");
-
-        // The abCSS.xul overlay is just adding a CSS file.
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
-
-        eas.overlayManager.startObserving();
-                
         try {
             // Create a basic error info (no accountname or foldername, just the provider)
             let eventLogInfo = new TbSync.EventLogInfo("eas");
@@ -118,7 +101,7 @@ var Base = class {
                 }
             }
 
-            let tzService = TbSync.lightning.cal.timezoneService ? TbSync.lightning.cal.timezoneService : TbSync.lightning.cal.getTimezoneService();
+            let tzService = TbSync.lightning.cal.timezoneService;
             let enumerator = tzService.timezoneIds;
             while (enumerator.hasMore()) {
                 let id = enumerator.getNext();
@@ -136,7 +119,7 @@ var Base = class {
             let providerData = new TbSync.ProviderData("eas");
             let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
             for (let folder of folders) {
-                let manager = TbSync.lightning.cal.manager ? TbSync.lightning.cal.manager : TbSync.lightning.cal.getCalendarManager();
+                let manager = TbSync.lightning.cal.manager;
                 let calendar = manager.getCalendarById(folder.getFolderProperty("target"));
                 if (calendar && calendar.getProperty("imip.identity.key") == "") {
                     //is there an email identity for this eas account?
@@ -147,15 +130,15 @@ var Base = class {
                         //set transient calendar organizer settings based on current best guess and 
                         calendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
                         calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
-                    } else {                      
+                    } else {
                         //force switch to found identity
                         calendar.setProperty("imip.identity.key", key);
                     }
                 }
             }
         } catch(e) {
-            Components.utils.reportError(e);        
-        }        
+            Components.utils.reportError(e);
+        }
     }
 
 
@@ -163,8 +146,6 @@ var Base = class {
      * Called during unload of external provider extension to unload provider.
      */
     static async unload() {
-        eas.overlayManager.stopObserving();	
-
         // Close all open windows of this provider.
         for (let id in eas.openWindows) {
           if (eas.openWindows.hasOwnProperty(id)) {
@@ -634,7 +615,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
     }
 
     async createCalendar(newname) {
-        let calManager = TbSync.lightning.cal.manager ? TbSync.lightning.cal.manager : TbSync.lightning.cal.getCalendarManager();
+        let calManager = TbSync.lightning.cal.manager;
         //Alternative calendar, which uses calTbSyncCalendar
         //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
 
