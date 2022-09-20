@@ -253,7 +253,7 @@ var Contacts = {
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
-    getWbxmlFromThunderbirdItem: function (abItem, syncdata, isException = false) {
+    getWbxmlFromThunderbirdItem: async function (abItem, syncdata, isException = false) {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
         let nowDate = new Date();
