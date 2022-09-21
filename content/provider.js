@@ -170,7 +170,7 @@ var Base = class {
     /**
      * Returns version of the TbSync API this provider is using
      */
-    static getApiVersion() { return "2.4"; }
+    static getApiVersion() { return "2.5"; }
 
 
     /**
@@ -318,49 +318,6 @@ var Base = class {
      */
     static onDeleteAccount(accountData) {
         eas.network.getAuthData(accountData).removeLoginData();
-    }
-
-
-    /**
-     * Implement this method, if this provider should add additional entries
-     * to the autocomplete list while typing something into the address field
-     * of the message composer.
-     */
-    static async abAutoComplete(accountData, currentQuery)  {
-        let data = [];
-
-        if (currentQuery.length < 3)
-            return null;
-        
-        if (!accountData.getAccountProperty("allowedEasCommands").split(",").includes("Search")) {
-            return null;
-        }
-
-        if (!accountData.getAccountProperty("galautocomplete")) {
-            return null;
-        }
-            
-        let response = await eas.network.getSearchResults(accountData, currentQuery);
-        let wbxmlData = eas.network.getDataFromResponse(response);
-
-        if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
-            let results = eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
-            let accountname = accountData.getAccountProperty("accountname");
-        
-            for (let count = 0; count < results.length; count++) {
-                if (results[count].Properties) {
-                    //TbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
-                    data.push({
-                        value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
-                        comment: TbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
-                        icon: eas.Base.getProviderIcon(16, accountData),
-                        style: "EASGAL-abook",
-                    });
-                }
-            }
-        }
-        
-        return data;
     }
 
 
@@ -616,8 +573,6 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
 
     async createCalendar(newname) {
         let calManager = TbSync.lightning.cal.manager;
-        //Alternative calendar, which uses calTbSyncCalendar
-        //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
 
         //Create the new standard calendar with a unique name
         let newCalendar = calManager.createCalendar("storage", Services.io.newURI("moz-storage-calendar://"));
