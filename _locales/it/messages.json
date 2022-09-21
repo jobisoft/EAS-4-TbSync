@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Ignora il Nome visualizzato e mostra Nome + Cognome"
     },
-    "pref.galautocomplete": {
-        "message": "Includi i risultati dalla rubrica globale (GAL) nel completamento automatico della posta elettronica"
-    },
     "pref.generaloptions": {
         "message": "Opzioni generali"
     },

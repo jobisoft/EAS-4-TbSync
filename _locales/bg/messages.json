@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Override Display Name with “First Name” + “Second Name”"
     },
-    "pref.galautocomplete": {
-        "message": "Include results from global address book (GAL) in email autocompletion"
-    },
     "pref.generaloptions": {
         "message": "General options"
     },

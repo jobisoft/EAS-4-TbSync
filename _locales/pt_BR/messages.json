@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Substituir nome de exibição com Nome + Segundo nome"
     },
-    "pref.galautocomplete": {
-        "message": "Incluir resultados do catálogo de endereços global (GAL) no preenchimento automático de e-mail"
-    },
     "pref.generaloptions": {
         "message": "Opções gerais"
     },

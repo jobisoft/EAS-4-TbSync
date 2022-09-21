@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Substituír o nome amosado por «Nome» + «Segundo nome»"
     },
-    "pref.galautocomplete": {
-        "message": "Incluír os resultados da libreta global de enderezos (GAL) no autocompletado do correo electrónico"
-    },
     "pref.generaloptions": {
         "message": "Opcións xerais"
     },

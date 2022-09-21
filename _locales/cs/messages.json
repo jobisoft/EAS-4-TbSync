@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Vynutit zobrazování jména jako “křestní” + “příjmení”"
     },
-    "pref.galautocomplete": {
-        "message": "Zahrnout výsledky z globálního adresáře (GAL) do našeptávače emailových adres"
-    },
     "pref.generaloptions": {
         "message": "Obecné"
     },

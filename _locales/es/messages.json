@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Reemplazar nombre de pantalla con «Nombre» + «Segundo nombre»"
     },
-    "pref.galautocomplete": {
-        "message": "Incluir los resultados de la libreta de direcciones global (GAL) en el autocompletado del correo electrónico"
-    },
     "pref.generaloptions": {
         "message": "Opciones generales"
     },

@@ -265,7 +265,6 @@ var Base = class {
             "allowedEasCommands": "",
             "useragent": eas.prefs.getCharPref("clientID.useragent"),
             "devicetype": eas.prefs.getCharPref("clientID.type"),
-            "galautocomplete": true, 
             "synclimit" : "7",
             }; 
         return row;
