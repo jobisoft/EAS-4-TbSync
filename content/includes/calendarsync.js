@@ -220,7 +220,7 @@ var Calendar = {
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
-    getWbxmlFromThunderbirdItem: function (tbItem, syncdata, isException = false) {
+    getWbxmlFromThunderbirdItem: async function (tbItem, syncdata, isException = false) {
         let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
 
         let asversion = syncdata.accountData.getAccountProperty("asversion");
@@ -405,7 +405,7 @@ var Calendar = {
 
         //recurrent events (implemented by Chris Allan)
         if (!isException) {
-            wbxml.append(eas.sync.getItemRecurrence(item, syncdata));
+            wbxml.append(await eas.sync.getItemRecurrence(item, syncdata));
         }
 
 

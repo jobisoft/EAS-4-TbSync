@@ -47,23 +47,6 @@ var Base = class {
         eas.windowsToIanaTimezoneMap = {};
         eas.openWindows = {};
 
-        let providerData = new TbSync.ProviderData("eas");   
-        eas.overlayManager = new OverlayManager(providerData.extension, {verbose: 0});
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abNewCardWindow.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCardWindow.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abEditCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCardWindow.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/addressbookoverlay.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/addressbookdetailsoverlay.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/abServerSearch.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abContactsPanel.xhtml", "chrome://eas4tbsync/content/overlays/abServerSearch.xhtml");
-
-        // The abCSS.xul overlay is just adding a CSS file.
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/messengercompose/messengercompose.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/abNewCardDialog.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
-        await eas.overlayManager.registerOverlay("chrome://messenger/content/addressbook/addressbook.xhtml", "chrome://eas4tbsync/content/overlays/abCSS.xhtml");
-
-        eas.overlayManager.startObserving();
-                
         try {
             // Create a basic error info (no accountname or foldername, just the provider)
             let eventLogInfo = new TbSync.EventLogInfo("eas");
@@ -118,7 +101,7 @@ var Base = class {
                 }
             }
 
-            let tzService = TbSync.lightning.cal.getTimezoneService();
+            let tzService = TbSync.lightning.cal.timezoneService;
             let enumerator = tzService.timezoneIds;
             while (enumerator.hasMore()) {
                 let id = enumerator.getNext();
@@ -136,7 +119,8 @@ var Base = class {
             let providerData = new TbSync.ProviderData("eas");
             let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
             for (let folder of folders) {
-                let calendar = TbSync.lightning.cal.getCalendarManager().getCalendarById(folder.getFolderProperty("target"));
+                let manager = TbSync.lightning.cal.manager;
+                let calendar = manager.getCalendarById(folder.getFolderProperty("target"));
                 if (calendar && calendar.getProperty("imip.identity.key") == "") {
                     //is there an email identity for this eas account?
                     let authData = eas.network.getAuthData(folder.accountData);
@@ -146,15 +130,15 @@ var Base = class {
                         //set transient calendar organizer settings based on current best guess and 
                         calendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
                         calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
-                    } else {                      
+                    } else {
                         //force switch to found identity
                         calendar.setProperty("imip.identity.key", key);
                     }
                 }
             }
         } catch(e) {
-            Components.utils.reportError(e);        
-        }        
+            Components.utils.reportError(e);
+        }
     }
 
 
@@ -162,8 +146,6 @@ var Base = class {
      * Called during unload of external provider extension to unload provider.
      */
     static async unload() {
-        eas.overlayManager.stopObserving();	
-
         // Close all open windows of this provider.
         for (let id in eas.openWindows) {
           if (eas.openWindows.hasOwnProperty(id)) {
@@ -188,7 +170,7 @@ var Base = class {
     /**
      * Returns version of the TbSync API this provider is using
      */
-    static getApiVersion() { return "2.4"; }
+    static getApiVersion() { return "2.5"; }
 
 
     /**
@@ -283,7 +265,6 @@ var Base = class {
             "allowedEasCommands": "",
             "useragent": eas.prefs.getCharPref("clientID.useragent"),
             "devicetype": eas.prefs.getCharPref("clientID.type"),
-            "galautocomplete": true, 
             "synclimit" : "7",
             }; 
         return row;
@@ -336,49 +317,6 @@ var Base = class {
      */
     static onDeleteAccount(accountData) {
         eas.network.getAuthData(accountData).removeLoginData();
-    }
-
-
-    /**
-     * Implement this method, if this provider should add additional entries
-     * to the autocomplete list while typing something into the address field
-     * of the message composer.
-     */
-    static async abAutoComplete(accountData, currentQuery)  {
-        let data = [];
-
-        if (currentQuery.length < 3)
-            return null;
-        
-        if (!accountData.getAccountProperty("allowedEasCommands").split(",").includes("Search")) {
-            return null;
-        }
-
-        if (!accountData.getAccountProperty("galautocomplete")) {
-            return null;
-        }
-            
-        let response = await eas.network.getSearchResults(accountData, currentQuery);
-        let wbxmlData = eas.network.getDataFromResponse(response);
-
-        if (wbxmlData.Search && wbxmlData.Search.Response && wbxmlData.Search.Response.Store && wbxmlData.Search.Response.Store.Result) {
-            let results = eas.xmltools.nodeAsArray(wbxmlData.Search.Response.Store.Result);
-            let accountname = accountData.getAccountProperty("accountname");
-        
-            for (let count = 0; count < results.length; count++) {
-                if (results[count].Properties) {
-                    //TbSync.window.console.log('Found contact:' + results[count].Properties.DisplayName);
-                    data.push({
-                        value: results[count].Properties.DisplayName + " <" + results[count].Properties.EmailAddress + ">", 
-                        comment: TbSync.getString("autocomplete.serverdirectory", "eas") + " ("+accountData.getAccountProperty("accountname")+")",
-                        icon: eas.Base.getProviderIcon(16, accountData),
-                        style: "EASGAL-abook",
-                    });
-                }
-            }
-        }
-        
-        return data;
     }
 
 
@@ -633,9 +571,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
     }
 
     async createCalendar(newname) {
-        let calManager = TbSync.lightning.cal.getCalendarManager();
-        //Alternative calendar, which uses calTbSyncCalendar
-        //let newCalendar = calManager.createCalendar("TbSync", Services.io.newURI('tbsync-calendar://'));
+        let calManager = TbSync.lightning.cal.manager;
 
         //Create the new standard calendar with a unique name
         let newCalendar = calManager.createCalendar("storage", Services.io.newURI("moz-storage-calendar://"));

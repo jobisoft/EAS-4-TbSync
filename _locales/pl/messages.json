@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Zastąp nazwę wyświetlaną ciągiem “Imię“ + “Drugie imię”"
     },
-    "pref.galautocomplete": {
-        "message": "Uwzględnij wyniki z globalnej książki adresowej (GAL) w auto-uzupełnianiu adresów e-mail"
-    },
     "pref.generaloptions": {
         "message": "Opcje ogólne"
     },

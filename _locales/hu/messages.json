@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Megjelenítési név felülbírálása ezzel: „keresztnév” + „második keresztnév”"
     },
-    "pref.galautocomplete": {
-        "message": "A globális címjegyzékből (GAL) kapott eredmények használata az e-mailek automatikus kitöltésekor"
-    },
     "pref.generaloptions": {
         "message": "Általános beállítások"
     },

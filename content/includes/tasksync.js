@@ -109,7 +109,7 @@ var Tasks = {
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
     // --------------------------------------------------------------------------- //
-    getWbxmlFromThunderbirdItem: function (tbItem, syncdata) {
+    getWbxmlFromThunderbirdItem: async function (tbItem, syncdata) {
         let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
 
         let asversion = syncdata.accountData.getAccountProperty("asversion");
@@ -149,7 +149,7 @@ var Tasks = {
         wbxml.append(eas.sync.getItemCategories(item, syncdata));
 
         //Recurrence (only if localStartDate has been set)
-        if (localStartDate) wbxml.append(eas.sync.getItemRecurrence(item, syncdata, localStartDate));
+        if (localStartDate) wbxml.append(await eas.sync.getItemRecurrence(item, syncdata, localStartDate));
         
         //Complete
         if (item.isCompleted) {

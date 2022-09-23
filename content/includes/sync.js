@@ -538,7 +538,7 @@ wbxml.otag("Exceptions");
     wbxml.ctag();
 wbxml.ctag();*/
 
-                                                        wbxml.append(eas.sync.getWbxmlFromThunderbirdItem(item, syncData));
+                                                        wbxml.append(await eas.sync.getWbxmlFromThunderbirdItem(item, syncData));
                                                         wbxml.switchpage("AirSync");
                                                     wbxml.ctag();
                                                 wbxml.ctag();
@@ -561,7 +561,7 @@ wbxml.ctag();*/
                                                 wbxml.atag("ServerId", changes[i].itemId);
                                                     wbxml.otag("ApplicationData");
                                                         wbxml.switchpage(syncData.type);
-                                                        wbxml.append(eas.sync.getWbxmlFromThunderbirdItem(item, syncData));
+                                                        wbxml.append(await eas.sync.getWbxmlFromThunderbirdItem(item, syncData));
                                                         wbxml.switchpage("AirSync");
                                                     wbxml.ctag();
                                                 wbxml.ctag();
@@ -1116,9 +1116,9 @@ wbxml.ctag();*/
         }
     },
     
-    getWbxmlFromThunderbirdItem(item, syncData, isException = false) {
+    async getWbxmlFromThunderbirdItem(item, syncData, isException = false) {
         try {
-            let wbxml = eas.sync[syncData.type].getWbxmlFromThunderbirdItem(item, syncData, isException);
+            let wbxml = await eas.sync[syncData.type].getWbxmlFromThunderbirdItem(item, syncData, isException);
             return wbxml;
         } catch (e) {
             TbSync.eventlog.add("warning", syncData.eventLogInfo, "BadItemSkipped::JavaScriptError", item.toString());
@@ -1321,7 +1321,7 @@ wbxml.ctag();*/
         }
     },
 
-    getItemRecurrence: function (item, syncData, localStartDate = null) {
+    getItemRecurrence: async function (item, syncData, localStartDate = null) {
         let asversion = syncData.accountData.getAccountProperty("asversion");
         let wbxml = eas.wbxmltools.createWBXML("", syncData.type); //init wbxml with "" and not with precodes, also activate type codePage (Calendar, Tasks etc)
 
@@ -1469,7 +1469,7 @@ wbxml.ctag();*/
                         let replacement = item.recurrenceInfo.getExceptionFor(exceptionId);
                         wbxml.otag("Exception");
                             wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exceptionId));
-                            wbxml.append(eas.sync.getWbxmlFromThunderbirdItem(replacement, syncData, true));
+                            wbxml.append(await eas.sync.getWbxmlFromThunderbirdItem(replacement, syncData, true));
                         wbxml.ctag();
                     }
                     wbxml.ctag();

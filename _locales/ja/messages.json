@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "表示名を「名」+「姓」で上書き"
     },
-    "pref.galautocomplete": {
-        "message": "Include results from global address book (GAL) in email autocompletion"
-    },
     "pref.generaloptions": {
         "message": "一般設定"
     },

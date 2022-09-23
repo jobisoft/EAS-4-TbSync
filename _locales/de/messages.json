@@ -209,9 +209,6 @@
     "pref.displayoverride": {
         "message": "Überschreibe Anzeigename mit 'Vorname' + 'Nachname'"
     },
-    "pref.galautocomplete": {
-        "message": "E-Mail Autovervollständigung mit Ergebnissen aus dem globalen Adressbuch (GAL) "
-    },
     "pref.generaloptions": {
         "message": "Allgemeine Optionen"
     },
