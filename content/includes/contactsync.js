@@ -441,12 +441,18 @@ var Contacts = {
                 case "BusinessAddressStreet":
                 case "OtherAddressStreet": {
                     let raw = this.getValue(vCardProperties, vCard_property);
-                    // We really get an array for the 2nd index of the adr field from Thunderbird.
-                    // Looks like it is encoded by , separators in the vCard. This is of course very
-                    // convenient for us.
-                    if (raw) {
-                        let seperator = String.fromCharCode(syncdata.accountData.getAccountProperty("seperator")); // options are 44 (,) or 10 (\n)
-                        value = raw.join(seperator);
+                    try {
+                        if (raw) {
+                            // We either get a single string or an array for the
+                            // street adr field from Thunderbird.
+                            if (!Array.isArray(raw)) {
+                                raw = [raw];
+                            }
+                            let seperator = String.fromCharCode(syncdata.accountData.getAccountProperty("seperator")); // options are 44 (,) or 10 (\n)
+                            value = raw.join(seperator);
+                        }
+                    } catch (ex) {
+                        throw new Error(`Failed to eval value: <${JSON.stringify(raw)}> @ ${JSON.stringify(vCard_property)}`);
                     }
                 }
                 break;
