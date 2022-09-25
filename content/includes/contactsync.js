@@ -64,15 +64,18 @@ var Contacts = {
 
         Notes: {item: "note", type: "text", params: {}},
 
-        // What should we do with Email 4+ ?
-        Email1Address: {item: "email", type: "text", params: {}},
-        Email2Address: {item: "email", type: "text", params: {}, entry: 1},
-        Email3Address: {item: "email", type: "text", params: {}, entry: 2},
+        // What should we do with Email 4+?
+        // EAS does not have the concept of home/work for emails. Define matchAll
+        // to not use params for finding the correct entry. They will come back as
+        // "other".
+        Email1Address: {item: "email", type: "text", entry: 0, matchAll: true, params: {}},
+        Email2Address: {item: "email", type: "text", entry: 1, matchAll: true, params: {}},
+        Email3Address: {item: "email", type: "text", entry: 2, matchAll: true, params: {}},
 
-        // WebPage has fallbackParams defined, to pick any url, if the specified
-        // one is not found, and the user has created a home or work url. It will
-        // come back as "Other".
-        WebPage: {item: "url", type: "text", params: {}, fallbackParams: [{type: "home"}, {type: "work"}]},
+        // EAS does not have the concept of home/work for WebPage. Define matchAll
+        // to not use params for finding the correct entry. It will come back as
+        // "other".
+        WebPage: {item: "url", type: "text", matchAll: true, params: {}},
         
         CompanyName: {item: "org", type: "text", params: {}, index: 0}, /* Company */
         Department: {item: "org", type: "text", params: {}, index: 1}, /* Department */
@@ -81,6 +84,9 @@ var Contacts = {
         MobilePhoneNumber: { item: "tel", type: "text", params: {type: "cell" }},
         PagerNumber: { item: "tel", type: "text", params: {type: "pager" }},
         HomeFaxNumber: { item: "tel", type: "text", params: {type: "fax" }},
+        // If home phone is defined, use that, otherwise use unspecified phone
+        // Note: This must be exclusive (no other field may use home/unspecified)
+        // except if entry is specified.
         HomePhoneNumber: { item: "tel", type: "text", params: {type: "home"}, fallbackParams: [{}]},
         BusinessPhoneNumber: { item: "tel", type: "text", params: {type: "work"}},
         Home2PhoneNumber: { item: "tel", type: "text", params: {type: "home"}, entry: 1 },
@@ -170,8 +176,9 @@ var Contacts = {
         }
         let entries;
         for (let normalizedParams of parameters.map(this.normalizeParameters)) {
+            // If no params set, do not filter, otherwise filter for exact match.
             entries = vCardProperties.getAllEntries(vCard_property.item)
-                .filter(e => normalizedParams == this.normalizeParameters(e.params));
+                .filter(e => vCard_property.matchAll || normalizedParams == this.normalizeParameters(e.params));
             if (entries.length > 0) {
                 break;
             }
@@ -264,7 +271,7 @@ var Contacts = {
                 
                 let normalizedParams = this.normalizeParameters(vCard_property.params)
                 let entries = vCardProperties.getAllEntries(vCard_property.item)
-                    .filter(e => normalizedParams == this.normalizeParameters(e.params));
+                    .filter(e => vCard_property.matchAll || normalizedParams == this.normalizeParameters(e.params));
                 // Which entry should we update? Add empty entries, if the requested entry number
                 // does not yet exist.
                 let entryNr = vCard_property.entry || 0;
@@ -432,7 +439,6 @@ var Contacts = {
                     if (raw) {
                         let dateObj = new Date(raw);
                         value = dateObj.toISOString();
-                        console.log(value);
                     }
                 }
                 break;
