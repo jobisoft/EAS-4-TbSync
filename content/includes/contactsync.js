@@ -77,8 +77,8 @@ var Contacts = {
         // "other".
         WebPage: {item: "url", type: "text", matchAll: true, params: {}},
         
-        CompanyName: {item: "org", type: "text", params: {}, index: 0}, /* Company */
-        Department: {item: "org", type: "text", params: {}, index: 1}, /* Department */
+        CompanyName: {item: "org", type: "text", params: {}, index: 1}, /* Company */
+        Department: {item: "org", type: "text", params: {}, index: 0}, /* Department */
         JobTitle: { item: "title", type: "text", params: {} }, /* JobTitle */ 
 
         MobilePhoneNumber: { item: "tel", type: "text", params: {type: "cell" }},
