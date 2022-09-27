@@ -188,9 +188,11 @@ var Contacts = {
         let entryNr = vCard_property.entry || 0;
         if (entries[entryNr]) {
             let value;
-            // The org field sometimes comes back as a string, even though it
-            // should be an array.
-            if (this.vcard_array_fields[vCard_property.item]) {
+            if (vCard_property.item == "org" && !Array.isArray(entries[entryNr].value)) {
+                // The org field sometimes comes back as a string (then it is Company),
+                // even though it should be an array [Department,Company]
+                value =  vCard_property.index == 1 ? entries[entryNr].value : "";
+            } else if (this.vcard_array_fields[vCard_property.item]) {
                 if (!Array.isArray(entries[entryNr].value)) {
                     // If the returned value is a single string, return it only
                     // when index 0 is requested, otherwise return nothing.
