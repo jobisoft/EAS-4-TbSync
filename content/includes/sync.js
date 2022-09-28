@@ -360,11 +360,30 @@ var sync = {
             await eas.sync.revertLocalChanges(syncData);
         }
 
-        await eas.network.getItemEstimate (syncData);
-        await eas.sync.requestRemoteChanges (syncData); 
+        await eas.network.getItemEstimate(syncData);
+        await eas.sync.requestRemoteChanges(syncData); 
 
         if (!syncData.currentFolderData.getFolderProperty("downloadonly")) {		
-            await eas.sync.sendLocalChanges(syncData);
+            let sendChanges = await eas.sync.sendLocalChanges(syncData);
+            if (sendChanges) {
+                // This is ugly as hell, but Microsoft sometimes sets the state of the
+                // remote account to "changed" after we have send a local change (even
+                // though it has acked the change) and this will cause the server to
+                // send a change request with our next sync. Because we follow the
+                // "server wins" policy, this will overwrite any additional local change
+                // we have done in the meantime. This is stupid, but we wait 2s and
+                // hope it is enough to catch this second ack of the local change.
+                let timer =  Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+                await new Promise(function(resolve, reject) {
+                    let event = {
+                        notify: function(timer) {
+                            resolve();
+                        }
+                    }
+                    timer.initWithCallback(event, 2000, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+                });
+                await eas.sync.requestRemoteChanges(syncData);
+            }
         }
     },
     
@@ -447,6 +466,7 @@ var sync = {
         
         let done = false;
         let numberOfItemsToSend = maxnumbertosend;
+        let sendChanges = false;
         do {
             syncData.setSyncState("prepare.request.localchanges");
             syncData.request = "";
@@ -454,6 +474,7 @@ var sync = {
 
             //get changed items from ChangeLog
             let changes = syncData.target.getItemsFromChangeLog(numberOfItemsToSend);
+            //console.log("chnages", changes);
             let c=0;
             let e=0;
 
@@ -595,7 +616,7 @@ wbxml.ctag();*/
 
 
             if (c > 0) { //if there was at least one actual local change, send request
-
+                sendChanges = true;
                 //SEND REQUEST & VALIDATE RESPONSE
                 syncData.setSyncState("send.request.localchanges");
                 let response = await eas.network.sendRequest(wbxml.getBytes(), "Sync", syncData);
@@ -677,7 +698,7 @@ wbxml.ctag();*/
         if (syncData.failedItems.length > 0) {
             throw eas.sync.finish("warning", "ServerRejectedSomeItems::" + syncData.failedItems.length);                            
         }
-        
+        return sendChanges;
     },
 
 
