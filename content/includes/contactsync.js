@@ -25,16 +25,11 @@ const eas = TbSync.providers.eas;
 
 var Contacts = {
 
-    // These functions handle categories compatible to the Category Manager add-on, which is compatible
-    // to lots of other sync tools (sogo, carddav-sync, roundcube)
-    categoriesFromString: function (catString) {
-        let catsArray = [];
-        if (catString.trim().length>0) catsArray = catString.trim().split("\u001A").filter(String);
-        return catsArray;
-    },
-
-    categoriesToString: function (catsArray) {
-        return catsArray.join("\u001A");
+    // Remove if migration code is removed.
+    arrayFromString: function (stringValue) {
+        let arrayValue = [];
+        if (stringValue.trim().length>0) arrayValue = stringValue.trim().split("\u001A").filter(String);
+        return arrayValue;
     },
 
     /* The following TB properties are not synced to the server:
@@ -358,17 +353,23 @@ var Contacts = {
             }
         }
 
-        // Take care of categories and children, stored in contacts property bag.
-        let containers = [];
-        containers.push(["Categories", "Category"]);
-        containers.push(["Children", "Child"]);
-        for (let c=0; c < containers.length; c++) {
-            if (data[containers[c][0]] && data[containers[c][0]][containers[c][1]]) {
-                let cats = [];
-                if (Array.isArray(data[containers[c][0]][containers[c][1]])) cats = data[containers[c][0]][containers[c][1]];
-                else cats.push(data[containers[c][0]][containers[c][1]]);
-                abItem.setProperty(containers[c][0], this.categoriesToString(cats));
-            }
+        // Take care of categories.
+        if (data["Categories"] && data["Categories"]["Category"]) {
+            let categories = Array.isArray(data["Categories"]["Category"])
+                ? data["Categories"]["Category"]
+                : [data["Categories"]["Category"]];
+            vCardProperties.clearValues("categories");
+            vCardProperties.addValue("categories", categories);
+            // Migration code, remove once no longer needed.
+            abItem.setProperty("Categories", "");
+        }
+
+        // Take care of children, stored in contacts property bag.
+        if (data["Children"] && data["Children"]["Child"]) {
+            let children = Array.isArray(data["Children"]["Child"])
+                ? data["Children"]["Child"]
+                : [data["Children"]["Child"]];
+            abItem.setProperty("Children", JSON.stringify(children));
         }
 
         // Take care of un-mappable EAS options, which are stored in the contacts
@@ -481,18 +482,33 @@ var Contacts = {
             if (value) wbxml.atag(this.unused_EAS_properties[i], value);
         }
 
-        // Take care of categories and children
-        let containers = [];
-        containers.push(["Categories", "Category"]);
-        containers.push(["Children", "Child"]);
-        for (let c=0; c < containers.length; c++) {
-            let cats = abItem.getProperty(containers[c][0], "");
-            if (cats) {
-                let catsArray = this.categoriesFromString(cats);
-                wbxml.otag(containers[c][0]);
-                for (let ca=0; ca < catsArray.length; ca++) wbxml.atag(containers[c][1], catsArray[ca]);
-                wbxml.ctag();
+        // Take care of categories.
+        let categories = vCardProperties.getFirstValue("categories");
+        let categoriesProperty = abItem.getProperty("Categories", "");
+        if (categoriesProperty) {
+            // Migration code, remove once no longer needed.
+            abItem.setProperty("Categories", "");
+            categories = this.arrayFromString(categoriesProperty);
+        }
+        if (categories) {
+            wbxml.otag("Categories");
+            for (let category of categories) wbxml.atag("Category", category);
+            wbxml.ctag();
+        }
+
+        // Take care of children, stored in contacts property bag.
+        let childrenProperty = abItem.getProperty("Children", "");
+        if (childrenProperty) {
+            let children = [];
+            try {
+                children = JSON.parse(childrenProperty);
+            } catch(ex) {
+                // Migration code, remove once no longer needed.
+                children = this.arrayFromString(childrenProperty);
             }
+            wbxml.otag("Children");
+            for (let child of children) wbxml.atag("Child", child);
+            wbxml.ctag();
         }
 
         // Take care of notes - SWITCHING TO AirSyncBase (if 2.5, we still need Contact group here!)
