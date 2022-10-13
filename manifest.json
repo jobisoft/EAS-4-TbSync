@@ -2,7 +2,7 @@
   "applications": {
     "gecko": {
       "id": "eas4tbsync@jobisoft.de",
-      "strict_min_version": "102.0",
+      "strict_min_version": "102.3.0",
       "strict_max_version": "102.*"
     }
   },
