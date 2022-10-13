@@ -16,7 +16,7 @@ async function main() {
     let manifest = browser.runtime.getManifest();
     browser.notifications.create({
       type: "basic",
-      iconUrl: browser.runtime.getURL("content/skin/sabredav32.png"),
+      iconUrl: browser.runtime.getURL("content/skin/eas32.png"),
       title: `${manifest.name}`,
       message: "Please update Thunderbird to at least 102.3.3 to be able to use this provider.",
     });
