@@ -93,7 +93,12 @@ var network = {
         return null;
     }
 
-    let oauth = new OAuth2(config.auth_uri, config.token_uri, config.scope, config.client_id, config.client_secret);
+    let oauth = new OAuth2(config.scope, {
+        authorizationEndpoint: config.auth_uri,
+        tokenEndpoint: config.token_uri,
+        clientId: config.client_id,
+        clientSecret: config.client_secret
+    });
     oauth.requestWindowFeatures = "chrome,private,centerscreen,width=500,height=750";
 
     // The v2 redirection endpoint differs from the default and needs manual override
