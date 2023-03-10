@@ -40,6 +40,7 @@ var Base = class {
         branch.setIntPref("maxitems", 50);
         branch.setCharPref("clientID.type", "TbSync");
         branch.setCharPref("clientID.useragent", "Thunderbird ActiveSync");    
+        branch.setCharPref("oauth.clientID", "");
 
         eas.defaultTimezone = null;
         eas.utcTimezone = null;
@@ -265,6 +266,7 @@ var Base = class {
             "allowedEasCommands": "",
             "useragent": eas.prefs.getCharPref("clientID.useragent"),
             "devicetype": eas.prefs.getCharPref("clientID.type"),
+            "oauthClientID": eas.prefs.getCharPref("oauth.clientID"),
             "synclimit" : "7",
             }; 
         return row;
