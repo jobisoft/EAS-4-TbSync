@@ -348,11 +348,10 @@ var Calendar = {
         //C can be reconstucted from TB STATUS
         //O can be reconstructed by looking at the original value, or (if not present) by comparing EAS ownerID with TB ownerID
 
-        let countAttendees = {};
-        let attendees = item.getAttendees(countAttendees);
-        //if (!(isException && asversion == "2.5")) { //MeetingStatus is not supported in exceptions in EAS 2.5        
+        let attendees = item.getAttendees();
+        //if (!(isException && asversion == "2.5")) { //MeetingStatus is not supported in exceptions in EAS 2.5
         if (!isException) { //Exchange 2010 does not seem to support MeetingStatus at all in exceptions
-            if (countAttendees == 0) wbxml.atag("MeetingStatus", "0");
+            if (attendees.length == 0) wbxml.atag("MeetingStatus", "0");
             else {
                 //get owner information
                 let isReceived = false;
@@ -369,11 +368,11 @@ var Calendar = {
                 }
             }
         }
-        
+
         //Attendees
-        let TB_responseType = null;        
+        let TB_responseType = null;
         if (!(isException && asversion == "2.5")) { //attendees are not supported in exceptions in EAS 2.5
-            if (countAttendees.value > 0) {
+            if (attendees.length > 0) { //We should use it instead of countAttendees.value
                 wbxml.otag("Attendees");
                     for (let attendee of attendees) {
                         wbxml.otag("Attendee");
