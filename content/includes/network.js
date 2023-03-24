@@ -78,7 +78,7 @@ var network = {
     let config = {};
     switch (host) {
       case "outlook.office365.com":
-        let customID = accountData.getAccountProperty("oauthClientID");
+        let customID = eas.Base.getCustomeOauthClientID();
         config = {
           auth_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
           token_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/token",
