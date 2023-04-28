@@ -78,20 +78,27 @@ var network = {
     let config = {};
     switch (host) {
       case "outlook.office365.com":
+      case "eas.outlook.com":
         let customID = accountData.getAccountProperty("oauthClientID");
         config = {
           auth_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
           token_uri : "https://login.microsoftonline.com/common/oauth2/v2.0/token",
           redirect_uri : "https://login.microsoftonline.com/common/oauth2/nativeclient",
-          // changed in beta 1.14.1, according to
-          // https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#default-and-consent
-          scope : "offline_access https://outlook.office.com/.default", //"offline_access https://outlook.office.com/EAS.AccessAsUser.All",
           client_id : customID != "" ? customID : "2980deeb-7460-4723-864a-f9b0f10cd992",
         }
         break;
       
       default:
         return null;
+    }
+
+    switch (host) {
+      case "outlook.office365.com":
+        config.scope = "offline_access https://outlook.office.com/.default";
+        break;
+      case "eas.outlook.com":
+        config.scope = "offline_access https://outlook.office.com/EAS.AccessAsUser.All";
+        break;
     }
 
     let oauth = new OAuth2(config.scope, {
