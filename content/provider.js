@@ -266,7 +266,6 @@ var Base = class {
             "allowedEasCommands": "",
             "useragent": eas.prefs.getCharPref("clientID.useragent"),
             "devicetype": eas.prefs.getCharPref("clientID.type"),
-            "oauthClientID": eas.prefs.getCharPref("oauth.clientID"),
             "synclimit" : "7",
             }; 
         return row;
@@ -441,6 +440,14 @@ var Base = class {
 
         // Fall through, if there was no error.
         return new TbSync.StatusData();   
+    }
+
+
+    /**
+     * Return the custom OAuth2 ClientID.
+     */
+    static getCustomeOauthClientID() {
+        return eas.prefs.getCharPref("oauth.clientID");
     }
 }
 
