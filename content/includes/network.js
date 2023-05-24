@@ -704,7 +704,7 @@ var network = {
                 wbxml.otag("Set");
                     wbxml.atag("Model", "Computer");
                     wbxml.atag("FriendlyName", "TbSync on Device " + syncData.accountData.getAccountProperty("deviceId").substring(4));
-                    wbxml.atag("OS", OS.Constants.Sys.Name);
+                    wbxml.atag("OS", Services.appinfo.OS);
                     wbxml.atag("UserAgent", syncData.accountData.getAccountProperty("useragent"));
                 wbxml.ctag();
             wbxml.ctag();
