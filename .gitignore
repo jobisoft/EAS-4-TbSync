@@ -1,1 +1,3 @@
 *.xpi
+/.settings/
+/.project
