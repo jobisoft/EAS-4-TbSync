@@ -104,18 +104,15 @@ var Base = class {
             }
 
             let tzService = TbSync.lightning.cal.timezoneService;
-            let enumerator = tzService.timezoneIds;
-            while (enumerator.hasMore()) {
-                let id = enumerator.getNext();
-                if (!eas.ianaToWindowsTimezoneMap[id]) {
-                    TbSync.eventlog.add("info", eventLogInfo, "The IANA timezone <"+id+"> cannot be mapped to any Exchange timezone.");
+            for (let timezoneId of tzService.timezoneIds) {
+                if (!eas.ianaToWindowsTimezoneMap[timezoneId]) {
+                    TbSync.eventlog.add("info", eventLogInfo, "The IANA timezone <"+timezoneId+"> cannot be mapped to any Exchange timezone.");
                 }
             }
-
             
             //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
             //but do not change any explicitly set association
-            // - A) find email identity and accociate (which sets organizer to that user identity)
+            // - A) find email identity and associate (which sets organizer to that user identity)
             // - B) overwrite default organizer with current best guess
             //TODO: Do this after email accounts changed, not only on restart? 
             let providerData = new TbSync.ProviderData("eas");

@@ -303,10 +303,8 @@ var tools = {
         if (test.timezoneOffset/-60 == curOffset) return test.timezone;
         
         //third try all others
-        let enumerator = tzService.timezoneIds;
-        while (enumerator.hasMore()) {
-            let id = enumerator.getNext();
-            let test = utcDateTime.getInTimezone(tzService.getTimezone(id));
+        for (let timezoneId of tzService.timezoneIds) {
+            let test = utcDateTime.getInTimezone(tzService.getTimezone(timezoneId));
             TbSync.dump("Matching TZ via current offset: " + test.timezone.tzid + " @ " + curOffset, test.timezoneOffset/-60);
             if (test.timezoneOffset/-60 == curOffset) return test.timezone;
         }
@@ -334,17 +332,15 @@ var tools = {
                 let tzService = TbSync.lightning.cal.timezoneService;
 
                 //cache timezones data from internal IANA data
-                let enumerator = tzService.timezoneIds;
-                while (enumerator.hasMore()) {
-                    let id = enumerator.getNext();
-                    let timezone = tzService.getTimezone(id);
+                for (let timezoneId of tzService.timezoneIds) {
+                    let timezone = tzService.getTimezone(timezoneId);
                     let tzInfo = eas.tools.getTimezoneInfo(timezone);
 
                     eas.cachedTimezoneData.bothOffsets[tzInfo.std.offset+":"+tzInfo.dst.offset] = timezone;
                     eas.cachedTimezoneData.stdOffset[tzInfo.std.offset] = timezone;
 
-                    eas.cachedTimezoneData.abbreviations[tzInfo.std.abbreviation] = id;
-                    eas.cachedTimezoneData.iana[id] = tzInfo;
+                    eas.cachedTimezoneData.abbreviations[tzInfo.std.abbreviation] = timezoneId;
+                    eas.cachedTimezoneData.iana[timezoneId] = tzInfo;
                     
                     //TbSync.dump("TZ ("+ tzInfo.std.id + " :: " + tzInfo.dst.id +  " :: " + tzInfo.std.displayname + " :: " + tzInfo.dst.displayname + " :: " + tzInfo.std.offset + " :: " + tzInfo.dst.offset + ")", tzService.getTimezone(id));
                 }
