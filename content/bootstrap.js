@@ -8,7 +8,9 @@
 
 // no need to create namespace, we are in a sandbox
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var Services = globalThis.Services || ChromeUtils.import(
+  "resource://gre/modules/Services.jsm"
+).Services;
 
 let onInitDoneObserver = {
     observe: async function (aSubject, aTopic, aData) {        
