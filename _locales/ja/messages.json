@@ -60,13 +60,13 @@
         "message": "自宅電話番号 3:"
     },
     "abCard.header.messaging": {
-        "message": "Messaging:"
+        "message": "メッセージング:"
     },
     "abCard.header.otheraddress": {
         "message": "その他のアドレス (EAS)"
     },
     "abCard.header.othernumbers": {
-        "message": "Additional numbers:"
+        "message": "追加の電話番号:"
     },
     "abCard.header.people": {
         "message": "People:"
@@ -279,7 +279,7 @@
         "message": "ユーザーが見つかりません (HTTP エラー 404)。"
     },
     "status.449": {
-        "message": "Server requests provisioning (HTTP Error 449)."
+        "message": "サーバーがプロビジョニングを要求しています (HTTP エラー 449)。"
     },
     "status.500": {
         "message": "不明なサーバー エラー (HTTP エラー 500)。"
@@ -441,7 +441,7 @@
         "message": "Sync failed. Server responded with status <##replace.1##>."
     },
     "status.wbxmlmissingfield": {
-        "message": "ActiveSync protocol violation: Mandatory field <##replace.1##> is missing from server response."
+        "message": "ActiveSync プロトコル違反: 必須フィールド <##replace.1##> がサーバー応答から見つかりません。"
     },
     "syncstate.accountdone": {
         "message": "Finished account"
@@ -513,7 +513,7 @@
         "message": "Requesting remote changes"
     },
     "syncstate.prepare.request.revertlocalchanges": {
-        "message": "Collecting local changes"
+        "message": "ローカルの変更を収集中"
     },
     "syncstate.prepare.request.setdeviceinfo": {
         "message": "デバイス情報を送信中"
@@ -534,13 +534,13 @@
         "message": "Waiting for change estimate"
     },
     "syncstate.send.request.folders": {
-        "message": "Waiting for folder list update"
+        "message": "フォルダリストの更新を待機中"
     },
     "syncstate.send.request.localchanges": {
-        "message": "Waiting for acknowledgment of local changes"
+        "message": "ローカルの変更の承認を待機中"
     },
     "syncstate.send.request.localdeletes": {
-        "message": "Waiting for acknowledgment of local deletes"
+        "message": "ローカルの削除の承認を待機中"
     },
     "syncstate.send.request.options": {
         "message": "Waiting for server options"
@@ -549,7 +549,7 @@
         "message": "Waiting for provision"
     },
     "syncstate.send.request.remotechanges": {
-        "message": "Waiting for remote changes"
+        "message": "リモートの変更を待機中"
     },
     "syncstate.send.request.revertlocalchanges": {
         "message": "Waiting for most recent versions"
@@ -558,9 +558,9 @@
         "message": "デバイス情報を送信中"
     },
     "syncstate.send.request.synckey": {
-        "message": "Waiting for SyncKey"
+        "message": "同期キーを待機中"
     },
     "syncstate.syncing": {
-        "message": "Initialize synchronization"
+        "message": "同期を初期化中"
     }
 }
