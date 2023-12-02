@@ -280,7 +280,7 @@ var Base = class {
             "synckey" : "",
             "target" : "",
             "targetColor" : "",
-            "targetName" : "",            
+            "targetName" : "",
             "parentID" : "0",
             "serverID" : "",
             };
@@ -526,7 +526,8 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
         
         if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
             directory.setStringValue("tbSyncIcon", "eas" + (this.folderData.accountData.getAccountProperty("servertype") == "office365" ? "_365" : ""));
-            return directory;		
+            directory.setStringValue("tbSyncRevision", "2");
+            return directory;
         }
         return null;
     }

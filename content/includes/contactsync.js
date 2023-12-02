@@ -45,7 +45,7 @@ var Contacts = {
         org : 2 
     },
 
-    map_EAS_properties_to_vCard : {
+    map_EAS_properties_to_vCard: revision => ({
         FileAs: {item: "fn", type: "text", params: {}}, /* DisplayName */ 
 
         Birthday: {item: "bday", type: "date", params: {}},
@@ -72,8 +72,8 @@ var Contacts = {
         // "other".
         WebPage: {item: "url", type: "text", matchAll: true, params: {}},
         
-        CompanyName: {item: "org", type: "text", params: {}, index: 1}, /* Company */
-        Department: {item: "org", type: "text", params: {}, index: 0}, /* Department */
+        CompanyName: {item: "org", type: "text", params: {}, index: revision < 2 ? 1 : 0}, /* Company */
+        Department: {item: "org", type: "text", params: {}, index: revision < 2 ? 0 : 1}, /* Department */
         JobTitle: { item: "title", type: "text", params: {} }, /* JobTitle */ 
 
         MobilePhoneNumber: { item: "tel", type: "text", params: {type: "cell" }},
@@ -115,7 +115,7 @@ var Contacts = {
         CarPhoneNumber: { item: "tel", type: "text", params: {type: "Car"}, prefix: true},
         RadioPhoneNumber: { item: "tel", type: "text", params: {type: "Radio"}, prefix: true},
         BusinessFaxNumber: { item: "tel", type: "text", params: {type: "WorkFax"}, prefix: true},
-    },
+    }),
    
     map_EAS_properties_to_vCard_set2 : {
         NickName: {item: "nickname", type: "text", params: {} },
@@ -235,6 +235,9 @@ var Contacts = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (abItem, data, id, syncdata, mode = "standard") {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
+        let revision = parseInt(syncdata.target._directory.getStringValue("tbSyncRevision","1"), 10);
+        let map_EAS_properties_to_vCard = this.map_EAS_properties_to_vCard(revision);
+
         if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Processing " + mode + " contact item", id);
 
         // Make sure we are dealing with a vCard, so we can update the card just
@@ -251,7 +254,7 @@ var Contacts = {
             let properties = (set == 0) ? this.EAS_properties : this.EAS_properties2;
 
             for (let EAS_property of properties) {
-                let vCard_property = (set == 0) ? this.map_EAS_properties_to_vCard[EAS_property] : this.map_EAS_properties_to_vCard_set2[EAS_property];
+                let vCard_property = (set == 0) ? map_EAS_properties_to_vCard[EAS_property] : this.map_EAS_properties_to_vCard_set2[EAS_property];
                 let value;
                 switch (EAS_property) {
                     case "Notes":
@@ -399,6 +402,9 @@ var Contacts = {
     // --------------------------------------------------------------------------- //
     getWbxmlFromThunderbirdItem: async function (abItem, syncdata, isException = false) {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
+        let revision = parseInt(syncdata.target._directory.getStringValue("tbSyncRevision","1"), 10);
+        let map_EAS_properties_to_vCard = this.map_EAS_properties_to_vCard(revision);
+
         let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
         let nowDate = new Date();
 
@@ -411,7 +417,7 @@ var Contacts = {
         // Loop over all known EAS properties (send empty value if not set).
         for (let EAS_property of this.EAS_properties) {
             // Some props need special handling.
-            let vCard_property = this.map_EAS_properties_to_vCard[EAS_property];
+            let vCard_property = map_EAS_properties_to_vCard[EAS_property];
             let value;
             switch (EAS_property) {
                 case "Notes":
@@ -512,7 +518,7 @@ var Contacts = {
         }
 
         // Take care of notes - SWITCHING TO AirSyncBase (if 2.5, we still need Contact group here!)
-        let description = this.getValue(vCardProperties, this.map_EAS_properties_to_vCard["Notes"]);
+        let description = this.getValue(vCardProperties, map_EAS_properties_to_vCard["Notes"]);
         if (asversion == "2.5") {
             wbxml.atag("Body", description);
         } else {
@@ -538,5 +544,5 @@ var Contacts = {
     }
 }
 
-Contacts.EAS_properties = Object.keys(Contacts.map_EAS_properties_to_vCard);
+Contacts.EAS_properties = Object.keys(Contacts.map_EAS_properties_to_vCard());
 Contacts.EAS_properties2 = Object.keys(Contacts.map_EAS_properties_to_vCard_set2);
