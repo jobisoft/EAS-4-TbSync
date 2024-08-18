@@ -6,7 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
  */
  
- "use strict";
+"use strict";
+
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { MailServices } = ChromeUtils.import("resource:///modules/MailServices.jsm");
+var { NetUtil } = ChromeUtils.importESModule(
+    "resource://gre/modules/NetUtil.sys.mjs"
+);
 
 var tools = {
 
@@ -435,7 +441,7 @@ var tools = {
             obj.displayname = "Coordinated Universal Time (UTC)";
             return obj;
         }
-                
+
         //we could parse the icalstring by ourself, but I wanted to use ICAL.parse - TODO try catch
         let info = TbSync.lightning.ICAL.parse("BEGIN:VCALENDAR\r\n" + timezone.icalComponent.toString() + "\r\nEND:VCALENDAR");
         let comp = new TbSync.lightning.ICAL.Component(info);

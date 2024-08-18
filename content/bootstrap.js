@@ -8,8 +8,6 @@
 
 // no need to create namespace, we are in a sandbox
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let onInitDoneObserver = {
     observe: async function (aSubject, aTopic, aData) {        
         let valid = false;

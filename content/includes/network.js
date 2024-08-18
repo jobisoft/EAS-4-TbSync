@@ -9,6 +9,7 @@
  "use strict";
 
 var { OAuth2 } = ChromeUtils.import("resource:///modules/OAuth2.jsm");
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
 
 var network = {  
     
@@ -39,9 +40,9 @@ var network = {
                 return TbSync.passwordManager.getLoginInfo(this.host, "TbSync/EAS", this.user);
             },
 
-            updateLoginData: function(newUsername, newPassword) {
+            updateLoginData: async function(newUsername, newPassword) {
                 let oldUsername = this.user;
-                TbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
+                await TbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
                 // Also update the username of this account. Add dedicated username setter?
                 accountData.setAccountProperty("user", newUsername);
             },          
@@ -234,7 +235,7 @@ var network = {
             let valueChanged = (val != tokens[oauthValue[0]])
             if (valueChanged) {
               tokens[oauthValue[0]] = val;
-              this.authData.updateLoginData(this.authData.user, JSON.stringify(tokens));
+              /* TODO ASYNc */ this.authData.updateLoginData(this.authData.user, JSON.stringify(tokens));
             }
           },
           enumerable: true,
@@ -295,7 +296,7 @@ var network = {
                                 let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
                                 if (credentials) {
                                   retry = true;
-                                  authData.updateLoginData(credentials.username, credentials.password);
+                                  await authData.updateLoginData(credentials.username, credentials.password);
                                 }
                             }
                         }
@@ -374,7 +375,7 @@ var network = {
         // console.log("length :" + wbxml.length + " vs " + encoded.byteLength + " vs " + encoded.length);
         
         return new Promise(function(resolve,reject) {
-            // Create request handler - API changed with TB60 to new XMKHttpRequest()
+            // Create request handler - API changed with TB60 to new XMLHttpRequest()
             syncData.req = new XMLHttpRequest();
             syncData.req.mozBackgroundRequest = true;
             syncData.req.open("POST", eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
@@ -955,7 +956,7 @@ var network = {
             
             try {
                 let response = await new Promise(function(resolve, reject) {
-                    // Create request handler - API changed with TB60 to new XMKHttpRequest()
+                    // Create request handler - API changed with TB60 to new XMLHttpRequest()
                     let req = new XMLHttpRequest();
                     req.mozBackgroundRequest = true;
                     req.open("POST", eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' +encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
@@ -1160,7 +1161,7 @@ var network = {
                         }
                         let credentials = await TbSync.passwordManager.asyncPasswordPrompt(promptData, eas.openWindows);
                         if (credentials) {
-                          authData.updateLoginData(credentials.username, credentials.password);
+                          await authData.updateLoginData(credentials.username, credentials.password);
                           retry = true;
                         }
                     }
@@ -1315,7 +1316,7 @@ var network = {
             
             let userAgent = eas.prefs.getCharPref("clientID.useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
 
-            // Create request handler - API changed with TB60 to new XMKHttpRequest()
+            // Create request handler - API changed with TB60 to new XMLHttpRequest()
             let req = new XMLHttpRequest();
             req.mozBackgroundRequest = true;
             req.open(method, connection.url, true);
@@ -1419,7 +1420,7 @@ var network = {
                         
             let userAgent = eas.prefs.getCharPref("clientID.useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
 
-            // Create request handler - API changed with TB60 to new XMKHttpRequest()
+            // Create request handler - API changed with TB60 to new XMLHttpRequest()
             let req = new XMLHttpRequest();
             req.mozBackgroundRequest = true;
             req.open("GET", url, true);
