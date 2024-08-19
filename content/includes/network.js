@@ -39,23 +39,26 @@ function getContainerIdForContainerName(containerName) {
 }
 
 function getSandBoxedXHR({ user, accountname }, uri, containerReset = false) {
-    let options = {};
-    let containerName = `${accountname}::${user}`;
+    // The content principal used for the sandbox honours CORS. A server redirect
+    // to a different server may cause CORS violations. We implemented code to
+    // catch such redirects and re-run the request with the correct sandbox. If
+    // that becomes an issue, we need to make sandboxing optional.
+    // return new XMLHttpRequest({ mozAnon: false });
 
-    options.userContextId = getContainerIdForContainerName(containerName);
+    let containerName = `${accountname}::${user}@${uri.scheme}://${uri.hostPort}`;
+
+    let userContextId = getContainerIdForContainerName(containerName);
     if (containerReset) {
-        resetContainerWithId(options.userContextId);
+        resetContainerWithId(userContextId);
     }
-
     if (!sandboxes.hasOwnProperty(containerName)) {
         console.log("Creating sandbox for <" + containerName + ">");
-        let principal = Services.scriptSecurityManager.createContentPrincipal(uri, options);
+        let principal = Services.scriptSecurityManager.createContentPrincipal(uri, { userContextId });
         sandboxes[containerName] = Components.utils.Sandbox(principal, {
             wantXrays: true,
             wantGlobalProperties: ["XMLHttpRequest"],
         });
     }
-
     return new sandboxes[containerName].XMLHttpRequest({ mozAnon: false });
 }
 
@@ -1301,15 +1304,15 @@ var network = {
         let urls = [];
         let parts = user.split("@");
 
-        urls.push({ "url": "http://autodiscover." + parts[1] + "/autodiscover/autodiscover.xml", "user": user });
-        urls.push({ "url": "http://" + parts[1] + "/autodiscover/autodiscover.xml", "user": user });
-        urls.push({ "url": "http://autodiscover." + parts[1] + "/Autodiscover/Autodiscover.xml", "user": user });
-        urls.push({ "url": "http://" + parts[1] + "/Autodiscover/Autodiscover.xml", "user": user });
-
         urls.push({ "url": "https://autodiscover." + parts[1] + "/autodiscover/autodiscover.xml", "user": user });
         urls.push({ "url": "https://" + parts[1] + "/autodiscover/autodiscover.xml", "user": user });
         urls.push({ "url": "https://autodiscover." + parts[1] + "/Autodiscover/Autodiscover.xml", "user": user });
         urls.push({ "url": "https://" + parts[1] + "/Autodiscover/Autodiscover.xml", "user": user });
+
+        urls.push({ "url": "http://autodiscover." + parts[1] + "/autodiscover/autodiscover.xml", "user": user });
+        urls.push({ "url": "http://" + parts[1] + "/autodiscover/autodiscover.xml", "user": user });
+        urls.push({ "url": "http://autodiscover." + parts[1] + "/Autodiscover/Autodiscover.xml", "user": user });
+        urls.push({ "url": "http://" + parts[1] + "/Autodiscover/Autodiscover.xml", "user": user });
 
         let requests = [];
         let responses = []; //array of objects {url, error, server}
@@ -1357,11 +1360,8 @@ var network = {
     },
 
     getServerConnectionViaAutodiscoverRedirectWrapper: async function (accountname, url, user, password, maxtimeout) {
-        //using HEAD to find URL redirects until response URL no longer changes 
-        // * XHR should follow redirects transparently, but that does not always work, POST data could get lost, so we
-        // * need to find the actual POST candidates (example: outlook.de accounts)
         let result = {};
-        let method = "HEAD";
+        let method = "POST";
         let connection = { accountname, url, user };
 
         do {
@@ -1373,8 +1373,6 @@ var network = {
                 TbSync.dump("EAS autodiscover URL redirect", "\n" + connection.url + " @ " + connection.user + " => \n" + result.url + " @ " + result.user);
                 connection.url = result.url;
                 connection.user = result.user;
-                method = "HEAD";
-            } else if (result.error == "POST candidate found") {
                 method = "POST";
             }
 
@@ -1431,6 +1429,13 @@ var network = {
             req.onerror = function () {
                 let error = TbSync.network.createTCPErrorFromFailedXHR(req);
                 if (!error) error = req.responseText;
+
+                // CORS violations can happen on redirects. They come back as NS_ERROR_DOM_BAD_URI.
+                if (error == "network::NS_ERROR_DOM_BAD_URI" && req.channel.URI.spec != uri.spec) {
+                    resolve({ "url": req.channel.URI.spec, "error": "redirect found", "server": "", "user": connection.user });
+                    return;
+                }
+
                 TbSync.dump("EAS autodiscover with error (" + error + ")", "\n" + connection.url + " => \n" + req.responseURL);
                 resolve({ "url": req.responseURL, "error": error, "server": "", "user": connection.user });
             };
@@ -1439,12 +1444,6 @@ var network = {
                 //initiate rerun on redirects
                 if (req.responseURL != connection.url) {
                     resolve({ "url": req.responseURL, "error": "redirect found", "server": "", "user": connection.user });
-                    return;
-                }
-
-                //initiate rerun on HEAD request without redirect (rerun and do a POST on this)
-                if (method == "HEAD") {
-                    resolve({ "url": req.responseURL, "error": "POST candidate found", "server": "", "user": connection.user });
                     return;
                 }
 
@@ -1495,9 +1494,7 @@ var network = {
                 }
             };
 
-            if (method == "HEAD") req.send();
-            else req.send(xml);
-
+            req.send(xml);
         });
     },
 
