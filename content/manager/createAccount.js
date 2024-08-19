@@ -156,7 +156,11 @@ var tbSyncEasNewAccount = {
             updateTimer.initWithCallback({notify : function () {tbSyncEasNewAccount.updateAutodiscoverStatus()}}, 1000, 3);
 
             if (servertype == "office365") {
-                let v2 = await eas.network.getServerConnectionViaAutodiscoverV2JsonRequest("https://autodiscover-s.outlook.com/autodiscover/autodiscover.json?Email="+encodeURIComponent(user)+"&Protocol=ActiveSync");
+                let v2 = await eas.network.getServerConnectionViaAutodiscoverV2JsonRequest(
+                    accountname,
+                    user,
+                    "https://autodiscover-s.outlook.com/autodiscover/autodiscover.json?Email="+encodeURIComponent(user)+"&Protocol=ActiveSync",
+                );
                 let oauthData = eas.network.getOAuthObj({ host: v2.server, user, accountname, servertype });
                 if (oauthData) {
                     // ask for token
@@ -173,7 +177,12 @@ var tbSyncEasNewAccount = {
                     error = TbSync.getString("status.404", "eas");
                 }
             } else {
-                let result = await eas.network.getServerConnectionViaAutodiscover(user, password, tbSyncEasNewAccount.maxTimeout*1000);
+                let result = await eas.network.getServerConnectionViaAutodiscover(
+                    accountname,
+                    user,
+                    password,
+                    tbSyncEasNewAccount.maxTimeout*1000
+                );
                 if (result.server) {
                     user = result.user;
                     url = result.server;

@@ -11,6 +11,54 @@
 var { OAuth2 } = ChromeUtils.import("resource:///modules/OAuth2.jsm");
 var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
 
+var containers = [];
+var sandboxes = {};
+
+function resetContainerWithId(id) {
+    Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: id });
+}
+
+function getContainerIdForContainerName(containerName) {
+    // Define the allowed range of container ids to be used
+    // TbSync is using 10000 - 19999
+    // Lightning is using 20000 - 29999
+    // Cardbook is using 30000 - 39999
+    let min = 10000;
+    let max = 19999;
+
+    //reset if adding an entry will exceed allowed range
+    if (containers.length > (max - min) && containers.indexOf(containerName) == -1) {
+        for (let i = 0; i < containers.length; i++) {
+            resetContainerWithId(i + min);
+        }
+        containers = [];
+    }
+
+    let idx = containers.indexOf(containerName);
+    return (idx == -1) ? containers.push(containerName) - 1 + min : (idx + min);
+}
+
+function getSandBoxedXHR({ user, accountname }, uri, containerReset = false) {
+    let options = {};
+    let containerName = `${accountname}::${user}`;
+
+    options.userContextId = getContainerIdForContainerName(containerName);
+    if (containerReset) {
+        resetContainerWithId(options.userContextId);
+    }
+
+    if (!sandboxes.hasOwnProperty(containerName)) {
+        console.log("Creating sandbox for <" + containerName + ">");
+        let principal = Services.scriptSecurityManager.createContentPrincipal(uri, options);
+        sandboxes[containerName] = Components.utils.Sandbox(principal, {
+            wantXrays: true,
+            wantGlobalProperties: ["XMLHttpRequest"],
+        });
+    }
+
+    return new sandboxes[containerName].XMLHttpRequest({ mozAnon: false });
+}
+
 var network = {
 
     getEasURL: function (accountData) {
@@ -40,6 +88,10 @@ var network = {
                 return TbSync.passwordManager.getLoginInfo(this.host, "TbSync/EAS", this.user);
             },
 
+            get accountname() {
+                return accountData.getAccountProperty("accountname");
+            },
+
             updateLoginData: async function (newUsername, newPassword) {
                 let oldUsername = this.user;
                 await TbSync.passwordManager.updateLoginInfo(this.host, "TbSync/EAS", oldUsername, newUsername, newPassword);
@@ -54,24 +106,37 @@ var network = {
         return authData;
     },
 
+    getContextData: function (configObject = null) {
+        let contextData = {}
+        contextData.accountData = (configObject && configObject.hasOwnProperty("accountData")) ? configObject.accountData : null;
+
+        if (contextData.accountData) {
+            contextData.accountname = contextData.accountData.getAccountProperty("accountname");
+            contextData.user = contextData.accountData.getAccountProperty("user");
+            contextData.host = contextData.accountData.getAccountProperty("host");
+            contextData.servertype = contextData.accountData.getAccountProperty("servertype");
+            contextData.accountID = contextData.accountData.accountID;
+        } else {
+            contextData.accountname = (configObject && configObject.hasOwnProperty("accountname")) ? configObject.accountname : "";
+            contextData.user = (configObject && configObject.hasOwnProperty("user")) ? configObject.user : "";
+            contextData.host = (configObject && configObject.hasOwnProperty("host")) ? configObject.host : "";
+            contextData.servertype = (configObject && configObject.hasOwnProperty("servertype")) ? configObject.servertype : "";
+            contextData.accountID = "";
+        }
+
+        return contextData;
+    },
+
     // prepare and patch OAuth2 object
     getOAuthObj: function (configObject = null) {
-        let accountname, user, host, accountID, servertype;
-
-        let accountData = (configObject && configObject.hasOwnProperty("accountData")) ? configObject.accountData : null;
-        if (accountData) {
-            accountname = accountData.getAccountProperty("accountname");
-            user = accountData.getAccountProperty("user");
-            host = accountData.getAccountProperty("host");
-            servertype = accountData.getAccountProperty("servertype");
-            accountID = accountData.accountID;
-        } else {
-            accountname = (configObject && configObject.hasOwnProperty("accountname")) ? configObject.accountname : "";
-            user = (configObject && configObject.hasOwnProperty("user")) ? configObject.user : "";
-            host = (configObject && configObject.hasOwnProperty("host")) ? configObject.host : "";
-            servertype = (configObject && configObject.hasOwnProperty("servertype")) ? configObject.servertype : "";
-            accountID = "";
-        }
+        let {
+            accountData,
+            accountname,
+            user,
+            host,
+            accountID,
+            servertype
+        } = this.getContextData(configObject);
 
         if (!["office365"].includes(servertype))
             return null;
@@ -388,11 +453,12 @@ var network = {
         // console.log("byte array: " + encoded);
         // console.log("length :" + wbxml.length + " vs " + encoded.byteLength + " vs " + encoded.length);
 
+        let contextData = eas.network.getContextData({ accountData: syncData.accountData });
+        let uri = Services.io.newURI(eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' + encodeURIComponent(deviceType) + '&DeviceId=' + deviceId);
         return new Promise(function (resolve, reject) {
-            // Create request handler - API changed with TB60 to new XMLHttpRequest()
-            syncData.req = new XMLHttpRequest({ mozAnon: false });
+            syncData.req = getSandBoxedXHR(contextData, uri);
             syncData.req.mozBackgroundRequest = true;
-            syncData.req.open("POST", eas.network.getEasURL(syncData.accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(connection.user) + '&DeviceType=' + encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
+            syncData.req.open("POST", uri.spec, true);
             syncData.req.overrideMimeType("text/plain");
             syncData.req.setRequestHeader("User-Agent", userAgent);
             syncData.req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
@@ -969,11 +1035,12 @@ var network = {
             }
 
             try {
+                let contextData = eas.network.getContextData({ accountData });
+                let uri = Services.io.newURI(eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' + encodeURIComponent(deviceType) + '&DeviceId=' + deviceId);
                 let response = await new Promise(function (resolve, reject) {
-                    // Create request handler - API changed with TB60 to new XMLHttpRequest()
-                    let req = new XMLHttpRequest({ mozAnon: false });
+                    let req = getSandBoxedXHR(contextData, uri);
                     req.mozBackgroundRequest = true;
-                    req.open("POST", eas.network.getEasURL(accountData) + '?Cmd=' + command + '&User=' + encodeURIComponent(authData.user) + '&DeviceType=' + encodeURIComponent(deviceType) + '&DeviceId=' + deviceId, true);
+                    req.open("POST", uri.spec, true);
                     req.overrideMimeType("text/plain");
                     req.setRequestHeader("User-Agent", userAgent);
                     req.setRequestHeader("Content-Type", "application/vnd.ms-sync.wbxml");
@@ -1087,10 +1154,12 @@ var network = {
                 }
             }
 
+            let contextData = eas.network.getContextData({ accountData: syncData.accountData });
+            let uri = Services.io.newURI(eas.network.getEasURL(syncData.accountData));
             let result = await new Promise(function (resolve, reject) {
-                syncData.req = new XMLHttpRequest({ mozAnon: false });
+                syncData.req = getSandBoxedXHR(contextData, uri);
                 syncData.req.mozBackgroundRequest = true;
-                syncData.req.open("OPTIONS", eas.network.getEasURL(syncData.accountData), true);
+                syncData.req.open("OPTIONS", uri.spec, true);
                 syncData.req.overrideMimeType("text/plain");
                 syncData.req.setRequestHeader("User-Agent", userAgent);
                 if (authData.password) {
@@ -1206,7 +1275,7 @@ var network = {
         let authData = eas.network.getAuthData(syncData.accountData);
 
         syncData.setSyncState("send.request.autodiscover");
-        let result = await eas.network.getServerConnectionViaAutodiscover(authData.user, authData.password, 30 * 1000);
+        let result = await eas.network.getServerConnectionViaAutodiscover(authData.accountname, authData.user, authData.password, 30 * 1000);
 
         syncData.setSyncState("eval.response.autodiscover");
         if (result.errorcode == 200) {
@@ -1228,7 +1297,7 @@ var network = {
         return u.split("//")[1]; //cut off protocol
     },
 
-    getServerConnectionViaAutodiscover: async function (user, password, maxtimeout) {
+    getServerConnectionViaAutodiscover: async function (accountname, user, password, maxtimeout) {
         let urls = [];
         let parts = user.split("@");
 
@@ -1247,7 +1316,13 @@ var network = {
 
         for (let i = 0; i < urls.length; i++) {
             await TbSync.tools.sleep(200);
-            requests.push(eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(urls[i].url, urls[i].user, password, maxtimeout));
+            requests.push(eas.network.getServerConnectionViaAutodiscoverRedirectWrapper(
+                accountname,
+                urls[i].url,
+                urls[i].user,
+                password,
+                maxtimeout
+            ));
         }
 
         try {
@@ -1281,13 +1356,13 @@ var network = {
         return result;
     },
 
-    getServerConnectionViaAutodiscoverRedirectWrapper: async function (url, user, password, maxtimeout) {
+    getServerConnectionViaAutodiscoverRedirectWrapper: async function (accountname, url, user, password, maxtimeout) {
         //using HEAD to find URL redirects until response URL no longer changes 
         // * XHR should follow redirects transparently, but that does not always work, POST data could get lost, so we
         // * need to find the actual POST candidates (example: outlook.de accounts)
         let result = {};
         let method = "HEAD";
-        let connection = { url, user };
+        let connection = { accountname, url, user };
 
         do {
             await TbSync.tools.sleep(200);
@@ -1329,11 +1404,10 @@ var network = {
             xml += '</Autodiscover>\r\n';
 
             let userAgent = eas.prefs.getCharPref("clientID.useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
-
-            // Create request handler - API changed with TB60 to new XMLHttpRequest()
-            let req = new XMLHttpRequest({ mozAnon: false });
+            let uri = Services.io.newURI(connection.url);
+            let req = getSandBoxedXHR(connection, uri);
             req.mozBackgroundRequest = true;
-            req.open(method, connection.url, true);
+            req.open(method, uri.spec, true);
             req.timeout = maxtimeout;
             req.setRequestHeader("User-Agent", userAgent);
 
@@ -1427,17 +1501,16 @@ var network = {
         });
     },
 
-    getServerConnectionViaAutodiscoverV2JsonRequest: function (url, maxtimeout) {
+    getServerConnectionViaAutodiscoverV2JsonRequest: function (accountname, user, url, maxtimeout) {
         TbSync.dump("Querry EAS autodiscover V2 URL", url);
 
         return new Promise(function (resolve, reject) {
 
             let userAgent = eas.prefs.getCharPref("clientID.useragent"); //plus calendar.useragent.extra = Lightning/5.4.5.2
-
-            // Create request handler - API changed with TB60 to new XMLHttpRequest()
-            let req = new XMLHttpRequest({ mozAnon: false });
+            let uri = Services.io.newURI(url);
+            let req = getSandBoxedXHR({ accountname, user }, uri);
             req.mozBackgroundRequest = true;
-            req.open("GET", url, true);
+            req.open("GET", uri.spec, true);
             req.timeout = maxtimeout;
             req.setRequestHeader("User-Agent", userAgent);
 
