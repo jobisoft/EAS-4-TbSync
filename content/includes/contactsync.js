@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     VCardUtils: "resource:///modules/VCardUtils.jsm",
 });
 
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { MailServices } = ChromeUtils.import("resource:///modules/MailServices.jsm");
+
 const eas = TbSync.providers.eas;
 
 var Contacts = {

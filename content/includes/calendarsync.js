@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  CalTodo: "resource:///modules/CalTodo.jsm",
 }); 
 
+var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
 const cal = TbSync.lightning.cal;
 const ICAL = TbSync.lightning.ICAL;
 

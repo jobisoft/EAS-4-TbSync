@@ -192,7 +192,7 @@ var tbSyncEasNewAccount = {
 
         //add if valid
         if (!error) {
-            tbSyncEasNewAccount.addAccount(user, password, servertype, accountname, url);
+            await tbSyncEasNewAccount.addAccount(user, password, servertype, accountname, url);
         }
         
         //end validation
@@ -223,7 +223,7 @@ var tbSyncEasNewAccount = {
         document.getElementById('tbsync.newaccount.autodiscoverstatus').value  = TbSync.getString("autodiscover.Querying","eas") + timeout;
     },
 
-    addAccount (user, password, servertype, accountname, url) {
+    async addAccount (user, password, servertype, accountname, url) {
         let newAccountEntry = this.providerData.getDefaultAccountEntries();
         newAccountEntry.user = user;
         newAccountEntry.servertype = servertype;
@@ -237,7 +237,7 @@ var tbSyncEasNewAccount = {
 
         // Add the new account.
         let newAccountData = this.providerData.addAccount(accountname, newAccountEntry);
-        eas.network.getAuthData(newAccountData).updateLoginData(user, password);
+        await eas.network.getAuthData(newAccountData).updateLoginData(user, password);
 
         window.close();
     }
