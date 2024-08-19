@@ -182,7 +182,7 @@ var network = {
                 rv.error = "OAuthServerError::" + rv.error;
                 Components.utils.reportError(e);
             }
-            rv.tokens = self.tokens;
+            rv.tokens = oauth.tokens;
             return false;
         };
 
