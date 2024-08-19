@@ -214,6 +214,7 @@ var tbSyncEasNewAccount = {
             document.getElementById("tbsync.error.message").textContent = error;
             document.getElementById("tbsync.error").hidden = false;
         }            
+        window.sizeToContent();
     },
 
     updateAutodiscoverStatus: function () {
