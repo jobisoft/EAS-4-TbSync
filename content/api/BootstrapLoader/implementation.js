@@ -12,9 +12,9 @@
  */
 
 // Get various parts of the WebExtension framework that we need.
-var { ExtensionCommon } = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-var { ExtensionSupport } = ChromeUtils.import("resource:///modules/ExtensionSupport.jsm");
-var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+var { ExtensionCommon } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
+var { ExtensionSupport } = ChromeUtils.importESModule("resource:///modules/ExtensionSupport.sys.mjs");
+var { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
 
 function getMessenger(context) {
   let apis = ["storage", "runtime", "extension", "i18n"];

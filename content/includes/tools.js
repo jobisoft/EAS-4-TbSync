@@ -8,8 +8,8 @@
  
 "use strict";
 
-var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
-var { MailServices } = ChromeUtils.import("resource:///modules/MailServices.jsm");
+var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
+var { MailServices } = ChromeUtils.importESModule("resource:///modules/MailServices.sys.mjs");
 var { NetUtil } = ChromeUtils.importESModule(
     "resource://gre/modules/NetUtil.sys.mjs"
 );
@@ -325,7 +325,7 @@ var tools = {
                     
             //get a list of all zones
             //alternativly use cal.fromRFC3339 - but this is only doing this:
-            //https://dxr.mozilla.org/comm-central/source/calendar/base/modules/calProviderUtils.jsm
+            //https://dxr.mozilla.org/comm-central/source/calendar/base/modules/calProviderUtils.sys.mjs
 
             //cache timezone data on first attempt
             if (eas.cachedTimezoneData === null) {

@@ -8,8 +8,8 @@
 
 "use strict";
 
-var { OAuth2 } = ChromeUtils.import("resource:///modules/OAuth2.jsm");
-var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { OAuth2 } = ChromeUtils.importESModule("resource:///modules/OAuth2.sys.mjs");
+var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
 
 var containers = [];
 var sandboxes = {};

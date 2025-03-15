@@ -8,17 +8,16 @@
  
 "use strict";
 
-var { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-    CalRecurrenceInfo: "resource:///modules/CalRecurrenceInfo.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+    CalRecurrenceInfo: "resource:///modules/CalRecurrenceInfo.sys.mjs",
 }); 
 
 // - https://dxr.mozilla.org/comm-central/source/calendar/base/public/calIEvent.idl
 // - https://dxr.mozilla.org/comm-central/source/calendar/base/public/calIItemBase.idl
 // - https://dxr.mozilla.org/comm-central/source/calendar/base/public/calICalendar.idl
-// - https://dxr.mozilla.org/comm-central/source/calendar/base/modules/calAsyncUtils.jsm
+// - https://dxr.mozilla.org/comm-central/source/calendar/base/modules/calAsyncUtils.sys.mjs
 
 // https://msdn.microsoft.com/en-us/library/dd299454(v=exchg.80).aspx
 

@@ -8,21 +8,17 @@
  
  "use strict";
 
- var { XPCOMUtils } = ChromeUtils.import(
-    "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-    newUID: "resource:///modules/AddrBookUtils.jsm",
-    AddrBookCard: "resource:///modules/AddrBookCard.jsm",
-    BANISHED_PROPERTIES: "resource:///modules/VCardUtils.jsm",
-    VCardProperties: "resource:///modules/VCardUtils.jsm",
-    VCardPropertyEntry: "resource:///modules/VCardUtils.jsm",
-    VCardUtils: "resource:///modules/VCardUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+    newUID: "resource:///modules/AddrBookUtils.sys.mjs",
+    AddrBookCard: "resource:///modules/AddrBookCard.sys.mjs",
+    BANISHED_PROPERTIES: "resource:///modules/VCardUtils.sys.mjs",
+    VCardProperties: "resource:///modules/VCardUtils.sys.mjs",
+    VCardPropertyEntry: "resource:///modules/VCardUtils.sys.mjs",
+    VCardUtils: "resource:///modules/VCardUtils.sys.mjs",
 });
 
-var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
-var { MailServices } = ChromeUtils.import("resource:///modules/MailServices.jsm");
+var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
+var { MailServices } = ChromeUtils.importESModule("resource:///modules/MailServices.sys.mjs");
 
 const eas = TbSync.providers.eas;
 

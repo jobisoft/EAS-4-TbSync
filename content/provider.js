@@ -8,8 +8,8 @@
 
 "use strict";
 
-var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
-var { MailServices } = ChromeUtils.import("resource:///modules/MailServices.jsm");
+var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
+var { MailServices } = ChromeUtils.importESModule("resource:///modules/MailServices.sys.mjs");
 
 // Every object in here will be loaded into TbSync.providers.<providername>.
 const eas = TbSync.providers.eas;

@@ -8,17 +8,15 @@
  
 "use strict";
 
-var { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetters(this, {
- CalAlarm: "resource:///modules/CalAlarm.jsm",
- CalAttachment: "resource:///modules/CalAttachment.jsm",
- CalAttendee: "resource:///modules/CalAttendee.jsm",
- CalEvent: "resource:///modules/CalEvent.jsm",
- CalTodo: "resource:///modules/CalTodo.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+ CalAlarm: "resource:///modules/CalAlarm.sys.mjs",
+ CalAttachment: "resource:///modules/CalAttachment.sys.mjs",
+ CalAttendee: "resource:///modules/CalAttendee.sys.mjs",
+ CalEvent: "resource:///modules/CalEvent.sys.mjs",
+ CalTodo: "resource:///modules/CalTodo.sys.mjs",
 }); 
 
-var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
 const cal = TbSync.lightning.cal;
 const ICAL = TbSync.lightning.ICAL;
 

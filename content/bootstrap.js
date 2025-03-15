@@ -12,7 +12,7 @@ let onInitDoneObserver = {
     observe: async function (aSubject, aTopic, aData) {        
         let valid = false;
         try {
-            var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+            var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
             valid = TbSync.enabled;
         } catch (e) {
             // If this fails, TbSync is not loaded yet and we will get the notification later again.
@@ -45,7 +45,7 @@ function shutdown(data, reason) {
     Services.obs.removeObserver(onInitDoneObserver, "tbsync.observer.initialized");
     //unload this provider add-on from TbSync
     try {
-        var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+        var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
         TbSync.providers.unloadProvider("eas");
     } catch (e) {
         //if this fails, TbSync has been unloaded already and has unloaded this addon as well

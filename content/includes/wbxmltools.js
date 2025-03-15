@@ -8,7 +8,7 @@
  
 "use strict";
 
-var { TbSync } = ChromeUtils.import("chrome://tbsync/content/tbsync.jsm");
+var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
 var wbxmltools = {
 
     // Convert a WBXML (WAP Binary XML) to plain XML - returns save xml with all special chars in the user data encoded by encodeURIComponent
