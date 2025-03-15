@@ -1,6 +1,5 @@
-async function main() {
-  await messenger.BootstrapLoader.registerChromeUrl([ ["content", "eas4tbsync", "content/"] ]);
-  await messenger.BootstrapLoader.registerBootstrapScript("chrome://eas4tbsync/content/bootstrap.js");  
-}
+await browser.LegacyHelper.registerGlobalUrls([
+  ["content", "eas4tbsync", "content/"],
+]);
 
-main();
+await browser.EAS4TbSync.load();

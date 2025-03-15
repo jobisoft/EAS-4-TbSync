@@ -17,18 +17,27 @@
     "32": "content/skin/eas32.png"
   },
   "background": {
+    "type": "module",
     "scripts": ["background.js"]
   },
   "permissions": [
     "notifications"
   ],
   "experiment_apis": {
-    "BootstrapLoader": {
-      "schema": "content/api/BootstrapLoader/schema.json",
+    "LegacyHelper": {
+      "schema": "api/LegacyHelper/schema.json",
       "parent": {
         "scopes": ["addon_parent"],
-        "paths": [["BootstrapLoader"]],
-        "script": "content/api/BootstrapLoader/implementation.js"
+        "paths": [["LegacyHelper"]],
+        "script": "api/LegacyHelper/implementation.js"
+      }
+    },
+    "EAS4TbSync": {
+      "schema": "api/EAS4TbSync/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["EAS4TbSync"]],
+        "script": "api/EAS4TbSync/implementation.js"
       }
     }
   }
