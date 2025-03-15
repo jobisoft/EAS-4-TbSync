@@ -8,8 +8,19 @@
 
 "use strict";
 
-var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
-var { MailServices } = ChromeUtils.importESModule("resource:///modules/MailServices.sys.mjs");
+var { ExtensionParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
+);
+var { MailServices } = ChromeUtils.importESModule(
+    "resource:///modules/MailServices.sys.mjs"
+);
+
+var tbsyncExtension = ExtensionParent.GlobalManager.getExtension(
+    "tbsync@jobisoft.de"
+);
+var { TbSync } = ChromeUtils.importESModule(
+    `chrome://tbsync/content/tbsync.sys.mjs?${tbsyncExtension.manifest.version}`
+);
 
 // Every object in here will be loaded into TbSync.providers.<providername>.
 const eas = TbSync.providers.eas;
@@ -18,7 +29,7 @@ eas.prefs = Services.prefs.getBranch("extensions.eas4tbsync.");
 
 //use flags instead of strings to avoid errors due to spelling errors
 eas.flags = Object.freeze({
-    allowEmptyResponse: true, 
+    allowEmptyResponse: true,
 });
 
 eas.windowsToIanaTimezoneMap = {};
@@ -43,7 +54,7 @@ var Base = class {
         branch.setIntPref("maxitems", 50);
         branch.setBoolPref("msTodoCompat", false);
         branch.setCharPref("clientID.type", "TbSync");
-        branch.setCharPref("clientID.useragent", "Thunderbird ActiveSync");    
+        branch.setCharPref("clientID.useragent", "Thunderbird ActiveSync");
         branch.setCharPref("oauth.clientID", "");
 
         eas.defaultTimezone = null;
@@ -55,12 +66,12 @@ var Base = class {
         try {
             // Create a basic error info (no accountname or foldername, just the provider)
             let eventLogInfo = new TbSync.EventLogInfo("eas");
-                            
+
             //get timezone info of default timezone (old cal. without dtz are depricated)
             eas.defaultTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.defaultTimezone) ? TbSync.lightning.cal.dtz.defaultTimezone : TbSync.lightning.cal.calendarDefaultTimezone();
             eas.utcTimezone = (TbSync.lightning.cal.dtz && TbSync.lightning.cal.dtz.UTC) ? TbSync.lightning.cal.dtz.UTC : TbSync.lightning.cal.UTC();
             if (eas.defaultTimezone && eas.defaultTimezone.icalComponent) {
-                TbSync.eventlog.add("info", eventLogInfo, "Default timezone has been found.");                    
+                TbSync.eventlog.add("info", eventLogInfo, "Default timezone has been found.");
             } else {
                 TbSync.eventlog.add("info", eventLogInfo, "Default timezone is not defined, using UTC!");
                 eas.defaultTimezone = eas.utcTimezone;
@@ -70,31 +81,31 @@ var Base = class {
             if (!eas.defaultTimezoneInfo) {
                 TbSync.eventlog.add("info", eventLogInfo, "Could not create defaultTimezoneInfo");
             }
-            
+
             //get windows timezone data from CSV
             let aliasData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/Aliases.csv");
             let aliasNames = {};
-            for (let i = 0; i<aliasData.length; i++) {
+            for (let i = 0; i < aliasData.length; i++) {
                 let lData = aliasData[i].split(",");
-                if (lData.length<2) continue;
+                if (lData.length < 2) continue;
                 aliasNames[lData[0].toString().trim()] = lData[1].toString().trim().split(" ");
             }
 
             let csvData = await eas.tools.fetchFile("chrome://eas4tbsync/content/timezonedata/WindowsTimezone.csv");
-            for (let i = 0; i<csvData.length; i++) {
+            for (let i = 0; i < csvData.length; i++) {
                 let lData = csvData[i].split(",");
-                if (lData.length<3) continue;
-                
+                if (lData.length < 3) continue;
+
                 let windowsZoneName = lData[0].toString().trim();
                 let zoneType = lData[1].toString().trim();
                 let ianaZoneName = lData[2].toString().trim();
-                
+
                 if (zoneType == "001") eas.windowsToIanaTimezoneMap[windowsZoneName] = ianaZoneName;
                 if (ianaZoneName == eas.defaultTimezoneInfo.std.id) eas.defaultTimezoneInfo.std.windowsZoneName = windowsZoneName;
-                                    
+
                 // build the revers map as well, which is many-to-one, grap iana aliases from the csvData and from the aliasData
                 // 1. multiple iana zones map to the same windows zone
-                let ianaZones = ianaZoneName.split(" "); 
+                let ianaZones = ianaZoneName.split(" ");
                 for (let ianaZone of ianaZones) {
                     eas.ianaToWindowsTimezoneMap[ianaZone] = windowsZoneName;
                     if (aliasNames.hasOwnProperty(ianaZone)) {
@@ -109,17 +120,17 @@ var Base = class {
             let tzService = TbSync.lightning.cal.timezoneService;
             for (let timezoneId of tzService.timezoneIds) {
                 if (!eas.ianaToWindowsTimezoneMap[timezoneId]) {
-                    TbSync.eventlog.add("info", eventLogInfo, "The IANA timezone <"+timezoneId+"> cannot be mapped to any Exchange timezone.");
+                    TbSync.eventlog.add("info", eventLogInfo, "The IANA timezone <" + timezoneId + "> cannot be mapped to any Exchange timezone.");
                 }
             }
-            
+
             //If an EAS calendar is currently NOT associated with an email identity, try to associate, 
             //but do not change any explicitly set association
             // - A) find email identity and associate (which sets organizer to that user identity)
             // - B) overwrite default organizer with current best guess
             //TODO: Do this after email accounts changed, not only on restart? 
             let providerData = new TbSync.ProviderData("eas");
-            let folders = providerData.getFolders({"selected": true, "type": ["8","13"]});
+            let folders = providerData.getFolders({ "selected": true, "type": ["8", "13"] });
             for (let folder of folders) {
                 let manager = TbSync.lightning.cal.manager;
                 let calendar = manager.getCalendarById(folder.getFolderProperty("target"));
@@ -131,14 +142,14 @@ var Base = class {
                     if (key === "") { //TODO: Do this even after manually switching to NONE, not only on restart?
                         //set transient calendar organizer settings based on current best guess and 
                         calendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
-                        calendar.setProperty("organizerCN",  calendar.getProperty("fallbackOrganizerName"));
+                        calendar.setProperty("organizerCN", calendar.getProperty("fallbackOrganizerName"));
                     } else {
                         //force switch to found identity
                         calendar.setProperty("imip.identity.key", key);
                     }
                 }
             }
-        } catch(e) {
+        } catch (e) {
             Components.utils.reportError(e);
         }
     }
@@ -150,13 +161,13 @@ var Base = class {
     static async unload() {
         // Close all open windows of this provider.
         for (let id in eas.openWindows) {
-          if (eas.openWindows.hasOwnProperty(id)) {
-            try {
-                eas.openWindows[id].close();
-            } catch(e) {
-                //NOOP
+            if (eas.openWindows.hasOwnProperty(id)) {
+                try {
+                    eas.openWindows[id].close();
+                } catch (e) {
+                    //NOOP
+                }
             }
-          }
         }
     }
 
@@ -180,13 +191,13 @@ var Base = class {
      */
     static getProviderIcon(size, accountData = null) {
         let base = (accountData && accountData.getAccountProperty("servertype") == "office365") ? "365_" : "eas";
-        
+
         switch (size) {
             case 16:
                 return "chrome://eas4tbsync/content/skin/" + base + "16.png";
             case 32:
                 return "chrome://eas4tbsync/content/skin/" + base + "32.png";
-            default :
+            default:
                 return "chrome://eas4tbsync/content/skin/" + base + "64.png";
         }
     }
@@ -197,12 +208,12 @@ var Base = class {
      */
     static getSponsors() {
         return {
-            "Schiessl, Michael 1" : {name: "Michael Schiessl", description: "Tine 2.0", icon: "", link: "" },
-            "Schiessl, Michael 2" : {name: "Michael Schiessl", description: " Exchange 2007", icon: "", link: "" },
-            "netcup GmbH" : {name: "netcup GmbH", description : "SOGo", icon: "chrome://eas4tbsync/content/skin/sponsors/netcup.png", link: "http://www.netcup.de/" },
-            "nethinks GmbH" : {name: "nethinks GmbH", description : "Zarafa", icon: "chrome://eas4tbsync/content/skin/sponsors/nethinks.png", link: "http://www.nethinks.com/" },
-            "Jau, Stephan" : {name: "Stephan Jau", description: "Horde", icon: "", link: "" },
-            "Zavar " : {name: "Zavar", description: "Zoho", icon: "", link: "" },
+            "Schiessl, Michael 1": { name: "Michael Schiessl", description: "Tine 2.0", icon: "", link: "" },
+            "Schiessl, Michael 2": { name: "Michael Schiessl", description: " Exchange 2007", icon: "", link: "" },
+            "netcup GmbH": { name: "netcup GmbH", description: "SOGo", icon: "chrome://eas4tbsync/content/skin/sponsors/netcup.png", link: "http://www.netcup.de/" },
+            "nethinks GmbH": { name: "nethinks GmbH", description: "Zarafa", icon: "chrome://eas4tbsync/content/skin/sponsors/nethinks.png", link: "http://www.nethinks.com/" },
+            "Jau, Stephan": { name: "Stephan Jau", description: "Horde", icon: "", link: "" },
+            "Zavar ": { name: "Zavar", description: "Zoho", icon: "", link: "" },
         };
     }
 
@@ -250,25 +261,25 @@ var Base = class {
      */
     static getDefaultAccountEntries() {
         let row = {
-            "policykey" : "0", 
-            "foldersynckey" : "0",
-            "deviceId" : eas.tools.getNewDeviceId(),
-            "asversionselected" : "auto",
-            "asversion" : "",
-            "host" : "",
-            "user" : "",
-            "servertype" : "",
-            "seperator" : "10",
-            "https" : true,
-            "provision" : false,
-            "displayoverride" : false, 
-            "lastEasOptionsUpdate":"0",
+            "policykey": "0",
+            "foldersynckey": "0",
+            "deviceId": eas.tools.getNewDeviceId(),
+            "asversionselected": "auto",
+            "asversion": "",
+            "host": "",
+            "user": "",
+            "servertype": "",
+            "seperator": "10",
+            "https": true,
+            "provision": false,
+            "displayoverride": false,
+            "lastEasOptionsUpdate": "0",
             "allowedEasVersions": "",
             "allowedEasCommands": "",
             "useragent": eas.prefs.getCharPref("clientID.useragent"),
             "devicetype": eas.prefs.getCharPref("clientID.type"),
-            "synclimit" : "7",
-            }; 
+            "synclimit": "7",
+        };
         return row;
     }
 
@@ -279,14 +290,14 @@ var Base = class {
      */
     static getDefaultFolderEntries() {
         let folder = {
-            "type" : "",
-            "synckey" : "",
-            "target" : "",
-            "targetColor" : "",
-            "targetName" : "",
-            "parentID" : "0",
-            "serverID" : "",
-            };
+            "type": "",
+            "synckey": "",
+            "target": "",
+            "targetColor": "",
+            "targetName": "",
+            "parentID": "0",
+            "serverID": "",
+        };
         return folder;
     }
 
@@ -327,16 +338,16 @@ var Base = class {
      * The most simple implementation is to return accountData.getAllFolders();
      */
     static getSortedFolders(accountData) {
-        let allowedTypesOrder = ["9","14","8","13","7","15"];
-        
-        function getIdChain (aServerID) {
+        let allowedTypesOrder = ["9", "14", "8", "13", "7", "15"];
+
+        function getIdChain(aServerID) {
             let serverID = aServerID;
             let chain = [];
             let folder;
             let rootType = "";
-            
+
             // create sort string so that child folders are directly below their parent folders
-            do { 
+            do {
                 folder = accountData.getFolder("serverID", serverID);
                 if (folder) {
                     chain.unshift(folder.getFolderProperty("foldername"));
@@ -344,33 +355,33 @@ var Base = class {
                     rootType = folder.getFolderProperty("type");
                 }
             } while (folder && serverID != "0")
-            
+
             // different folder types are grouped and trashed folders at the end
             let pos = allowedTypesOrder.indexOf(rootType);
-            chain.unshift(pos == -1 ? "ZZZ" : pos.toString().padStart(3,"0"));
-                        
+            chain.unshift(pos == -1 ? "ZZZ" : pos.toString().padStart(3, "0"));
+
             return chain.join(".");
         };
-        
+
         let toBeSorted = [];
         let folders = accountData.getAllFolders();
         for (let f of folders) {
             if (!allowedTypesOrder.includes(f.getFolderProperty("type"))) {
                 continue;
             }
-            toBeSorted.push({"key": getIdChain(f.getFolderProperty("serverID")), "folder": f});
+            toBeSorted.push({ "key": getIdChain(f.getFolderProperty("serverID")), "folder": f });
         }
-        
+
         //sort
-        toBeSorted.sort(function(a,b) {
-            return  a.key > b.key;
+        toBeSorted.sort(function (a, b) {
+            return a.key > b.key;
         });
 
         let sortedFolders = [];
         for (let sortObj of toBeSorted) {
             sortedFolders.push(sortObj.folder);
         }
-        return sortedFolders;        
+        return sortedFolders;
     }
 
 
@@ -382,7 +393,7 @@ var Base = class {
     static getConnectionTimeout(accountData) {
         return eas.prefs.getIntPref("timeout");
     }
-    
+
 
     /**
      * Is called if TbSync needs to synchronize the folder list.
@@ -393,7 +404,7 @@ var Base = class {
         // happens inside that function. You may also throw custom errors
         // in that function, which have the StatusData obj attached, which
         // should be returned.
-        
+
         try {
             await eas.sync.folderList(syncData);
         } catch (e) {
@@ -407,7 +418,7 @@ var Base = class {
         }
 
         // Fall through, if there was no error.
-        return new TbSync.StatusData();        
+        return new TbSync.StatusData();
     }
 
 
@@ -420,14 +431,14 @@ var Base = class {
         // happens inside that function. You may also throw custom errors
         // in that function, which have the StatusData obj attached, which
         // should be returned.
-        
+
         try {
             switch (syncJob) {
                 case "deletefolder":
                     await eas.sync.deleteFolder(syncData);
                     break;
                 default:
-                   await eas.sync.singleFolder(syncData);
+                    await eas.sync.singleFolder(syncData);
             }
         } catch (e) {
             if (e.name == "eas4tbsync") {
@@ -440,7 +451,7 @@ var Base = class {
         }
 
         // Fall through, if there was no error.
-        return new TbSync.StatusData();   
+        return new TbSync.StatusData();
     }
 
 
@@ -468,14 +479,14 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
     get primaryKeyField() {
         return "X-EAS-SERVERID";
     }
-    
+
     generatePrimaryKey() {
-         return TbSync.generateUUID();
+        return TbSync.generateUUID();
     }
 
     // enable or disable changelog
     get logUserChanges() {
-        return  true;
+        return true;
     }
 
     directoryObserver(aTopic) {
@@ -495,10 +506,10 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
                 break;
 
             case "addrbook-contact-created":
-            {
-                //Services.console.logStringMessage("["+ aTopic + "] "+ abCardItem.getProperty("DisplayName")+">");
-                break;
-            }
+                {
+                    //Services.console.logStringMessage("["+ aTopic + "] "+ abCardItem.getProperty("DisplayName")+">");
+                    break;
+                }
         }
     }
 
@@ -508,25 +519,25 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
             case "addrbook-list-member-removed":
                 //Services.console.logStringMessage("["+ aTopic + "] MemberName: " + abListMember.getProperty("DisplayName"));
                 break;
-            
+
             case "addrbook-list-removed":
             case "addrbook-list-updated":
                 //Services.console.logStringMessage("["+ aTopic + "] ListName: " + abListItem.getProperty("ListName"));
                 break;
-            
-            case "addrbook-list-created": 
+
+            case "addrbook-list-created":
                 //Services.console.logStringMessage("["+ aTopic + "] ListName: "+abListItem.getProperty("ListName")+">");
                 break;
         }
     }
-    
+
     async createAddressbook(newname) {
         // https://searchfox.org/comm-central/source/mailnews/addrbook/src/nsDirPrefs.h
         let dirPrefId = MailServices.ab.newAddressBook(newname, "", 101);
         let directory = MailServices.ab.getDirectoryFromId(dirPrefId);
-        
+
         eas.sync.resetFolderSyncInfo(this.folderData);
-        
+
         if (directory && directory instanceof Components.interfaces.nsIAbDirectory && directory.dirPrefId == dirPrefId) {
             directory.setStringValue("tbSyncIcon", "eas" + (this.folderData.accountData.getAccountProperty("servertype") == "office365" ? "_365" : ""));
             directory.setStringValue("tbSyncRevision", "2");
@@ -546,13 +557,13 @@ var TargetData_addressbook = class extends TbSync.addressbook.AdvancedTargetData
 var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
     constructor(folderData) {
         super(folderData);
-    }       
-        
+    }
+
     // The calendar target does not support a custom primaryKeyField, because
     // the lightning implementation only allows to search for items via UID.
     // Like the addressbook target, the calendar target item element has a
     // primaryKey getter/setter which - however - only works on the UID.
-    
+
     // enable or disable changelog
     get logUserChanges() {
         return true;
@@ -563,14 +574,14 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
             case "onCalendarPropertyChanged":
                 //Services.console.logStringMessage("["+ aTopic + "] " + tbCalendar.calendar.name + " : " + aPropertyName);
                 break;
-            
+
             case "onCalendarDeleted":
             case "onCalendarPropertyDeleted":
                 //Services.console.logStringMessage("["+ aTopic + "] " +tbCalendar.calendar.name);
                 break;
         }
     }
-    
+
     itemObserver(aTopic, tbItem, tbOldItem) {
         switch (aTopic) {
             case "onAddItem":
@@ -597,7 +608,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
         // https://searchfox.org/comm-central/source/calendar/base/content/calendar-management.js#385
         //newCalendar.setProperty("calendar-main-in-composite",true);
         newCalendar.setProperty("readOnly", this.folderData.getFolderProperty("downloadonly"));
-        
+
         switch (this.folderData.getFolderProperty("type")) {
             case "8": //event
             case "13":
@@ -605,7 +616,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
                 newCalendar.setProperty("capabilities.events.supported", true);
                 break;
             case "7": //todo
-            case "15":        
+            case "15":
                 newCalendar.setProperty("capabilities.tasks.supported", true);
                 newCalendar.setProperty("capabilities.events.supported", false);
                 break;
@@ -613,11 +624,11 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
                 newCalendar.setProperty("capabilities.tasks.supported", false);
                 newCalendar.setProperty("capabilities.events.supported", false);
         }
-        
+
         calManager.registerCalendar(newCalendar);
 
         let authData = eas.network.getAuthData(this.folderData.accountData);
-        
+
         //is there an email identity we can associate this calendar to? 
         //getIdentityKey returns "" if none found, which removes any association
         let key = eas.tools.getIdentityKey(authData.user);
@@ -629,7 +640,7 @@ var TargetData_calendar = class extends TbSync.lightning.AdvancedTargetData {
             newCalendar.setProperty("organizerCN", newCalendar.getProperty("fallbackOrganizerName"));
             newCalendar.setProperty("organizerId", TbSync.lightning.cal.email.prependMailTo(authData.user));
         }
-        
+
         return newCalendar;
     }
 }
@@ -655,7 +666,7 @@ var StandardFolderList = class {
             if (eas.tools.parentIsTrash(folderData) && folderData.accountData.getAccountProperty("allowedEasCommands").split(",").includes("FolderDelete")) {
                 hideContextMenuDelete = false;
                 window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").label = TbSync.getString("deletefolder.menuentry::" + folderData.getFolderProperty("foldername"), "eas");
-            }                
+            }
         }
         window.document.getElementById("TbSync.eas.FolderListContextMenuDelete").hidden = hideContextMenuDelete;
     }
@@ -668,8 +679,8 @@ var StandardFolderList = class {
     static getTypeImage(folderData) {
         let src = "";
         switch (folderData.getFolderProperty("type")) {
-            case "9": 
-            case "14": 
+            case "9":
+            case "14":
                 src = "contacts16.png";
                 break;
             case "8":
@@ -687,13 +698,13 @@ var StandardFolderList = class {
 
     /**
      * Return the name of the folder shown in the folderlist.
-     */ 
+     */
     static getFolderDisplayName(folderData) {
         let folderName = folderData.getFolderProperty("foldername");
         if (eas.tools.parentIsTrash(folderData)) folderName = TbSync.getString("recyclebin", "eas") + " | " + folderName;
         return folderName;
     }
-    
+
 
     /**
      * Return the attributes for the ACL RO (readonly menu element per folder.
@@ -701,13 +712,13 @@ var StandardFolderList = class {
      *
      * Return a list of attributes and their values If both (RO+RW) do
      * not return any attributes, the ACL menu is not displayed at all.
-     */ 
+     */
     static getAttributesRoAcl(folderData) {
         return {
             label: TbSync.getString("acl.readonly", "eas"),
         };
     }
-    
+
 
     /**
      * Return the attributes for the ACL RW (readwrite) menu element per folder.
@@ -715,11 +726,11 @@ var StandardFolderList = class {
      *
      * Return a list of attributes and their values. If both (RO+RW) do
      * not return any attributes, the ACL menu is not displayed at all.
-     */ 
+     */
     static getAttributesRwAcl(folderData) {
         return {
             label: TbSync.getString("acl.readwrite", "eas"),
-        }             
+        }
     }
 }
 

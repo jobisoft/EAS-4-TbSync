@@ -5,22 +5,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
  */
- 
+
 "use strict";
 
-var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
+var { ExtensionParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
+);
+
+var tbsyncExtension = ExtensionParent.GlobalManager.getExtension(
+    "tbsync@jobisoft.de"
+);
+var { TbSync } = ChromeUtils.importESModule(
+    `chrome://tbsync/content/tbsync.sys.mjs?${tbsyncExtension.manifest.version}`
+);
+
 var xmltools = {
 
-    isString : function (obj) {
+    isString: function (obj) {
         return (Object.prototype.toString.call(obj) === '[object String]');
     },
-        
-    checkString : function(d, fallback = "") {
+
+    checkString: function (d, fallback = "") {
         if (this.isString(d)) return d;
         else return fallback;
-    },	    
-        
-    nodeAsArray : function (node) {
+    },
+
+    nodeAsArray: function (node) {
         let a = [];
         if (node) {
             //return, if already an array
@@ -32,8 +42,8 @@ var xmltools = {
         return a;
     },
 
-    hasWbxmlDataField: function(wbxmlData, path) {
-        if (wbxmlData) {		
+    hasWbxmlDataField: function (wbxmlData, path) {
+        if (wbxmlData) {
             let pathElements = path.split(".");
             let data = wbxmlData;
             for (let x = 0; x < pathElements.length; x++) {
@@ -45,8 +55,8 @@ var xmltools = {
         return false;
     },
 
-    getWbxmlDataField: function(wbxmlData,path) {
-        if (wbxmlData) {		
+    getWbxmlDataField: function (wbxmlData, path) {
+        if (wbxmlData) {
             let pathElements = path.split(".");
             let data = wbxmlData;
             let valid = true;
@@ -60,7 +70,7 @@ var xmltools = {
     },
 
     //print content of xml data object (if debug output enabled)
-    printXmlData : function (data, printApplicationData) {
+    printXmlData: function (data, printApplicationData) {
         if (TbSync.prefs.getIntPref("log.userdatalevel") > 1 || (TbSync.prefs.getIntPref("log.userdatalevel") == 1 && printApplicationData)) {
             let dump = JSON.stringify(data);
             TbSync.dump("Extracted XML data", "\n" + dump);
@@ -69,9 +79,9 @@ var xmltools = {
 
     getDataFromXMLString: function (str) {
         let data = null;
-        let xml = "";        
+        let xml = "";
         if (str == "") return data;
-        
+
         let oParser = (Services.vc.compare(Services.appinfo.platformVersion, "61.*") >= 0) ? new DOMParser() : Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser);
         try {
             xml = oParser.parseFromString(str, "application/xml");
@@ -93,64 +103,64 @@ var xmltools = {
         } catch (e) {
             throw eas.sync.finish("error", "mailformed-data");
         }
-        
+
         return data;
     },
-    
+
     //create data object from XML node
-    getDataFromXML : function (nodes) {
-        
+    getDataFromXML: function (nodes) {
+
         /*
          * The passed nodes value could be an entire document in a single node (type 9) or a 
          * single element node (type 1) as returned by getElementById. It could however also 
          * be an array of nodes as returned by getElementsByTagName or a nodeList as returned
          * by childNodes. In that case node.length is defined.
-         */        
-        
+         */
+
         // create the return object
         let obj = {};
         let nodeList = [];
         let multiplicity = {};
-        
+
         if (nodes.length === undefined) nodeList.push(nodes);
         else nodeList = nodes;
-        
+
         // nodelist contains all childs, if two childs have the same name, we cannot add the chils as an object, but as an array of objects
-        for (let node of nodeList) { 
+        for (let node of nodeList) {
             if (node.nodeType == 1 || node.nodeType == 3) {
                 if (!multiplicity.hasOwnProperty(node.nodeName)) multiplicity[node.nodeName] = 0;
                 multiplicity[node.nodeName]++;
                 //if this nodeName has multiplicity > 1, prepare obj  (but only once)
-                if (multiplicity[node.nodeName]==2) obj[node.nodeName] = [];
+                if (multiplicity[node.nodeName] == 2) obj[node.nodeName] = [];
             }
         }
 
         // process nodes
-        for (let node of nodeList) { 
+        for (let node of nodeList) {
             switch (node.nodeType) {
-                case 9: 
+                case 9:
                     //document node, dive directly and process all children
                     if (node.hasChildNodes) obj = this.getDataFromXML(node.childNodes);
                     break;
-                case 1: 
+                case 1:
                     //element node
                     if (node.hasChildNodes) {
                         //if this is an element with only one text child, do not dive, but get text childs value
                         let o;
-                        if (node.childNodes.length == 1 && node.childNodes.item(0).nodeType==3) {
+                        if (node.childNodes.length == 1 && node.childNodes.item(0).nodeType == 3) {
                             //the passed xml is a save xml with all special chars in the user data encoded by encodeURIComponent
                             o = decodeURIComponent(node.childNodes.item(0).nodeValue);
                         } else {
                             o = this.getDataFromXML(node.childNodes);
                         }
                         //check, if we can add the object directly, or if we have to push it into an array
-                        if (multiplicity[node.nodeName]>1) obj[node.nodeName].push(o)
-                        else obj[node.nodeName] = o; 
+                        if (multiplicity[node.nodeName] > 1) obj[node.nodeName].push(o)
+                        else obj[node.nodeName] = o;
                     }
                     break;
             }
         }
         return obj;
     }
-    
+
 };

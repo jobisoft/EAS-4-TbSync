@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
  */
- 
- "use strict";
+
+"use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
     newUID: "resource:///modules/AddrBookUtils.sys.mjs",
@@ -17,8 +17,19 @@ ChromeUtils.defineESModuleGetters(this, {
     VCardUtils: "resource:///modules/VCardUtils.sys.mjs",
 });
 
-var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
-var { MailServices } = ChromeUtils.importESModule("resource:///modules/MailServices.sys.mjs");
+var { ExtensionParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
+);
+var { MailServices } = ChromeUtils.importESModule(
+    "resource:///modules/MailServices.sys.mjs"
+);
+
+var tbsyncExtension = ExtensionParent.GlobalManager.getExtension(
+    "tbsync@jobisoft.de"
+);
+var { TbSync } = ChromeUtils.importESModule(
+    `chrome://tbsync/content/tbsync.sys.mjs?${tbsyncExtension.manifest.version}`
+);
 
 const eas = TbSync.providers.eas;
 
@@ -27,7 +38,7 @@ var Contacts = {
     // Remove if migration code is removed.
     arrayFromString: function (stringValue) {
         let arrayValue = [];
-        if (stringValue.trim().length>0) arrayValue = stringValue.trim().split("\u001A").filter(String);
+        if (stringValue.trim().length > 0) arrayValue = stringValue.trim().split("\u001A").filter(String);
         return arrayValue;
     },
 
@@ -38,96 +49,96 @@ var Contacts = {
        - position (in org)
     */
 
-    vcard_array_fields : {
-        n : 5,
-        adr : 7,
-        org : 2 
+    vcard_array_fields: {
+        n: 5,
+        adr: 7,
+        org: 2
     },
 
     map_EAS_properties_to_vCard: revision => ({
-        FileAs: {item: "fn", type: "text", params: {}}, /* DisplayName */ 
+        FileAs: { item: "fn", type: "text", params: {} }, /* DisplayName */
 
-        Birthday: {item: "bday", type: "date", params: {}},
-        Anniversary: {item: "anniversary", type: "date", params: {}},
-        
-        LastName: {item: "n", type: "text", params: {}, index: 0},
-        FirstName: {item: "n", type: "text", params: {}, index: 1},
-        MiddleName: {item: "n", type: "text", params: {}, index: 2},
-        Title: {item: "n", type: "text", params: {}, index: 3},
-        Suffix: {item: "n", type: "text", params: {}, index: 4},
+        Birthday: { item: "bday", type: "date", params: {} },
+        Anniversary: { item: "anniversary", type: "date", params: {} },
 
-        Notes: {item: "note", type: "text", params: {}},
+        LastName: { item: "n", type: "text", params: {}, index: 0 },
+        FirstName: { item: "n", type: "text", params: {}, index: 1 },
+        MiddleName: { item: "n", type: "text", params: {}, index: 2 },
+        Title: { item: "n", type: "text", params: {}, index: 3 },
+        Suffix: { item: "n", type: "text", params: {}, index: 4 },
+
+        Notes: { item: "note", type: "text", params: {} },
 
         // What should we do with Email 4+?
         // EAS does not have the concept of home/work for emails. Define matchAll
         // to not use params for finding the correct entry. They will come back as
         // "other".
-        Email1Address: {item: "email", type: "text", entry: 0, matchAll: true, params: {}},
-        Email2Address: {item: "email", type: "text", entry: 1, matchAll: true, params: {}},
-        Email3Address: {item: "email", type: "text", entry: 2, matchAll: true, params: {}},
+        Email1Address: { item: "email", type: "text", entry: 0, matchAll: true, params: {} },
+        Email2Address: { item: "email", type: "text", entry: 1, matchAll: true, params: {} },
+        Email3Address: { item: "email", type: "text", entry: 2, matchAll: true, params: {} },
 
         // EAS does not have the concept of home/work for WebPage. Define matchAll
         // to not use params for finding the correct entry. It will come back as
         // "other".
-        WebPage: {item: "url", type: "text", matchAll: true, params: {}},
-        
-        CompanyName: {item: "org", type: "text", params: {}, index: revision < 2 ? 1 : 0}, /* Company */
-        Department: {item: "org", type: "text", params: {}, index: revision < 2 ? 0 : 1}, /* Department */
-        JobTitle: { item: "title", type: "text", params: {} }, /* JobTitle */ 
+        WebPage: { item: "url", type: "text", matchAll: true, params: {} },
 
-        MobilePhoneNumber: { item: "tel", type: "text", params: {type: "cell" }},
-        PagerNumber: { item: "tel", type: "text", params: {type: "pager" }},
-        HomeFaxNumber: { item: "tel", type: "text", params: {type: "fax" }},
+        CompanyName: { item: "org", type: "text", params: {}, index: revision < 2 ? 1 : 0 }, /* Company */
+        Department: { item: "org", type: "text", params: {}, index: revision < 2 ? 0 : 1 }, /* Department */
+        JobTitle: { item: "title", type: "text", params: {} }, /* JobTitle */
+
+        MobilePhoneNumber: { item: "tel", type: "text", params: { type: "cell" } },
+        PagerNumber: { item: "tel", type: "text", params: { type: "pager" } },
+        HomeFaxNumber: { item: "tel", type: "text", params: { type: "fax" } },
         // If home phone is defined, use that, otherwise use unspecified phone
         // Note: This must be exclusive (no other field may use home/unspecified)
         // except if entry is specified.
-        HomePhoneNumber: { item: "tel", type: "text", params: {type: "home"}, fallbackParams: [{}]},
-        BusinessPhoneNumber: { item: "tel", type: "text", params: {type: "work"}},
-        Home2PhoneNumber: { item: "tel", type: "text", params: {type: "home"}, entry: 1 },
-        Business2PhoneNumber: { item: "tel", type: "text", params: {type: "work"}, entry: 1 },
+        HomePhoneNumber: { item: "tel", type: "text", params: { type: "home" }, fallbackParams: [{}] },
+        BusinessPhoneNumber: { item: "tel", type: "text", params: { type: "work" } },
+        Home2PhoneNumber: { item: "tel", type: "text", params: { type: "home" }, entry: 1 },
+        Business2PhoneNumber: { item: "tel", type: "text", params: { type: "work" }, entry: 1 },
 
-        HomeAddressStreet: {item: "adr", type: "text", params: {type: "home"}, index: 2},  // needs special handling
-        HomeAddressCity: {item: "adr", type: "text", params: {type: "home"}, index: 3},
-        HomeAddressState: {item: "adr", type: "text", params: {type: "home"}, index: 4},
-        HomeAddressPostalCode: {item: "adr", type: "text", params: {type: "home"}, index: 5},
-        HomeAddressCountry: {item: "adr", type: "text", params: {type: "home"}, index: 6},
+        HomeAddressStreet: { item: "adr", type: "text", params: { type: "home" }, index: 2 },  // needs special handling
+        HomeAddressCity: { item: "adr", type: "text", params: { type: "home" }, index: 3 },
+        HomeAddressState: { item: "adr", type: "text", params: { type: "home" }, index: 4 },
+        HomeAddressPostalCode: { item: "adr", type: "text", params: { type: "home" }, index: 5 },
+        HomeAddressCountry: { item: "adr", type: "text", params: { type: "home" }, index: 6 },
 
-        BusinessAddressStreet: {item: "adr", type: "text", params: {type: "work"}, index: 2},  // needs special handling
-        BusinessAddressCity: {item: "adr", type: "text", params: {type: "work"}, index: 3},
-        BusinessAddressState: {item: "adr", type: "text", params: {type: "work"}, index: 4},
-        BusinessAddressPostalCode: {item: "adr", type: "text", params: {type: "work"}, index: 5},
-        BusinessAddressCountry: {item: "adr", type: "text", params: {type: "work"}, index: 6},
+        BusinessAddressStreet: { item: "adr", type: "text", params: { type: "work" }, index: 2 },  // needs special handling
+        BusinessAddressCity: { item: "adr", type: "text", params: { type: "work" }, index: 3 },
+        BusinessAddressState: { item: "adr", type: "text", params: { type: "work" }, index: 4 },
+        BusinessAddressPostalCode: { item: "adr", type: "text", params: { type: "work" }, index: 5 },
+        BusinessAddressCountry: { item: "adr", type: "text", params: { type: "work" }, index: 6 },
 
-        OtherAddressStreet: {item: "adr", type: "text", params: {}, index: 2},  // needs special handling
-        OtherAddressCity: {item: "adr", type: "text", params: {}, index: 3},
-        OtherAddressState: {item: "adr", type: "text", params: {}, index: 4},
-        OtherAddressPostalCode: {item: "adr", type: "text", params: {}, index: 5},
-        OtherAddressCountry: {item: "adr", type: "text", params: {}, index: 6},
+        OtherAddressStreet: { item: "adr", type: "text", params: {}, index: 2 },  // needs special handling
+        OtherAddressCity: { item: "adr", type: "text", params: {}, index: 3 },
+        OtherAddressState: { item: "adr", type: "text", params: {}, index: 4 },
+        OtherAddressPostalCode: { item: "adr", type: "text", params: {}, index: 5 },
+        OtherAddressCountry: { item: "adr", type: "text", params: {}, index: 6 },
 
         // Misusing this EAS field, so that "Custom1" is saved to the server.
-        OfficeLocation: {item: "x-custom1", type: "text", params: {}},
+        OfficeLocation: { item: "x-custom1", type: "text", params: {} },
 
-        Picture: {item: "photo", params: {}, type: "uri"},
+        Picture: { item: "photo", params: {}, type: "uri" },
 
         // TB shows them as undefined, but showing them might be better, than not. Use a prefix.
-        AssistantPhoneNumber: { item: "tel", type: "text", params: {type: "Assistant"}, prefix: true},
-        CarPhoneNumber: { item: "tel", type: "text", params: {type: "Car"}, prefix: true},
-        RadioPhoneNumber: { item: "tel", type: "text", params: {type: "Radio"}, prefix: true},
-        BusinessFaxNumber: { item: "tel", type: "text", params: {type: "WorkFax"}, prefix: true},
+        AssistantPhoneNumber: { item: "tel", type: "text", params: { type: "Assistant" }, prefix: true },
+        CarPhoneNumber: { item: "tel", type: "text", params: { type: "Car" }, prefix: true },
+        RadioPhoneNumber: { item: "tel", type: "text", params: { type: "Radio" }, prefix: true },
+        BusinessFaxNumber: { item: "tel", type: "text", params: { type: "WorkFax" }, prefix: true },
     }),
-   
-    map_EAS_properties_to_vCard_set2 : {
-        NickName: {item: "nickname", type: "text", params: {} },
+
+    map_EAS_properties_to_vCard_set2: {
+        NickName: { item: "nickname", type: "text", params: {} },
         // Misusing these EAS fields, so that "Custom2,3,4" is saved to the server.
-        CustomerId: {item: "x-custom2", type: "text", params: {}},
-        GovernmentId: {item: "x-custom3", type: "text", params: {}},
-        AccountName:  {item: "x-custom4", type: "text", params: {}},
+        CustomerId: { item: "x-custom2", type: "text", params: {} },
+        GovernmentId: { item: "x-custom3", type: "text", params: {} },
+        AccountName: { item: "x-custom4", type: "text", params: {} },
 
-        IMAddress: {item: "impp", type: "text", params: {} },
-        IMAddress2: {item: "impp", type: "text", params: {}, entry: 1 },
-        IMAddress3: {item: "impp", type: "text", params: {}, entry: 2 },
+        IMAddress: { item: "impp", type: "text", params: {} },
+        IMAddress2: { item: "impp", type: "text", params: {}, entry: 1 },
+        IMAddress3: { item: "impp", type: "text", params: {}, entry: 2 },
 
-        CompanyMainPhone: { item: "tel", type: "text", params: {type: "Company"}, prefix: true},
+        CompanyMainPhone: { item: "tel", type: "text", params: { type: "Company" }, prefix: true },
     },
 
     // There are currently no TB fields for these values, TbSync will store (and
@@ -154,10 +165,10 @@ var Contacts = {
     normalizeParameters: function (unordered) {
         return JSON.stringify(
             Object.keys(unordered).map(e => `${e}`.toLowerCase()).sort().reduce(
-                (obj, key) => { 
-                    obj[key] = `${unordered[key]}`.toLowerCase(); 
-                return obj;
-                }, 
+                (obj, key) => {
+                    obj[key] = `${unordered[key]}`.toLowerCase();
+                    return obj;
+                },
                 {}
             )
         );
@@ -185,12 +196,12 @@ var Contacts = {
             if (vCard_property.item == "org" && !Array.isArray(entries[entryNr].value)) {
                 // The org field sometimes comes back as a string (then it is Company),
                 // even though it should be an array [Department,Company]
-                value =  vCard_property.index == 1 ? entries[entryNr].value : "";
+                value = vCard_property.index == 1 ? entries[entryNr].value : "";
             } else if (this.vcard_array_fields[vCard_property.item]) {
                 if (!Array.isArray(entries[entryNr].value)) {
                     // If the returned value is a single string, return it only
                     // when index 0 is requested, otherwise return nothing.
-                    value =  vCard_property.index == 0 ? entries[entryNr].value : "";
+                    value = vCard_property.index == 0 ? entries[entryNr].value : "";
                 } else {
                     value = entries[entryNr].value[vCard_property.index];
                 }
@@ -218,10 +229,10 @@ var Contacts = {
         return new Promise((resolve, reject) => {
             var reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = function() {
+            reader.onload = function () {
                 resolve(reader.result);
             };
-            reader.onerror = function(error) {
+            reader.onerror = function (error) {
                 resolve("");
             };
         });
@@ -234,7 +245,7 @@ var Contacts = {
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (abItem, data, id, syncdata, mode = "standard") {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
-        let revision = parseInt(syncdata.target._directory.getStringValue("tbSyncRevision","1"), 10);
+        let revision = parseInt(syncdata.target._directory.getStringValue("tbSyncRevision", "1"), 10);
         let map_EAS_properties_to_vCard = this.map_EAS_properties_to_vCard(revision);
 
         if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Processing " + mode + " contact item", id);
@@ -249,7 +260,7 @@ var Contacts = {
         abItem.primaryKey = id;
 
         // Loop over all known EAS properties (two EAS sets Contacts and Contacts2).
-        for (let set=0; set < 2; set++) {
+        for (let set = 0; set < 2; set++) {
             let properties = (set == 0) ? this.EAS_properties : this.EAS_properties2;
 
             for (let EAS_property of properties) {
@@ -262,12 +273,12 @@ var Contacts = {
                         } else if (data.Body && data.Body.Data) {
                             value = eas.xmltools.checkString(data.Body.Data);
                         }
-                    break;
+                        break;
 
                     default:
                         value = eas.xmltools.checkString(data[EAS_property]);
                 }
-                
+
                 let normalizedParams = this.normalizeParameters(vCard_property.params)
                 let entries = vCardProperties.getAllEntries(vCard_property.item)
                     .filter(e => vCard_property.matchAll || normalizedParams == this.normalizeParameters(e.params));
@@ -276,11 +287,11 @@ var Contacts = {
                 let entryNr = vCard_property.entry || 0;
                 while (entries.length <= entryNr) {
                     let newEntry = new VCardPropertyEntry(
-                        vCard_property.item, 
-                        vCard_property.params, 
-                        vCard_property.type, 
-                        this.vcard_array_fields[vCard_property.item] 
-                            ? new Array(this.vcard_array_fields[vCard_property.item]).fill("") 
+                        vCard_property.item,
+                        vCard_property.params,
+                        vCard_property.type,
+                        this.vcard_array_fields[vCard_property.item]
+                            ? new Array(this.vcard_array_fields[vCard_property.item]).fill("")
                             : ""
                     );
                     vCardProperties.addEntry(newEntry);
@@ -295,7 +306,7 @@ var Contacts = {
                         case "Picture":
                             value = `data:image/jpeg;base64,${eas.xmltools.nodeAsArray(data.Picture)[0]}`; //Kerio sends Picture as container
                             break;
-                        
+
                         case "Birthday":
                         case "Anniversary":
                             let dateObj = new Date(value);
@@ -306,20 +317,20 @@ var Contacts = {
                         case "Email2Address":
                         case "Email3Address":
                             let parsedInput = MailServices.headerParser.makeFromDisplayAddress(value);
-                            let fixedValue =  (parsedInput && parsedInput[0] && parsedInput[0].email) ? parsedInput[0].email : value;
+                            let fixedValue = (parsedInput && parsedInput[0] && parsedInput[0].email) ? parsedInput[0].email : value;
                             if (fixedValue != value) {
-                                if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Parsing email display string via RFC 2231 and RFC 2047 ("+EAS_property+")", value + " -> " + fixedValue);
+                                if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Parsing email display string via RFC 2231 and RFC 2047 (" + EAS_property + ")", value + " -> " + fixedValue);
                                 value = fixedValue;
                             }
                             break;
-                        
+
                         case "HomeAddressStreet":
                         case "BusinessAddressStreet":
                         case "OtherAddressStreet":
                             // Thunderbird accepts an array in the vCardProperty of the 2nd index of the adr field.
                             let seperator = String.fromCharCode(syncdata.accountData.getAccountProperty("seperator")); // options are 44 (,) or 10 (\n)
                             value = value.split(seperator);
-                        break;
+                            break;
                     }
 
                     // Add a typePrefix for fields unknown to TB (better: TB should use the type itself).
@@ -376,7 +387,7 @@ var Contacts = {
 
         // Take care of un-mappable EAS options, which are stored in the contacts
         // property bag.
-        for (let i=0; i < this.unused_EAS_properties.length; i++) {
+        for (let i = 0; i < this.unused_EAS_properties.length; i++) {
             if (data[this.unused_EAS_properties[i]]) abItem.setProperty("EAS-" + this.unused_EAS_properties[i], data[this.unused_EAS_properties[i]]);
         }
 
@@ -386,7 +397,7 @@ var Contacts = {
         // Further manipulations (a few getters are still usable \o/).
         if (syncdata.accountData.getAccountProperty("displayoverride")) {
             abItem._card.displayName = abItem._card.firstName + " " + abItem._card.lastName;
-            if (abItem._card.displayName == " " ) {
+            if (abItem._card.displayName == " ") {
                 let company = (vCardProperties.getFirstValue("org") || [""])[0];
                 abItem._card.displayName = company || abItem._card.primaryEmail
             }
@@ -401,7 +412,7 @@ var Contacts = {
     // --------------------------------------------------------------------------- //
     getWbxmlFromThunderbirdItem: async function (abItem, syncdata, isException = false) {
         let asversion = syncdata.accountData.getAccountProperty("asversion");
-        let revision = parseInt(syncdata.target._directory.getStringValue("tbSyncRevision","1"), 10);
+        let revision = parseInt(syncdata.target._directory.getStringValue("tbSyncRevision", "1"), 10);
         let map_EAS_properties_to_vCard = this.map_EAS_properties_to_vCard(revision);
 
         let wbxml = eas.wbxmltools.createWBXML("", syncdata.type); //init wbxml with "" and not with precodes, and set initial codepage
@@ -439,7 +450,7 @@ var Contacts = {
                         value = parts.join(",");
                     }
                 }
-                break;
+                    break;
 
                 case "Birthday":
                 case "Anniversary": {
@@ -449,8 +460,8 @@ var Contacts = {
                         value = dateObj.toISOString();
                     }
                 }
-                break;
-                    
+                    break;
+
                 case "HomeAddressStreet":
                 case "BusinessAddressStreet":
                 case "OtherAddressStreet": {
@@ -469,20 +480,20 @@ var Contacts = {
                         throw new Error(`Failed to eval value: <${JSON.stringify(raw)}> @ ${JSON.stringify(vCard_property)}`);
                     }
                 }
-                break;
+                    break;
 
                 default: {
                     value = this.getValue(vCardProperties, vCard_property);
                 }
             }
-            
+
             if (value) {
                 wbxml.atag(EAS_property, value);
             }
         }
 
         // Take care of un-mappable EAS option.
-        for (let i=0; i < this.unused_EAS_properties.length; i++) {
+        for (let i = 0; i < this.unused_EAS_properties.length; i++) {
             let value = abItem.getProperty("EAS-" + this.unused_EAS_properties[i], "");
             if (value) wbxml.atag(this.unused_EAS_properties[i], value);
         }
@@ -507,7 +518,7 @@ var Contacts = {
             let children = [];
             try {
                 children = JSON.parse(childrenProperty);
-            } catch(ex) {
+            } catch (ex) {
                 // Migration code, remove once no longer needed.
                 children = this.arrayFromString(childrenProperty);
             }
@@ -523,9 +534,9 @@ var Contacts = {
         } else {
             wbxml.switchpage("AirSyncBase");
             wbxml.otag("Body");
-                wbxml.atag("Type", "1");
-                wbxml.atag("EstimatedDataSize", "" + description.length);
-                wbxml.atag("Data", description);
+            wbxml.atag("Type", "1");
+            wbxml.atag("EstimatedDataSize", "" + description.length);
+            wbxml.atag("Data", description);
             wbxml.ctag();
         }
 

@@ -12,23 +12,27 @@
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs"
   );
-  const easExtension = ExtensionParent.GlobalManager.getExtension(
-    "eas4tbsync@jobisoft.de"
-  );
 
-  async function observeTbSyncInitialized (aSubject, aTopic, aData) {
-    let valid = false;
+  async function observeTbSyncInitialized(aSubject, aTopic, aData) {
     try {
-      var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
-      valid = TbSync.enabled;
+      const tbsyncExtension = ExtensionParent.GlobalManager.getExtension(
+        "tbsync@jobisoft.de"
+      );
+      const { TbSync } = ChromeUtils.importESModule(
+        `chrome://tbsync/content/tbsync.sys.mjs?${tbsyncExtension.manifest.version}`
+      );
+
+      // Load this provider add-on into TbSync
+      if (TbSync.enabled) {
+        const easExtension = ExtensionParent.GlobalManager.getExtension(
+          "eas4tbsync@jobisoft.de"
+        );
+        await TbSync.providers.loadProvider(easExtension, "eas", "chrome://eas4tbsync/content/provider.js");
+      }
     } catch (e) {
       // If this fails, TbSync is not loaded yet and we will get the notification later again.
     }
 
-    //load this provider add-on into TbSync
-    if (valid) {
-      await TbSync.providers.loadProvider(easExtension, "eas", "chrome://eas4tbsync/content/provider.js");
-    }
   }
 
   var EAS4TbSync = class extends ExtensionCommon.ExtensionAPI {
@@ -54,7 +58,12 @@
       Services.obs.removeObserver(observeTbSyncInitialized, "tbsync.observer.initialized");
       //unload this provider add-on from TbSync
       try {
-        var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
+        const tbsyncExtension = ExtensionParent.GlobalManager.getExtension(
+          "tbsync@jobisoft.de"
+        );
+        const { TbSync } = ChromeUtils.importESModule(
+          `chrome://tbsync/content/tbsync.sys.mjs?${tbsyncExtension.manifest.version}`
+        );
         TbSync.providers.unloadProvider("eas");
       } catch (e) {
         //if this fails, TbSync has been unloaded already and has unloaded this addon as well

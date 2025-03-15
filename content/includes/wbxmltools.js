@@ -5,10 +5,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
  */
- 
+
 "use strict";
 
-var { TbSync } = ChromeUtils.importESModule("chrome://tbsync/content/tbsync.sys.mjs");
+var { ExtensionParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
+);
+
+var tbsyncExtension = ExtensionParent.GlobalManager.getExtension(
+    "tbsync@jobisoft.de"
+);
+var { TbSync } = ChromeUtils.importESModule(
+    `chrome://tbsync/content/tbsync.sys.mjs?${tbsyncExtension.manifest.version}`
+);
+
 var wbxmltools = {
 
     // Convert a WBXML (WAP Binary XML) to plain XML - returns save xml with all special chars in the user data encoded by encodeURIComponent
@@ -22,36 +32,36 @@ var wbxmltools = {
         let tagStack = [];
         let xml = "";
         let codepage = 0;
-        
+
         while (num < wbxml.length) {
             let data = wbxml.substr(num, 1).charCodeAt(0);
             let token = data & 0x3F; //removes content bit(6) and attribute bit(7)
             let tokenHasContent = ((data & 0x40) != 0); //checks if content bit is set
             let tokenHasAttributes = ((data & 0x80) != 0); //checks if attribute bit is set
-        
-            switch(token) {
+
+            switch (token) {
                 case 0x00: // switch of codepage (new codepage is next byte)
                     num = num + 1;
                     codepage = (wbxml.substr(num, 1)).charCodeAt(0) & 0xFF;
                     break;
-                    
+
                 case 0x01: // Indicates the end of an attribute list or the end of an element
-                        // tagStack contains a list of opened tags, which await to be closed
-                        xml = xml + tagStack.pop();
+                    // tagStack contains a list of opened tags, which await to be closed
+                    xml = xml + tagStack.pop();
                     break;
-                    
+
                 case 0x02: // A character entity. Followed by a mb_u_int32 encoding the character entity number.
                     TbSync.dump("wbxml", "Encoded character entity has not yet been implemented. Sorry.");
                     return false;
                     break;
-                
+
                 case 0x03: // Inline string followed by a termstr. (0x00)
                     let termpos = wbxml.indexOf(String.fromCharCode(0x00), num);
                     //encode all special chars in the user data by encodeURIComponent which does not encode the apostrophe, so we need to do that by hand
                     xml = xml + encodeURIComponent(wbxml.substring(num + 1, termpos)).replace(/'/g, "%27");
                     num = termpos;
                     break;
-                
+
                 case 0x04: // An unknown tag or attribute name. Followed by an mb_u_int32 that encodes an offset into the string table.
                 case 0x40: // Inline string document-type-specific extension token. Token is followed by a termstr.
                 case 0x41: // Inline string document-type-specific extension token. Token is followed by a termstr.
@@ -71,7 +81,7 @@ var wbxmltools = {
                     TbSync.dump("wbxml", "Global token <" + token + "> has not yet been implemented. Sorry.");
                     return false;
                     break;
-                    
+
                 default:
                     // if this code page is not the mainCodePage (or mainCodePage is not yet set =  very first tag), add codePageTag with current codepage
                     let codePageTag = (codepage != mainCodePage) ? " xmlns='" + this.getNamespace(codepage) + "'" : "";
@@ -80,15 +90,15 @@ var wbxmltools = {
                     if (mainCodePage === null) mainCodePage = codepage;
 
                     if (!tokenHasContent) {
-                        xml = xml + "<" + this. getCodepageToken(codepage, token) + codePageTag + "/>";
+                        xml = xml + "<" + this.getCodepageToken(codepage, token) + codePageTag + "/>";
                     } else {
-                        xml = xml + "<" +this. getCodepageToken(codepage, token) + codePageTag +">";
+                        xml = xml + "<" + this.getCodepageToken(codepage, token) + codePageTag + ">";
                         //add the closing tag to the stack, so it can get properly closed later
-                        tagStack.push("</" +this. getCodepageToken(codepage, token) + ">");
+                        tagStack.push("</" + this.getCodepageToken(codepage, token) + ">");
                     }
 
                     if (this.isUnknownToken(codepage, token)) {
-                        TbSync.eventlog.add("warning", null, "WBXML: Unknown token <" + token + "> for codepage <"+codepage+">.");
+                        TbSync.eventlog.add("warning", null, "WBXML: Unknown token <" + token + "> for codepage <" + codepage + ">.");
                     }
             }
             num = num + 1;
@@ -100,31 +110,31 @@ var wbxmltools = {
         if (this.codepages[codepage] && token in this.codepages[codepage]) return false;
         else return true;
     },
-    
+
     getNamespace: function (codepage) {
-        return (this.namespaces[codepage]) ? this.namespaces[codepage] : "UnknownCodePage" + codepage ;
+        return (this.namespaces[codepage]) ? this.namespaces[codepage] : "UnknownCodePage" + codepage;
     },
 
     getCodepageToken: function (codepage, token) {
-        return this.isUnknownToken(codepage, token) ? "Unknown." + codepage + "." + token : this.codepages[codepage][token];   
+        return this.isUnknownToken(codepage, token) ? "Unknown." + codepage + "." + token : this.codepages[codepage][token];
     },
 
     // This returns a wbxml object, which allows to add tags (using names), switch codepages, or open and close tags, it is also possible to append pure (binary) wbxml
     // If no wbxmlstring is present, default to the "init" string ( WBXML Version 1.3, unknown public identifier, UTF-8, Length of string table)
     createWBXML: function (wbxmlstring = String.fromCharCode(0x03, 0x01, 0x6A, 0x00), initialCodepage = "") {
         let wbxml = {
-            _codepage : 0,
-            _wbxml : wbxmlstring, 
+            _codepage: 0,
+            _wbxml: wbxmlstring,
 
-            append : function (wbxmlstring) {
+            append: function (wbxmlstring) {
                 this._wbxml = this._wbxml + wbxmlstring;
             },
-            
+
             // adding a string content tag as <tagname>contentstring</tagname>
-            atag : function (tokenname, content = "") {
+            atag: function (tokenname, content = "") {
                 //check if tokenname is in current codepage
-                if ((this._codepage in wbxmltools.codepages2) == false) throw "[wbxmltools] Unknown codepage <"+this._codepage+">";
-                if ((tokenname in wbxmltools.codepages2[this._codepage]) == false) throw "[wbxmltools] Unknown tokenname <"+tokenname+"> for codepage <"+wbxmltools.namespaces[this._codepage]+">";  
+                if ((this._codepage in wbxmltools.codepages2) == false) throw "[wbxmltools] Unknown codepage <" + this._codepage + ">";
+                if ((tokenname in wbxmltools.codepages2[this._codepage]) == false) throw "[wbxmltools] Unknown tokenname <" + tokenname + "> for codepage <" + wbxmltools.namespaces[this._codepage] + ">";
 
                 if (content == "") {
                     //empty, just add token
@@ -133,39 +143,39 @@ var wbxmltools = {
                     //not empty,add token with enabled content bit and also add inlinestringidentifier
                     this._wbxml += String.fromCharCode(wbxmltools.codepages2[this._codepage][tokenname] | 0x40, 0x03);
                     //add content
-                    for (let i=0; i< content.length; i++) this._wbxml += String.fromCharCode(content.charCodeAt(i));
+                    for (let i = 0; i < content.length; i++) this._wbxml += String.fromCharCode(content.charCodeAt(i));
                     //add string termination and tag close
                     this._wbxml += String.fromCharCode(0x00, 0x01);
                 }
             },
 
-            switchpage : function (name) {
+            switchpage: function (name) {
                 let codepage = wbxmltools.namespaces.indexOf(name);
-                if (codepage == -1) throw "[wbxmltools] Unknown codepage <"+ name +">";
+                if (codepage == -1) throw "[wbxmltools] Unknown codepage <" + name + ">";
                 this._codepage = codepage;
                 this._wbxml += String.fromCharCode(0x00, codepage);
             },
 
-            ctag : function () {
+            ctag: function () {
                 this._wbxml += String.fromCharCode(0x01);
             },
 
             //opentag is assumed to add a token with content, otherwise use addtag
-            otag : function (tokenname) {
+            otag: function (tokenname) {
                 this._wbxml += String.fromCharCode(wbxmltools.codepages2[this._codepage][tokenname] | 0x40);
             },
 
-            getCharCodes : function () {
+            getCharCodes: function () {
                 let value = "";
-                for (let i=0; i<this._wbxml.length; i++) value += ("00" + this._wbxml.charCodeAt(i).toString(16)).substr(-2) + " ";
+                for (let i = 0; i < this._wbxml.length; i++) value += ("00" + this._wbxml.charCodeAt(i).toString(16)).substr(-2) + " ";
                 return value;
             },
 
-            getBytes : function () {
+            getBytes: function () {
                 return this._wbxml;
             }
         };
-	if (initialCodepage) wbxml._codepage = wbxmltools.namespaces.indexOf(initialCodepage);
+        if (initialCodepage) wbxml._codepage = wbxmltools.namespaces.indexOf(initialCodepage);
         return wbxml;
     },
 
@@ -173,10 +183,10 @@ var wbxmltools = {
 
 
 
-    codepages2 : [],
+    codepages2: [],
 
-    buildCodepages2 : function () {
-        for (let i=0; i<this.codepages.length; i++) {
+    buildCodepages2: function () {
+        for (let i = 0; i < this.codepages.length; i++) {
             let inverted = {};
             for (let token in this.codepages[i]) {
                 inverted[this.codepages[i][token]] = token;
@@ -189,7 +199,7 @@ var wbxmltools = {
 
 
 
-    codepages : [
+    codepages: [
         // Code Page 0: AirSync
         {
             0x05: 'Sync',
@@ -845,7 +855,7 @@ var wbxmltools = {
         }
     ],
 
-    namespaces : [
+    namespaces: [
         'AirSync',
         'Contacts',
         'Email',
@@ -872,7 +882,7 @@ var wbxmltools = {
         'Notes',
         'RightsManagement'
     ]
-    
+
 };
 
 wbxmltools.buildCodepages2();
