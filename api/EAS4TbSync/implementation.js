@@ -21,12 +21,12 @@
       const { TbSync } = ChromeUtils.importESModule(
         `chrome://tbsync/content/tbsync.sys.mjs?${tbsyncExtension.manifest.version}`
       );
-
       // Load this provider add-on into TbSync
       if (TbSync.enabled) {
         const easExtension = ExtensionParent.GlobalManager.getExtension(
           "eas4tbsync@jobisoft.de"
         );
+        console.log(`Registering EAS provider v${easExtension.manifest.version} with TbSync v${tbsyncExtension.manifest.version}`);
         await TbSync.providers.loadProvider(easExtension, "eas", "chrome://eas4tbsync/content/provider.js");
       }
     } catch (e) {
