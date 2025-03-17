@@ -62,6 +62,26 @@ function getSandBoxedXHR({ user, accountname }, uri, containerReset = false) {
     if (containerReset) {
         resetContainerWithId(userContextId);
     }
+    
+    // Pre-set cookie needed by eas.outlook.com. The cookie is returned with each
+    // server response, but is is SameSite=None without the secure flag being set
+    // and ignored.
+    if (uri.host == "eas.outlook.com") {
+        Services.cookies.add(
+            "eas.outlook.com",
+            "/",
+            "DefaultAnchorMailbox",
+            user,
+            /* isSecure */ true,
+            /* isHttponly */ false,
+            /* isSession = */ false,
+            /* expiry */ Number.MAX_SAFE_INTEGER,
+            { userContextId },
+            Ci.nsICookie.SAMESITE_NONE,
+            Ci.nsICookie.SCHEME_HTTPS,
+            /* partitioned */ false
+        );
+    }
     if (!sandboxes.hasOwnProperty(containerName)) {
         console.log("Creating sandbox for <" + containerName + ">");
         let principal = Services.scriptSecurityManager.createContentPrincipal(uri, { userContextId });
@@ -516,6 +536,18 @@ var network = {
 
             syncData.req.onload = function () {
                 let response = syncData.req.responseText;
+
+                // Debug: Log received cookies.
+                const channel = syncData.req.channel.QueryInterface(Ci.nsIHttpChannel);
+                const SET_COOKIE_REGEXP = /set-cookie/i;
+                channel.visitOriginalResponseHeaders({
+                    visitHeader(name, value) {
+                        if (SET_COOKIE_REGEXP.test(name)) {
+                            console.log("Received cookie", value);
+                        }
+                    },
+                });
+
                 switch (syncData.req.status) {
 
                     case 200: //OK
@@ -1088,6 +1120,17 @@ var network = {
                     req.onload = function () {
                         let response = req.responseText;
 
+                        // Debug: Log received cookies.
+                        const channel = req.channel.QueryInterface(Ci.nsIHttpChannel);
+                        const SET_COOKIE_REGEXP = /set-cookie/i;
+                        channel.visitOriginalResponseHeaders({
+                            visitHeader(name, value) {
+                                if (SET_COOKIE_REGEXP.test(name)) {
+                                    console.log("Received cookie", value);
+                                }
+                            },
+                        });
+
                         switch (req.status) {
 
                             case 200: //OK
@@ -1201,6 +1244,17 @@ var network = {
                 syncData.req.onload = function () {
                     syncData.setSyncState("eval.request.options");
                     let responseData = {};
+
+                    // Debug: Log received cookies.
+                    const channel = syncData.req.channel.QueryInterface(Ci.nsIHttpChannel);
+                    const SET_COOKIE_REGEXP = /set-cookie/i;
+                    channel.visitOriginalResponseHeaders({
+                        visitHeader(name, value) {
+                            if (SET_COOKIE_REGEXP.test(name)) {
+                                console.log("Received cookie", value);
+                            }
+                        },
+                    });
 
                     switch (syncData.req.status) {
                         case 401: // AuthError
