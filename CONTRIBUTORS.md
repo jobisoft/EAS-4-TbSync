@@ -9,6 +9,7 @@
 * Dzamo Norton
 * Puran2	
 * Tijuca
+* Kabe2007
 
 ## Translators
 * John Bieling (de, en-US)
