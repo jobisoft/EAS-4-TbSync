@@ -460,7 +460,11 @@ var tools = {
         let comp = new TbSync.lightning.ICAL.Component(info);
         let vtimezone = comp.getFirstSubcomponent("vtimezone");
         let id = vtimezone.getFirstPropertyValue("tzid").toString();
-        let zone = vtimezone.getFirstSubcomponent(standardOrDaylight);
+        let zones = vtimezone.getAllSubcomponents(standardOrDaylight);
+
+        // sorting the timezones to get the lates timezone cause timezones have been changed multiple times in history
+        zones.sort((zone1, zone2)=>zone1.getFirstPropertyValue("dtstart")<zone2.getFirstPropertyValue("dtstart"));
+        let zone = zones[0];
 
         if (zone) {
             let obj = {};
