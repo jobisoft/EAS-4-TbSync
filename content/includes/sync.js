@@ -1216,7 +1216,21 @@ var sync = {
         let asversion = syncData.accountData.getAccountProperty("asversion");
         let wbxml = eas.wbxmltools.createWBXML("", syncData.type); //init wbxml with "" and not with precodes, also activate type codePage (Calendar, Tasks, Contacts etc)
 
-        let description = (item.hasProperty("description")) ? item.getProperty("description") : "";
+        // WORKAROUND: Force non-empty description to prevent WBXML truncation bug
+        // When Data element is empty, subsequent elements are truncated
+        let description = " "; // Single space placeholder - will be trimmed by server
+        try {
+            if (item.hasProperty("description")) {
+                let prop = item.getProperty("description");
+                let desc = (typeof prop === "string") ? prop : String(prop || "");
+                if (desc.length > 0) {
+                    description = desc;
+                }
+            }
+        } catch (e) {
+            // Keep placeholder space on error
+        }
+
         if (asversion == "2.5") {
             wbxml.atag("Body", description);
         } else {
