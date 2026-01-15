@@ -306,20 +306,8 @@ var Calendar = {
         //EndTime in UTC
         wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
 
-        //Location - use space placeholder for empty to prevent WBXML truncation
-        let location = " ";
-        try {
-            if (item.hasProperty("location")) {
-                let prop = item.getProperty("location");
-                let loc = (typeof prop === "string") ? prop : String(prop || "");
-                if (loc.length > 0) {
-                    location = loc;
-                }
-            }
-        } catch (e) {
-            // Keep placeholder space
-        }
-        wbxml.atag("Location", location);
+        //Location
+        wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
 
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
         let alarms = item.getAlarms({});
