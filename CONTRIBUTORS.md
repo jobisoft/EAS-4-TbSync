@@ -10,7 +10,7 @@
 * Puran2	
 * Tijuca
 * Kabe2007
-* Jarek Polok (initial EWS 16.1 support)
+* Jarek Polok (initial EAS 16.1 support)
 
 ## Translators
 * John Bieling (de, en-US)
