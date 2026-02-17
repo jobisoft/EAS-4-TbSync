@@ -535,7 +535,8 @@ var Contacts = {
             wbxml.switchpage("AirSyncBase");
             wbxml.otag("Body");
             wbxml.atag("Type", "1");
-            wbxml.atag("EstimatedDataSize", "" + description.length);
+            //EAS 16 fails sync if EstimatedDataSize is set ..
+            //wbxml.atag("EstimatedDataSize", "" + description.length);
             wbxml.atag("Data", description);
             wbxml.ctag();
         }

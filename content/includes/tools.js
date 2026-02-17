@@ -272,7 +272,7 @@ var tools = {
 
 
     // Convert TB date to UTC and return it as  basic or extended ISO 8601  String
-    getIsoUtcString: function (origdate, requireExtendedISO = false, fakeUTC = false) {
+    getIsoUtcString: function (origdate, requireExtendedISO = false, fakeUTC = false, onlyDate = false) {
         let date = origdate.clone();
         //floating timezone cannot be converted to UTC (cause they float) - we have to overwrite it with the local timezone
         if (date.timezone.tzid == "floating") date.timezone = eas.defaultTimezoneInfo.timezone;
@@ -286,6 +286,10 @@ var tools = {
                 return '0' + number;
             }
             return number;
+        }
+        
+        if (onlyDate && fakeUTC) {
+            return UTC.year + pad(UTC.month + 1) + pad(UTC.day) + "T000000Z" ;
         }
 
         if (requireExtendedISO) {

@@ -276,11 +276,16 @@ var Calendar = {
                 easTZ.daylightDate.wSecond = tzInfo.dst.switchdate.second;
             }
 
-            wbxml.atag("TimeZone", easTZ.easTimeZone64);
-            if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Send TZ", item.title + easTZ.toString());
+             // EAS 16 [MS-ASCAL] 2.2.2.1 
+            if (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+            } else {
+                wbxml.atag("TimeZone", easTZ.easTimeZone64);
+                if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Send TZ", item.title + easTZ.toString());
+            }
         }
 
         //AllDayEvent (for simplicity, we always send a value)
+        // not ALWAYS in EAS 16: [MS-ASCAL] 2.2.2.1 .. but seems OK...
         wbxml.atag("AllDayEvent", (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) ? "1" : "0");
 
         //Body
@@ -295,19 +300,26 @@ var Calendar = {
         }
 
         //Organizer
-        if (!isException) {
-            if (item.organizer && item.organizer.commonName) wbxml.atag("OrganizerName", item.organizer.commonName);
-            if (item.organizer && item.organizer.id) wbxml.atag("OrganizerEmail", cal.email.removeMailTo(item.organizer.id));
-        }
+        //if (!isException) {
+        //    // not in EAS 16: [MS-ASCAL] 2.2.2.35 / 36
+        //    //if (item.organizer && item.organizer.commonName) wbxml.atag("OrganizerName", item.organizer.commonName);
+        //    //if (item.organizer && item.organizer.id) wbxml.atag("OrganizerEmail", cal.email.removeMailTo(item.organizer.id));
+        //}
 
         //DtStamp in UTC
-        wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
+        // not in EAS 16: [MS-ASCAL] 2.2.2.18
+        //wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
 
         //EndTime in UTC
-        wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
-
+        // EAS 16 [MS-ASCAL] 2.2.2.1 -> no time component
+        if (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+            wbxml.atag("EndTime",eas.tools.getIsoUtcString(item.endDate,false,true,true));
+        } else {
+            wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
+        }
         //Location
-        wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
+        // not in EAS 16: [MS-ASCAL] 2.2.2.27
+        // wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
 
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
         let alarms = item.getAlarms({});
@@ -325,7 +337,7 @@ var Calendar = {
             else TbSync.eventlog.add("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
 
         }
-
+        
         //Sensitivity (CLASS)
         wbxml.atag("Sensitivity", eas.sync.mapThunderbirdPropertyToEas("CLASS", "Sensitivity", item));
 
@@ -333,14 +345,22 @@ var Calendar = {
         wbxml.atag("Subject", (item.title) ? item.title : "");
 
         //StartTime in UTC
-        wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
+        // EAS 16 [MS-ASCAL] 2.2.2.1
+        if (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+            wbxml.atag("StartTime",eas.tools.getIsoUtcString(item.startDate,false,true,true)); 
+        } else {
+            wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
+        }
 
         //UID (limit to 300)
         //each TB event has an ID, which is used as EAS serverId - however there is a second UID in the ApplicationData
         //since we do not have two different IDs to use, we use the same ID
-        if (!isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
-            wbxml.atag("UID", item.id);
-        }
+        //if (!isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
+          // EAS 16.1 example code contains UID .. but sending it makes sync fail ...
+          // wbxml.atag("UID", item.id);
+          // EAS 16.1 optional ClientUid ? not needed?
+          // wbxml.atag("ClientUid", item.id);
+        //}
         //IMPORTANT in EAS v16 it is no longer allowed to send a UID
         //Only allowed in exceptions in v2.5
 
