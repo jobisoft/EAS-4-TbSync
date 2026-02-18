@@ -92,8 +92,13 @@ var Calendar = {
             let alarm = new CalAlarm();
             alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START;
             alarm.offset = cal.createDuration();
-            alarm.offset.inSeconds = (0 - parseInt(data.Reminder) * 60);
             alarm.action = "DISPLAY";
+            // EAS 16.1 MS-ASCAL 2.2.2.38 : Reminder can be EMPTY
+            let offsecs = parseInt(data.Reminder);
+            if (!isNaN(offsecs)) {
+                alarm.offset.inSeconds = (0 - offsecs * 60);
+            }    
+
             item.addAlarm(alarm);
 
             let alarmData = cal.alarms.calculateAlarmDate(item, alarm);
