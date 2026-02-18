@@ -1,8 +1,16 @@
 # EAS-4-TbSync
 
-NOTE: EAS v16.1 initial support introduced in this version and requires further testing ...
-NOTE: https://techcommunity.microsoft.com/blog/exchange/exchange-online-activesync-device-support-update/4477997
-This provider add-on adds Exchange ActiveSync (EAS v2.5 & v16.1) synchronization capabilities to [TbSync](https://github.com/jobisoft/TbSync/).
+## Exchange Active Sync (EAS) protocol v 16.1 Initial Support
+
+Initial support introduced in this version:
+- Basic Calendar/Contacts/Tasks editing and synchronization is working
+Known problems:
+- Calendar: Editing single event (with Attendees defined) in recurring series fails, changed item cannot be synchronized to Exchange
+- ....
+
+([EAS protocol v 14 support ends on 01.03.2026](https://techcommunity.microsoft.com/blog/exchange/exchange-online-activesync-device-support-update/4477997))
+
+This provider add-on adds Exchange ActiveSync (EAS v2.5 & v14) synchronization capabilities to [TbSync](https://github.com/jobisoft/TbSync/).
 
 More information can be found in the [wiki](https://github.com/jobisoft/EAS-4-TbSync/wiki/About:-Provider-for-Exchange-ActiveSync) of this repository
 
