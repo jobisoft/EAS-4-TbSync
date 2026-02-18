@@ -1502,7 +1502,11 @@ var sync = {
                     wbxml.otag("Exceptions");
                     for (let exception of deleted) {
                         wbxml.otag("Exception");
-                        wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exception.date));
+                        // EAS 16.1 MS-ASCAL 2.2.2.23 / 2.2.2.21
+                        //wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exception.date));
+                        wbxml.switchpage("AirSyncBase");
+                        wbxml.atag("InstanceId", eas.tools.getIsoUtcString(exception.date));
+                        wbxml.switchpage(syncData.type);
                         wbxml.atag("Deleted", "1");
                         //Docs say it is allowed, but if present, it does not work
                         //if (asversion == "2.5") {
@@ -1513,7 +1517,12 @@ var sync = {
                     for (let exceptionId of modifiedIds) {
                         let replacement = item.recurrenceInfo.getExceptionFor(exceptionId);
                         wbxml.otag("Exception");
-                        wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exceptionId));
+                        // EAS 16.1 MS-ASCAL 2.2.2.23 / 2.2.2.21
+                        //wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exceptionId));
+                        wbxml.switchpage("AirSyncBase");
+                        wbxml.atag("InstanceId", eas.tools.getIsoUtcString(exceptionId));
+                        wbxml.switchpage(syncData.type);
+
                         wbxml.append(await eas.sync.getWbxmlFromThunderbirdItem(replacement, syncData, true));
                         wbxml.ctag();
                     }
