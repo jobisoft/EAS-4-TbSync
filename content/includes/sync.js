@@ -1496,17 +1496,20 @@ var sync = {
                 wbxml.ctag();
             }
 
+            // This is not going to work in EAS 16: Change in single event in recurrent series needs to be done 
+            // in Sync Change request adding InstanceId (and ServerId?) to the request, not using Exceptions (me thinks..) 
+            // MS-ASCAL 2.2.2.22:
+            //wbxml.switchpage("AirSyncBase");
+            //wbxml.atag("InstanceId", eas.tools.getIsoUtcString(exception.date));
+            //wbxml.switchpage(syncData.type);
+
             if (syncData.type == "Calendar" && hasRecurrence) { //Exceptions only allowed in Calendar and only if a valid Recurrence was added
                 let modifiedIds = item.recurrenceInfo.getExceptionIds({});
                 if (deleted.length || modifiedIds.length) {
                     wbxml.otag("Exceptions");
                     for (let exception of deleted) {
                         wbxml.otag("Exception");
-                        // EAS 16.1 MS-ASCAL 2.2.2.23 / 2.2.2.21
-                        //wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exception.date));
-                        wbxml.switchpage("AirSyncBase");
-                        wbxml.atag("InstanceId", eas.tools.getIsoUtcString(exception.date));
-                        wbxml.switchpage(syncData.type);
+                        wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exception.date));                        
                         wbxml.atag("Deleted", "1");
                         //Docs say it is allowed, but if present, it does not work
                         //if (asversion == "2.5") {
@@ -1517,12 +1520,7 @@ var sync = {
                     for (let exceptionId of modifiedIds) {
                         let replacement = item.recurrenceInfo.getExceptionFor(exceptionId);
                         wbxml.otag("Exception");
-                        // EAS 16.1 MS-ASCAL 2.2.2.23 / 2.2.2.21
-                        //wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exceptionId));
-                        wbxml.switchpage("AirSyncBase");
-                        wbxml.atag("InstanceId", eas.tools.getIsoUtcString(exceptionId));
-                        wbxml.switchpage(syncData.type);
-
+                        wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exceptionId));
                         wbxml.append(await eas.sync.getWbxmlFromThunderbirdItem(replacement, syncData, true));
                         wbxml.ctag();
                     }
