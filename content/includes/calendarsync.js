@@ -305,34 +305,39 @@ var Calendar = {
         }
 
         //Organizer
-        //if (!isException) {
-        //    // not in EAS 16: [MS-ASCAL] 2.2.2.35 / 36
-        //    //if (item.organizer && item.organizer.commonName) wbxml.atag("OrganizerName", item.organizer.commonName);
-        //    //if (item.organizer && item.organizer.id) wbxml.atag("OrganizerEmail", cal.email.removeMailTo(item.organizer.id));
-        //}
+        if (asversion != "16.1" && !isException) {
+            // not in EAS 16: [MS-ASCAL] 2.2.2.35 / 36
+            if (item.organizer && item.organizer.commonName) wbxml.atag("OrganizerName", item.organizer.commonName);
+            if (item.organizer && item.organizer.id) wbxml.atag("OrganizerEmail", cal.email.removeMailTo(item.organizer.id));
+        }
 
         //DtStamp in UTC
-        // not in EAS 16: [MS-ASCAL] 2.2.2.18
-        //wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
-
+        if (asversion != "16.1") {
+            // not in EAS 16: [MS-ASCAL] 2.2.2.18
+            wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
+        }
+        
         //EndTime in UTC
         // EAS 16 [MS-ASCAL] 2.2.2.1 -> no time component
-        if (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+        if (asversion = "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
             wbxml.atag("EndTime",eas.tools.getIsoUtcString(item.endDate,false,true,true));
         } else {
             wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
         }
+        
         //Location
-        // not in EAS 16: [MS-ASCAL] 2.2.2.27
-        // wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
-        // EAS 16 MS-AIRS 2.2.2.28
-
-        wbxml.switchpage("AirSyncBase");
-        wbxml.otag("Location");
-        wbxml.atag("DisplayName", (item.hasProperty("location")) ? item.getProperty("location") : "");
-        wbxml.ctag();
-        wbxml.switchpage(syncdata.type);
-
+        if (asversion != "16.1") {
+            // not in EAS 16: [MS-ASCAL] 2.2.2.27
+            wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
+        } else {    
+            // EAS 16 MS-AIRS 2.2.2.28
+            wbxml.switchpage("AirSyncBase");
+            wbxml.otag("Location");
+            wbxml.atag("DisplayName", (item.hasProperty("location")) ? item.getProperty("location") : "");
+            wbxml.ctag();
+            wbxml.switchpage(syncdata.type);
+        }
+        
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
         let alarms = item.getAlarms({});
         if (alarms.length > 0) {
@@ -349,7 +354,7 @@ var Calendar = {
             else TbSync.eventlog.add("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
 
         }
-        
+
         //Sensitivity (CLASS)
         wbxml.atag("Sensitivity", eas.sync.mapThunderbirdPropertyToEas("CLASS", "Sensitivity", item));
 
@@ -358,7 +363,7 @@ var Calendar = {
 
         //StartTime in UTC
         // EAS 16 [MS-ASCAL] 2.2.2.1
-        if (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+        if (asversion = "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
             wbxml.atag("StartTime",eas.tools.getIsoUtcString(item.startDate,false,true,true)); 
         } else {
             wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
@@ -367,12 +372,14 @@ var Calendar = {
         //UID (limit to 300)
         //each TB event has an ID, which is used as EAS serverId - however there is a second UID in the ApplicationData
         //since we do not have two different IDs to use, we use the same ID
-        //if (!isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
-          // EAS 16.1 example code contains UID .. but sending it makes sync fail ...
-          // wbxml.atag("UID", item.id);
-          // EAS 16.1 optional ClientUid ? not needed?
-          // wbxml.atag("ClientUid", item.id);
-        //}
+        if (asversion != "16.1" && !isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
+            // EAS 16.1 MS-ASCAL 2.2.2.46 UID MUST NOT be present
+            wbxml.atag("UID", item.id);
+        }
+        if (asversion == "16.1") {
+            // EAS 16.1 MS-ASCAL 2.2.2.13 optional ClientUid
+            wbxml.atag("ClientUid", item.id);
+        }
         //IMPORTANT in EAS v16 it is no longer allowed to send a UID
         //Only allowed in exceptions in v2.5
 

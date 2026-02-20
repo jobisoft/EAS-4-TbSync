@@ -536,7 +536,9 @@ var Contacts = {
             wbxml.otag("Body");
             wbxml.atag("Type", "1");
             //EAS 16 fails sync if EstimatedDataSize is set ..
-            //wbxml.atag("EstimatedDataSize", "" + description.length);
+            if (asversion != "16.1") {
+                wbxml.atag("EstimatedDataSize", "" + description.length);
+            }
             wbxml.atag("Data", description);
             wbxml.ctag();
         }

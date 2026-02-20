@@ -97,6 +97,7 @@ var sync = {
 
             if (asversionselected == "auto") {
                 if (allowedVersionsArray.includes("16.1")) syncData.accountData.setAccountProperty("asversion", "16.1");
+                else if (allowedVersionsArray.includes("14.0")) syncData.accountData.setAccountProperty("asversion", "14.0");
                 else if (allowedVersionsArray.includes("2.5")) syncData.accountData.setAccountProperty("asversion", "2.5");
                 else if (allowedVersionsString == "") {
                     throw eas.sync.finish("error", "InvalidServerOptions");
