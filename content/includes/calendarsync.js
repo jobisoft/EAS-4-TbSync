@@ -325,6 +325,13 @@ var Calendar = {
         //Location
         // not in EAS 16: [MS-ASCAL] 2.2.2.27
         // wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
+        // EAS 16 MS-AIRS 2.2.2.28
+
+        wbxml.switchpage("AirSyncBase");
+        wbxml.otag("Location");
+        wbxml.atag("DisplayName", (item.hasProperty("location")) ? item.getProperty("location") : "");
+        wbxml.ctag();
+        wbxml.switchpage(syncdata.type);
 
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
         let alarms = item.getAlarms({});
