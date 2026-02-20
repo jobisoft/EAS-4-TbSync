@@ -282,7 +282,8 @@ var Calendar = {
             }
 
              // EAS 16 [MS-ASCAL] 2.2.2.1 
-            if (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+            if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+                // client MUST NOT send TimeZone
             } else {
                 wbxml.atag("TimeZone", easTZ.easTimeZone64);
                 if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Send TZ", item.title + easTZ.toString());
@@ -319,7 +320,7 @@ var Calendar = {
         
         //EndTime in UTC
         // EAS 16 [MS-ASCAL] 2.2.2.1 -> no time component
-        if (asversion = "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+        if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
             wbxml.atag("EndTime",eas.tools.getIsoUtcString(item.endDate,false,true,true));
         } else {
             wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
@@ -363,7 +364,7 @@ var Calendar = {
 
         //StartTime in UTC
         // EAS 16 [MS-ASCAL] 2.2.2.1
-        if (asversion = "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+        if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
             wbxml.atag("StartTime",eas.tools.getIsoUtcString(item.startDate,false,true,true)); 
         } else {
             wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
@@ -372,11 +373,12 @@ var Calendar = {
         //UID (limit to 300)
         //each TB event has an ID, which is used as EAS serverId - however there is a second UID in the ApplicationData
         //since we do not have two different IDs to use, we use the same ID
-        if (asversion != "16.1" && !isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
-            // EAS 16.1 MS-ASCAL 2.2.2.46 UID MUST NOT be present
-            wbxml.atag("UID", item.id);
-        }
-        if (asversion == "16.1") {
+        // EAS 16.1 MS-ASCAL 2.2.2.46 UID MUST NOT be present
+        if (asversion != "16.1") {
+            if (!isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
+                wbxml.atag("UID", item.id);
+            }
+        } else {
             // EAS 16.1 MS-ASCAL 2.2.2.13 optional ClientUid
             wbxml.atag("ClientUid", item.id);
         }

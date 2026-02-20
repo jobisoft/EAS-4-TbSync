@@ -1228,7 +1228,9 @@ var sync = {
             wbxml.otag("Body");
             wbxml.atag("Type", "1");
             // EAS 16 description sync fails if EstimatedDataSize is defined ? ...
-            //wbxml.atag("EstimatedDataSize", "" + description.length);
+            if (asversion != "16.1") {
+                wbxml.atag("EstimatedDataSize", "" + description.length);
+            }
             wbxml.atag("Data", description);
             wbxml.ctag();
             //does not work with horde at the moment, does not work with task, does not work with exceptions
@@ -1496,7 +1498,7 @@ var sync = {
                     wbxml.otag("Exceptions");
                     for (let exception of deleted) {
                         wbxml.otag("Exception");
-                        wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exception.date));                        
+                        wbxml.atag("ExceptionStartTime", eas.tools.getIsoUtcString(exception.date));
                         wbxml.atag("Deleted", "1");
                         //Docs say it is allowed, but if present, it does not work
                         //if (asversion == "2.5") {
