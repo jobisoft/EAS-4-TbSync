@@ -503,9 +503,12 @@ var network = {
 
             if (syncData.accountData.getAccountProperty("asversion") == "2.5") {
                 syncData.req.setRequestHeader("MS-ASProtocolVersion", "2.5");
-            } else {
+            } else if (syncData.accountData.getAccountProperty("asversion") == "14.0") {
                 syncData.req.setRequestHeader("MS-ASProtocolVersion", "14.0");
+            } else {
+                syncData.req.setRequestHeader("MS-ASProtocolVersion", "16.1");
             }
+            
             syncData.req.setRequestHeader("Content-Length", encoded.length);
             if (syncData.accountData.getAccountProperty("provision")) {
                 syncData.req.setRequestHeader("X-MS-PolicyKey", syncData.accountData.getAccountProperty("policykey"));
@@ -1098,8 +1101,10 @@ var network = {
 
                     if (accountData.getAccountProperty("asversion") == "2.5") {
                         req.setRequestHeader("MS-ASProtocolVersion", "2.5");
-                    } else {
+                    } else if (accountData.getAccountProperty("asversion") == "14.0") {
                         req.setRequestHeader("MS-ASProtocolVersion", "14.0");
+                    } else {
+                        req.setRequestHeader("MS-ASProtocolVersion", "16.1");
                     }
                     req.setRequestHeader("Content-Length", wbxml.length);
                     if (accountData.getAccountProperty("provision")) {

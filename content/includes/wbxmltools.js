@@ -103,7 +103,7 @@ var wbxmltools = {
             }
             num = num + 1;
         }
-        return (xml == "") ? "" : '<?xml version="1.0"?>' + xml;
+        return (xml == "") ? "" : '<?xml version="1.0" encoding="utf-8"?>' + xml;
     },
 
     isUnknownToken: function (codepage, token) {
@@ -417,7 +417,8 @@ var wbxmltools = {
             0x38: 'IsLeapMonth',
             0x39: 'FirstDayOfWeek',
             0x3a: 'OnlineMeetingConfLink',
-            0x3b: 'OnlineMeetingExternalLink'
+            0x3b: 'OnlineMeetingExternalLink',
+            0x3c: 'ClientUid'		
         },
         // Code Page 5: Move
         {
@@ -471,7 +472,10 @@ var wbxmltools = {
             0x0a: 'Result',
             0x0b: 'Status',
             0x0c: 'UserResponse',
-            0x0e: 'InstanceId'
+            0x0e: 'InstanceId',
+            0x10: 'ProposedStartTime',
+            0x11: 'ProposedEndTime',
+            0x12: 'SendResponse'	
         },
         // Code Page 9: Tasks
         {
@@ -627,7 +631,8 @@ var wbxmltools = {
             0x37: 'UnapprovedInROMApplicationList',
             0x38: 'ApplicationName',
             0x39: 'ApprovedApplicationList',
-            0x3A: 'Hash'
+            0x3A: 'Hash',
+            0x3B: 'AccountOnlyRemoteWipe'
         },
         // Code Page 15: Search
         {
@@ -702,7 +707,25 @@ var wbxmltools = {
             0x18: 'Preview',
             0x19: 'BodyPartPreference',
             0x1A: 'BodyPart',
-            0x1B: 'Status'
+            0x1B: 'Status',
+            0x1C: 'Add',
+            0x1D: 'Delete',
+            0x1E: 'ClientId',
+            0x1F: 'Content',
+            0x20: 'Location',
+            0x21: 'Annotation',
+            0x22: 'Street',
+            0x23: 'City',
+            0x24: 'State',
+            0x25: 'Country',
+            0x26: 'PostalCode',
+            0x27: 'Latitude',
+            0x28: 'Longitude',
+            0x29: 'Accuracy',
+            0x2A: 'Altitude',
+            0x2B: 'AltitudeAccuracy',
+            0x2C: 'LocationUri',
+            0x2D: 'InstanceId'
         },
         // Code Page 18: Settings
         {
@@ -852,7 +875,32 @@ var wbxmltools = {
             0x16: 'TemplateDescription',
             0x17: 'ContentOwner',
             0x18: 'RemoveRightsManagementDistribution'
-        }
+        },
+        // Code Page 25: Find
+        {
+            0x05: 'Find',
+            0x06: 'SearchId',
+            0x07: 'ExecuteSearch',
+            0x08: 'MailBoxSearchCriterion',
+            0x09: 'Query',
+            0x0A: 'Status',
+            0x0B: 'FreeText',
+            0x0C: 'Options',
+            0x0D: 'Range',
+            0x0E: 'DeepTraversal',
+            0x11: 'Response',
+            0x12: 'Result',
+            0x13: 'Properties',
+            0x14: 'Preview',
+            0x15: 'HasAttachments',
+            0x16: 'Total',
+            0x17: 'DisplayCc',
+            0x18: 'DisplayBcc',
+            0x19: 'GalSearchCriterion',
+            0x20: 'MaxPictures',
+            0x21: 'MaxSize',
+            0x22: 'Picture'
+       }
     ],
 
     namespaces: [
@@ -880,7 +928,8 @@ var wbxmltools = {
         'ComposeMail',
         'Email2',
         'Notes',
-        'RightsManagement'
+        'RightsManagement',
+        'Find'
     ]
 
 };

@@ -97,6 +97,7 @@ var sync = {
 
             if (asversionselected == "auto") {
                 if (allowedVersionsArray.includes("14.0")) syncData.accountData.setAccountProperty("asversion", "14.0");
+                else if (allowedVersionsArray.includes("16.1")) syncData.accountData.setAccountProperty("asversion", "16.1");
                 else if (allowedVersionsArray.includes("2.5")) syncData.accountData.setAccountProperty("asversion", "2.5");
                 else if (allowedVersionsString == "") {
                     throw eas.sync.finish("error", "InvalidServerOptions");
@@ -497,6 +498,7 @@ var sync = {
             if (syncData.accountData.getAccountProperty("asversion") == "2.5") wbxml.atag("Class", syncData.type);
             wbxml.atag("SyncKey", syncData.synckey);
             wbxml.atag("CollectionId", syncData.currentFolderData.getFolderProperty("serverID"));
+            //EAS 16: wbxml.atag("GetChanges","1"); .. seems not really needed ?
             wbxml.otag("Commands");
 
             for (let i = 0; i < changes.length; i++) if (!syncData.failedItems.includes(changes[i].itemId)) {
@@ -1173,7 +1175,9 @@ var sync = {
     },
 
     setItemLocation: function (item, syncData, data) {
-        if (data.Location) item.setProperty("location", eas.xmltools.checkString(data.Location));
+    // EAS 16 changes in Location: MS-AIRS 2.2.2.28
+          if (data.Location && data.Location.DisplayName) item.setProperty("location", eas.xmltools.checkString(data.Location.DisplayName));
+    //    if (data.Location) item.setProperty("location", eas.xmltools.checkString(data.Location));
     },
 
 
@@ -1223,7 +1227,10 @@ var sync = {
             wbxml.switchpage("AirSyncBase");
             wbxml.otag("Body");
             wbxml.atag("Type", "1");
-            wbxml.atag("EstimatedDataSize", "" + description.length);
+            // EAS 16 description sync fails if EstimatedDataSize is defined ? ...
+            if (asversion != "16.1") {
+                wbxml.atag("EstimatedDataSize", "" + description.length);
+            }
             wbxml.atag("Data", description);
             wbxml.ctag();
             //does not work with horde at the moment, does not work with task, does not work with exceptions
@@ -1477,6 +1484,13 @@ var sync = {
                 }
                 wbxml.ctag();
             }
+
+            // This is not going to work in EAS 16: Change in single event in recurrent series needs to be done 
+            // in Sync Change request adding InstanceId (and ServerId?) to the request, not using Exceptions (me thinks..) 
+            // MS-ASCAL 2.2.2.22:
+            //wbxml.switchpage("AirSyncBase");
+            //wbxml.atag("InstanceId", eas.tools.getIsoUtcString(exception.date));
+            //wbxml.switchpage(syncData.type);
 
             if (syncData.type == "Calendar" && hasRecurrence) { //Exceptions only allowed in Calendar and only if a valid Recurrence was added
                 let modifiedIds = item.recurrenceInfo.getExceptionIds({});
