@@ -380,7 +380,8 @@ var Calendar = {
             }
         } else {
             // EAS 16.1 MS-ASCAL 2.2.2.13 optional ClientUid
-            wbxml.atag("ClientUid", item.id);
+            //for some reason when defined Exchange Online rejects many change requests ... oh well .. since it is optional lets skip it ...
+            //wbxml.atag("ClientUid", item.id);
         }
         //IMPORTANT in EAS v16 it is no longer allowed to send a UID
         //Only allowed in exceptions in v2.5
