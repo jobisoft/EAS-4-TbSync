@@ -1201,7 +1201,7 @@ var sync = {
             for (let i = 0; i < categories.length; i++) wbxml.atag("Category", categories[i]);
             wbxml.ctag();
         } else {
-            wbxml.atag("Categories");
+            if (asversion != "16.1") { wbxml.atag("Categories"); }
         }
         return wbxml.getBytes();
     },
@@ -1220,6 +1220,9 @@ var sync = {
         let asversion = syncData.accountData.getAccountProperty("asversion");
         let wbxml = eas.wbxmltools.createWBXML("", syncData.type); //init wbxml with "" and not with precodes, also activate type codePage (Calendar, Tasks, Contacts etc)
 
+        if (asversion == "16.1" && !item.hasProperty("description")) {
+            return wbxml.getBytes();
+        }
         let description = (item.hasProperty("description")) ? item.getProperty("description") : "";
         if (asversion == "2.5") {
             wbxml.atag("Body", description);

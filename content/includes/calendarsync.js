@@ -281,12 +281,16 @@ var Calendar = {
                 easTZ.daylightDate.wSecond = tzInfo.dst.switchdate.second;
             }
 
-             // EAS 16 [MS-ASCAL] 2.2.2.1 
-            if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+
+            // for EAS 16.1 dont send TimeZone at all since we use UTC timestamps this should work.  
+            if (asversion != "16.1") {
+                // EAS 16 [MS-ASCAL] 2.2.2.1 
+                // if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
                 // client MUST NOT send TimeZone
-            } else {
+                // } else {
                 wbxml.atag("TimeZone", easTZ.easTimeZone64);
                 if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Send TZ", item.title + easTZ.toString());
+                // }
             }
         }
 
@@ -332,11 +336,13 @@ var Calendar = {
             wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
         } else {    
             // EAS 16 MS-AIRS 2.2.2.28
-            wbxml.switchpage("AirSyncBase");
-            wbxml.otag("Location");
-            wbxml.atag("DisplayName", (item.hasProperty("location")) ? item.getProperty("location") : "");
-            wbxml.ctag();
-            wbxml.switchpage(syncdata.type);
+            if (item.hasProperty("location")) {
+                wbxml.switchpage("AirSyncBase");
+                wbxml.otag("Location");
+                wbxml.atag("DisplayName", item.getProperty("location"));
+                wbxml.ctag();
+                wbxml.switchpage(syncdata.type);
+            }
         }
         
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
@@ -444,7 +450,9 @@ var Calendar = {
                 }
                 wbxml.ctag();
             } else {
-                wbxml.atag("Attendees");
+                if (asversion != "16.1") {
+                    wbxml.atag("Attendees"); 
+                }
             }
         }
 
