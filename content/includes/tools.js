@@ -355,29 +355,17 @@ var tools = {
             let tzService = TbSync.lightning.cal.timezoneService;
 
             //cache timezones data from internal IANA data
-            // 1. Get the system's current timezone ID once before the loop
-            let systemTzid = TbSync.lightning.cal.timezoneService.defaultTimezone.tzid;
-
             for (let timezoneId of tzService.timezoneIds) {
                 let timezone = tzService.getTimezone(timezoneId);
                 let tzInfo = eas.tools.getTimezoneInfo(timezone);
 
-                let offsetKey = tzInfo.std.offset + ":" + tzInfo.dst.offset;
-                let stdKey = tzInfo.std.offset;
+                eas.cachedTimezoneData.bothOffsets[tzInfo.std.offset + ":" + tzInfo.dst.offset] = timezone;
+                eas.cachedTimezoneData.stdOffset[tzInfo.std.offset] = timezone;
 
-                // 2. Only overwrite the cache if the slot is empty
-                // OR if this specific timezone matches the System Timezone.
-                if (!eas.cachedTimezoneData.bothOffsets[offsetKey] || timezoneId === systemTzid) {
-                    eas.cachedTimezoneData.bothOffsets[offsetKey] = timezone;
-                }
-
-                if (!eas.cachedTimezoneData.stdOffset[stdKey] || timezoneId === systemTzid) {
-                    eas.cachedTimezoneData.stdOffset[stdKey] = timezone;
-                }
-
-                // Keep the rest of the original assignments
                 eas.cachedTimezoneData.abbreviations[tzInfo.std.abbreviation] = timezoneId;
                 eas.cachedTimezoneData.iana[timezoneId] = tzInfo;
+
+                //TbSync.dump("TZ ("+ tzInfo.std.id + " :: " + tzInfo.dst.id +  " :: " + tzInfo.std.displayname + " :: " + tzInfo.dst.displayname + " :: " + tzInfo.std.offset + " :: " + tzInfo.dst.offset + ")", tzService.getTimezone(id));
             }
 
             //make sure, that UTC timezone is there
