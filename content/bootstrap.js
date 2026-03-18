@@ -7,7 +7,7 @@
  */
 
 // no need to create namespace, we are in a sandbox
-
+//test
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let onInitDoneObserver = {
