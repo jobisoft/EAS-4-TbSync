@@ -8,11 +8,11 @@ Not implemented:
 - Calendar: 
    - Editing single event in recurring series
    - Changing event type from single to recurrent
-   
-Above will result in synchronization failing: as a workaround: delete the vent and resynchronize. 
 
-The add-on will autoselect EAS v14 protocol version whenever available with fallback to EAS v16.1. The usage of v16.1 protocol can be forced by 
-editing 'Account Settings' in TbSync account manager.
+   Above will result in synchronization failing: as a workaround: delete the vent and resynchronize. 
+
+I your server supports EAS v14 (Exchange 2016/2019/SE(?)) the add-on will autoselect EAS v16.1 protocol version whenever avaailable. 
+This can be changed to desired version in 'Account Settings' in TbSync account manager.
 
 ([EAS protocol v 14 support for Exchange Online ends on 01.03.2026](https://techcommunity.microsoft.com/blog/exchange/exchange-online-activesync-device-support-update/4477997))
 

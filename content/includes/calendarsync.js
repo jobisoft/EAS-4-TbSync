@@ -33,11 +33,55 @@ const ICAL = TbSync.lightning.ICAL;
 var Calendar = {
 
     // --------------------------------------------------------------------------- //
+    // EAS 16.1 Helper: Is this item an exception occurrence?
+    // --------------------------------------------------------------------------- //
+    isExceptionItem: function (item) {
+        return item.recurrenceId && item.recurrenceId.isValid;
+    },
+
+    // --------------------------------------------------------------------------- //
+    // NEW: Build WBXML for a single-occurrence change (EAS 16.1)
+    // --------------------------------------------------------------------------- //
+    getWbxmlFromThunderbirdException: async function (tbItem, syncData, instanceId) {
+        let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+
+        let wbxml = eas.wbxmltools.createWBXML("", syncData.type);
+        wbxml.switchpage("AirSyncBase");
+        wbxml.atag("InstanceId", instanceId);
+        wbxml.switchpage(syncData.type);
+
+        // Deletion of exception (works for both explicit delete and exceptions created with Deleted flag)
+        if (item.recurrenceId) {
+            wbxml.atag("Deleted", "1");
+        } else {
+            // Modified exception
+            wbxml.append(await eas.sync.getWbxmlFromThunderbirdItem(item, syncData, true));
+        }
+
+        return wbxml.getBytes();
+    },
+
+    // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata, mode = "standard") {
 
         let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+
+        // EAS 16.1 incoming exception?
+        if (data.InstanceId) {
+            let instanceDate = cal.createDateTime(data.InstanceId).getInTimezone(cal.dtz.defaultTimezone);
+            if (item.recurrenceInfo) {
+                let occurrence = item.recurrenceInfo.getOccurrenceFor(instanceDate);
+                if (occurrence) {
+                    // We work on a clone of the occurrence so changes can be applied properly
+                    item = occurrence.clone();
+                    // Remember we are handling an exception so we can modifyException later
+                    item._isIncomingException = true;
+                    item._exceptionId = instanceDate;
+                }
+            }
+        }
 
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
@@ -220,16 +264,16 @@ var Calendar = {
         if (tbStatus) item.setProperty("STATUS", tbStatus)
         else item.deleteProperty("STATUS");
 
+        // If this was an incoming exception, properly register it on the master
+        if (item._isIncomingException) {
+            let master = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+            master.recurrenceInfo.modifyException(item, true);
+            delete item._isIncomingException;
+            delete item._exceptionId;
+        }
+
         //TODO: attachements (needs EAS 16.0!)
     },
-
-
-
-
-
-
-
-
 
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
@@ -478,3 +522,5 @@ var Calendar = {
         return wbxml.getBytes();
     }
 }
+// Export Calendar object so sync.js can use it
+eas.sync.Calendar = Calendar;
