@@ -11,6 +11,7 @@
 * Tijuca
 * Kabe2007
 * Jarek Polok (initial EAS 16.1 support)
+* Niel Buys (EAS 16.1 recurring calendar events support)
 
 ## Translators
 * John Bieling (de, en-US)
