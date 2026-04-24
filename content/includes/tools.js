@@ -272,7 +272,7 @@ var tools = {
 
 
     // Convert TB date to UTC and return it as  basic or extended ISO 8601  String
-    getIsoUtcString: function (origdate, requireExtendedISO = false, fakeUTC = false) {
+    getIsoUtcString: function (origdate, requireExtendedISO = false, fakeUTC = false, onlyDate = false) {
         let date = origdate.clone();
         //floating timezone cannot be converted to UTC (cause they float) - we have to overwrite it with the local timezone
         if (date.timezone.tzid == "floating") date.timezone = eas.defaultTimezoneInfo.timezone;
@@ -286,6 +286,10 @@ var tools = {
                 return '0' + number;
             }
             return number;
+        }
+        
+        if (onlyDate && fakeUTC) {
+            return UTC.year + pad(UTC.month + 1) + pad(UTC.day) + "T000000Z" ;
         }
 
         if (requireExtendedISO) {
@@ -351,17 +355,29 @@ var tools = {
             let tzService = TbSync.lightning.cal.timezoneService;
 
             //cache timezones data from internal IANA data
+            // 1. Get the system's current timezone ID once before the loop
+            let systemTzid = TbSync.lightning.cal.timezoneService.defaultTimezone.tzid;
+
             for (let timezoneId of tzService.timezoneIds) {
                 let timezone = tzService.getTimezone(timezoneId);
                 let tzInfo = eas.tools.getTimezoneInfo(timezone);
 
-                eas.cachedTimezoneData.bothOffsets[tzInfo.std.offset + ":" + tzInfo.dst.offset] = timezone;
-                eas.cachedTimezoneData.stdOffset[tzInfo.std.offset] = timezone;
+                let offsetKey = tzInfo.std.offset + ":" + tzInfo.dst.offset;
+                let stdKey = tzInfo.std.offset;
 
+                // 2. Only overwrite the cache if the slot is empty
+                // OR if this specific timezone matches the System Timezone.
+                if (!eas.cachedTimezoneData.bothOffsets[offsetKey] || timezoneId === systemTzid) {
+                    eas.cachedTimezoneData.bothOffsets[offsetKey] = timezone;
+                }
+
+                if (!eas.cachedTimezoneData.stdOffset[stdKey] || timezoneId === systemTzid) {
+                    eas.cachedTimezoneData.stdOffset[stdKey] = timezone;
+                }
+
+                // Keep the rest of the original assignments
                 eas.cachedTimezoneData.abbreviations[tzInfo.std.abbreviation] = timezoneId;
                 eas.cachedTimezoneData.iana[timezoneId] = tzInfo;
-
-                //TbSync.dump("TZ ("+ tzInfo.std.id + " :: " + tzInfo.dst.id +  " :: " + tzInfo.std.displayname + " :: " + tzInfo.dst.displayname + " :: " + tzInfo.std.offset + " :: " + tzInfo.dst.offset + ")", tzService.getTimezone(id));
             }
 
             //make sure, that UTC timezone is there

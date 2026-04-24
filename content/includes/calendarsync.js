@@ -33,11 +33,55 @@ const ICAL = TbSync.lightning.ICAL;
 var Calendar = {
 
     // --------------------------------------------------------------------------- //
+    // EAS 16.1 Helper: Is this item an exception occurrence?
+    // --------------------------------------------------------------------------- //
+    isExceptionItem: function (item) {
+        return item.recurrenceId && item.recurrenceId.isValid;
+    },
+
+    // --------------------------------------------------------------------------- //
+    // NEW: Build WBXML for a single-occurrence change (EAS 16.1)
+    // --------------------------------------------------------------------------- //
+    getWbxmlFromThunderbirdException: async function (tbItem, syncData, instanceId) {
+        let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+
+        let wbxml = eas.wbxmltools.createWBXML("", syncData.type);
+        wbxml.switchpage("AirSyncBase");
+        wbxml.atag("InstanceId", instanceId);
+        wbxml.switchpage(syncData.type);
+
+        // Deletion of exception (works for both explicit delete and exceptions created with Deleted flag)
+        if (item.recurrenceId) {
+            wbxml.atag("Deleted", "1");
+        } else {
+            // Modified exception
+            wbxml.append(await eas.sync.getWbxmlFromThunderbirdItem(item, syncData, true));
+        }
+
+        return wbxml.getBytes();
+    },
+
+    // --------------------------------------------------------------------------- //
     // Read WBXML and set Thunderbird item
     // --------------------------------------------------------------------------- //
     setThunderbirdItemFromWbxml: function (tbItem, data, id, syncdata, mode = "standard") {
 
         let item = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+
+        // EAS 16.1 incoming exception?
+        if (data.InstanceId) {
+            let instanceDate = cal.createDateTime(data.InstanceId).getInTimezone(cal.dtz.defaultTimezone);
+            if (item.recurrenceInfo) {
+                let occurrence = item.recurrenceInfo.getOccurrenceFor(instanceDate);
+                if (occurrence) {
+                    // We work on a clone of the occurrence so changes can be applied properly
+                    item = occurrence.clone();
+                    // Remember we are handling an exception so we can modifyException later
+                    item._isIncomingException = true;
+                    item._exceptionId = instanceDate;
+                }
+            }
+        }
 
         let asversion = syncdata.accountData.getAccountProperty("asversion");
         item.id = id;
@@ -92,8 +136,13 @@ var Calendar = {
             let alarm = new CalAlarm();
             alarm.related = Components.interfaces.calIAlarm.ALARM_RELATED_START;
             alarm.offset = cal.createDuration();
-            alarm.offset.inSeconds = (0 - parseInt(data.Reminder) * 60);
             alarm.action = "DISPLAY";
+            // EAS 16.1 MS-ASCAL 2.2.2.38 : Reminder can be EMPTY
+            let offsecs = parseInt(data.Reminder);
+            if (!isNaN(offsecs)) {
+                alarm.offset.inSeconds = (0 - offsecs * 60);
+            }    
+
             item.addAlarm(alarm);
 
             let alarmData = cal.alarms.calculateAlarmDate(item, alarm);
@@ -215,16 +264,16 @@ var Calendar = {
         if (tbStatus) item.setProperty("STATUS", tbStatus)
         else item.deleteProperty("STATUS");
 
+        // If this was an incoming exception, properly register it on the master
+        if (item._isIncomingException) {
+            let master = tbItem instanceof TbSync.lightning.TbItem ? tbItem.nativeItem : tbItem;
+            master.recurrenceInfo.modifyException(item, true);
+            delete item._isIncomingException;
+            delete item._exceptionId;
+        }
+
         //TODO: attachements (needs EAS 16.0!)
     },
-
-
-
-
-
-
-
-
 
     // --------------------------------------------------------------------------- //
     //read TB event and return its data as WBXML
@@ -276,11 +325,21 @@ var Calendar = {
                 easTZ.daylightDate.wSecond = tzInfo.dst.switchdate.second;
             }
 
-            wbxml.atag("TimeZone", easTZ.easTimeZone64);
-            if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Send TZ", item.title + easTZ.toString());
+
+            // for EAS 16.1 dont send TimeZone at all since we use UTC timestamps this should work.  
+            if (asversion != "16.1") {
+                // EAS 16 [MS-ASCAL] 2.2.2.1 
+                // if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+                // client MUST NOT send TimeZone
+                // } else {
+                wbxml.atag("TimeZone", easTZ.easTimeZone64);
+                if (TbSync.prefs.getIntPref("log.userdatalevel") > 2) TbSync.dump("Send TZ", item.title + easTZ.toString());
+                // }
+            }
         }
 
         //AllDayEvent (for simplicity, we always send a value)
+        // not ALWAYS in EAS 16: [MS-ASCAL] 2.2.2.1 .. but seems OK...
         wbxml.atag("AllDayEvent", (item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) ? "1" : "0");
 
         //Body
@@ -295,20 +354,41 @@ var Calendar = {
         }
 
         //Organizer
-        if (!isException) {
+        if (asversion != "16.1" && !isException) {
+            // not in EAS 16: [MS-ASCAL] 2.2.2.35 / 36
             if (item.organizer && item.organizer.commonName) wbxml.atag("OrganizerName", item.organizer.commonName);
             if (item.organizer && item.organizer.id) wbxml.atag("OrganizerEmail", cal.email.removeMailTo(item.organizer.id));
         }
 
         //DtStamp in UTC
-        wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
-
+        if (asversion != "16.1") {
+            // not in EAS 16: [MS-ASCAL] 2.2.2.18
+            wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
+        }
+        
         //EndTime in UTC
-        wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
-
+        // EAS 16 [MS-ASCAL] 2.2.2.1 -> no time component
+        if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+            wbxml.atag("EndTime",eas.tools.getIsoUtcString(item.endDate,false,true,true));
+        } else {
+            wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
+        }
+        
         //Location
-        wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
-
+        if (asversion != "16.1") {
+            // not in EAS 16: [MS-ASCAL] 2.2.2.27
+            wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
+        } else {    
+            // EAS 16 MS-AIRS 2.2.2.28
+            if (item.hasProperty("location")) {
+                wbxml.switchpage("AirSyncBase");
+                wbxml.otag("Location");
+                wbxml.atag("DisplayName", item.getProperty("location"));
+                wbxml.ctag();
+                wbxml.switchpage(syncdata.type);
+            }
+        }
+        
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
         let alarms = item.getAlarms({});
         if (alarms.length > 0) {
@@ -333,13 +413,25 @@ var Calendar = {
         wbxml.atag("Subject", (item.title) ? item.title : "");
 
         //StartTime in UTC
-        wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
+        // EAS 16 [MS-ASCAL] 2.2.2.1
+        if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
+            wbxml.atag("StartTime",eas.tools.getIsoUtcString(item.startDate,false,true,true)); 
+        } else {
+            wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
+        }
 
         //UID (limit to 300)
         //each TB event has an ID, which is used as EAS serverId - however there is a second UID in the ApplicationData
         //since we do not have two different IDs to use, we use the same ID
-        if (!isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
-            wbxml.atag("UID", item.id);
+        // EAS 16.1 MS-ASCAL 2.2.2.46 UID MUST NOT be present
+        if (asversion != "16.1") {
+            if (!isException) { //docs say it would be allowed in exception in 2.5, but it does not work, if present
+                wbxml.atag("UID", item.id);
+            }
+        } else {
+            // EAS 16.1 MS-ASCAL 2.2.2.13 optional ClientUid
+            //for some reason when defined Exchange Online rejects many change requests ... oh well .. since it is optional lets skip it ... 
+            //wbxml.atag("ClientUid", item.id);
         }
         //IMPORTANT in EAS v16 it is no longer allowed to send a UID
         //Only allowed in exceptions in v2.5
@@ -402,7 +494,9 @@ var Calendar = {
                 }
                 wbxml.ctag();
             } else {
-                wbxml.atag("Attendees");
+                if (asversion != "16.1") {
+                    wbxml.atag("Attendees"); 
+                }
             }
         }
 
@@ -428,3 +522,5 @@ var Calendar = {
         return wbxml.getBytes();
     }
 }
+// Export Calendar object so sync.js can use it
+eas.sync.Calendar = Calendar;
