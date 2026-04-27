@@ -1,43 +1,57 @@
 {
-  "applications": {
+  "manifest_version": 2,
+  "browser_specific_settings": {
     "gecko": {
       "id": "eas4tbsync@jobisoft.de",
-      "strict_min_version": "136.0",
-      "strict_max_version": "150.*"
+      "strict_min_version": "140.0"
     }
   },
-  "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "version": "4.17.2.ews.16.1",
+  "version": "5.0",
   "author": "John Bieling",
-  "homepage_url": "https://github.com/jobisoft/EAS-4-TbSync/",
+  "homepage_url": "https://github.com/jobisoft/EAS-4-TbSync",
   "default_locale": "en-US",
   "description": "__MSG_extensionDescription__",
   "icons": {
-    "32": "content/skin/eas32.png"
-  },
-  "background": {
-    "type": "module",
-    "scripts": ["background.js"]
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "64": "icons/icon-64.png"
   },
   "permissions": [
-    "notifications"
+    "storage",
+    "management",
+    "addressBooks",
+    "notifications",
+    "tabs",
+    "cookies",
+    "<all_urls>"
+  ],
+  "background": {
+    "type": "module",
+    "scripts": [
+      "background.mjs"
+    ]
+  },
+  "web_accessible_resources": [
+    "icons/icon-16.png",
+    "icons/icon-32.png",
+    "icons/icon-64.png"
   ],
   "experiment_apis": {
-    "LegacyHelper": {
-      "schema": "api/LegacyHelper/schema.json",
+    "LegacyPrefs": {
+      "schema": "experiments/LegacyPrefs/schema.json",
       "parent": {
         "scopes": ["addon_parent"],
-        "paths": [["LegacyHelper"]],
-        "script": "api/LegacyHelper/implementation.js"
+        "paths": [["LegacyPrefs"]],
+        "script": "experiments/LegacyPrefs/implementation.js"
       }
     },
-    "EAS4TbSync": {
-      "schema": "api/EAS4TbSync/schema.json",
+    "LegacyLoginManager": {
+      "schema": "experiments/LegacyLoginManager/schema.json",
       "parent": {
         "scopes": ["addon_parent"],
-        "paths": [["EAS4TbSync"]],
-        "script": "api/EAS4TbSync/implementation.js"
+        "paths": [["LegacyLoginManager"]],
+        "script": "experiments/LegacyLoginManager/implementation.js"
       }
     }
   }

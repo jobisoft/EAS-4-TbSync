@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title data-i18n-content="config.title"></title>
+    <link rel="stylesheet" href="../shared/dropdown.css" />
+    <script type="module" src="config.mjs"></script>
+    <style>
+      :root {
+        --bg-page: #fff;
+        --bg-card: #fff;
+        --bg-input-disabled: #f4f4f6;
+        --bg-display: #f8f8f9;
+        --text-primary: #222;
+        --text-secondary: #555;
+        --text-tertiary: #666;
+        --text-body: #333;
+        --border-input: #ccc;
+        --border-subtle: #ececee;
+        --accent: #2a7fd4;
+        --accent-hover: #1a6fc4;
+        --btn-secondary-bg: #e5e5e7;
+        --warning-bg: #fff6d9;
+        --warning-accent: #e8b923;
+        --warning-text: #5a4200;
+        --error-bg: #ffe0e0;
+        --error-accent: #c43b3b;
+        --error-text: #7a2222;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-page: #1e1f21;
+          --bg-card: #2b2d30;
+          --bg-input-disabled: #2a2c2f;
+          --bg-display: #26282b;
+          --text-primary: #e8e9eb;
+          --text-secondary: #b3b5ba;
+          --text-tertiary: #9498a0;
+          --text-body: #d6d8dc;
+          --border-input: #4a4d52;
+          --border-subtle: #3a3c40;
+          --accent: #5fa6e8;
+          --accent-hover: #7ab5ec;
+          --btn-secondary-bg: #3a3c40;
+          --warning-bg: #3d3319;
+          --warning-accent: #d9b74e;
+          --warning-text: #e6c76c;
+          --error-bg: #3f1f1f;
+          --error-accent: #e66a6a;
+          --error-text: #f3a5a5;
+        }
+      }
+
+      body {
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        color: var(--text-primary);
+        background: var(--bg-page);
+        margin: 0;
+        padding: 20px 24px;
+      }
+      h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+
+      .readonly-banner {
+        display: none;
+        background: var(--warning-bg);
+        border-left: 3px solid var(--warning-accent);
+        padding: 8px 12px;
+        font-size: 12px;
+        color: var(--warning-text);
+        border-radius: 3px;
+        margin-bottom: 16px;
+      }
+      .readonly-banner.visible { display: block; }
+
+      .section {
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border-subtle);
+      }
+      .section:first-of-type {
+        margin-top: 6px;
+        padding-top: 0;
+        border-top: none;
+      }
+      .section h3 {
+        margin: 0 0 10px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--text-tertiary);
+      }
+
+      .field { display: flex; flex-direction: column; margin-bottom: 10px; }
+      .field label {
+        font-size: 11px; color: var(--text-secondary); text-transform: uppercase;
+        letter-spacing: .04em; margin-bottom: 4px;
+      }
+      .field input[type="text"],
+      .field input[type="url"],
+      .field input[type="password"],
+      .field select {
+        padding: 5px 8px; border: 1px solid var(--border-input); border-radius: 4px; font-size: 13px;
+        background: var(--bg-card); color: var(--text-primary);
+      }
+      .field input:disabled,
+      .field select:disabled { background: var(--bg-input-disabled); color: var(--text-tertiary); }
+      .field .display {
+        padding: 5px 8px; border: 1px solid var(--border-subtle); border-radius: 4px;
+        background: var(--bg-display); color: var(--text-body); font-size: 13px;
+        min-height: 17px;
+      }
+      .field .display.mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+      }
+      .field .hint {
+        font-size: 11px; color: var(--text-tertiary); margin-top: 4px; line-height: 1.4;
+      }
+
+      .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; }
+      .checkbox-row input { margin-top: 2px; flex-shrink: 0; }
+      .checkbox-row .checkbox-body { display: flex; flex-direction: column; gap: 2px; }
+      .checkbox-row .label { font-size: 13px; color: var(--text-body); }
+      .checkbox-row .hint { font-size: 11px; color: var(--text-tertiary); line-height: 1.4; }
+      .checkbox-row label { margin: 0; padding: 0; }
+
+      .actions { display: flex; align-items: center; gap: 8px; margin-top: 24px; }
+      .actions .right { display: flex; gap: 8px; margin-left: auto; }
+      button.primary {
+        padding: 6px 14px; background: var(--accent); color: #fff; border: none;
+        border-radius: 4px; cursor: pointer; font-size: 13px;
+      }
+      button.primary:hover { background: var(--accent-hover); }
+      button.primary:disabled { opacity: .5; cursor: not-allowed; }
+      button.secondary {
+        padding: 6px 14px; background: var(--btn-secondary-bg); color: var(--text-primary); border: none;
+        border-radius: 4px; cursor: pointer; font-size: 13px;
+      }
+      button[hidden] { display: none; }
+
+      .error {
+        margin-top: 10px; padding: 8px 12px; background: var(--error-bg);
+        border-left: 3px solid var(--error-accent); color: var(--error-text); font-size: 12px;
+        border-radius: 3px; display: none;
+      }
+      .error.visible { display: block; }
+
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <h2 id="title" data-i18n-content="config.title"></h2>
+
+    <div id="readonly-banner" class="readonly-banner"></div>
+
+    <!-- ── Account ─────────────────────────────────────────────────────── -->
+    <div class="section">
+      <h3 data-i18n-content="config.section.account"></h3>
+
+      <div class="field">
+        <label data-i18n-content="config.label"></label>
+        <input id="account-name" type="text" />
+      </div>
+
+      <div class="field">
+        <label data-i18n-content="config.account.accountType"></label>
+        <div id="account-type"></div>
+      </div>
+
+      <div class="field" id="oauth-identity-row" hidden>
+        <label data-i18n-content="config.account.signedInAs"></label>
+        <div id="oauth-identity" class="display"></div>
+      </div>
+    </div>
+
+    <!-- ── Connection (basic auth only) ────────────────────────────────── -->
+    <div class="section" id="connection-section" hidden>
+      <h3 data-i18n-content="config.section.connection"></h3>
+
+      <div class="field">
+        <label data-i18n-content="config.server"></label>
+        <input id="server" type="url" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label data-i18n-content="config.user"></label>
+        <input id="user" type="text" autocomplete="username" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label data-i18n-content="config.password"></label>
+        <input id="password" type="password" autocomplete="new-password" spellcheck="false" />
+      </div>
+    </div>
+
+    <!-- ── Protocol ────────────────────────────────────────────────────── -->
+    <div class="section">
+      <h3 data-i18n-content="config.section.protocol"></h3>
+
+      <div class="field">
+        <label data-i18n-content="config.protocol.asVersion"></label>
+        <select id="as-version-selected"></select>
+        <span class="hint" id="as-version-hint"></span>
+      </div>
+
+      <div class="field">
+        <label data-i18n-content="config.protocol.deviceId"></label>
+        <div id="device-id" class="display mono"></div>
+      </div>
+
+      <div class="checkbox-row">
+        <input id="provision" type="checkbox" />
+        <span class="checkbox-body">
+          <label for="provision" class="label" data-i18n-content="config.protocol.provision"></label>
+          <span class="hint" data-i18n-content="config.protocol.provision.hint"></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Contacts ────────────────────────────────────────────────────── -->
+    <div class="section">
+      <h3 data-i18n-content="config.section.contacts"></h3>
+
+      <div class="checkbox-row">
+        <input id="contacts-display-override" type="checkbox" />
+        <span class="checkbox-body">
+          <label for="contacts-display-override" class="label" data-i18n-content="config.contacts.displayOverride"></label>
+        </span>
+      </div>
+
+      <div class="field">
+        <label data-i18n-content="config.contacts.nameSeparator"></label>
+        <select id="contacts-name-separator">
+          <option value="10" data-i18n-content="config.contacts.nameSeparator.linebreak"></option>
+          <option value="44" data-i18n-content="config.contacts.nameSeparator.comma"></option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── Calendar ────────────────────────────────────────────────────── -->
+    <div class="section">
+      <h3 data-i18n-content="config.section.calendar"></h3>
+
+      <div class="field">
+        <label data-i18n-content="config.calendar.syncLimit"></label>
+        <select id="calendar-sync-limit">
+          <option value="0" data-i18n-content="config.calendar.syncLimit.all"></option>
+          <option value="4" data-i18n-content="config.calendar.syncLimit.2weeks"></option>
+          <option value="5" data-i18n-content="config.calendar.syncLimit.1month"></option>
+          <option value="6" data-i18n-content="config.calendar.syncLimit.3months"></option>
+          <option value="7" data-i18n-content="config.calendar.syncLimit.6months"></option>
+        </select>
+      </div>
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <div class="actions">
+      <div class="right">
+        <button id="btn-save"   class="primary"   data-i18n-content="config.save"></button>
+        <button id="btn-cancel" class="secondary"></button>
+      </div>
+    </div>
+  </body>
+</html>

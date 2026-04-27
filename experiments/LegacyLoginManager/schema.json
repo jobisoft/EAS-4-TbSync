@@ -1,0 +1,33 @@
+[
+  {
+    "namespace": "LegacyLoginManager",
+    "functions": [
+      {
+        "name": "getLoginInfo",
+        "type": "function",
+        "async": true,
+        "description": "Look up a single nsILoginManager entry by (origin, httpRealm, username) and return the stored password (or null if no match).",
+        "parameters": [
+          {
+            "name": "query",
+            "type": "object",
+            "properties": {
+              "origin": {
+                "type": "string",
+                "description": "Bare hostname used as the login origin in legacy TbSync, e.g. 'outlook.office365.com'."
+              },
+              "httpRealm": {
+                "type": "string",
+                "description": "Login realm, e.g. 'TbSync/EAS'."
+              },
+              "username": {
+                "type": "string",
+                "description": "Username to match within the realm."
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

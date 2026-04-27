@@ -1,0 +1,103 @@
+/* Reusable rich dropdown - used by setup.html and config.html.
+ * Themable via the same CSS variables as the parent dialog
+ * (--bg-card, --border-card, --border-card-active, --text-primary,
+ *  --text-tertiary, --bg-card-hover, --bg-card-active). */
+
+.dropdown {
+  position: relative;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  font: inherit;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.dropdown-trigger:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+}
+.dropdown[data-state="open"] .dropdown-trigger {
+  border-color: var(--border-card-active);
+}
+.dropdown-trigger:disabled {
+  cursor: default;
+  opacity: 1;
+  background: var(--bg-card);
+}
+.dropdown.locked .dropdown-trigger {
+  background: var(--bg-input-disabled, var(--bg-card));
+  color: var(--text-tertiary);
+}
+.dropdown.locked .dropdown-caret { display: none; }
+
+.dropdown-current {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.dropdown-current .dropdown-label { font-weight: 500; }
+.dropdown-current .dropdown-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+.dropdown.locked .dropdown-current .dropdown-label { color: var(--text-tertiary); }
+
+.dropdown-caret {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  transition: transform 0.12s ease;
+}
+.dropdown[data-state="open"] .dropdown-caret { transform: rotate(180deg); }
+
+.dropdown-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card-active);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.dropdown-panel li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dropdown-panel li .label { font-weight: 500; }
+.dropdown-panel li .hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+.dropdown-panel li.focused,
+.dropdown-panel li:focus {
+  outline: none;
+  background: var(--bg-card-hover);
+}
+.dropdown-panel li.selected {
+  background: var(--bg-card-active);
+}

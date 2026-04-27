@@ -1,0 +1,231 @@
+{
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "TbSync용 공급자 부가기능으로, Exchange ActiveSync 서버와 연락처, 일정, 작업을 동기화합니다."
+  },
+
+  "folder.trashPrefix": {
+    "message": "휴지통"
+  },
+
+  "setup.title": {
+    "message": "Exchange ActiveSync 계정 추가 (EAS)"
+  },
+  "setup.intro": {
+    "message": "추가하려는 Exchange ActiveSync 계정 유형을 선택하세요."
+  },
+
+  "setup.accountType": {
+    "message": "계정 유형"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 비즈니스"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Microsoft 365 회사/직장 테넌트입니다."
+  },
+  "setup.accountType.personalMs": {
+    "message": "개인 Microsoft 계정"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com 및 기타 일반 사용자용 Microsoft 계정입니다."
+  },
+  "setup.accountType.custom": {
+    "message": "사용자 정의 EAS 서버"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "모든 EAS 호환 서버. 사용자 이름과 비밀번호 인증을 사용합니다."
+  },
+
+  "setup.oauth.email": {
+    "message": "Microsoft 계정 이메일"
+  },
+  "setup.oauth.signIn": {
+    "message": "Microsoft로 로그인"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Microsoft 계정 이메일을 입력하세요."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "로그인이 취소되었습니다."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "로그인에 실패했습니다"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "로그인 실패: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "계정 라벨"
+  },
+  "setup.server": {
+    "message": "서버 URL"
+  },
+  "setup.serverHint": {
+    "message": "예: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "사용자 이름"
+  },
+  "setup.password": {
+    "message": "비밀번호"
+  },
+  "setup.authButton": {
+    "message": "계정 만들기"
+  },
+  "setup.cancelButton": {
+    "message": "취소"
+  },
+  "setup.error.labelRequired": {
+    "message": "계정 라벨을 입력하세요."
+  },
+  "setup.error.serverRequired": {
+    "message": "서버 URL을 입력하세요."
+  },
+  "setup.error.userRequired": {
+    "message": "사용자 이름을 입력하세요."
+  },
+  "setup.error.passwordRequired": {
+    "message": "비밀번호를 입력하세요."
+  },
+  "setup.error.missingToken": {
+    "message": "설정 토큰이 없습니다. TbSync를 통해 이 창을 여세요."
+  },
+  "setup.error.createFailed": {
+    "message": "계정을 생성할 수 없습니다"
+  },
+
+  "config.title": {
+    "message": "Exchange 계정 설정"
+  },
+  "config.label": {
+    "message": "계정 라벨"
+  },
+  "config.server": {
+    "message": "서버 URL"
+  },
+  "config.user": {
+    "message": "사용자 이름"
+  },
+  "config.password": {
+    "message": "비밀번호 (현재 비밀번호를 유지하려면 비워 두세요)"
+  },
+  "config.readOnlyBanner": {
+    "message": "동기화 오류를 방지하기 위해 계정이 활성화된 동안에는 설정을 편집할 수 없습니다."
+  },
+  "config.save": {
+    "message": "저장"
+  },
+  "config.cancel": {
+    "message": "취소"
+  },
+  "config.close": {
+    "message": "닫기"
+  },
+  "config.error.missingAccountId": {
+    "message": "계정 식별자가 없습니다."
+  },
+  "config.error.loadFailed": {
+    "message": "계정을 불러오지 못했습니다."
+  },
+  "config.error.accountNameRequired": {
+    "message": "계정 이름은 필수입니다."
+  },
+  "config.error.saveFailed": {
+    "message": "저장 실패"
+  },
+
+  "config.section.account": {
+    "message": "계정"
+  },
+  "config.section.connection": {
+    "message": "연결"
+  },
+  "config.section.protocol": {
+    "message": "프로토콜"
+  },
+  "config.section.contacts": {
+    "message": "연락처"
+  },
+  "config.section.calendar": {
+    "message": "일정"
+  },
+
+  "config.account.accountType": {
+    "message": "계정 유형"
+  },
+  "config.account.signedInAs": {
+    "message": "로그인 계정"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "ActiveSync 버전"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "자동 (서버가 선호하는 버전 사용)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "현재 협상된 버전: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "기기 ID"
+  },
+  "config.protocol.provision": {
+    "message": "프로비저닝 강제 적용"
+  },
+  "config.protocol.provision.hint": {
+    "message": "일부 서버(예: Kerio)는 다른 명령보다 먼저 프로비저닝을 보내야 합니다. Microsoft Exchange 및 Microsoft 365를 포함한 대부분의 서버는 필요할 때 자동으로 요청하므로 수동으로 활성화할 필요가 없습니다."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "표시 이름을 \"이름\" + \"성\"으로 재정의"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "여러 줄 이름 구분 기호"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "줄 바꿈"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "쉼표"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "동기화 기간"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "모든 일정"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "지난 2주"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "지난 1개월"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "지난 3개월"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "지난 6개월"
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "잘못된 ActiveSync 버전 선택입니다."
+  },
+
+  "warning.reauthFailed": {
+    "message": "재인증이 완료되지 않았습니다. \"다시 로그인\"을 클릭하여 다시 시도하세요."
+  }
+}

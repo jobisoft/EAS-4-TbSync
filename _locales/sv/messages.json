@@ -1,0 +1,231 @@
+{
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Leverantörstillägg för TbSync som synkroniserar kontakter, kalendrar och uppgifter med en Exchange ActiveSync-server."
+  },
+
+  "folder.trashPrefix": {
+    "message": "Papperskorg"
+  },
+
+  "setup.title": {
+    "message": "Lägg till ett Exchange ActiveSync-konto (EAS)"
+  },
+  "setup.intro": {
+    "message": "Välj vilken typ av Exchange ActiveSync-konto du vill lägga till."
+  },
+
+  "setup.accountType": {
+    "message": "Kontotyp"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Microsoft 365 företags-/arbetstenant."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Personligt Microsoft-konto"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com och andra Microsoft-konton för konsumenter."
+  },
+  "setup.accountType.custom": {
+    "message": "Anpassad EAS-server"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Valfri EAS-kompatibel server. Autentisering med användarnamn och lösenord."
+  },
+
+  "setup.oauth.email": {
+    "message": "E-postadress för Microsoft-konto"
+  },
+  "setup.oauth.signIn": {
+    "message": "Logga in med Microsoft"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Ange din e-postadress för Microsoft-kontot."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "Inloggningen avbröts."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Inloggningen misslyckades"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Inloggningen misslyckades: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Kontoetikett"
+  },
+  "setup.server": {
+    "message": "Server-URL"
+  },
+  "setup.serverHint": {
+    "message": "Exempel: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Användarnamn"
+  },
+  "setup.password": {
+    "message": "Lösenord"
+  },
+  "setup.authButton": {
+    "message": "Skapa konto"
+  },
+  "setup.cancelButton": {
+    "message": "Avbryt"
+  },
+  "setup.error.labelRequired": {
+    "message": "Ange en kontoetikett."
+  },
+  "setup.error.serverRequired": {
+    "message": "Ange server-URL."
+  },
+  "setup.error.userRequired": {
+    "message": "Ange användarnamn."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Ange lösenord."
+  },
+  "setup.error.missingToken": {
+    "message": "Saknar installations-token. Öppna detta fönster via TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "Det gick inte att skapa kontot"
+  },
+
+  "config.title": {
+    "message": "Inställningar för Exchange-konto"
+  },
+  "config.label": {
+    "message": "Kontoetikett"
+  },
+  "config.server": {
+    "message": "Server-URL"
+  },
+  "config.user": {
+    "message": "Användarnamn"
+  },
+  "config.password": {
+    "message": "Lösenord (lämna tomt för att behålla det nuvarande)"
+  },
+  "config.readOnlyBanner": {
+    "message": "För att undvika synkroniseringsfel kan inställningarna inte redigeras medan kontot är aktiverat."
+  },
+  "config.save": {
+    "message": "Spara"
+  },
+  "config.cancel": {
+    "message": "Avbryt"
+  },
+  "config.close": {
+    "message": "Stäng"
+  },
+  "config.error.missingAccountId": {
+    "message": "Saknar kontoidentifierare."
+  },
+  "config.error.loadFailed": {
+    "message": "Det gick inte att läsa in kontot."
+  },
+  "config.error.accountNameRequired": {
+    "message": "Kontonamn krävs."
+  },
+  "config.error.saveFailed": {
+    "message": "Det gick inte att spara"
+  },
+
+  "config.section.account": {
+    "message": "Konto"
+  },
+  "config.section.connection": {
+    "message": "Anslutning"
+  },
+  "config.section.protocol": {
+    "message": "Protokoll"
+  },
+  "config.section.contacts": {
+    "message": "Kontakter"
+  },
+  "config.section.calendar": {
+    "message": "Kalender"
+  },
+
+  "config.account.accountType": {
+    "message": "Kontotyp"
+  },
+  "config.account.signedInAs": {
+    "message": "Inloggad som"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "ActiveSync-version"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automatisk (använd serverns föredragna version)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Aktuell förhandlad version: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "Enhets-ID"
+  },
+  "config.protocol.provision": {
+    "message": "Tvinga provisioning"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Vissa servrar (t.ex. Kerio) kräver att provisioning skickas innan något annat kommando. De flesta servrar - inklusive Microsoft Exchange och Microsoft 365 - begär det automatiskt vid behov; du behöver inte aktivera detta manuellt för dem."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Åsidosätt visningsnamnet med \"Förnamn\" + \"Efternamn\""
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Avgränsare för flerradsnamn"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Radbrytning"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Komma"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Synkroniseringsfönster"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Alla händelser"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Senaste 2 veckorna"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Senaste månaden"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Senaste 3 månaderna"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Senaste 6 månaderna"
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Ogiltigt val av ActiveSync-version."
+  },
+
+  "warning.reauthFailed": {
+    "message": "Återautentiseringen slutfördes inte. Klicka på \"Logga in igen\" för att försöka igen."
+  }
+}
