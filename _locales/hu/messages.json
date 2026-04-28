@@ -3,88 +3,88 @@
     "message": "EAS-4-TbSync"
   },
   "extensionDescription": {
-    "message": "Provider add-on for TbSync that synchronizes contacts, calendars, and tasks with an Exchange ActiveSync server."
+    "message": "Szolgáltató kiegészítő a TbSynchez, amely szinkronizálja a névjegyeket, a naptárakat és a feladatokat egy Exchange ActiveSync-kiszolgálóval."
   },
   "folder.trashPrefix": {
-    "message": "Trash"
+    "message": "Kuka"
   },
   "setup.title": {
-    "message": "Add an Exchange ActiveSync account (EAS)"
+    "message": "Exchange ActiveSync-fiók (EAS) hozzáadása"
   },
   "setup.intro": {
-    "message": "Choose the type of Exchange ActiveSync account you want to add."
+    "message": "Válassza ki a hozzáadandó Exchange ActiveSync-fiók típusát."
   },
   "setup.accountType": {
-    "message": "Account type"
+    "message": "Fióktípus"
   },
   "setup.accountType.office365": {
     "message": "Office 365 Business"
   },
   "setup.accountType.office365.hint": {
-    "message": "Microsoft 365 corporate / work tenants."
+    "message": "Microsoft 365 vállalati / munkahelyi előfizetők."
   },
   "setup.accountType.personalMs": {
-    "message": "Personal Microsoft account"
+    "message": "Személyes Microsoft-fiók"
   },
   "setup.accountType.personalMs.hint": {
-    "message": "outlook.com, hotmail.com, live.com and other consumer Microsoft accounts."
+    "message": "outlook.com, hotmail.com, live.com és más végfelhasználói Microsoft-fiókok."
   },
   "setup.accountType.auto": {
-    "message": "Auto-detect"
+    "message": "Automatikus észlelés"
   },
   "setup.accountType.auto.hint": {
-    "message": "Look up the EAS server URL from your email address. Works for most Exchange and EAS-compatible providers."
+    "message": "EAS kiszolgáló webcímének kikeresése az e-mail-címe alapján. A legtöbb Exchange- és EAS-kompatibilis szolgáltatóval működik."
   },
   "setup.accountType.custom": {
-    "message": "Custom EAS server"
+    "message": "Egyéni EAS-kiszolgáló"
   },
   "setup.accountType.custom.hint": {
-    "message": "Any EAS-compatible server. Username and password authentication."
+    "message": "Bármilyen EAS-kompatibilis kiszolgáló. Felhasználónevet és jelszót használó hitelesítés."
   },
   "setup.auto.email": {
-    "message": "Email address"
+    "message": "E-mail-cím"
   },
   "setup.auto.discoverButton": {
-    "message": "Discover"
+    "message": "Felfedezés"
   },
   "setup.auto.status.searching": {
-    "message": "Looking up server settings…"
+    "message": "Kiszolgálóbeállítások keresése…"
   },
   "setup.auto.error.title": {
-    "message": "We couldn’t find an EAS server"
+    "message": "Nem található EAS-kiszolgáló"
   },
   "setup.auto.error.auth": {
-    "message": "The username or password was rejected. Check spelling, or fall back to “Custom EAS server”."
+    "message": "A felhasználónév vagy jelszó el lett utasítva. Ellenőrizze, hogy helyesen írta-e be, vagy válassza az „Egyéni EAS-kiszolgáló” lehetőséget."
   },
   "setup.auto.error.network": {
-    "message": "Could not reach the discovery endpoints. Check your internet connection."
+    "message": "Nem sikerült elérni a felfedezési végpontokat. Ellenőrizze az internetkapcsolatot."
   },
   "setup.auto.error.noServer": {
-    "message": "Discovery completed but no EAS server was advertised. The server may not support auto-detect."
+    "message": "A felfedezés befejeződött, de nem talált EAS-kiszolgálót. Lehet, hogy a kiszolgáló nem támogatja az automatikus észlelést."
   },
   "setup.auto.error.tried": {
-    "message": "Endpoints we tried:"
+    "message": "Kipróbált végpontok:"
   },
   "setup.auto.error.fallback": {
-    "message": "If your provider requires manual configuration, choose “Custom EAS server”."
+    "message": "Ha a szolgáltató kézi konfigurációt igényel, válassza az „Egyéni EAS-kiszolgáló” lehetőséget."
   },
   "setup.oauth.email": {
-    "message": "Microsoft account email"
+    "message": "Microsoft-fiók e-mail-címe"
   },
   "setup.oauth.signIn": {
-    "message": "Sign in with Microsoft"
+    "message": "Bejelentkezés a Microsofttal"
   },
   "setup.oauth.error.emailRequired": {
-    "message": "Please enter your Microsoft account email."
+    "message": "Adja meg a Microsoft-fiókja e-mail-címét."
   },
   "setup.oauth.error.cancelled": {
-    "message": "Sign-in was cancelled."
+    "message": "Bejelentkezés megszakítva."
   },
   "setup.oauth.error.signInFailed": {
-    "message": "Sign-in failed"
+    "message": "Sikertelen bejelentkezés"
   },
   "setup.oauth.error.signInFailedDetail": {
-    "message": "Sign-in failed: $DETAIL$",
+    "message": "Sikertelen bejelentkezés: $DETAIL$",
     "placeholders": {
       "detail": {
         "content": "$1",
@@ -93,112 +93,112 @@
     }
   },
   "setup.accountName": {
-    "message": "Account label"
+    "message": "Fiókcímke"
   },
   "setup.server": {
-    "message": "Server URL"
+    "message": "Kiszolgáló webcíme"
   },
   "setup.serverHint": {
-    "message": "Example: https://mail.example.com/Microsoft-Server-ActiveSync"
+    "message": "Példa: https://mail.example.com/Microsoft-Server-ActiveSync"
   },
   "setup.user": {
-    "message": "Username"
+    "message": "Felhasználónév"
   },
   "setup.password": {
-    "message": "Password"
+    "message": "Jelszó"
   },
   "setup.authButton": {
-    "message": "Create account"
+    "message": "Fiók létrehozása"
   },
   "setup.cancelButton": {
-    "message": "Cancel"
+    "message": "Mégse"
   },
   "setup.error.labelRequired": {
-    "message": "Please enter an account label."
+    "message": "Adjon meg egy fiókcímkét."
   },
   "setup.error.serverRequired": {
-    "message": "Please enter the server URL."
+    "message": "Adja meg a kiszolgáló webcímét."
   },
   "setup.error.userRequired": {
-    "message": "Please enter the username."
+    "message": "Adja meg a felhasználónevet."
   },
   "setup.error.passwordRequired": {
-    "message": "Please enter the password."
+    "message": "Adja meg a jelszót."
   },
   "setup.error.missingToken": {
-    "message": "Missing setup token. Open this window through TbSync."
+    "message": "Hiányzó beállítási token. Nyissa meg ezt az ablakot a TbSyncen keresztül."
   },
   "setup.error.createFailed": {
-    "message": "Could not create the account"
+    "message": "Nem sikerült a fiók létrehozása"
   },
   "config.title": {
-    "message": "Exchange account settings"
+    "message": "Exchange-fiók beállításai"
   },
   "config.label": {
-    "message": "Account label"
+    "message": "Fiókcímke"
   },
   "config.server": {
-    "message": "Server URL"
+    "message": "Kiszolgáló webcíme"
   },
   "config.user": {
-    "message": "Username"
+    "message": "Felhasználónév"
   },
   "config.password": {
-    "message": "Password (leave blank to keep the current one)"
+    "message": "Jelszó (hagyja üresen a jelenlegi megtartásához)"
   },
   "config.readOnlyBanner": {
-    "message": "To prevent synchronization errors, settings cannot be edited while the account is enabled."
+    "message": "A szinkronizálási hibák elkerülése érdekében a beállítások addig nem szerkeszthetők, amíg a fiók engedélyezve van."
   },
   "config.save": {
-    "message": "Save"
+    "message": "Mentés"
   },
   "config.cancel": {
-    "message": "Cancel"
+    "message": "Mégse"
   },
   "config.close": {
-    "message": "Close"
+    "message": "Bezárás"
   },
   "config.error.missingAccountId": {
-    "message": "Missing account identifier."
+    "message": "Hiányzó fiókazonosító."
   },
   "config.error.loadFailed": {
-    "message": "Failed to load account."
+    "message": "Nem sikerült a fiók betöltése."
   },
   "config.error.accountNameRequired": {
-    "message": "Account name is required."
+    "message": "A fióknév megadása kötelező."
   },
   "config.error.saveFailed": {
-    "message": "Save failed"
+    "message": "Sikertelen mentés"
   },
   "config.section.account": {
-    "message": "Account"
+    "message": "Fiók"
   },
   "config.section.connection": {
-    "message": "Connection"
+    "message": "Kapcsolat"
   },
   "config.section.protocol": {
-    "message": "Protocol"
+    "message": "Protokoll"
   },
   "config.section.contacts": {
-    "message": "Contacts"
+    "message": "Névjegyek"
   },
   "config.section.calendar": {
-    "message": "Calendar"
+    "message": "Naptár"
   },
   "config.account.accountType": {
-    "message": "Account type"
+    "message": "Fióktípus"
   },
   "config.account.signedInAs": {
-    "message": "Signed in as"
+    "message": "Bejelentkezve, mint"
   },
   "config.protocol.asVersion": {
-    "message": "ActiveSync version"
+    "message": "ActiveSync verzió"
   },
   "config.protocol.asVersion.auto": {
-    "message": "Automatic (use server's preferred version)"
+    "message": "Automatikus (kiszolgáló által előnyben részesített verzió)"
   },
   "config.protocol.asVersion.negotiatedHint": {
-    "message": "Currently negotiated: $VERSION$",
+    "message": "Jelenlegi megállapodás: $VERSION$",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -207,54 +207,105 @@
     }
   },
   "config.protocol.deviceId": {
-    "message": "Device ID"
+    "message": "Eszközazonosító"
   },
   "config.protocol.provision": {
-    "message": "Enforce provisioning"
+    "message": "Kiépítés betartatása"
   },
   "config.protocol.provision.hint": {
-    "message": "Some servers (e.g. Kerio) require provisioning to be sent before any other command. Most servers - including Microsoft Exchange and Microsoft 365 - request it automatically when needed; you do not need to enable this manually for them."
+    "message": "Egyes kiszolgálók (például a Kerio) megkövetelik, hogy a kiépítés minden egyéb parancs előtt legyen kiadva. A legtöbb kiszolgáló – köztük a Microsoft Exchange és a Microsoft 365 is – ezt szükség szerint automatikusan kéri, így ezt nem kell kézileg engedélyeznie."
   },
   "config.contacts.displayOverride": {
-    "message": "Override Display Name with \"First Name\" + \"Second Name\""
+    "message": "Megjelenítési név felülbírálása ezzel: „utónév” + „második utónév\""
   },
   "config.contacts.nameSeparator": {
-    "message": "Multi-line name separator"
+    "message": "Többsoros név elválasztója"
   },
   "config.contacts.nameSeparator.linebreak": {
-    "message": "Line break"
+    "message": "Sortörés"
   },
   "config.contacts.nameSeparator.comma": {
-    "message": "Comma"
+    "message": "Vessző"
   },
   "config.calendar.syncLimit": {
-    "message": "Sync window"
+    "message": "Szinkronizálási ablak"
   },
   "config.calendar.syncLimit.all": {
-    "message": "All events"
+    "message": "Összes esemény"
   },
   "config.calendar.syncLimit.2weeks": {
-    "message": "Last 2 weeks"
+    "message": "Utolsó 2 hét"
   },
   "config.calendar.syncLimit.1month": {
-    "message": "Last month"
+    "message": "Utolsó hónap"
   },
   "config.calendar.syncLimit.3months": {
-    "message": "Last 3 months"
+    "message": "Utolsó 3 hónap"
   },
   "config.calendar.syncLimit.6months": {
-    "message": "Last 6 months"
+    "message": "Utolsó 6 hónap"
   },
   "config.calendar.syncRecurrence": {
-    "message": "Sync recurring events / tasks and exceptions"
+    "message": "Ismétlődő események / feladatok és kivételek szinkronizálása"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental — off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
+    "message": "Experimental - off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
   "config.error.invalidAsVersion": {
-    "message": "Invalid ActiveSync version selection."
+    "message": "Érvénytelen ActiveSync verzió kiválasztva."
   },
   "warning.reauthFailed": {
-    "message": "Re-authentication did not complete. Click \"Sign in again\" to retry."
+    "message": "Az újrahitelesítés nem fejeződött be. Kattintson a „Bejelentkezés újra” lehetőségre."
+  },
+  "options.title": {
+    "message": "EAS-4-TbSync - Advanced settings"
+  },
+  "options.intro": {
+    "message": "These settings affect every EAS account in this profile. The defaults work for almost everyone, only change a value if you have a specific reason to. Leave a field empty to fall back to the bundled default."
+  },
+  "options.section.network": {
+    "message": "Network"
+  },
+  "options.section.sync": {
+    "message": "Sync"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Connection timeout (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maximum time to wait for a response from the EAS server before giving up. Increase this if you sync over slow or unreliable links and see frequent timeouts. Default: 90000 ms (90 seconds)."
+  },
+  "options.useragent": {
+    "message": "User-Agent header"
+  },
+  "options.useragent.hint": {
+    "message": "HTTP User-Agent string sent with every EAS request. A few servers refuse the default and require a specific value to allow the connection. Default: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Device type"
+  },
+  "options.devicetype.hint": {
+    "message": "EAS DeviceType value sent in the request URL. A few servers reject unknown device types. Default: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Items per sync batch"
+  },
+  "options.maxitems.hint": {
+    "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. Default: 25."
+  },
+  "options.mstodo": {
+    "message": "Microsoft To Do compatibility mode"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publishes tasks with a date-only due date and no start date, so reminders render at midnight. When enabled, an incoming task with a reminder is rewritten so its start and due date both equal the reminder time, and the reminder fires exactly when the task is due. Only enable this when encountering issues and trying an alternative to the default behavior."
+  },
+  "options.clientid": {
+    "message": "Custom OAuth client ID"
+  },
+  "options.clientid.hint": {
+    "message": "Microsoft Entra Client ID used when signing in to Microsoft accounts. Leave empty to use the default client ID registered by John Bieling (author of the EAS provider)."
   }
 }
