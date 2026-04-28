@@ -220,7 +220,7 @@
     "message": "Forzar el aprovisionamiento"
   },
   "config.protocol.provision.hint": {
-    "message": "Algunos servidores (p. ej. Kerio) exigen enviar el aprovisionamiento antes de cualquier otra orden. La mayoría de servidores —incluidos Microsoft Exchange y Microsoft 365— lo solicitan automáticamente cuando es necesario; no es necesario activarlo manualmente para ellos."
+    "message": "Algunos servidores (p. ej. Kerio) exigen enviar el aprovisionamiento antes de cualquier otra orden. La mayoría de servidores -incluidos Microsoft Exchange y Microsoft 365- lo solicitan automáticamente cuando es necesario; no es necesario activarlo manualmente para ellos."
   },
 
   "config.contacts.displayOverride": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "La nueva autenticación no se completó. Pulse «Iniciar sesión de nuevo» para reintentarlo."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Configuración avanzada"
+  },
+  "options.intro": {
+    "message": "Estos ajustes afectan a todas las cuentas EAS de este perfil. Los valores predeterminados son adecuados para casi todos los usuarios — modifique un valor solo si tiene una razón específica. Deje un campo vacío para volver al valor predeterminado incorporado."
+  },
+  "options.section.network": {
+    "message": "Red"
+  },
+  "options.section.sync": {
+    "message": "Sincronización"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Tiempo de espera de conexión (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Tiempo máximo de espera de una respuesta del servidor EAS antes de cancelar. Aumente este valor si sincroniza a través de conexiones lentas o poco fiables y observa tiempos de espera frecuentes. Predeterminado: 90000 ms (90 segundos)."
+  },
+  "options.useragent": {
+    "message": "Cabecera User-Agent"
+  },
+  "options.useragent.hint": {
+    "message": "Cadena HTTP User-Agent enviada con cada solicitud EAS. Algunos servidores rechazan el valor predeterminado y requieren un valor específico (por ejemplo, un UA de Microsoft Outlook) para permitir la conexión. Predeterminado: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Tipo de dispositivo"
+  },
+  "options.devicetype.hint": {
+    "message": "Valor EAS DeviceType enviado en la URL de la solicitud. Algunos servidores rechazan tipos de dispositivo desconocidos — pruebe un valor como WindowsOutlook15 o iPhone si su proveedor no acepta el predeterminado. Predeterminado: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Elementos por lote de sincronización"
+  },
+  "options.maxitems.hint": {
+    "message": "Número máximo de elementos que el servidor puede devolver por solicitud de sincronización (el WindowSize de EAS). Valores mayores sincronizan más rápido en conexiones estables; valores menores son más fiables en conexiones inestables y consumen menos memoria. Predeterminado: 25."
+  },
+  "options.mstodo": {
+    "message": "Modo de compatibilidad con Microsoft To Do"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publica las tareas con una fecha de vencimiento sin hora y sin fecha de inicio, por lo que los recordatorios aparecen a medianoche en Lightning. Cuando se activa, una tarea entrante con un recordatorio se reescribe para que sus fechas de inicio y vencimiento sean iguales a la hora del recordatorio, y el recordatorio se dispara exactamente cuando la tarea vence. Active esta opción solo cuando sincronice con Microsoft To Do."
+  },
+  "options.clientid": {
+    "message": "ID de cliente OAuth personalizado"
+  },
+  "options.clientid.hint": {
+    "message": "ID de aplicación (cliente) de Microsoft Entra ID utilizado al iniciar sesión en Office 365 / cuentas Microsoft personales. Deje vacío para usar el ID de aplicación predeterminado registrado por John Bieling (autor del proveedor EAS). Defina el suyo propio solo si el administrador de su inquilino lo requiere."
   }
 }

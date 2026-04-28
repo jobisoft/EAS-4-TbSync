@@ -33,6 +33,10 @@
       "background.mjs"
     ]
   },
+  "options_ui": {
+    "page": "dialogs/options/options.html",
+    "open_in_tab": false
+  },
   "web_accessible_resources": [
     "icons/icon-16.png",
     "icons/icon-32.png",

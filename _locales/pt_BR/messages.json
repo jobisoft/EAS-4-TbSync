@@ -220,7 +220,7 @@
     "message": "Forçar provisionamento"
   },
   "config.protocol.provision.hint": {
-    "message": "Alguns servidores (por exemplo, Kerio) exigem que o provisionamento seja enviado antes de qualquer outro comando. A maioria dos servidores — incluindo Microsoft Exchange e Microsoft 365 — solicita automaticamente quando necessário; você não precisa ativar manualmente para eles."
+    "message": "Alguns servidores (por exemplo, Kerio) exigem que o provisionamento seja enviado antes de qualquer outro comando. A maioria dos servidores - incluindo Microsoft Exchange e Microsoft 365 - solicita automaticamente quando necessário; você não precisa ativar manualmente para eles."
   },
 
   "config.contacts.displayOverride": {
@@ -258,7 +258,7 @@
     "message": "Sincronizar eventos/tarefas recorrentes e exceções"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental — desativado por padrão. Quando ativado, as regras de recorrência e as exceções por instância são sincronizadas nos dois sentidos com o servidor."
+    "message": "Experimental - desativado por padrão. Quando ativado, as regras de recorrência e as exceções por instância são sincronizadas nos dois sentidos com o servidor."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "A reautenticação não foi concluída. Clique em “Entrar novamente” para tentar de novo."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Configurações avançadas"
+  },
+  "options.intro": {
+    "message": "Essas configurações afetam todas as contas EAS deste perfil. Os valores padrão funcionam para quase todo mundo — só altere um valor se tiver um motivo específico. Deixe um campo vazio para voltar ao valor padrão integrado."
+  },
+  "options.section.network": {
+    "message": "Rede"
+  },
+  "options.section.sync": {
+    "message": "Sincronização"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Tempo limite de conexão (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Tempo máximo de espera por uma resposta do servidor EAS antes de desistir. Aumente esse valor se você sincroniza em conexões lentas ou instáveis e percebe tempos limite frequentes. Padrão: 90000 ms (90 segundos)."
+  },
+  "options.useragent": {
+    "message": "Cabeçalho User-Agent"
+  },
+  "options.useragent.hint": {
+    "message": "String HTTP User-Agent enviada com cada solicitação EAS. Alguns servidores recusam o valor padrão e exigem um valor específico (por exemplo, um UA do Microsoft Outlook) para permitir a conexão. Padrão: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Tipo de dispositivo"
+  },
+  "options.devicetype.hint": {
+    "message": "Valor EAS DeviceType enviado na URL da solicitação. Alguns servidores rejeitam tipos de dispositivo desconhecidos — tente um valor como WindowsOutlook15 ou iPhone se o seu provedor não aceitar o padrão. Padrão: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Itens por lote de sincronização"
+  },
+  "options.maxitems.hint": {
+    "message": "Número máximo de itens que o servidor pode retornar por solicitação de sincronização (o WindowSize do EAS). Valores maiores sincronizam mais rápido em conexões estáveis; valores menores são mais confiáveis em conexões instáveis e usam menos memória. Padrão: 25."
+  },
+  "options.mstodo": {
+    "message": "Modo de compatibilidade com o Microsoft To Do"
+  },
+  "options.mstodo.hint": {
+    "message": "O Microsoft To Do publica tarefas com uma data de vencimento somente com data e sem data de início, então os lembretes aparecem à meia-noite no Lightning. Quando ativado, uma tarefa recebida com um lembrete é reescrita para que suas datas de início e vencimento sejam iguais ao horário do lembrete, e o lembrete dispara exatamente quando a tarefa vence. Ative essa opção apenas quando sincronizar com o Microsoft To Do."
+  },
+  "options.clientid": {
+    "message": "ID de cliente OAuth personalizado"
+  },
+  "options.clientid.hint": {
+    "message": "ID de aplicativo (cliente) do Microsoft Entra ID usado ao entrar em Office 365 / contas pessoais da Microsoft. Deixe vazio para usar o ID de aplicativo padrão registrado por John Bieling (autor do provedor EAS). Defina o seu apenas se o administrador do seu locatário exigir."
   }
 }

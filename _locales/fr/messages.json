@@ -220,7 +220,7 @@
     "message": "Forcer le provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Certains serveurs (par ex. Kerio) exigent l’envoi du provisioning avant toute autre commande. La plupart des serveurs — y compris Microsoft Exchange et Microsoft 365 — le demandent automatiquement quand c’est nécessaire ; vous n’avez pas besoin d’activer cette option manuellement pour eux."
+    "message": "Certains serveurs (par ex. Kerio) exigent l’envoi du provisioning avant toute autre commande. La plupart des serveurs - y compris Microsoft Exchange et Microsoft 365 - le demandent automatiquement quand c’est nécessaire ; vous n’avez pas besoin d’activer cette option manuellement pour eux."
   },
 
   "config.contacts.displayOverride": {
@@ -258,7 +258,7 @@
     "message": "Synchroniser les évènements/tâches récurrents et les exceptions"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Expérimental — désactivé par défaut. Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
+    "message": "Expérimental - désactivé par défaut. Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "La réauthentification ne s’est pas terminée. Cliquez sur « Se reconnecter » pour réessayer."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Paramètres avancés"
+  },
+  "options.intro": {
+    "message": "Ces paramètres affectent tous les comptes EAS de ce profil. Les valeurs par défaut conviennent à presque tout le monde — ne modifiez une valeur que si vous avez une raison précise. Laissez un champ vide pour revenir à la valeur par défaut intégrée."
+  },
+  "options.section.network": {
+    "message": "Réseau"
+  },
+  "options.section.sync": {
+    "message": "Synchronisation"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Délai de connexion (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Délai maximal d’attente d’une réponse du serveur EAS avant abandon. Augmentez cette valeur si vous synchronisez via des liens lents ou instables et que vous rencontrez souvent des dépassements de délai. Par défaut : 90000 ms (90 secondes)."
+  },
+  "options.useragent": {
+    "message": "En-tête User-Agent"
+  },
+  "options.useragent.hint": {
+    "message": "Chaîne User-Agent HTTP envoyée avec chaque requête EAS. Quelques serveurs refusent la valeur par défaut et exigent une valeur spécifique (par exemple un UA Microsoft Outlook) pour autoriser la connexion. Par défaut : Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Type d’appareil"
+  },
+  "options.devicetype.hint": {
+    "message": "Valeur EAS DeviceType envoyée dans l’URL de la requête. Quelques serveurs rejettent les types d’appareils inconnus — essayez une valeur telle que WindowsOutlook15 ou iPhone si votre fournisseur n’accepte pas la valeur par défaut. Par défaut : TbSync."
+  },
+  "options.maxitems": {
+    "message": "Éléments par lot de synchronisation"
+  },
+  "options.maxitems.hint": {
+    "message": "Nombre maximal d’éléments que le serveur peut renvoyer par requête de synchronisation (la WindowSize EAS). Des valeurs plus grandes synchronisent plus rapidement sur des connexions saines ; des valeurs plus petites sont plus fiables sur des connexions instables et utilisent moins de mémoire. Par défaut : 25."
+  },
+  "options.mstodo": {
+    "message": "Mode de compatibilité Microsoft To Do"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publie les tâches avec une date d’échéance sans heure et sans date de début ; les rappels apparaissent donc à minuit dans Lightning. Lorsque cette option est activée, une tâche entrante avec un rappel est réécrite pour que ses dates de début et d’échéance soient égales à l’heure du rappel, et le rappel se déclenche exactement lorsque la tâche est due. Activez cette option uniquement lors de la synchronisation avec Microsoft To Do."
+  },
+  "options.clientid": {
+    "message": "ID client OAuth personnalisé"
+  },
+  "options.clientid.hint": {
+    "message": "ID d’application (client) Microsoft Entra ID utilisé lors de la connexion à Office 365 / aux comptes Microsoft personnels. Laissez vide pour utiliser l’ID d’application par défaut enregistré par John Bieling (auteur du fournisseur EAS). Ne définissez le vôtre que si votre administrateur de tenant l’exige."
   }
 }

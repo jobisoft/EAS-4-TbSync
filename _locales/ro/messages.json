@@ -220,7 +220,7 @@
     "message": "Forțează provisioning-ul"
   },
   "config.protocol.provision.hint": {
-    "message": "Unele servere (ex. Kerio) cer ca provisioning-ul să fie trimis înaintea oricărei alte comenzi. Majoritatea serverelor — inclusiv Microsoft Exchange și Microsoft 365 — îl solicită automat când e nevoie; nu trebuie să-l activezi manual pentru acestea."
+    "message": "Unele servere (ex. Kerio) cer ca provisioning-ul să fie trimis înaintea oricărei alte comenzi. Majoritatea serverelor - inclusiv Microsoft Exchange și Microsoft 365 - îl solicită automat când e nevoie; nu trebuie să-l activezi manual pentru acestea."
   },
 
   "config.contacts.displayOverride": {
@@ -258,7 +258,7 @@
     "message": "Sincronizează evenimentele/activitățile recurente și excepțiile"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental — dezactivat implicit. Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
+    "message": "Experimental - dezactivat implicit. Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "Reautentificarea nu a fost finalizată. Apasă „Conectează-te din nou” pentru a reîncerca."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Setări avansate"
+  },
+  "options.intro": {
+    "message": "Aceste setări afectează toate conturile EAS din acest profil. Valorile implicite sunt potrivite pentru aproape toată lumea — modificați o valoare doar dacă aveți un motiv specific. Lăsați un câmp gol pentru a reveni la valoarea implicită încorporată."
+  },
+  "options.section.network": {
+    "message": "Rețea"
+  },
+  "options.section.sync": {
+    "message": "Sincronizare"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Timp expirare conexiune (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Timpul maxim de așteptare a unui răspuns de la serverul EAS înainte de a renunța. Măriți această valoare dacă sincronizați prin conexiuni lente sau nesigure și observați expirări frecvente. Implicit: 90000 ms (90 de secunde)."
+  },
+  "options.useragent": {
+    "message": "Antet User-Agent"
+  },
+  "options.useragent.hint": {
+    "message": "Șir HTTP User-Agent trimis cu fiecare cerere EAS. Unele servere refuză valoarea implicită și necesită o valoare specifică (de exemplu un UA Microsoft Outlook) pentru a permite conexiunea. Implicit: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Tip dispozitiv"
+  },
+  "options.devicetype.hint": {
+    "message": "Valoarea EAS DeviceType trimisă în URL-ul cererii. Unele servere resping tipurile de dispozitiv necunoscute — încercați o valoare precum WindowsOutlook15 sau iPhone dacă furnizorul dvs. nu acceptă valoarea implicită. Implicit: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Elemente per lot de sincronizare"
+  },
+  "options.maxitems.hint": {
+    "message": "Numărul maxim de elemente pe care serverul le poate returna pentru o cerere de sincronizare (EAS WindowSize). Valorile mai mari sincronizează mai rapid pe conexiuni stabile; cele mai mici sunt mai fiabile pe conexiuni instabile și folosesc mai puțină memorie. Implicit: 25."
+  },
+  "options.mstodo": {
+    "message": "Mod de compatibilitate Microsoft To Do"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publică sarcinile cu o dată scadentă fără oră și fără dată de începere, astfel încât memento-urile apar la miezul nopții în Lightning. Când este activat, o sarcină primită cu memento este rescrisă astfel încât data de începere și data scadentă să fie egale cu ora memento-ului, iar memento-ul se declanșează exact când sarcina este scadentă. Activați această opțiune doar atunci când sincronizați cu Microsoft To Do."
+  },
+  "options.clientid": {
+    "message": "ID client OAuth personalizat"
+  },
+  "options.clientid.hint": {
+    "message": "ID-ul aplicației (client) Microsoft Entra ID utilizat la conectarea la Office 365 / conturile personale Microsoft. Lăsați gol pentru a utiliza ID-ul implicit al aplicației înregistrat de John Bieling (autorul furnizorului EAS). Setați-l pe al dvs. doar dacă administratorul tenantului dvs. cere acest lucru."
   }
 }

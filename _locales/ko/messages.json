@@ -258,7 +258,7 @@
     "message": "반복 이벤트/작업 및 예외 동기화"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "실험적 기능 — 기본적으로 비활성화되어 있습니다. 활성화하면 반복 규칙과 인스턴스별 예외가 서버와 양방향으로 동기화됩니다."
+    "message": "실험적 기능 - 기본적으로 비활성화되어 있습니다. 활성화하면 반복 규칙과 인스턴스별 예외가 서버와 양방향으로 동기화됩니다."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "재인증이 완료되지 않았습니다. \"다시 로그인\"을 클릭하여 다시 시도하세요."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — 고급 설정"
+  },
+  "options.intro": {
+    "message": "이 설정은 이 프로필의 모든 EAS 계정에 영향을 줍니다. 기본값은 거의 모든 사용자에게 적합합니다 — 특별한 이유가 없는 한 값을 변경하지 마세요. 필드를 비워 두면 기본 제공값으로 되돌아갑니다."
+  },
+  "options.section.network": {
+    "message": "네트워크"
+  },
+  "options.section.sync": {
+    "message": "동기화"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "연결 시간 초과 (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "EAS 서버의 응답을 기다리는 최대 시간이며, 초과 시 포기합니다. 느리거나 불안정한 연결에서 동기화하고 잦은 시간 초과가 발생하는 경우 이 값을 늘리세요. 기본값: 90000 ms (90초)."
+  },
+  "options.useragent": {
+    "message": "User-Agent 헤더"
+  },
+  "options.useragent.hint": {
+    "message": "모든 EAS 요청과 함께 전송되는 HTTP User-Agent 문자열입니다. 일부 서버는 기본값을 거부하고 연결을 허용하기 위해 특정 값(예: Microsoft Outlook UA)을 요구합니다. 기본값: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "장치 종류"
+  },
+  "options.devicetype.hint": {
+    "message": "요청 URL에 전송되는 EAS DeviceType 값입니다. 일부 서버는 알 수 없는 장치 종류를 거부합니다 — 사용 중인 공급자가 기본값을 받지 않으면 WindowsOutlook15 또는 iPhone과 같은 값을 시도해 보세요. 기본값: TbSync."
+  },
+  "options.maxitems": {
+    "message": "동기화 일괄당 항목 수"
+  },
+  "options.maxitems.hint": {
+    "message": "서버가 한 번의 동기화 요청에서 반환할 수 있는 최대 항목 수입니다(EAS WindowSize). 큰 값은 안정적인 연결에서 더 빠르게 동기화합니다. 작은 값은 불안정한 연결에서 더 안정적이며 더 적은 메모리를 사용합니다. 기본값: 25."
+  },
+  "options.mstodo": {
+    "message": "Microsoft To Do 호환 모드"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do는 시간이 없는 기한 날짜와 시작 날짜 없이 작업을 게시하므로 알림이 Lightning에서 자정에 표시됩니다. 이 옵션을 활성화하면 알림이 있는 수신 작업이 시작 날짜와 기한 날짜가 모두 알림 시간과 같아지도록 다시 작성되며, 알림은 작업 기한 정각에 발생합니다. Microsoft To Do와 동기화할 때만 활성화하세요."
+  },
+  "options.clientid": {
+    "message": "사용자 지정 OAuth 클라이언트 ID"
+  },
+  "options.clientid.hint": {
+    "message": "Office 365 / 개인 Microsoft 계정에 로그인할 때 사용되는 Microsoft Entra ID 애플리케이션(클라이언트) ID입니다. EAS 공급자의 작성자인 John Bieling이 등록한 기본 애플리케이션 ID를 사용하려면 비워 두세요. 테넌트 관리자가 요구하는 경우에만 직접 설정하세요."
   }
 }

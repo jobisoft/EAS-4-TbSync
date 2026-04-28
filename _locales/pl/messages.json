@@ -220,7 +220,7 @@
     "message": "Wymuś provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Niektóre serwery (np. Kerio) wymagają wysłania provisioningu przed jakimkolwiek innym poleceniem. Większość serwerów — w tym Microsoft Exchange i Microsoft 365 — żąda go automatycznie, gdy jest potrzebny; dla nich nie trzeba włączać tej opcji ręcznie."
+    "message": "Niektóre serwery (np. Kerio) wymagają wysłania provisioningu przed jakimkolwiek innym poleceniem. Większość serwerów - w tym Microsoft Exchange i Microsoft 365 - żąda go automatycznie, gdy jest potrzebny; dla nich nie trzeba włączać tej opcji ręcznie."
   },
 
   "config.contacts.displayOverride": {
@@ -258,7 +258,7 @@
     "message": "Synchronizuj cykliczne wydarzenia/zadania i wyjątki"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Eksperymentalne — domyślnie wyłączone. Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
+    "message": "Eksperymentalne - domyślnie wyłączone. Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "Ponowne uwierzytelnienie nie zostało ukończone. Kliknij „Zaloguj się ponownie”, aby spróbować ponownie."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Ustawienia zaawansowane"
+  },
+  "options.intro": {
+    "message": "Te ustawienia wpływają na wszystkie konta EAS w tym profilu. Wartości domyślne sprawdzają się u prawie wszystkich — zmieniaj wartość tylko wtedy, gdy masz ku temu konkretny powód. Pozostaw pole puste, aby wrócić do domyślnej wartości wbudowanej."
+  },
+  "options.section.network": {
+    "message": "Sieć"
+  },
+  "options.section.sync": {
+    "message": "Synchronizacja"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Limit czasu połączenia (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maksymalny czas oczekiwania na odpowiedź serwera EAS przed rezygnacją. Zwiększ tę wartość, jeśli synchronizujesz przez wolne lub zawodne łącza i często występują przekroczenia limitu czasu. Domyślnie: 90000 ms (90 sekund)."
+  },
+  "options.useragent": {
+    "message": "Nagłówek User-Agent"
+  },
+  "options.useragent.hint": {
+    "message": "Łańcuch HTTP User-Agent wysyłany z każdym żądaniem EAS. Niektóre serwery odrzucają wartość domyślną i wymagają konkretnej wartości (na przykład UA Microsoft Outlook), aby zezwolić na połączenie. Domyślnie: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Typ urządzenia"
+  },
+  "options.devicetype.hint": {
+    "message": "Wartość EAS DeviceType wysyłana w adresie URL żądania. Niektóre serwery odrzucają nieznane typy urządzeń — wypróbuj wartość taką jak WindowsOutlook15 lub iPhone, jeśli Twój dostawca nie akceptuje wartości domyślnej. Domyślnie: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Elementy na partię synchronizacji"
+  },
+  "options.maxitems.hint": {
+    "message": "Maksymalna liczba elementów, które serwer może zwrócić w jednym żądaniu synchronizacji (EAS WindowSize). Większe wartości synchronizują się szybciej przy stabilnych połączeniach; mniejsze są bardziej niezawodne przy słabych i zużywają mniej pamięci. Domyślnie: 25."
+  },
+  "options.mstodo": {
+    "message": "Tryb zgodności z Microsoft To Do"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publikuje zadania z terminem zawierającym tylko datę (bez godziny) i bez daty rozpoczęcia, dlatego przypomnienia w Lightning pojawiają się o północy. Gdy ta opcja jest włączona, przychodzące zadanie z przypomnieniem jest przepisywane tak, aby jego data rozpoczęcia i termin były równe godzinie przypomnienia, a przypomnienie uruchamia się dokładnie wtedy, gdy zadanie ma zostać wykonane. Włącz tę opcję tylko podczas synchronizacji z Microsoft To Do."
+  },
+  "options.clientid": {
+    "message": "Niestandardowy identyfikator klienta OAuth"
+  },
+  "options.clientid.hint": {
+    "message": "Identyfikator aplikacji (klienta) Microsoft Entra ID używany podczas logowania do Office 365 / osobistych kont Microsoft. Pozostaw puste, aby użyć domyślnego identyfikatora aplikacji zarejestrowanego przez Johna Bielinga (autora dostawcy EAS). Wprowadź własny tylko wtedy, gdy wymaga tego administrator dzierżawy."
   }
 }

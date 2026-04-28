@@ -258,7 +258,7 @@
     "message": "Synkronisera återkommande händelser/uppgifter och undantag"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimentellt — av som standard. När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
+    "message": "Experimentellt - av som standard. När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "Återautentiseringen slutfördes inte. Klicka på \"Logga in igen\" för att försöka igen."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Avancerade inställningar"
+  },
+  "options.intro": {
+    "message": "Dessa inställningar påverkar varje EAS-konto i den här profilen. Standardvärdena fungerar för nästan alla — ändra bara ett värde om du har en specifik anledning. Lämna ett fält tomt för att återgå till det inbyggda standardvärdet."
+  },
+  "options.section.network": {
+    "message": "Nätverk"
+  },
+  "options.section.sync": {
+    "message": "Synkronisering"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Anslutningstidsgräns (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maximal väntetid på ett svar från EAS-servern innan det ges upp. Öka det här värdet om du synkroniserar över långsamma eller opålitliga anslutningar och ofta får tidsgränsfel. Standard: 90000 ms (90 sekunder)."
+  },
+  "options.useragent": {
+    "message": "User-Agent-rubrik"
+  },
+  "options.useragent.hint": {
+    "message": "HTTP User-Agent-sträng som skickas med varje EAS-förfrågan. Vissa servrar avvisar standardvärdet och kräver ett specifikt värde (till exempel en Microsoft Outlook-UA) för att tillåta anslutningen. Standard: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Enhetstyp"
+  },
+  "options.devicetype.hint": {
+    "message": "EAS DeviceType-värde som skickas i förfrågans URL. Vissa servrar avvisar okända enhetstyper — prova ett värde som WindowsOutlook15 eller iPhone om din leverantör inte godtar standardvärdet. Standard: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Objekt per synkroniseringsbatch"
+  },
+  "options.maxitems.hint": {
+    "message": "Maximalt antal objekt som servern får returnera per synkroniseringsförfrågan (EAS WindowSize). Större värden synkroniserar snabbare på stabila anslutningar; mindre värden är mer pålitliga på instabila och använder mindre minne. Standard: 25."
+  },
+  "options.mstodo": {
+    "message": "Kompatibilitetsläge för Microsoft To Do"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publicerar uppgifter med endast ett förfallodatum (utan tid) och utan startdatum, så påminnelser visas vid midnatt i Lightning. När det är aktiverat skrivs en inkommande uppgift med en påminnelse om så att start- och förfallodatum är lika med påminnelsens tid, och påminnelsen aktiveras exakt när uppgiften förfaller. Aktivera bara detta vid synkronisering mot Microsoft To Do."
+  },
+  "options.clientid": {
+    "message": "Anpassat OAuth-klient-ID"
+  },
+  "options.clientid.hint": {
+    "message": "Microsoft Entra ID-program-ID (klient) som används vid inloggning till Office 365 / personliga Microsoft-konton. Lämna tomt för att använda standardprogram-ID:t som registrerats av John Bieling (författare till EAS-leverantören). Ange ett eget endast om din klientadministratör kräver det."
   }
 }

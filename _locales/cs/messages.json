@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "Opětovné ověření se nedokončilo. Pro nový pokus klikněte na „Přihlásit se znovu“."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Pokročilá nastavení"
+  },
+  "options.intro": {
+    "message": "Tato nastavení ovlivňují všechny účty EAS v tomto profilu. Výchozí hodnoty vyhovují téměř všem — měňte hodnotu pouze tehdy, máte-li k tomu konkrétní důvod. Ponechte pole prázdné, aby se vrátila výchozí hodnota zabudovaná v rozšíření."
+  },
+  "options.section.network": {
+    "message": "Síť"
+  },
+  "options.section.sync": {
+    "message": "Synchronizace"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Časový limit připojení (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maximální doba čekání na odpověď ze serveru EAS před vzdáním se. Zvyšte tuto hodnotu, pokud synchronizujete přes pomalá nebo nestabilní připojení a často dochází k překročení časového limitu. Výchozí: 90000 ms (90 sekund)."
+  },
+  "options.useragent": {
+    "message": "Hlavička User-Agent"
+  },
+  "options.useragent.hint": {
+    "message": "Řetězec HTTP User-Agent zasílaný s každým požadavkem EAS. Některé servery odmítají výchozí hodnotu a vyžadují konkrétní hodnotu (například UA aplikace Microsoft Outlook), aby povolily připojení. Výchozí: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Typ zařízení"
+  },
+  "options.devicetype.hint": {
+    "message": "Hodnota EAS DeviceType odesílaná v URL požadavku. Některé servery odmítají neznámé typy zařízení — pokud váš poskytovatel nepřijímá výchozí hodnotu, zkuste hodnotu jako WindowsOutlook15 nebo iPhone. Výchozí: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Položek na dávku synchronizace"
+  },
+  "options.maxitems.hint": {
+    "message": "Maximální počet položek, které server může vrátit na jeden synchronizační požadavek (EAS WindowSize). Vyšší hodnoty zrychlují synchronizaci na stabilních připojeních; nižší hodnoty jsou spolehlivější na nestabilních a využívají méně paměti. Výchozí: 25."
+  },
+  "options.mstodo": {
+    "message": "Režim kompatibility s Microsoft To Do"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do zveřejňuje úkoly s termínem obsahujícím pouze datum (bez času) a bez data zahájení, takže připomenutí se v aplikaci Lightning zobrazují o půlnoci. Pokud je tato volba aktivní, příchozí úkol s připomenutím je přepsán tak, aby datum zahájení i termín byly rovny času připomenutí, a připomenutí se spustí přesně v okamžiku splatnosti úkolu. Tuto volbu aktivujte pouze při synchronizaci s Microsoft To Do."
+  },
+  "options.clientid": {
+    "message": "Vlastní ID klienta OAuth"
+  },
+  "options.clientid.hint": {
+    "message": "ID aplikace (klienta) Microsoft Entra ID používané při přihlašování k Office 365 / osobním účtům Microsoft. Ponechte prázdné, abyste použili výchozí ID aplikace zaregistrované Johnem Bielingem (autorem poskytovatele EAS). Vlastní hodnotu zadávejte pouze tehdy, pokud to vyžaduje administrátor vašeho tenanta."
   }
 }

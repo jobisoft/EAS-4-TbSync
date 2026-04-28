@@ -258,7 +258,7 @@
     "message": "Sync recurring events / tasks and exceptions"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental — off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
+    "message": "Experimental - off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,64 @@
 
   "warning.reauthFailed": {
     "message": "Re-authentication did not complete. Click \"Sign in again\" to retry."
+  },
+
+  "options.title": {
+    "message": "EAS-4-TbSync - Advanced settings"
+  },
+  "options.intro": {
+    "message": "These settings affect every EAS account in this profile. The defaults work for almost everyone, only change a value if you have a specific reason to. Leave a field empty to fall back to the bundled default."
+  },
+
+  "options.section.network": {
+    "message": "Network"
+  },
+  "options.section.sync": {
+    "message": "Sync"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+
+  "options.timeout": {
+    "message": "Connection timeout (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maximum time to wait for a response from the EAS server before giving up. Increase this if you sync over slow or unreliable links and see frequent timeouts. Default: 90000 ms (90 seconds)."
+  },
+
+  "options.useragent": {
+    "message": "User-Agent header"
+  },
+  "options.useragent.hint": {
+    "message": "HTTP User-Agent string sent with every EAS request. A few servers refuse the default and require a specific value to allow the connection. Default: Thunderbird ActiveSync."
+  },
+
+  "options.devicetype": {
+    "message": "Device type"
+  },
+  "options.devicetype.hint": {
+    "message": "EAS DeviceType value sent in the request URL. A few servers reject unknown device types. Default: TbSync."
+  },
+
+  "options.maxitems": {
+    "message": "Items per sync batch"
+  },
+  "options.maxitems.hint": {
+    "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. Default: 25."
+  },
+
+  "options.mstodo": {
+    "message": "Microsoft To Do compatibility mode"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publishes tasks with a date-only due date and no start date, so reminders render at midnight. When enabled, an incoming task with a reminder is rewritten so its start and due date both equal the reminder time, and the reminder fires exactly when the task is due. Only enable this when encountering issues and trying an alternative to the default behavior."
+  },
+
+  "options.clientid": {
+    "message": "Custom OAuth client ID"
+  },
+  "options.clientid.hint": {
+    "message": "Microsoft Entra Client ID used when signing in to Microsoft accounts. Leave empty to use the default client ID registered by John Bieling (author of the EAS provider)."
   }
 }

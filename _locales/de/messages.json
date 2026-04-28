@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "Erneute Anmeldung wurde nicht abgeschlossen. Klicken Sie auf „Erneut anmelden“, um es erneut zu versuchen."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync – Erweiterte Einstellungen"
+  },
+  "options.intro": {
+    "message": "Diese Einstellungen wirken sich auf jedes EAS-Konto in diesem Profil aus. Die Standardwerte sind für fast alle Benutzer geeignet – ändern Sie einen Wert nur, wenn Sie einen bestimmten Grund dafür haben. Lassen Sie ein Feld leer, um auf den mitgelieferten Standardwert zurückzugreifen."
+  },
+  "options.section.network": {
+    "message": "Netzwerk"
+  },
+  "options.section.sync": {
+    "message": "Synchronisation"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Verbindungs-Timeout (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maximale Wartezeit auf eine Antwort vom EAS-Server, bevor abgebrochen wird. Erhöhen Sie diesen Wert, wenn Sie über langsame oder unzuverlässige Verbindungen synchronisieren und häufig Timeouts auftreten. Standard: 90000 ms (90 Sekunden)."
+  },
+  "options.useragent": {
+    "message": "User-Agent-Header"
+  },
+  "options.useragent.hint": {
+    "message": "HTTP-User-Agent, der mit jeder EAS-Anfrage gesendet wird. Einige Server lehnen den Standardwert ab und verlangen einen bestimmten Wert (z. B. einen Microsoft-Outlook-UA), um die Verbindung zuzulassen. Standard: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Gerätetyp"
+  },
+  "options.devicetype.hint": {
+    "message": "EAS-DeviceType-Wert, der in der Anfrage-URL gesendet wird. Einige Server lehnen unbekannte Gerätetypen ab – versuchen Sie einen Wert wie WindowsOutlook15 oder iPhone, wenn Ihr Anbieter den Standard nicht akzeptiert. Standard: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Elemente pro Synchronisationsschritt"
+  },
+  "options.maxitems.hint": {
+    "message": "Maximale Anzahl an Elementen, die der Server pro Synchronisationsanfrage zurückgeben darf (die EAS WindowSize). Größere Werte synchronisieren bei stabilen Verbindungen schneller; kleinere Werte sind bei unzuverlässigen Verbindungen robuster und benötigen weniger Speicher. Standard: 25."
+  },
+  "options.mstodo": {
+    "message": "Microsoft-To-Do-Kompatibilitätsmodus"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do veröffentlicht Aufgaben mit einem reinen Datums-Fälligkeitstermin und ohne Startdatum, sodass Erinnerungen in Lightning um Mitternacht ausgelöst werden. Wenn aktiviert, wird eine eingehende Aufgabe mit einer Erinnerung so umgeschrieben, dass Start- und Fälligkeitsdatum dem Erinnerungszeitpunkt entsprechen, und die Erinnerung wird genau dann ausgelöst, wenn die Aufgabe fällig ist. Aktivieren Sie diese Option nur, wenn Sie mit Microsoft To Do synchronisieren."
+  },
+  "options.clientid": {
+    "message": "Eigene OAuth-Client-ID"
+  },
+  "options.clientid.hint": {
+    "message": "Microsoft-Entra-ID-Anwendungs-ID (Client), die beim Anmelden bei Office 365 / persönlichen Microsoft-Konten verwendet wird. Lassen Sie das Feld leer, um die Standard-Anwendungs-ID zu verwenden, die von John Bieling (Autor des EAS-Providers) registriert wurde. Setzen Sie eine eigene ID nur, wenn Ihr Mandantenadministrator dies verlangt."
   }
 }

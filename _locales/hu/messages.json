@@ -258,7 +258,7 @@
     "message": "Ismétlődő események/feladatok és kivételek szinkronizálása"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Kísérleti — alapértelmezetten kikapcsolva. Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
+    "message": "Kísérleti - alapértelmezetten kikapcsolva. Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
   },
 
   "config.error.invalidAsVersion": {
@@ -267,5 +267,58 @@
 
   "warning.reauthFailed": {
     "message": "Az újrahitelesítés nem fejeződött be. Kattintson az „Újra bejelentkezés” gombra a próbálkozáshoz."
+  },
+
+
+  "options.title": {
+    "message": "EAS-4-TbSync — Speciális beállítások"
+  },
+  "options.intro": {
+    "message": "Ezek a beállítások a profil összes EAS-fiókját érintik. Az alapértékek szinte mindenkinek megfelelnek — csak akkor módosítson egy értéket, ha konkrét oka van rá. Hagyjon egy mezőt üresen a beépített alapértékre való visszatéréshez."
+  },
+  "options.section.network": {
+    "message": "Hálózat"
+  },
+  "options.section.sync": {
+    "message": "Szinkronizáció"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Kapcsolódási időtúllépés (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maximális várakozási idő az EAS-kiszolgáló válaszára, mielőtt feladja. Növelje ezt az értéket, ha lassú vagy megbízhatatlan kapcsolaton szinkronizál, és gyakori időtúllépéseket tapasztal. Alapértelmezett: 90000 ms (90 másodperc)."
+  },
+  "options.useragent": {
+    "message": "User-Agent fejléc"
+  },
+  "options.useragent.hint": {
+    "message": "Minden EAS-kéréssel küldött HTTP User-Agent karakterlánc. Néhány kiszolgáló elutasítja az alapértéket, és konkrét értéket igényel (például egy Microsoft Outlook UA-t) a kapcsolat engedélyezéséhez. Alapértelmezett: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Eszköztípus"
+  },
+  "options.devicetype.hint": {
+    "message": "Az EAS DeviceType értéke, amelyet a kérés URL-jében küld. Néhány kiszolgáló elutasítja az ismeretlen eszköztípusokat — próbáljon WindowsOutlook15 vagy iPhone értéket, ha szolgáltatója nem fogadja el az alapértelmezést. Alapértelmezett: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Elem szinkronizációs kötegenként"
+  },
+  "options.maxitems.hint": {
+    "message": "Az elemek maximális száma, amelyet a kiszolgáló egy szinkronizációs kérésre visszaadhat (az EAS WindowSize értéke). A nagyobb értékek stabil kapcsolaton gyorsabban szinkronizálnak; a kisebbek megbízhatóbbak instabil kapcsolaton, és kevesebb memóriát használnak. Alapértelmezett: 25."
+  },
+  "options.mstodo": {
+    "message": "Microsoft To Do kompatibilitási mód"
+  },
+  "options.mstodo.hint": {
+    "message": "A Microsoft To Do csak dátumot tartalmazó határidővel (idő nélkül) és kezdési dátum nélkül teszi közzé a feladatokat, így az emlékeztetők a Lightningban éjfélkor jelennek meg. Ha engedélyezi, az emlékeztetőt tartalmazó bejövő feladatot úgy írja át, hogy a kezdési és határidő dátuma egyaránt megegyezzen az emlékeztető idejével, és az emlékeztető pontosan akkor szólaljon meg, amikor a feladat esedékes. Csak Microsoft To Do-val való szinkronizációkor engedélyezze."
+  },
+  "options.clientid": {
+    "message": "Egyéni OAuth ügyfélazonosító"
+  },
+  "options.clientid.hint": {
+    "message": "A Microsoft Entra ID alkalmazásazonosító (kliens), amelyet az Office 365 / személyes Microsoft-fiókokba való bejelentkezéskor használ. Hagyja üresen az alapértelmezett, John Bieling (az EAS-szolgáltató szerzője) által regisztrált alkalmazásazonosító használatához. Csak akkor adja meg a sajátját, ha a bérlő rendszergazdája ezt megköveteli."
   }
 }
