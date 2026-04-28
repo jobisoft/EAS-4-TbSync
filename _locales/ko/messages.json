@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — 고급 설정"
+    "message": "EAS-4-TbSync - 고급 설정"
   },
   "options.intro": {
-    "message": "이 설정은 이 프로필의 모든 EAS 계정에 영향을 줍니다. 기본값은 거의 모든 사용자에게 적합합니다 — 특별한 이유가 없는 한 값을 변경하지 마세요. 필드를 비워 두면 기본 제공값으로 되돌아갑니다."
+    "message": "이 설정은 이 프로필의 모든 EAS 계정에 영향을 줍니다. 기본값은 거의 모든 사용자에게 적합합니다 - 특별한 이유가 없는 한 값을 변경하지 마세요. 필드를 비워 두면 기본 제공값으로 되돌아갑니다."
   },
   "options.section.network": {
     "message": "네트워크"
@@ -301,7 +301,7 @@
     "message": "장치 종류"
   },
   "options.devicetype.hint": {
-    "message": "요청 URL에 전송되는 EAS DeviceType 값입니다. 일부 서버는 알 수 없는 장치 종류를 거부합니다 — 사용 중인 공급자가 기본값을 받지 않으면 WindowsOutlook15 또는 iPhone과 같은 값을 시도해 보세요. 기본값: TbSync."
+    "message": "요청 URL에 전송되는 EAS DeviceType 값입니다. 일부 서버는 알 수 없는 장치 종류를 거부합니다 - 사용 중인 공급자가 기본값을 받지 않으면 WindowsOutlook15 또는 iPhone과 같은 값을 시도해 보세요. 기본값: TbSync."
   },
   "options.maxitems": {
     "message": "동기화 일괄당 항목 수"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do는 시간이 없는 기한 날짜와 시작 날짜 없이 작업을 게시하므로 알림이 Lightning에서 자정에 표시됩니다. 이 옵션을 활성화하면 알림이 있는 수신 작업이 시작 날짜와 기한 날짜가 모두 알림 시간과 같아지도록 다시 작성되며, 알림은 작업 기한 정각에 발생합니다. Microsoft To Do와 동기화할 때만 활성화하세요."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "휴지통 폴더의 항목 표시"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "일부 서버는 삭제된 캘린더, 주소록 및 작업 목록을 완전히 제거하지 않고 휴지통 폴더 안에 보관합니다. 기본적으로 이러한 항목은 폴더 목록에서 숨겨집니다. 이 옵션을 활성화하면 표시되며, 현지화된 \"휴지통 | \" 접두사가 붙어 구분할 수 있고 동기화 여부를 선택할 수 있습니다. 다음 폴더 목록 새로 고침 시 적용됩니다."
   },
   "options.clientid": {
     "message": "사용자 지정 OAuth 클라이언트 ID"

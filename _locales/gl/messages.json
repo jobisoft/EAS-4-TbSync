@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Configuración avanzada"
+    "message": "EAS-4-TbSync - Configuración avanzada"
   },
   "options.intro": {
-    "message": "Esta configuración afecta a todas as contas EAS deste perfil. Os valores predeterminados van ben para case todos — modifique un valor só se ten unha razón concreta. Deixe un campo baleiro para volver ao valor predeterminado integrado."
+    "message": "Esta configuración afecta a todas as contas EAS deste perfil. Os valores predeterminados van ben para case todos - modifique un valor só se ten unha razón concreta. Deixe un campo baleiro para volver ao valor predeterminado integrado."
   },
   "options.section.network": {
     "message": "Rede"
@@ -301,7 +301,7 @@
     "message": "Tipo de dispositivo"
   },
   "options.devicetype.hint": {
-    "message": "Valor EAS DeviceType enviado no URL da solicitude. Algúns servidores rexeitan tipos de dispositivo descoñecidos — probe un valor como WindowsOutlook15 ou iPhone se o seu provedor non acepta o predeterminado. Predeterminado: TbSync."
+    "message": "Valor EAS DeviceType enviado no URL da solicitude. Algúns servidores rexeitan tipos de dispositivo descoñecidos - probe un valor como WindowsOutlook15 ou iPhone se o seu provedor non acepta o predeterminado. Predeterminado: TbSync."
   },
   "options.maxitems": {
     "message": "Elementos por lote de sincronización"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do publica as tarefas cunha data de vencemento sen hora e sen data de inicio, polo que os recordatorios aparecen á medianoite en Lightning. Cando se activa, unha tarefa entrante cun recordatorio reescríbese para que as súas datas de inicio e vencemento sexan iguais á hora do recordatorio, e o recordatorio dispárase exactamente cando a tarefa vence. Active esta opción só cando sincronice con Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Mostrar elementos en cartafoles do Lixo"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Algúns servidores conservan os calendarios, axendas e listas de tarefas eliminadas dentro dun cartafol do Lixo en lugar de eliminalos por completo. De forma predeterminada, estes quedan ocultos da lista de cartafoles. Active esta opción para facelos visibles - aparecen cun prefixo localizado «Lixo | » para que poida distinguilos e decidir se os sincroniza. Aplícase na seguinte actualización da lista de cartafoles."
   },
   "options.clientid": {
     "message": "ID de cliente OAuth personalizado"

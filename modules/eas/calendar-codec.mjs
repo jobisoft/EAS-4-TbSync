@@ -76,7 +76,7 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
 }
 
 /** Populate a VEVENT (master or override) from an EAS <ApplicationData>
- *  or <Exception> node. The set of fields is the same on both — legacy
+ *  or <Exception> node. The set of fields is the same on both - legacy
  *  reuses `setThunderbirdItemFromWbxml` for both paths.
  *  Returns nothing; mutates `vevent`. */
 function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
@@ -210,7 +210,7 @@ export function applyInstanceChange({ ical, adNode, instanceUtc, asVersion, defa
 }
 
 /** Outbound 16.1: emit one `<Change ServerId=master>` per current
- *  EXDATE / RECURRENCE-ID override on the master. Idempotent — re-asserts
+ *  EXDATE / RECURRENCE-ID override on the master. Idempotent - re-asserts
  *  the full exception set on every push of a recurring master.
  *
  *  Limitation: a user un-deleting an EXDATE or removing an override
@@ -289,7 +289,7 @@ export function applyInstanceDelete({ ical, instanceUtc }) {
   const master = vcal.getFirstSubcomponent("vevent");
   if (!master) return ical;
 
-  // Drop any existing override at this RECURRENCE-ID — server says it's
+  // Drop any existing override at this RECURRENCE-ID - server says it's
   // gone now.
   for (const sub of vcal.getAllSubcomponents("vevent")) {
     const rid = sub.getFirstPropertyValue("recurrence-id");
@@ -319,7 +319,7 @@ export function appendApplicationDataFromIcal({
   // helpers switch to AirSyncBase as needed and switch back here.
   builder.switchpage("Calendar");
 
-  // Outbound timezone (≤14.x only; never inside an exception body —
+  // Outbound timezone (≤14.x only; never inside an exception body -
   // legacy emits this only on the master).
   if (asVersion !== "16.1" && !isException) {
     const blob = buildTimezoneBlob(vevent, defaultTimezone);
@@ -628,7 +628,7 @@ function appendInboundExceptions({ adNode, vcal, vevent, asVersion, defaultTimez
 
 /** Outbound: emit a `<Exceptions>` wrapper from the VCALENDAR's EXDATEs
  *  on the master plus any sibling override VEVENTs (subcomponents that
- *  share the master's UID and carry RECURRENCE-ID). 2.5/14.x only —
+ *  share the master's UID and carry RECURRENCE-ID). 2.5/14.x only -
  *  16.1 sends each exception as its own `<Change>` at the runner level.
  *  Mirrors legacy `getItemRecurrence` at sync.js:1488-1505. */
 function appendOutboundExceptions({ builder, vcal, vevent, asVersion, defaultTimezone, syncRecurrence }) {

@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Configuración avanzada"
+    "message": "EAS-4-TbSync - Configuración avanzada"
   },
   "options.intro": {
-    "message": "Estos ajustes afectan a todas las cuentas EAS de este perfil. Los valores predeterminados son adecuados para casi todos los usuarios — modifique un valor solo si tiene una razón específica. Deje un campo vacío para volver al valor predeterminado incorporado."
+    "message": "Estos ajustes afectan a todas las cuentas EAS de este perfil. Los valores predeterminados son adecuados para casi todos los usuarios - modifique un valor solo si tiene una razón específica. Deje un campo vacío para volver al valor predeterminado incorporado."
   },
   "options.section.network": {
     "message": "Red"
@@ -301,7 +301,7 @@
     "message": "Tipo de dispositivo"
   },
   "options.devicetype.hint": {
-    "message": "Valor EAS DeviceType enviado en la URL de la solicitud. Algunos servidores rechazan tipos de dispositivo desconocidos — pruebe un valor como WindowsOutlook15 o iPhone si su proveedor no acepta el predeterminado. Predeterminado: TbSync."
+    "message": "Valor EAS DeviceType enviado en la URL de la solicitud. Algunos servidores rechazan tipos de dispositivo desconocidos - pruebe un valor como WindowsOutlook15 o iPhone si su proveedor no acepta el predeterminado. Predeterminado: TbSync."
   },
   "options.maxitems": {
     "message": "Elementos por lote de sincronización"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do publica las tareas con una fecha de vencimiento sin hora y sin fecha de inicio, por lo que los recordatorios aparecen a medianoche en Lightning. Cuando se activa, una tarea entrante con un recordatorio se reescribe para que sus fechas de inicio y vencimiento sean iguales a la hora del recordatorio, y el recordatorio se dispara exactamente cuando la tarea vence. Active esta opción solo cuando sincronice con Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Mostrar elementos en carpetas Papelera"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Algunos servidores guardan los calendarios, libretas de direcciones y listas de tareas eliminados dentro de una carpeta Papelera en lugar de eliminarlos por completo. De forma predeterminada, estos quedan ocultos de la lista de carpetas. Active esta opción para hacerlos visibles - aparecen con un prefijo localizado «Papelera | » para que pueda distinguirlos y decidir si los sincroniza. Surte efecto en la próxima actualización de la lista de carpetas."
   },
   "options.clientid": {
     "message": "ID de cliente OAuth personalizado"

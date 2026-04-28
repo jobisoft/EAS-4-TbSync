@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Configurações avançadas"
+    "message": "EAS-4-TbSync - Configurações avançadas"
   },
   "options.intro": {
-    "message": "Essas configurações afetam todas as contas EAS deste perfil. Os valores padrão funcionam para quase todo mundo — só altere um valor se tiver um motivo específico. Deixe um campo vazio para voltar ao valor padrão integrado."
+    "message": "Essas configurações afetam todas as contas EAS deste perfil. Os valores padrão funcionam para quase todo mundo - só altere um valor se tiver um motivo específico. Deixe um campo vazio para voltar ao valor padrão integrado."
   },
   "options.section.network": {
     "message": "Rede"
@@ -301,7 +301,7 @@
     "message": "Tipo de dispositivo"
   },
   "options.devicetype.hint": {
-    "message": "Valor EAS DeviceType enviado na URL da solicitação. Alguns servidores rejeitam tipos de dispositivo desconhecidos — tente um valor como WindowsOutlook15 ou iPhone se o seu provedor não aceitar o padrão. Padrão: TbSync."
+    "message": "Valor EAS DeviceType enviado na URL da solicitação. Alguns servidores rejeitam tipos de dispositivo desconhecidos - tente um valor como WindowsOutlook15 ou iPhone se o seu provedor não aceitar o padrão. Padrão: TbSync."
   },
   "options.maxitems": {
     "message": "Itens por lote de sincronização"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "O Microsoft To Do publica tarefas com uma data de vencimento somente com data e sem data de início, então os lembretes aparecem à meia-noite no Lightning. Quando ativado, uma tarefa recebida com um lembrete é reescrita para que suas datas de início e vencimento sejam iguais ao horário do lembrete, e o lembrete dispara exatamente quando a tarefa vence. Ative essa opção apenas quando sincronizar com o Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Mostrar itens em pastas Lixeira"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Alguns servidores mantêm calendários, catálogos de endereços e listas de tarefas excluídos dentro de uma pasta Lixeira em vez de removê-los por completo. Por padrão, esses itens ficam ocultos na lista de pastas. Ative essa opção para torná-los visíveis - eles aparecem com um prefixo localizado “Lixeira | ” para que você possa distingui-los e escolher se quer sincronizá-los. Tem efeito na próxima atualização da lista de pastas."
   },
   "options.clientid": {
     "message": "ID de cliente OAuth personalizado"

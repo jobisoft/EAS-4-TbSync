@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Setări avansate"
+    "message": "EAS-4-TbSync - Setări avansate"
   },
   "options.intro": {
-    "message": "Aceste setări afectează toate conturile EAS din acest profil. Valorile implicite sunt potrivite pentru aproape toată lumea — modificați o valoare doar dacă aveți un motiv specific. Lăsați un câmp gol pentru a reveni la valoarea implicită încorporată."
+    "message": "Aceste setări afectează toate conturile EAS din acest profil. Valorile implicite sunt potrivite pentru aproape toată lumea - modificați o valoare doar dacă aveți un motiv specific. Lăsați un câmp gol pentru a reveni la valoarea implicită încorporată."
   },
   "options.section.network": {
     "message": "Rețea"
@@ -301,7 +301,7 @@
     "message": "Tip dispozitiv"
   },
   "options.devicetype.hint": {
-    "message": "Valoarea EAS DeviceType trimisă în URL-ul cererii. Unele servere resping tipurile de dispozitiv necunoscute — încercați o valoare precum WindowsOutlook15 sau iPhone dacă furnizorul dvs. nu acceptă valoarea implicită. Implicit: TbSync."
+    "message": "Valoarea EAS DeviceType trimisă în URL-ul cererii. Unele servere resping tipurile de dispozitiv necunoscute - încercați o valoare precum WindowsOutlook15 sau iPhone dacă furnizorul dvs. nu acceptă valoarea implicită. Implicit: TbSync."
   },
   "options.maxitems": {
     "message": "Elemente per lot de sincronizare"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do publică sarcinile cu o dată scadentă fără oră și fără dată de începere, astfel încât memento-urile apar la miezul nopții în Lightning. Când este activat, o sarcină primită cu memento este rescrisă astfel încât data de începere și data scadentă să fie egale cu ora memento-ului, iar memento-ul se declanșează exact când sarcina este scadentă. Activați această opțiune doar atunci când sincronizați cu Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Afișează elemente din folderele Coș de gunoi"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Unele servere păstrează calendarele, agendele de adrese și listele de activități șterse într-un folder Coș de gunoi în loc să le elimine complet. În mod implicit, acestea sunt ascunse din lista de foldere. Activați această opțiune pentru a le face vizibile - apar cu un prefix localizat „Coș de gunoi | ” pentru a le putea distinge și pentru a alege dacă să le sincronizați. Are efect la următoarea reîmprospătare a listei de foldere."
   },
   "options.clientid": {
     "message": "ID client OAuth personalizat"

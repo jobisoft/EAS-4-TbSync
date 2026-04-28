@@ -1,5 +1,5 @@
 /**
- * Advanced settings page. Six storage.local keys, all optional — empty
+ * Advanced settings page. Six storage.local keys, all optional - empty
  * input means "use the bundled default", so an empty value is persisted
  * as `storage.local.remove(key)` rather than as an empty string. The
  * msTodoCompat boolean is similar: only the `true` state is written.
@@ -18,7 +18,7 @@ const STRING_FIELDS = [
 ];
 
 async function load() {
-  const keys = STRING_FIELDS.map(f => f.key).concat("msTodoCompat");
+  const keys = STRING_FIELDS.map(f => f.key).concat("msTodoCompat", "showItemsInTrash");
   const stored = await browser.storage.local.get(keys);
 
   for (const f of STRING_FIELDS) {
@@ -27,6 +27,7 @@ async function load() {
     $(f.inputId).value = String(v);
   }
   $("opt-mstodo").checked = stored.msTodoCompat === true;
+  $("opt-show-trash").checked = stored.showItemsInTrash === true;
 }
 
 function bindStringField({ key, inputId, type }) {
@@ -67,4 +68,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   await load();
   for (const f of STRING_FIELDS) bindStringField(f);
   bindCheckbox("opt-mstodo", "msTodoCompat");
+  bindCheckbox("opt-show-trash", "showItemsInTrash");
 });

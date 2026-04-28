@@ -315,6 +315,13 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do veröffentlicht Aufgaben mit einem reinen Datums-Fälligkeitstermin und ohne Startdatum, sodass Erinnerungen in Lightning um Mitternacht ausgelöst werden. Wenn aktiviert, wird eine eingehende Aufgabe mit einer Erinnerung so umgeschrieben, dass Start- und Fälligkeitsdatum dem Erinnerungszeitpunkt entsprechen, und die Erinnerung wird genau dann ausgelöst, wenn die Aufgabe fällig ist. Aktivieren Sie diese Option nur, wenn Sie mit Microsoft To Do synchronisieren."
   },
+
+  "options.showItemsInTrash": {
+    "message": "Elemente in Papierkorb-Ordnern anzeigen"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Einige Server bewahren gelöschte Kalender, Adressbücher und Aufgabenlisten in einem Papierkorb-Ordner auf, anstatt sie endgültig zu entfernen. Standardmäßig werden diese in der Ordnerliste ausgeblendet. Aktivieren Sie diese Option, um sie sichtbar zu machen – sie werden mit einem lokalisierten „Papierkorb | “-Präfix angezeigt, damit Sie sie unterscheiden und entscheiden können, ob sie synchronisiert werden sollen. Wird beim nächsten Aktualisieren der Ordnerliste wirksam."
+  },
   "options.clientid": {
     "message": "Eigene OAuth-Client-ID"
   },

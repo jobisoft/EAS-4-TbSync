@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Speciális beállítások"
+    "message": "EAS-4-TbSync - Speciális beállítások"
   },
   "options.intro": {
-    "message": "Ezek a beállítások a profil összes EAS-fiókját érintik. Az alapértékek szinte mindenkinek megfelelnek — csak akkor módosítson egy értéket, ha konkrét oka van rá. Hagyjon egy mezőt üresen a beépített alapértékre való visszatéréshez."
+    "message": "Ezek a beállítások a profil összes EAS-fiókját érintik. Az alapértékek szinte mindenkinek megfelelnek - csak akkor módosítson egy értéket, ha konkrét oka van rá. Hagyjon egy mezőt üresen a beépített alapértékre való visszatéréshez."
   },
   "options.section.network": {
     "message": "Hálózat"
@@ -301,7 +301,7 @@
     "message": "Eszköztípus"
   },
   "options.devicetype.hint": {
-    "message": "Az EAS DeviceType értéke, amelyet a kérés URL-jében küld. Néhány kiszolgáló elutasítja az ismeretlen eszköztípusokat — próbáljon WindowsOutlook15 vagy iPhone értéket, ha szolgáltatója nem fogadja el az alapértelmezést. Alapértelmezett: TbSync."
+    "message": "Az EAS DeviceType értéke, amelyet a kérés URL-jében küld. Néhány kiszolgáló elutasítja az ismeretlen eszköztípusokat - próbáljon WindowsOutlook15 vagy iPhone értéket, ha szolgáltatója nem fogadja el az alapértelmezést. Alapértelmezett: TbSync."
   },
   "options.maxitems": {
     "message": "Elem szinkronizációs kötegenként"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "A Microsoft To Do csak dátumot tartalmazó határidővel (idő nélkül) és kezdési dátum nélkül teszi közzé a feladatokat, így az emlékeztetők a Lightningban éjfélkor jelennek meg. Ha engedélyezi, az emlékeztetőt tartalmazó bejövő feladatot úgy írja át, hogy a kezdési és határidő dátuma egyaránt megegyezzen az emlékeztető idejével, és az emlékeztető pontosan akkor szólaljon meg, amikor a feladat esedékes. Csak Microsoft To Do-val való szinkronizációkor engedélyezze."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Lomtár-mappákban lévő elemek megjelenítése"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Egyes kiszolgálók a törölt naptárakat, címjegyzékeket és feladatlistákat egy Lomtár mappában tartják, ahelyett, hogy ténylegesen eltávolítanák őket. Alapértelmezés szerint ezek el vannak rejtve a mappalistából. Engedélyezze ezt a beállítást, hogy láthatóvá váljanak - egy lokalizált „Lomtár | ” előtaggal jelennek meg, így megkülönböztetheti őket, és eldöntheti, hogy szinkronizálja-e őket. A következő mappalista-frissítéskor lép életbe."
   },
   "options.clientid": {
     "message": "Egyéni OAuth ügyfélazonosító"

@@ -315,9 +315,9 @@ export class EasProvider extends TbSyncProviderImplementation {
       const initial = syncResult.adds
         .map(a => folderDescriptorFromAdd(a))
         .filter(Boolean);
-      await this.pushFolderList({ accountId, folders: finalizeFolderListForPush(initial) });
+      await this.pushFolderList({ accountId, folders: await finalizeFolderListForPush(initial) });
     } else if (syncResult.adds.length || syncResult.updates.length || syncResult.deletes.length) {
-      const merged = mergeFolderDeltas(ctx.folders, syncResult);
+      const merged = await mergeFolderDeltas(ctx.folders, syncResult);
       await this.pushFolderList({ accountId, folders: merged });
     }
 
@@ -407,7 +407,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     const sorted = ctx.folders
       .slice()
       .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
-    return finalizeFolderListForPush(sorted);
+    return await finalizeFolderListForPush(sorted);
   }
 
   async onSyncFolder({ accountId, folderId }) {
@@ -765,8 +765,13 @@ export function buildTrashServerIDs(folders) {
 
 /** Recompute `hidden`, `targetType`, `displayName`, and
  *  `custom.displayNameRaw` from the current trash state. Idempotent:
- *  re-running on an already-processed folder yields the same output. */
-export function applyTrashVisibility(folder, trashServerIDs) {
+ *  re-running on an already-processed folder yields the same output.
+ *
+ *  Trash folders themselves (`type === "4"`) are always hidden. Folders
+ *  whose parent is a Trash folder ("trash children") are hidden when
+ *  `showItemsInTrash` is `false` and revealed (with a localized "Trash | "
+ *  display-name prefix) when it is `true`. */
+export function applyTrashVisibility(folder, trashServerIDs, showItemsInTrash) {
   const c = folder.custom ?? {};
   const isTrash = c.type === "4";
   const raw = c.displayNameRaw ?? folder.displayName ?? "";
@@ -777,10 +782,19 @@ export function applyTrashVisibility(folder, trashServerIDs) {
   return {
     ...folder,
     displayName,
-    hidden: isTrash,
+    hidden: isTrash || (inTrash && !showItemsInTrash),
     targetType: isTrash ? null : folder.targetType,
     custom: { ...c, displayNameRaw: raw },
   };
+}
+
+async function readShowItemsInTrash() {
+  try {
+    const rv = await browser.storage.local.get({ showItemsInTrash: false });
+    return rv.showItemsInTrash === true;
+  } catch {
+    return false;
+  }
 }
 
 /** Apply an incremental FolderSync delta to the existing host folder
@@ -794,7 +808,7 @@ export function applyTrashVisibility(folder, trashServerIDs) {
  *    existing entry's custom blob; folderType is recomputed from Type
  *    in case the server reclassified.
  *  - Delete: drop the entry entirely. */
-function mergeFolderDeltas(existingFolders, delta) {
+async function mergeFolderDeltas(existingFolders, delta) {
   // serverID → existing folder record. Folders that lack a serverID are
   // pre-Stage-2 ghosts; drop them silently.
   const byServerID = new Map();
@@ -853,11 +867,14 @@ function mergeFolderDeltas(existingFolders, delta) {
 
 /** Run the trash-visibility pass over a folder list and emit the
  *  canonical descriptor shape that pushFolderList accepts. Used by both
- *  the runtime sync path (initial + delta) and the migration upgrade. */
-export function finalizeFolderListForPush(folders) {
+ *  the runtime sync path (initial + delta) and the migration upgrade.
+ *  Reads the `showItemsInTrash` advanced option once so a runtime toggle
+ *  is reflected on the next folder-list fetch. */
+export async function finalizeFolderListForPush(folders) {
+  const showItemsInTrash = await readShowItemsInTrash();
   const trashServerIDs = buildTrashServerIDs(folders);
   return folders
-    .map(f => applyTrashVisibility(f, trashServerIDs))
+    .map(f => applyTrashVisibility(f, trashServerIDs, showItemsInTrash))
     .map(f => ({
       folderId: f.folderId,
       targetType: f.targetType,

@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Impostazioni avanzate"
+    "message": "EAS-4-TbSync - Impostazioni avanzate"
   },
   "options.intro": {
-    "message": "Queste impostazioni influiscono su tutti gli account EAS di questo profilo. I valori predefiniti vanno bene per quasi tutti — modifica un valore solo se hai un motivo specifico. Lascia un campo vuoto per tornare al valore predefinito integrato."
+    "message": "Queste impostazioni influiscono su tutti gli account EAS di questo profilo. I valori predefiniti vanno bene per quasi tutti - modifica un valore solo se hai un motivo specifico. Lascia un campo vuoto per tornare al valore predefinito integrato."
   },
   "options.section.network": {
     "message": "Rete"
@@ -301,7 +301,7 @@
     "message": "Tipo di dispositivo"
   },
   "options.devicetype.hint": {
-    "message": "Valore EAS DeviceType inviato nell’URL della richiesta. Alcuni server rifiutano tipi di dispositivo sconosciuti — prova un valore come WindowsOutlook15 o iPhone se il tuo provider non accetta quello predefinito. Predefinito: TbSync."
+    "message": "Valore EAS DeviceType inviato nell’URL della richiesta. Alcuni server rifiutano tipi di dispositivo sconosciuti - prova un valore come WindowsOutlook15 o iPhone se il tuo provider non accetta quello predefinito. Predefinito: TbSync."
   },
   "options.maxitems": {
     "message": "Elementi per lotto di sincronizzazione"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do pubblica le attività con una data di scadenza senza orario e senza data di inizio, quindi i promemoria vengono mostrati a mezzanotte in Lightning. Quando attivata, un’attività in arrivo con un promemoria viene riscritta in modo che la data di inizio e quella di scadenza coincidano con l’orario del promemoria, e il promemoria si attiva esattamente quando l’attività è scaduta. Attiva questa opzione solo quando sincronizzi con Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Mostra elementi nelle cartelle Cestino"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Alcuni server conservano i calendari, le rubriche e gli elenchi di attività eliminati all’interno di una cartella Cestino invece di rimuoverli del tutto. Per impostazione predefinita questi elementi sono nascosti dall’elenco delle cartelle. Attiva questa opzione per renderli visibili - appariranno con un prefisso localizzato «Cestino | » in modo da poterli distinguere e decidere se sincronizzarli. Ha effetto al prossimo aggiornamento dell’elenco delle cartelle."
   },
   "options.clientid": {
     "message": "ID client OAuth personalizzato"

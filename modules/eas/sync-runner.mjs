@@ -125,11 +125,11 @@ export async function runItemSync({
         accountId,
         patch: { custom: { foldersynckey: "0" } },
       });
-      return warningStatus("Folder hierarchy changed on the server — refresh the folder list and retry");
+      return warningStatus("Folder hierarchy changed on the server - refresh the folder list and retry");
     }
     return result.status ?? ok();
   }
-  return errorStatus("Repeated synckey reset — giving up");
+  return errorStatus("Repeated synckey reset - giving up");
 }
 
 /* ── One full sync pass ───────────────────────────────────────────── */

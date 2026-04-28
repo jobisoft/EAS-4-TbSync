@@ -212,7 +212,7 @@ async function liftFolderVisibility(provider, acc) {
   const rv = await provider.getAccount(acc.accountId);
   const folders = rv?.folders ?? [];
   if (!folders.length) return;
-  const patched = finalizeFolderListForPush(folders);
+  const patched = await finalizeFolderListForPush(folders);
   await provider.pushFolderList({ accountId: acc.accountId, folders: patched });
   provider.reportEventLog({
     level: "debug",

@@ -321,6 +321,13 @@
     "message": "Microsoft To Do publishes tasks with a date-only due date and no start date, so reminders render at midnight. When enabled, an incoming task with a reminder is rewritten so its start and due date both equal the reminder time, and the reminder fires exactly when the task is due. Only enable this when encountering issues and trying an alternative to the default behavior."
   },
 
+  "options.showItemsInTrash": {
+    "message": "Show items in Trash folders"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Some servers keep deleted calendars, address books, and task lists inside a Trash folder rather than removing them outright. By default these are hidden from the folder list. Enable this to make them visible - they appear with a localized \"Trash | \" prefix so you can tell them apart and choose whether to sync them. Takes effect on the next folder-list refresh."
+  },
+
   "options.clientid": {
     "message": "Custom OAuth client ID"
   },

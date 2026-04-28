@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Paramètres avancés"
+    "message": "EAS-4-TbSync - Paramètres avancés"
   },
   "options.intro": {
-    "message": "Ces paramètres affectent tous les comptes EAS de ce profil. Les valeurs par défaut conviennent à presque tout le monde — ne modifiez une valeur que si vous avez une raison précise. Laissez un champ vide pour revenir à la valeur par défaut intégrée."
+    "message": "Ces paramètres affectent tous les comptes EAS de ce profil. Les valeurs par défaut conviennent à presque tout le monde - ne modifiez une valeur que si vous avez une raison précise. Laissez un champ vide pour revenir à la valeur par défaut intégrée."
   },
   "options.section.network": {
     "message": "Réseau"
@@ -301,7 +301,7 @@
     "message": "Type d’appareil"
   },
   "options.devicetype.hint": {
-    "message": "Valeur EAS DeviceType envoyée dans l’URL de la requête. Quelques serveurs rejettent les types d’appareils inconnus — essayez une valeur telle que WindowsOutlook15 ou iPhone si votre fournisseur n’accepte pas la valeur par défaut. Par défaut : TbSync."
+    "message": "Valeur EAS DeviceType envoyée dans l’URL de la requête. Quelques serveurs rejettent les types d’appareils inconnus - essayez une valeur telle que WindowsOutlook15 ou iPhone si votre fournisseur n’accepte pas la valeur par défaut. Par défaut : TbSync."
   },
   "options.maxitems": {
     "message": "Éléments par lot de synchronisation"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do publie les tâches avec une date d’échéance sans heure et sans date de début ; les rappels apparaissent donc à minuit dans Lightning. Lorsque cette option est activée, une tâche entrante avec un rappel est réécrite pour que ses dates de début et d’échéance soient égales à l’heure du rappel, et le rappel se déclenche exactement lorsque la tâche est due. Activez cette option uniquement lors de la synchronisation avec Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Afficher les éléments des dossiers Corbeille"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Certains serveurs conservent les agendas, carnets d’adresses et listes de tâches supprimés dans un dossier Corbeille au lieu de les retirer définitivement. Ils sont masqués par défaut dans la liste des dossiers. Activez cette option pour les rendre visibles - ils apparaissent avec un préfixe localisé « Corbeille | » qui vous permet de les distinguer et de choisir de les synchroniser ou non. Prend effet lors du prochain rafraîchissement de la liste des dossiers."
   },
   "options.clientid": {
     "message": "ID client OAuth personnalisé"

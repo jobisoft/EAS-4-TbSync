@@ -194,7 +194,7 @@ function showAutoError(reply) {
     triedLabel.hidden = false;
     for (const t of tried) {
       const li = document.createElement("li");
-      li.textContent = `${t.url} — ${t.status}`;
+      li.textContent = `${t.url} - ${t.status}`;
       triedList.appendChild(li);
     }
   } else {

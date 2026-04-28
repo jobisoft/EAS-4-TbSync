@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Ustawienia zaawansowane"
+    "message": "EAS-4-TbSync - Ustawienia zaawansowane"
   },
   "options.intro": {
-    "message": "Te ustawienia wpływają na wszystkie konta EAS w tym profilu. Wartości domyślne sprawdzają się u prawie wszystkich — zmieniaj wartość tylko wtedy, gdy masz ku temu konkretny powód. Pozostaw pole puste, aby wrócić do domyślnej wartości wbudowanej."
+    "message": "Te ustawienia wpływają na wszystkie konta EAS w tym profilu. Wartości domyślne sprawdzają się u prawie wszystkich - zmieniaj wartość tylko wtedy, gdy masz ku temu konkretny powód. Pozostaw pole puste, aby wrócić do domyślnej wartości wbudowanej."
   },
   "options.section.network": {
     "message": "Sieć"
@@ -301,7 +301,7 @@
     "message": "Typ urządzenia"
   },
   "options.devicetype.hint": {
-    "message": "Wartość EAS DeviceType wysyłana w adresie URL żądania. Niektóre serwery odrzucają nieznane typy urządzeń — wypróbuj wartość taką jak WindowsOutlook15 lub iPhone, jeśli Twój dostawca nie akceptuje wartości domyślnej. Domyślnie: TbSync."
+    "message": "Wartość EAS DeviceType wysyłana w adresie URL żądania. Niektóre serwery odrzucają nieznane typy urządzeń - wypróbuj wartość taką jak WindowsOutlook15 lub iPhone, jeśli Twój dostawca nie akceptuje wartości domyślnej. Domyślnie: TbSync."
   },
   "options.maxitems": {
     "message": "Elementy na partię synchronizacji"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do publikuje zadania z terminem zawierającym tylko datę (bez godziny) i bez daty rozpoczęcia, dlatego przypomnienia w Lightning pojawiają się o północy. Gdy ta opcja jest włączona, przychodzące zadanie z przypomnieniem jest przepisywane tak, aby jego data rozpoczęcia i termin były równe godzinie przypomnienia, a przypomnienie uruchamia się dokładnie wtedy, gdy zadanie ma zostać wykonane. Włącz tę opcję tylko podczas synchronizacji z Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Pokaż elementy w folderach Kosz"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Niektóre serwery przechowują usunięte kalendarze, książki adresowe i listy zadań w folderze Kosz, zamiast usuwać je całkowicie. Domyślnie są one ukryte z listy folderów. Włącz tę opcję, aby były widoczne - pojawiają się z lokalizowanym przedrostkiem „Kosz | ”, dzięki czemu można je odróżnić i wybrać, czy mają być synchronizowane. Zacznie obowiązywać przy następnym odświeżeniu listy folderów."
   },
   "options.clientid": {
     "message": "Niestandardowy identyfikator klienta OAuth"

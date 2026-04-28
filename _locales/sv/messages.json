@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Avancerade inställningar"
+    "message": "EAS-4-TbSync - Avancerade inställningar"
   },
   "options.intro": {
-    "message": "Dessa inställningar påverkar varje EAS-konto i den här profilen. Standardvärdena fungerar för nästan alla — ändra bara ett värde om du har en specifik anledning. Lämna ett fält tomt för att återgå till det inbyggda standardvärdet."
+    "message": "Dessa inställningar påverkar varje EAS-konto i den här profilen. Standardvärdena fungerar för nästan alla - ändra bara ett värde om du har en specifik anledning. Lämna ett fält tomt för att återgå till det inbyggda standardvärdet."
   },
   "options.section.network": {
     "message": "Nätverk"
@@ -301,7 +301,7 @@
     "message": "Enhetstyp"
   },
   "options.devicetype.hint": {
-    "message": "EAS DeviceType-värde som skickas i förfrågans URL. Vissa servrar avvisar okända enhetstyper — prova ett värde som WindowsOutlook15 eller iPhone om din leverantör inte godtar standardvärdet. Standard: TbSync."
+    "message": "EAS DeviceType-värde som skickas i förfrågans URL. Vissa servrar avvisar okända enhetstyper - prova ett värde som WindowsOutlook15 eller iPhone om din leverantör inte godtar standardvärdet. Standard: TbSync."
   },
   "options.maxitems": {
     "message": "Objekt per synkroniseringsbatch"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do publicerar uppgifter med endast ett förfallodatum (utan tid) och utan startdatum, så påminnelser visas vid midnatt i Lightning. När det är aktiverat skrivs en inkommande uppgift med en påminnelse om så att start- och förfallodatum är lika med påminnelsens tid, och påminnelsen aktiveras exakt när uppgiften förfaller. Aktivera bara detta vid synkronisering mot Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Visa objekt i Papperskorg-mappar"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Vissa servrar behåller borttagna kalendrar, adressböcker och uppgiftslistor i en Papperskorg-mapp istället för att ta bort dem helt. Som standard är dessa dolda från mapplistan. Aktivera detta alternativ för att göra dem synliga - de visas med ett lokaliserat \"Papperskorg | \"-prefix så att du kan särskilja dem och välja om du vill synkronisera dem. Träder i kraft vid nästa uppdatering av mapplistan."
   },
   "options.clientid": {
     "message": "Anpassat OAuth-klient-ID"

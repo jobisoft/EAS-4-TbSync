@@ -271,10 +271,10 @@
 
 
   "options.title": {
-    "message": "EAS-4-TbSync — Pokročilá nastavení"
+    "message": "EAS-4-TbSync - Pokročilá nastavení"
   },
   "options.intro": {
-    "message": "Tato nastavení ovlivňují všechny účty EAS v tomto profilu. Výchozí hodnoty vyhovují téměř všem — měňte hodnotu pouze tehdy, máte-li k tomu konkrétní důvod. Ponechte pole prázdné, aby se vrátila výchozí hodnota zabudovaná v rozšíření."
+    "message": "Tato nastavení ovlivňují všechny účty EAS v tomto profilu. Výchozí hodnoty vyhovují téměř všem - měňte hodnotu pouze tehdy, máte-li k tomu konkrétní důvod. Ponechte pole prázdné, aby se vrátila výchozí hodnota zabudovaná v rozšíření."
   },
   "options.section.network": {
     "message": "Síť"
@@ -301,7 +301,7 @@
     "message": "Typ zařízení"
   },
   "options.devicetype.hint": {
-    "message": "Hodnota EAS DeviceType odesílaná v URL požadavku. Některé servery odmítají neznámé typy zařízení — pokud váš poskytovatel nepřijímá výchozí hodnotu, zkuste hodnotu jako WindowsOutlook15 nebo iPhone. Výchozí: TbSync."
+    "message": "Hodnota EAS DeviceType odesílaná v URL požadavku. Některé servery odmítají neznámé typy zařízení - pokud váš poskytovatel nepřijímá výchozí hodnotu, zkuste hodnotu jako WindowsOutlook15 nebo iPhone. Výchozí: TbSync."
   },
   "options.maxitems": {
     "message": "Položek na dávku synchronizace"
@@ -314,6 +314,13 @@
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do zveřejňuje úkoly s termínem obsahujícím pouze datum (bez času) a bez data zahájení, takže připomenutí se v aplikaci Lightning zobrazují o půlnoci. Pokud je tato volba aktivní, příchozí úkol s připomenutím je přepsán tak, aby datum zahájení i termín byly rovny času připomenutí, a připomenutí se spustí přesně v okamžiku splatnosti úkolu. Tuto volbu aktivujte pouze při synchronizaci s Microsoft To Do."
+  },
+
+  "options.showItemsInTrash": {
+    "message": "Zobrazovat položky v koši"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Některé servery uchovávají odstraněné kalendáře, adresáře a seznamy úkolů uvnitř složky Koš, místo aby je úplně odstranily. Tyto položky jsou ve výchozím stavu ze seznamu složek skryté. Aktivací této volby je zviditelníte - zobrazují se s lokalizovaným prefixem „Koš | “, abyste je rozlišili a mohli rozhodnout, zda je synchronizovat. Projeví se při příštím obnovení seznamu složek."
   },
   "options.clientid": {
     "message": "Vlastní ID klienta OAuth"
