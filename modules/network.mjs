@@ -21,8 +21,14 @@
 import { decodeWBXML } from "./wbxml.mjs";
 import { getAccessToken, invalidateAccessToken, isOAuthAccount } from "./eas/oauth.mjs";
 
-const DEFAULT_USER_AGENT = "TbSync-EAS/1.0";
-const CONNECTION_TIMEOUT_MS = 90_000;
+const DEFAULT_USER_AGENT = "Thunderbird ActiveSync";
+const CUSTOM_USER_AGENT_STORAGE_KEY = "tbsync.useragent";
+
+const DEFAULT_DEVICE_TYPE = "TbSync";
+const CUSTOM_DEVICE_TYPE_STORAGE_KEY = "tbsync.type";
+
+const DEFAULT_CONNECTION_TIMEOUT_MS = 90_000;
+const CUSTOM_CONNECTION_TIMEOUT_STORAGE_KEY = "timeout";
 
 /** Hostnames where Microsoft's load balancer needs the
  *  `DefaultAnchorMailbox` cookie to route the request to the right
@@ -34,11 +40,11 @@ const ANCHOR_MAILBOX_HOSTS = new Set(["eas.outlook.com"]);
 
 /** Stable error codes thrown by this module. */
 export const NET_ERR = {
-  AUTH:               "E:AUTH",
+  AUTH: "E:AUTH",
   PROVISION_REQUIRED: "E:PROVISION_REQUIRED",
-  HOST_REDIRECT:      "E:HOST_REDIRECT",
-  HTTP:               "E:HTTP",
-  NETWORK:            "E:NETWORK",
+  HOST_REDIRECT: "E:HOST_REDIRECT",
+  HTTP: "E:HTTP",
+  NETWORK: "E:NETWORK",
 };
 
 export class EasHttpError extends Error {
@@ -66,7 +72,7 @@ export async function easOptions({ account }) {
   const authHeader = await buildAuthHeader(account);
   const headers = new Headers({
     Authorization: authHeader,
-    "User-Agent": userAgentFor(account),
+    "User-Agent": await getUserAgent(),
   });
   const resp = await fetchWithTimeout(custom.server, { method: "OPTIONS", headers });
   if (resp.status === 401 || resp.status === 403) {
@@ -83,14 +89,14 @@ export async function easOptions({ account }) {
 export async function easRequest({ account, command, body, asVersion }) {
   const custom = account?.custom ?? {};
   if (!custom.server) throw new Error("easRequest: account.custom.server is missing");
-  if (!custom.user)   throw new Error("easRequest: account.custom.user is missing");
+  if (!custom.user) throw new Error("easRequest: account.custom.user is missing");
   if (!custom.deviceId) throw new Error("easRequest: account.custom.deviceId is missing");
 
   const url = new URL(custom.server);
   url.searchParams.set("Cmd", command);
   url.searchParams.set("User", custom.user);
   url.searchParams.set("DeviceId", custom.deviceId);
-  url.searchParams.set("DeviceType", custom.devicetype ?? "TbSyncEAS");
+  url.searchParams.set("DeviceType", await getDeviceType());
 
   await ensureAnchorMailboxCookie(account);
 
@@ -100,7 +106,7 @@ export async function easRequest({ account, command, body, asVersion }) {
       Accept: "application/vnd.ms-sync.wbxml",
       Authorization: authHeader,
       "MS-ASProtocolVersion": asVersion ?? custom.asversion ?? "14.1",
-      "User-Agent": userAgentFor(account),
+      "User-Agent": await getUserAgent(),
     });
     // Once the user (or a server-driven 449) has flipped `provision: true`,
     // legacy sends `X-MS-PolicyKey` on every command - including the
@@ -148,9 +154,37 @@ export async function easRequest({ account, command, body, asVersion }) {
   return send(authHeader, /* retryOnAuth */ true);
 }
 
-function userAgentFor(account) {
-  const ua = account?.custom?.userAgent;
-  return (typeof ua === "string" && ua.trim()) ? ua.trim() : DEFAULT_USER_AGENT;
+async function getDeviceType() {
+  try {
+    const rv = await browser.storage.local.get({ [CUSTOM_DEVICE_TYPE_STORAGE_KEY]: "" });
+    const v = rv[CUSTOM_DEVICE_TYPE_STORAGE_KEY];
+    if (typeof v === "string" && v.trim()) {
+      return v.trim();
+    }
+  } catch { /* fall through */ }
+  return DEFAULT_DEVICE_TYPE;
+}
+
+async function getUserAgent() {
+  try {
+    const rv = await browser.storage.local.get({ [CUSTOM_USER_AGENT_STORAGE_KEY]: "" });
+    const v = rv[CUSTOM_USER_AGENT_STORAGE_KEY];
+    if (typeof v === "string" && v.trim()) {
+      return v.trim();
+    }
+  } catch { /* fall through */ }
+  return DEFAULT_USER_AGENT;
+}
+
+async function getConnectionTimeout() {
+  try {
+    const rv = await browser.storage.local.get({ [CUSTOM_CONNECTION_TIMEOUT_STORAGE_KEY]: null });
+    const v = rv[CUSTOM_CONNECTION_TIMEOUT_STORAGE_KEY];
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+      return v;
+    }
+  } catch { /* fall through */ }
+  return DEFAULT_CONNECTION_TIMEOUT_MS;
 }
 
 /** Pre-set the `DefaultAnchorMailbox` cookie that Microsoft's load
@@ -211,9 +245,11 @@ async function buildAuthHeader(account) {
 const NETWORK_RETRY_DELAY_MS = 500;
 
 async function fetchWithTimeout(url, init) {
+  const timeout = await getConnectionTimeout();
+
   for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeout);
     try {
       return await fetch(url, { ...init, signal: controller.signal });
     } catch (err) {

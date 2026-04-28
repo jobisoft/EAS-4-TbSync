@@ -7,7 +7,6 @@
  *   - user         - login, often full email
  *   - password     - basic-auth password (plaintext; future: move to secure storage)
  *   - deviceId     - stable per-account EAS device identifier
- *   - devicetype   - EAS device type (static "TbSyncEAS")
  *   - asversion    - negotiated AS version ("2.5" | "14.0" | "14.1" | "16.1")
  *   - policykey    - current provision key ("0" before first Provision)
  *   - foldersynckey - FolderSync key ("0" before first FolderSync)
@@ -509,7 +508,6 @@ export class EasProvider extends TbSyncProviderImplementation {
           authenticatedUserEmail: authenticatedUserEmail ?? null,
           // Common EAS state:
           deviceId: generateDeviceId(),
-          devicetype: "TbSyncEAS",
           asversion: "",
           policykey: "0",
           foldersynckey: "0",
@@ -539,7 +537,6 @@ export class EasProvider extends TbSyncProviderImplementation {
           user: email,
           password: args.password,
           deviceId: generateDeviceId(),
-          devicetype: "TbSyncEAS",
           asversion: "",
           policykey: "0",
           foldersynckey: "0",
@@ -568,7 +565,6 @@ export class EasProvider extends TbSyncProviderImplementation {
         user: trimmedUser,
         password: args.password,
         deviceId: generateDeviceId(),
-        devicetype: "TbSyncEAS",
         asversion: "",
         policykey: "0",
         foldersynckey: "0",

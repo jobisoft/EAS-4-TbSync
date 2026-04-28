@@ -12,8 +12,8 @@ import * as taskCodec  from "./task-codec.mjs";
 
 function makeCodec(modCodec) {
   return {
-    applicationDataToBlob({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, uid }) {
-      return modCodec.applicationDataToIcal({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, uid });
+    applicationDataToBlob({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, msTodoCompat, uid }) {
+      return modCodec.applicationDataToIcal({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, msTodoCompat, uid });
     },
     appendApplicationDataFromBlob({ builder, blob, asVersion, defaultTimezone, syncRecurrence }) {
       return modCodec.appendApplicationDataFromIcal({ builder, ical: blob, asVersion, defaultTimezone, syncRecurrence });

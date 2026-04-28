@@ -13,9 +13,9 @@
  * `OAuth2.sys.mjs` did internally for the legacy add-on.
  *
  * Refresh tokens persist in `account.custom.refreshToken`. The OAuth
- * client ID lives in `browser.storage.local["tbsync.clientID"]` - a
+ * client ID lives in `browser.storage.local["oauth.clientID"]` - a
  * single global value shared by every account in the profile; empty or
- * missing falls back to LEGACY_CLIENT_ID. Scope is derived from
+ * missing falls back to DEFAULT_OAUTH_CLIENT_ID. Scope is derived from
  * `account.custom.servertype` via `scopeForServertype`. The same
  * `servertype` field is the discriminator for "is this an OAuth
  * account?" (see `isOAuthAccount`). Access tokens are kept in an
@@ -26,25 +26,31 @@
 
 import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 
-/** Default Application (client) ID - same one the legacy add-on used.
- *  Registered in Microsoft Entra ID with the nativeclient redirect URI. */
-export const LEGACY_CLIENT_ID = "2980deeb-7460-4723-864a-f9b0f10cd992";
+/** 
+ * Default Application (client) ID, registered in Microsoft Entra ID with
+ * the nativeclient redirect URI.
+ */
+export const DEFAULT_OAUTH_CLIENT_ID = "2980deeb-7460-4723-864a-f9b0f10cd992";
 
-/** Global storage.local key that holds the user's custom OAuth client ID.
- *  One value shared by every account in the profile; empty or missing
- *  means "use LEGACY_CLIENT_ID". */
-const CLIENT_ID_STORAGE_KEY = "tbsync.clientID";
+/**
+ * Global storage.local key that holds the user's custom OAuth client ID.
+ * One value shared by every account in the profile; empty or missing
+ * means "use DEFAULT_OAUTH_CLIENT_ID".
+ */
+const CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY = "oauth.clientID";
 
-/** Resolve the OAuth client ID. Reads `tbsync.clientID` from
- *  `browser.storage.local`; falls back to LEGACY_CLIENT_ID when missing or
- *  empty. Called from every call site that builds a Microsoft request. */
+/**
+ * Resolve the OAuth client ID. Reads `oauth.clientID` from
+ * `browser.storage.local`; falls back to DEFAULT_OAUTH_CLIENT_ID when missing
+ * or empty. Called from every call site that builds a Microsoft request.
+ */
 export async function getGlobalClientID() {
   try {
-    const rv = await browser.storage.local.get({ [CLIENT_ID_STORAGE_KEY]: "" });
-    const v = rv[CLIENT_ID_STORAGE_KEY];
+    const rv = await browser.storage.local.get({ [CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY]: "" });
+    const v = rv[CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY];
     if (typeof v === "string" && v.trim()) return v.trim();
   } catch { /* fall through */ }
-  return LEGACY_CLIENT_ID;
+  return DEFAULT_OAUTH_CLIENT_ID;
 }
 
 const AUTH_ENDPOINT = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
@@ -111,7 +117,7 @@ export function primeAccessToken(accountId, token, expiresIn) {
  *   loginHint   pre-selects an account on the consent screen
  *   servertype  "office365" | "personal-ms" - drives scope
  *
- * The OAuth client ID is read from the global `tbsync.clientID` slot
+ * The OAuth client ID is read from the global `oauth.clientID` slot
  * (storage.local), with the hardcoded community ID as fallback. */
 export async function startAuth({ loginHint, servertype }) {
   const clientID = await getGlobalClientID();
@@ -209,7 +215,7 @@ export async function getAccessToken(accountId) {
 
 /** Exchange a refresh token for a fresh access token. Throws ERR.AUTH on
  *  invalid_grant (the user revoked access or password changed). The
- *  client ID is resolved from the global `tbsync.clientID` slot at every
+ *  client ID is resolved from the global `oauth.clientID` slot at every
  *  call; the scope is derived from the per-account servertype. */
 export async function refreshAccessToken({ refreshToken, servertype }) {
   const clientID = await getGlobalClientID();

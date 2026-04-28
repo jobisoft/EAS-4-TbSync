@@ -23,7 +23,7 @@ const CLASS_TO_SENSITIVITY = { PUBLIC: "0", PRIVATE: "2", CONFIDENTIAL: "3" };
 
 /* ── Reader: ApplicationData → iCal VTODO ──────────────────────────── */
 
-export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, uid }) {
+export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, msTodoCompat, uid }) {
   const vcal = newVCalendar();
   const vtodo = new ICAL.Component(["vtodo", [], []]);
   vcal.addSubcomponent(vtodo);
@@ -42,11 +42,25 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
     if (data) vtodo.updatePropertyWithValue("description", data);
   }
 
+  // Reminder is read up-front so the MS To-Do compatibility hack can pin
+  // DTSTART/DUE to the reminder time before they are written.
+  const reminderTime = readPathFrom(adNode, ["ReminderSet"]) === "1"
+    ? readPathFrom(adNode, ["ReminderTime"])
+    : null;
+  const msTodoOverride = msTodoCompat === true && !!reminderTime;
+
   // StartDate / DueDate with Utc* pairing for offset extraction.
-  const startUtc = readPathFrom(adNode, ["UtcStartDate"]);
-  if (startUtc) writeUtcDateProp(vtodo, "dtstart", startUtc);
-  const dueUtc = readPathFrom(adNode, ["UtcDueDate"]);
-  if (dueUtc) writeUtcDateProp(vtodo, "due", dueUtc);
+  if (msTodoOverride) {
+    // MS To-Do only ships date-only due dates; pin both ends to the
+    // reminder so Lightning renders the task on the correct day.
+    writeUtcDateProp(vtodo, "dtstart", reminderTime);
+    writeUtcDateProp(vtodo, "due",     reminderTime);
+  } else {
+    const startUtc = readPathFrom(adNode, ["UtcStartDate"]);
+    if (startUtc) writeUtcDateProp(vtodo, "dtstart", startUtc);
+    const dueUtc = readPathFrom(adNode, ["UtcDueDate"]);
+    if (dueUtc) writeUtcDateProp(vtodo, "due", dueUtc);
+  }
 
   // Importance → PRIORITY.
   const importance = readPathFrom(adNode, ["Importance"]);
@@ -69,9 +83,9 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
   }
 
   // Reminder.
-  if (readPathFrom(adNode, ["ReminderSet"]) === "1") {
-    const t = readPathFrom(adNode, ["ReminderTime"]);
-    if (t) appendAbsoluteAlarm(vtodo, t);
+  if (reminderTime) {
+    if (msTodoOverride) appendStartRelativeAlarm(vtodo, 0);
+    else                appendAbsoluteAlarm(vtodo, reminderTime);
   }
 
   // Categories.
@@ -238,6 +252,16 @@ function fakeLocalAsUtc(value) {
 }
 
 /* ── Alarm helpers ─────────────────────────────────────────────────── */
+
+function appendStartRelativeAlarm(vtodo, offsetSeconds) {
+  const alarm = new ICAL.Component(["valarm", [], []]);
+  alarm.updatePropertyWithValue("action", "DISPLAY");
+  const trig = new ICAL.Property("trigger", alarm);
+  trig.setValue(ICAL.Duration.fromSeconds(offsetSeconds));
+  trig.setParameter("related", "START");
+  alarm.addProperty(trig);
+  vtodo.addSubcomponent(alarm);
+}
 
 function appendAbsoluteAlarm(vtodo, easUtcStr) {
   const d = parseExtendedIso(easUtcStr);

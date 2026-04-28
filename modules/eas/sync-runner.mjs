@@ -56,6 +56,31 @@ const STATUS_FOLDER_HIERARCHY = "12";
 const MAX_PULL_BATCHES = 50;
 const POST_PUSH_WAIT_MS = 2000;
 
+/* ── Recurrence diagnostic logging ────────────────────────────────────
+ * Emit a debug-level event-log entry whenever the runner touches a
+ * recurring item or processes a 16.1 per-instance exception. The full
+ * iCal blob is attached as `details.ical` (or before/after pair for
+ * exceptions) so the user can inspect what shape the data is in at
+ * each step. Gated behind level: "debug" - production captures stay
+ * clean unless the user opts in. */
+function blobHasRecurrence(blob) {
+  if (typeof blob !== "string") return false;
+  return /\n(?:RRULE|EXDATE|RECURRENCE-ID)[;:]/.test(blob);
+}
+
+/**
+ * Extended Debug log for recurrence-related events.
+ */
+function logRecurrence(ctx, message, details) {
+  //ctx.provider.reportEventLog({
+  //  level: "debug",
+  //  accountId: ctx.accountId,
+  //  folderId: ctx.folderId,
+  //  message: `[${ctx.itemKind.changelogKind}-sync] recurrence: ${message}`,
+  //  details,
+  //});
+}
+
 /** Pull WindowSize + initial push batch size. Migrated from the legacy
  *  `extensions.eas4tbsync.maxitems` pref (default 50) into
  *  `browser.storage.local["maxItems"]`; default 25 when unset. */
@@ -63,6 +88,11 @@ async function readMaxItems() {
   const { maxItems } = await browser.storage.local.get({ maxItems: 25 });
   const n = Number(maxItems);
   return Number.isFinite(n) && n > 0 ? n : 25;
+}
+
+async function readMsTodoCompat() {
+  const { msTodoCompat } = await browser.storage.local.get({ msTodoCompat: false });
+  return msTodoCompat === true;
 }
 
 /* ── Entry point ──────────────────────────────────────────────────── */
@@ -111,12 +141,14 @@ async function runOneSync({
   const separator = String(account.custom?.seperator ?? "10");
   let synckey = String(folder.custom?.synckey ?? "0");
   const maxItems = await readMaxItems();
+  const msTodoCompat = await readMsTodoCompat();
 
   const ctx = {
     provider, account, accountId, folderId, folder,
     targetID: folder.targetID, collectionId, separator, asVersion,
     defaultTimezone,
     syncRecurrence: account.custom?.syncrecurrence === true,
+    msTodoCompat,
     itemKind,
     store: itemKind.storeFactory(folder.targetID),
     synckey,
@@ -254,6 +286,24 @@ async function pushPhase(ctx, userEdits) {
       itemsDone += slice.length;
       reportProgress(ctx, itemsDone, itemsTotal);
       continue;
+    }
+
+    // Trace any recurring items going out so the user can correlate
+    // server responses with the iCal we just sent. 16.1 sends each
+    // exception as its own <Change> with the same ServerId; that
+    // expansion happens inside appendInstanceChanges and isn't visible
+    // here - the master mod log entry is the anchor.
+    if (ctx.syncRecurrence) {
+      for (const a of built.adds) {
+        if (blobHasRecurrence(a.item.blob)) {
+          logRecurrence(ctx, `push add: itemId=${a.item.id}, clientId=${a.clientId}`, { ical: a.item.blob });
+        }
+      }
+      for (const m of built.mods) {
+        if (blobHasRecurrence(m.item.blob)) {
+          logRecurrence(ctx, `push update: itemId=${m.item.id}, serverID=${m.serverID}`, { ical: m.item.blob });
+        }
+      }
     }
 
     const r = await sendSync({
@@ -433,6 +483,7 @@ async function applyAdd(ctx, addNode) {
     adNode: ad, serverID, asVersion: ctx.asVersion,
     separator: ctx.separator, defaultTimezone: ctx.defaultTimezone,
     syncRecurrence: ctx.syncRecurrence,
+    msTodoCompat: ctx.msTodoCompat,
     uid: newId,
   });
   await ctx.provider.changelogMarkServerWrite({
@@ -447,6 +498,9 @@ async function applyAdd(ctx, addNode) {
   await verifyRoundTrip(ctx, newId, blob, "create");
   ctx.byServerId.set(serverID, { itemId: newId, blob });
   mergeIdMap(ctx, { [newId]: serverID });
+  if (blobHasRecurrence(blob)) {
+    logRecurrence(ctx, `pull add: itemId=${newId}, serverID=${serverID}`, { ical: blob });
+  }
 }
 
 async function applyChange(ctx, changeNode) {
@@ -485,7 +539,12 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
       defaultTimezone: ctx.defaultTimezone,
     });
   }
-  if (!nextBlob || nextBlob === existing.blob) return;
+  if (!nextBlob || nextBlob === existing.blob) {
+    logRecurrence(ctx, `pull 16.1 exception ${deleted ? "delete" : "change"} no-op: itemId=${existing.itemId}, instance=${instanceId}`, {
+      ical: existing.blob,
+    });
+    return;
+  }
 
   await ctx.provider.changelogMarkServerWrite({
     accountId: ctx.accountId, folderId: ctx.folderId,
@@ -494,6 +553,10 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
   });
   await ctx.store.update(existing.itemId, nextBlob);
   await verifyRoundTrip(ctx, existing.itemId, nextBlob, deleted ? "exception-delete" : "exception-update");
+  logRecurrence(ctx, `pull 16.1 exception ${deleted ? "delete" : "change"} applied: itemId=${existing.itemId}, instance=${instanceId}`, {
+    before: existing.blob,
+    after: nextBlob,
+  });
   // Re-key by the master's serverId (unchanged); keep the new blob.
   const masterServerId = codec.readEasServerIdFromBlob(nextBlob)
                        ?? codec.readEasServerIdFromBlob(existing.blob);
@@ -521,6 +584,7 @@ async function applyChangeFromAd(ctx, ad, existing) {
     separator: ctx.separator,
     defaultTimezone: ctx.defaultTimezone,
     syncRecurrence: ctx.syncRecurrence,
+    msTodoCompat: ctx.msTodoCompat,
     uid: existing.itemId,
   });
   await ctx.provider.changelogMarkServerWrite({
@@ -532,6 +596,12 @@ async function applyChangeFromAd(ctx, ad, existing) {
   await verifyRoundTrip(ctx, existing.itemId, blob, "update");
   ctx.byServerId.set(ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
                      { itemId: existing.itemId, blob });
+  if (blobHasRecurrence(blob) || blobHasRecurrence(existing.blob)) {
+    logRecurrence(ctx, `pull update: itemId=${existing.itemId}`, {
+      before: existing.blob,
+      after: blob,
+    });
+  }
 }
 
 async function applyDelete(ctx, delNode) {

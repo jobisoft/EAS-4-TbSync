@@ -32,43 +32,61 @@ const UPGRADE_QUEUE_KEY = "eas.upgradeQueue";
 export const UPGRADES = [
   {
     splitVersion: "4.20",
-    id: "eas.host-and-https-to-server",
+    id: "eas.legacy-migration",
     run: async (provider) => {
-      await liftLegacyAccountState(provider);
+      const PREF_MIGRATIONS = [
+        {
+          keys: {
+            "extensions.eas4tbsync.timeout": "timeout",
+            "extensions.eas4tbsync.maxitems": "maxItems",
+          },
+          validate: (v) => typeof v === "number" && Number.isFinite(v) && v > 0,
+          transform: (v) => v,
+          logValue: (v) => ` (${v})`,
+        },
+        {
+          keys: {
+            "extensions.eas4tbsync.oauth.clientID": "oauth.clientID",
+            "extensions.eas4tbsync.clientID.useragent": "tbsync.useragent",
+            "extensions.eas4tbsync.clientID.type": "tbsync.type",
+
+          },
+          validate: (v) => typeof v === "string" && !!v.trim(),
+          transform: (v) => v.trim(),
+          logValue: () => "",
+        },
+        {
+          keys: {
+            "extensions.eas4tbsync.msTodoCompat": "msTodoCompat",
+          },
+          defaultValue: null,
+          validate: (v) => typeof v === "boolean",
+          transform: (v) => v,
+          logValue: (v) => ` (${v})`,
+        }
+      ];
+
+      for (const migration of PREF_MIGRATIONS) {
+        await liftPref(provider, migration);
+      }
+
+      const accounts = await provider.listAccounts();
+      for (const acc of accounts) {
+        try {
+          await liftHostAndHttpsToServer(provider, acc);
+          await liftCredentials(provider, acc);
+          await liftFolderVisibility(provider, acc);
+        } catch (err) {
+          provider.reportEventLog({
+            level: "warning",
+            accountId: acc.accountId,
+            message: `[upgrade] failed to lift legacy state: ${err?.message ?? String(err)}`,
+          });
+        }
+      }
     },
   },
 ];
-
-/** Legacy add-on root pref branch ([provider.js:28](../../EAS-4-TbSync/content/provider.js#L28)).
- *  Used to find the global OAuth client-ID slot. */
-const LEGACY_PREF_CLIENT_ID = "extensions.eas4tbsync.oauth.clientID";
-
-/** Legacy `maxitems` pref - sync WindowSize + push batch size. Default
- *  was 50 ([provider.js:54](../../EAS-4-TbSync/content/provider.js#L54)). */
-const LEGACY_PREF_MAX_ITEMS = "extensions.eas4tbsync.maxitems";
-
-/** Storage.local key the new add-on reads at refresh time
- *  ([modules/eas/oauth.mjs](eas/oauth.mjs)). One value shared by all
- *  accounts in the profile, matching legacy semantics. */
-const STORAGE_KEY_CLIENT_ID = "tbsync.clientID";
-
-/** Storage.local key for the per-pull/push WindowSize cap. Read at sync
- *  time by `eas/sync-runner.mjs`; default 25 when missing. */
-const STORAGE_KEY_MAX_ITEMS = "maxItems";
-
-/** nsILoginManager realm legacy used for EAS credentials
- *  ([content/includes/network.js:122](../../EAS-4-TbSync/content/includes/network.js#L122)).
- *  The origin is namespaced per-account as "TbSync#<accountID>" rather
- *  than the actual server hostname - legacy decoupled the credential
- *  from the host so Autodiscover-driven host changes don't orphan it
- *  ([content/includes/network.js:107-115](../../EAS-4-TbSync/content/includes/network.js#L107-L115)).
- *  The legacy accountID survives the host's profile migration unchanged,
- *  so we can reach the entry by reusing `account.accountId` here. */
-const LEGACY_LOGIN_REALM = "TbSync/EAS";
-
-function legacyLoginOrigin(accountId) {
-  return `TbSync#${accountId}`;
-}
 
 /** Dotted-decimal version comparison. Sufficient for the version
  *  strings the legacy add-on shipped (e.g. `"4.17.2.ews.16.1"`) and
@@ -168,43 +186,25 @@ export async function enqueueUpgradesForUpdate(previousVersion, currentVersion) 
   return next.length;
 }
 
-// ── Upgrade bodies ───────────────────────────────────────────────────────
+// ── Upgrade helpers for legacy migrations─────────────────────────────────────
 
-/** Lift the legacy account state into the shape the new EAS provider
- *  reads:
- *
- *    1. Global OAuth client-ID pref (`extensions.eas4tbsync.oauth.clientID`)
- *       → `browser.storage.local["tbsync.clientID"]`. Skipped when the
- *       legacy pref is missing or empty.
- *    2. Per-account `host` + `https` (bool) → `custom.server` URL.
- *       Strips trailing slashes and appends `/Microsoft-Server-ActiveSync`
- *       unless the host already ends in it.
- *    3. Per-account credentials lifted from `nsILoginManager` (origin =
- *       `TbSync#<accountID>`, realm = "TbSync/EAS", user = legacy user)
- *       into `custom`. Branches on `custom.servertype`:
- *         - "office365" → parse the JSON token blob, take `.refresh`,
- *           write `refreshToken`.
- *         - anything else → write `password` from the raw login-manager
- *           value.
- *
- *  Each step is idempotent. */
-async function liftLegacyAccountState(provider) {
-  await liftClientIDPref(provider);
-  await liftMaxItemsPref(provider);
+async function liftPref(provider, {
+  keys,
+  validate,
+  transform,
+  logValue,
+}) {
+  for (const [legacyKey, storageKey] of Object.entries(keys)) {
+    const value = await browser.LegacyPrefs.getUserPref(legacyKey);
+    if (!validate(value)) continue;
 
-  const accounts = await provider.listAccounts();
-  for (const acc of accounts) {
-    try {
-      await liftHostAndHttpsToServer(provider, acc);
-      await liftCredentials(provider, acc);
-      await liftFolderVisibility(provider, acc);
-    } catch (err) {
-      provider.reportEventLog({
-        level: "warning",
-        accountId: acc.accountId,
-        message: `[upgrade] failed to lift legacy state: ${err?.message ?? String(err)}`,
-      });
-    }
+    const newValue = transform(value);
+    await browser.storage.local.set({ [storageKey]: newValue });
+
+    provider.reportEventLog({
+      level: "debug",
+      message: `[upgrade] lifted legacy '${legacyKey}' pref${logValue(newValue)} into storage.local['${storageKey}']`,
+    });
   }
 }
 
@@ -218,30 +218,6 @@ async function liftFolderVisibility(provider, acc) {
     level: "debug",
     accountId: acc.accountId,
     message: `[upgrade] applied trash visibility to ${patched.length} folder(s)`,
-  });
-}
-
-async function liftMaxItemsPref(provider) {
-  const existing = await browser.storage.local.get({ [STORAGE_KEY_MAX_ITEMS]: null });
-  if (existing[STORAGE_KEY_MAX_ITEMS] != null) return;
-  const value = await browser.LegacyPrefs.getUserPref(LEGACY_PREF_MAX_ITEMS);
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return;
-  await browser.storage.local.set({ [STORAGE_KEY_MAX_ITEMS]: value });
-  provider.reportEventLog({
-    level: "debug",
-    message: `[upgrade] lifted legacy '${LEGACY_PREF_MAX_ITEMS}' pref (${value}) into storage.local['${STORAGE_KEY_MAX_ITEMS}']`,
-  });
-}
-
-async function liftClientIDPref(provider) {
-  const existing = await browser.storage.local.get({ [STORAGE_KEY_CLIENT_ID]: "" });
-  if (existing[STORAGE_KEY_CLIENT_ID]) return;
-  const value = await browser.LegacyPrefs.getUserPref(LEGACY_PREF_CLIENT_ID);
-  if (typeof value !== "string" || !value.trim()) return;
-  await browser.storage.local.set({ [STORAGE_KEY_CLIENT_ID]: value.trim() });
-  provider.reportEventLog({
-    level: "debug",
-    message: `[upgrade] lifted legacy '${LEGACY_PREF_CLIENT_ID}' pref into storage.local['${STORAGE_KEY_CLIENT_ID}']`,
   });
 }
 
@@ -265,6 +241,15 @@ async function liftHostAndHttpsToServer(provider, acc) {
 }
 
 async function liftCredentials(provider, acc) {
+  /** nsILoginManager realm legacy used for EAS credentials
+   *  The origin is namespaced per-account as "TbSync#<accountID>" rather
+   *  than the actual server hostname - legacy decoupled the credential
+   *  from the host so Autodiscover-driven host changes don't orphan it.
+   *  The legacy accountID survives the host's profile migration unchanged,
+   *  so we can reach the entry by reusing `account.accountId` here.
+   */
+  const LEGACY_LOGIN_REALM = "TbSync/EAS";
+
   const c = acc.custom ?? {};
   const isOAuthLegacy = c.servertype === "office365";
 
@@ -281,7 +266,7 @@ async function liftCredentials(provider, acc) {
     return;
   }
 
-  const origin = legacyLoginOrigin(acc.accountId);
+  const origin = `TbSync#${acc.accountId}`;
   const stored = await browser.LegacyLoginManager.getLoginInfo({
     origin,
     httpRealm: LEGACY_LOGIN_REALM,
@@ -310,10 +295,12 @@ async function liftCredentials(provider, acc) {
     }
     await provider.updateAccount({
       accountId: acc.accountId,
-      patch: { custom: {
-        refreshToken,
-        authenticatedUserEmail: c.authenticatedUserEmail ?? null,
-      }},
+      patch: {
+        custom: {
+          refreshToken,
+          authenticatedUserEmail: c.authenticatedUserEmail ?? null,
+        }
+      },
     });
     provider.reportEventLog({
       level: "debug",
@@ -325,9 +312,11 @@ async function liftCredentials(provider, acc) {
 
   await provider.updateAccount({
     accountId: acc.accountId,
-    patch: { custom: {
-      password: stored,
-    }},
+    patch: {
+      custom: {
+        password: stored,
+      }
+    },
   });
   provider.reportEventLog({
     level: "debug",
