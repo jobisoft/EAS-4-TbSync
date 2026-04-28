@@ -58,7 +58,7 @@ const PHONE_KEYS_BY_TYPE = invertMap({
  *    asVersion   "2.5" | "14.0" | "14.1" | "16.1" - selects body codepage
  *    separator   ASCII char code (string) for multi-line address streets
  *    uid         optional vCard UID to embed (TB derives the contact id from it) */
-export function applicationDataToVCard({ adNode, serverID, asVersion, separator, uid }) {
+export async function applicationDataToVCard({ adNode, serverID, asVersion, separator, uid }) {
   const comp = newVCard();
   if (uid) comp.addPropertyWithValue("uid", uid);
   comp.addPropertyWithValue(X_EAS_SERVERID, serverID);
@@ -66,7 +66,7 @@ export function applicationDataToVCard({ adNode, serverID, asVersion, separator,
   readNames(adNode, comp);
   readFileAs(adNode, comp);
   readDates(adNode, comp);
-  readEmails(adNode, comp);
+  await readEmails(adNode, comp);
   readWeb(adNode, comp);
   readPhones(adNode, comp);
   readAddresses(adNode, comp, separator);
@@ -186,18 +186,58 @@ function writeDates(b, comp) {
 
 /* ── Emails ────────────────────────────────────────────────────────── */
 
-function readEmails(adNode, comp) {
+// EAS encodes Email{N}Address as RFC 5322 mailboxes (e.g.
+// `"John Doe" <john@example.com>`). On read we extract the bare address
+// so Thunderbird's address book stores `EMAIL:john@example.com`. On
+// write we rebuild the mailbox using the contact's FN as display name.
+
+async function readEmails(adNode, comp) {
   for (let i = 0; i < 3; i++) {
     const v = readPathFrom(adNode, [`Email${i + 1}Address`]);
-    if (v) comp.addPropertyWithValue("email", v);
+    if (!v) continue;
+    const bare = await extractBareEmail(v);
+    comp.addPropertyWithValue("email", bare);
   }
 }
 
+async function extractBareEmail(raw) {
+  try {
+    const parsed = await messenger.messengerUtilities.parseMailboxString(raw);
+    const first = Array.isArray(parsed) ? parsed[0] : null;
+    if (first?.email) return first.email;
+  } catch { /* fall through */ }
+  return raw;
+}
+
 function writeEmails(b, comp) {
-  const emails = comp.getAllProperties("email").map(p => stringOf(p.getFirstValue())).filter(Boolean);
+  const fn = stringOf(comp.getFirstPropertyValue("fn")).trim();
+  const emails = comp.getAllProperties("email")
+    .map(p => stringOf(p.getFirstValue()).trim())
+    .filter(Boolean);
   for (let i = 0; i < Math.min(emails.length, 3); i++) {
-    b.atag(`Email${i + 1}Address`, emails[i]);
+    b.atag(`Email${i + 1}Address`, formatMailboxForServer(emails[i], fn));
   }
+}
+
+// Defensive: skip the wrap if the stored value already looks like a
+// mailbox. Avoids "Name <Other Name <addr@x>>" frankenmailboxes when an
+// external tool has already formatted the EMAIL property, or when legacy
+// data carried the unstripped form forward.
+const MAILBOX_RE = /<[^<>@\s]+@[^<>@\s]+>\s*$/;
+
+function formatMailboxForServer(value, displayName) {
+  if (MAILBOX_RE.test(value)) return value;
+  if (!displayName) return value;
+  return buildMailbox(displayName, value);
+}
+
+function buildMailbox(name, email) {
+  // RFC 5322 §3.4: quote the display name when it contains specials.
+  // EAS WBXML payloads are UTF-8 native, so no RFC 2047 encoding needed.
+  const needsQuote = /[",;:<>@()[\]\\.]/.test(name);
+  if (!needsQuote) return `${name} <${email}>`;
+  const escaped = name.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return `"${escaped}" <${email}>`;
 }
 
 /* ── WebPage ───────────────────────────────────────────────────────── */

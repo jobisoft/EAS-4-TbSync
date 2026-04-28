@@ -479,7 +479,7 @@ async function applyAdd(ctx, addNode) {
   if (existing) return applyChangeFromAd(ctx, ad, existing);
 
   const newId = crypto.randomUUID();
-  const blob = ctx.itemKind.codec.applicationDataToBlob({
+  const blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad, serverID, asVersion: ctx.asVersion,
     separator: ctx.separator, defaultTimezone: ctx.defaultTimezone,
     syncRecurrence: ctx.syncRecurrence,
@@ -577,7 +577,7 @@ function parseEasInstanceId(s) {
 }
 
 async function applyChangeFromAd(ctx, ad, existing) {
-  const blob = ctx.itemKind.codec.applicationDataToBlob({
+  const blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
     serverID: ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
     asVersion: ctx.asVersion,

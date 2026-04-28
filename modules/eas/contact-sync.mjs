@@ -14,8 +14,8 @@ import {
 } from "./contact-codec.mjs";
 
 const codec = {
-  applicationDataToBlob({ adNode, serverID, asVersion, separator, uid }) {
-    return applicationDataToVCard({ adNode, serverID, asVersion, separator, uid });
+  async applicationDataToBlob({ adNode, serverID, asVersion, separator, uid }) {
+    return await applicationDataToVCard({ adNode, serverID, asVersion, separator, uid });
   },
   appendApplicationDataFromBlob({ builder, blob, asVersion, separator }) {
     return appendApplicationDataFromVCard({ builder, vCard: blob, asVersion, separator });
