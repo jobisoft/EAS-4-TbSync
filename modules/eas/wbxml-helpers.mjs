@@ -31,16 +31,25 @@ export function readPathFrom(node, path) {
 }
 
 /** Inverse of the WBXML decoder's `encodeURIComponent` round-trip in
- *  [modules/wbxml.mjs](../wbxml.mjs) — turns "Feiertage%20in%20Deutschland"
- *  back into "Feiertage in Deutschland". All leaf text in the synthesized
- *  XML went through `encodeURIComponent`, so a single decode here is the
- *  right inverse for everything (numeric tokens like "1"/"8"/"13" round-trip
- *  unchanged; multi-byte UTF-8 is reassembled correctly). */
+ *  [modules/wbxml.mjs](../wbxml.mjs). The decoder builds a string with
+ *  one JS code unit per raw WBXML byte, then `encodeURIComponent`s it
+ *  for safe XML embedding. `decodeURIComponent` here recovers that
+ *  byte-per-code-unit string; we then interpret the byte sequence as
+ *  UTF-8 (per MS-ASWBXML 2.1.2.2) to get the proper Unicode string.
+ *  Without the second step "ü" (UTF-8 0xC3 0xBC) would surface as
+ *  "Ã¼". ASCII bytes are unchanged by either step. */
 function decodeText(text) {
   if (text == null) return null;
   if (text === "") return "";
-  try { return decodeURIComponent(text); }
+  let raw;
+  try { raw = decodeURIComponent(text); }
   catch { return text; }
+  try {
+    const bytes = Uint8Array.from(raw, c => c.charCodeAt(0) & 0xFF);
+    return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  } catch {
+    return raw;
+  }
 }
 
 function childByTag(node, tag) {

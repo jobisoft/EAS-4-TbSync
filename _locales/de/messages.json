@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Provider-Add-on für TbSync, das Kontakte, Kalender und Aufgaben mit einem Exchange-ActiveSync-Server synchronisiert."
+  },
+
   "folder.trashPrefix": {
     "message": "Papierkorb"
+  },
+
+  "setup.title": {
+    "message": "Exchange-ActiveSync-Konto (EAS) hinzufügen"
+  },
+  "setup.intro": {
+    "message": "Wählen Sie die Art des Exchange-ActiveSync-Kontos, das Sie hinzufügen möchten."
+  },
+
+  "setup.accountType": {
+    "message": "Kontotyp"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Microsoft 365 Firmen-/Geschäftskonten."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Persönliches Microsoft-Konto"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com und andere Microsoft-Konten für Privatpersonen."
+  },
+  "setup.accountType.auto": {
+    "message": "Automatische Erkennung"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Ermittelt die EAS-Server-URL aus Ihrer E-Mail-Adresse. Funktioniert mit den meisten Exchange- und EAS-kompatiblen Anbietern."
+  },
+  "setup.accountType.custom": {
+    "message": "Eigener EAS-Server"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Beliebiger EAS-kompatibler Server. Authentifizierung mit Benutzername und Passwort."
+  },
+
+  "setup.auto.email": {
+    "message": "E-Mail-Adresse"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Suchen"
+  },
+  "setup.auto.status.searching": {
+    "message": "Server-Einstellungen werden gesucht…"
+  },
+  "setup.auto.error.title": {
+    "message": "Es konnte kein EAS-Server gefunden werden"
+  },
+  "setup.auto.error.auth": {
+    "message": "Benutzername oder Passwort wurde abgelehnt. Bitte Schreibweise überprüfen oder „Eigener EAS-Server“ verwenden."
+  },
+  "setup.auto.error.network": {
+    "message": "Die Erkennungsendpunkte konnten nicht erreicht werden. Bitte prüfen Sie Ihre Internetverbindung."
+  },
+  "setup.auto.error.noServer": {
+    "message": "Die Erkennung wurde abgeschlossen, aber es wurde kein EAS-Server angeboten. Der Server unterstützt möglicherweise keine automatische Erkennung."
+  },
+  "setup.auto.error.tried": {
+    "message": "Geprüfte Endpunkte:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Falls Ihr Anbieter eine manuelle Konfiguration erfordert, wählen Sie „Eigener EAS-Server“."
+  },
+
+  "setup.oauth.email": {
+    "message": "E-Mail-Adresse des Microsoft-Kontos"
+  },
+  "setup.oauth.signIn": {
+    "message": "Mit Microsoft anmelden"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Bitte geben Sie die E-Mail-Adresse Ihres Microsoft-Kontos ein."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "Anmeldung wurde abgebrochen."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Anmeldung fehlgeschlagen"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Anmeldung fehlgeschlagen: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Kontobezeichnung"
+  },
+  "setup.server": {
+    "message": "Server-URL"
+  },
+  "setup.serverHint": {
+    "message": "Beispiel: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Benutzername"
+  },
+  "setup.password": {
+    "message": "Passwort"
+  },
+  "setup.authButton": {
+    "message": "Konto erstellen"
+  },
+  "setup.cancelButton": {
+    "message": "Abbrechen"
+  },
+  "setup.error.labelRequired": {
+    "message": "Bitte geben Sie eine Kontobezeichnung ein."
+  },
+  "setup.error.serverRequired": {
+    "message": "Bitte geben Sie die Server-URL ein."
+  },
+  "setup.error.userRequired": {
+    "message": "Bitte geben Sie den Benutzernamen ein."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Bitte geben Sie das Passwort ein."
+  },
+  "setup.error.missingToken": {
+    "message": "Setup-Token fehlt. Bitte öffnen Sie dieses Fenster über TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "Konto konnte nicht erstellt werden"
+  },
+
+  "config.title": {
+    "message": "Exchange-Konto-Einstellungen"
+  },
+  "config.label": {
+    "message": "Kontobezeichnung"
+  },
+  "config.server": {
+    "message": "Server-URL"
+  },
+  "config.user": {
+    "message": "Benutzername"
+  },
+  "config.password": {
+    "message": "Passwort (leer lassen, um das aktuelle beizubehalten)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Um Synchronisierungsfehler zu vermeiden, können die Einstellungen nicht bearbeitet werden, solange das Konto aktiviert ist."
+  },
+  "config.save": {
+    "message": "Speichern"
+  },
+  "config.cancel": {
+    "message": "Abbrechen"
+  },
+  "config.close": {
+    "message": "Schließen"
+  },
+  "config.error.missingAccountId": {
+    "message": "Konto-Kennung fehlt."
+  },
+  "config.error.loadFailed": {
+    "message": "Konto konnte nicht geladen werden."
+  },
+  "config.error.accountNameRequired": {
+    "message": "Kontoname ist erforderlich."
+  },
+  "config.error.saveFailed": {
+    "message": "Speichern fehlgeschlagen"
+  },
+
+  "config.section.account": {
+    "message": "Konto"
+  },
+  "config.section.connection": {
+    "message": "Verbindung"
+  },
+  "config.section.protocol": {
+    "message": "Protokoll"
+  },
+  "config.section.contacts": {
+    "message": "Kontakte"
+  },
+  "config.section.calendar": {
+    "message": "Kalender"
+  },
+
+  "config.account.accountType": {
+    "message": "Kontotyp"
+  },
+  "config.account.signedInAs": {
+    "message": "Angemeldet als"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "ActiveSync-Version"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automatisch (vom Server bevorzugte Version verwenden)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Aktuell ausgehandelt: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "Geräte-ID"
+  },
+  "config.protocol.provision": {
+    "message": "Provisionierung erzwingen"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Einige Server (z. B. Kerio) verlangen, dass die Provisionierung vor allen anderen Befehlen gesendet wird. Die meisten Server – einschließlich Microsoft Exchange und Microsoft 365 – fordern sie bei Bedarf automatisch an; für diese müssen Sie diese Option nicht manuell aktivieren."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Anzeigenamen mit „Vorname“ + „Nachname“ überschreiben"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Trennzeichen für mehrzeilige Namen"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Zeilenumbruch"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Komma"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Synchronisierungszeitraum"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Alle Termine"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Letzte 2 Wochen"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Letzter Monat"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Letzte 3 Monate"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Letzte 6 Monate"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Wiederkehrende Termine/Aufgaben und Ausnahmen synchronisieren"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Experimentell – standardmäßig deaktiviert. Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Ungültige ActiveSync-Version ausgewählt."
+  },
+
+  "warning.reauthFailed": {
+    "message": "Erneute Anmeldung wurde nicht abgeschlossen. Klicken Sie auf „Erneut anmelden“, um es erneut zu versuchen."
   }
 }

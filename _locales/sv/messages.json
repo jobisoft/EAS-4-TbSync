@@ -32,11 +32,45 @@
   "setup.accountType.personalMs.hint": {
     "message": "outlook.com, hotmail.com, live.com och andra Microsoft-konton för konsumenter."
   },
+  "setup.accountType.auto": {
+    "message": "Auto-detektera"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Slå upp EAS-serverns URL från din e-postadress. Fungerar med de flesta Exchange- och EAS-kompatibla leverantörer."
+  },
   "setup.accountType.custom": {
     "message": "Anpassad EAS-server"
   },
   "setup.accountType.custom.hint": {
     "message": "Valfri EAS-kompatibel server. Autentisering med användarnamn och lösenord."
+  },
+
+  "setup.auto.email": {
+    "message": "E-postadress"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Sök"
+  },
+  "setup.auto.status.searching": {
+    "message": "Letar efter serverinställningar…"
+  },
+  "setup.auto.error.title": {
+    "message": "Vi kunde inte hitta någon EAS-server"
+  },
+  "setup.auto.error.auth": {
+    "message": "Användarnamnet eller lösenordet avvisades. Kontrollera stavningen eller använd ”Anpassad EAS-server”."
+  },
+  "setup.auto.error.network": {
+    "message": "Kunde inte nå upptäcktsändpunkterna. Kontrollera din internetanslutning."
+  },
+  "setup.auto.error.noServer": {
+    "message": "Upptäckten slutfördes men ingen EAS-server annonserades. Servern kanske inte stöder auto-detektering."
+  },
+  "setup.auto.error.tried": {
+    "message": "Ändpunkter vi provade:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Om din leverantör kräver manuell konfiguration, välj ”Anpassad EAS-server”."
   },
 
   "setup.oauth.email": {
@@ -219,6 +253,12 @@
   },
   "config.calendar.syncLimit.6months": {
     "message": "Senaste 6 månaderna"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Synkronisera återkommande händelser/uppgifter och undantag"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Experimentellt — av som standard. När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
   },
 
   "config.error.invalidAsVersion": {

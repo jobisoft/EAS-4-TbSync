@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Doplněk poskytovatele pro TbSync, který synchronizuje kontakty, kalendáře a úkoly se serverem Exchange ActiveSync."
+  },
+
   "folder.trashPrefix": {
     "message": "Koš"
+  },
+
+  "setup.title": {
+    "message": "Přidat účet Exchange ActiveSync (EAS)"
+  },
+  "setup.intro": {
+    "message": "Vyberte typ účtu Exchange ActiveSync, který chcete přidat."
+  },
+
+  "setup.accountType": {
+    "message": "Typ účtu"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Firemní / pracovní tenanty Microsoft 365."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Osobní účet Microsoft"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com a další osobní účty Microsoft."
+  },
+  "setup.accountType.auto": {
+    "message": "Automatické zjištění"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Najde URL EAS serveru podle vaší e-mailové adresy. Funguje s většinou poskytovatelů Exchange a EAS-kompatibilních serverů."
+  },
+  "setup.accountType.custom": {
+    "message": "Vlastní EAS server"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Jakýkoli server kompatibilní s EAS. Ověření uživatelským jménem a heslem."
+  },
+
+  "setup.auto.email": {
+    "message": "E-mailová adresa"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Zjistit"
+  },
+  "setup.auto.status.searching": {
+    "message": "Zjišťování nastavení serveru…"
+  },
+  "setup.auto.error.title": {
+    "message": "Nepodařilo se najít EAS server"
+  },
+  "setup.auto.error.auth": {
+    "message": "Uživatelské jméno nebo heslo bylo odmítnuto. Zkontrolujte pravopis nebo použijte „Vlastní EAS server“."
+  },
+  "setup.auto.error.network": {
+    "message": "Nepodařilo se kontaktovat zjišťovací koncové body. Zkontrolujte připojení k internetu."
+  },
+  "setup.auto.error.noServer": {
+    "message": "Zjišťování proběhlo, ale nebyl ohlášen žádný EAS server. Server zřejmě nepodporuje automatické zjištění."
+  },
+  "setup.auto.error.tried": {
+    "message": "Zkoušené koncové body:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Pokud váš poskytovatel vyžaduje ruční nastavení, zvolte „Vlastní EAS server“."
+  },
+
+  "setup.oauth.email": {
+    "message": "E-mail účtu Microsoft"
+  },
+  "setup.oauth.signIn": {
+    "message": "Přihlásit se přes Microsoft"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Zadejte e-mail svého účtu Microsoft."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "Přihlášení bylo zrušeno."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Přihlášení selhalo"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Přihlášení selhalo: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Štítek účtu"
+  },
+  "setup.server": {
+    "message": "URL serveru"
+  },
+  "setup.serverHint": {
+    "message": "Příklad: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Uživatelské jméno"
+  },
+  "setup.password": {
+    "message": "Heslo"
+  },
+  "setup.authButton": {
+    "message": "Vytvořit účet"
+  },
+  "setup.cancelButton": {
+    "message": "Zrušit"
+  },
+  "setup.error.labelRequired": {
+    "message": "Zadejte štítek účtu."
+  },
+  "setup.error.serverRequired": {
+    "message": "Zadejte URL serveru."
+  },
+  "setup.error.userRequired": {
+    "message": "Zadejte uživatelské jméno."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Zadejte heslo."
+  },
+  "setup.error.missingToken": {
+    "message": "Chybí token nastavení. Otevřete toto okno prostřednictvím TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "Účet se nepodařilo vytvořit"
+  },
+
+  "config.title": {
+    "message": "Nastavení účtu Exchange"
+  },
+  "config.label": {
+    "message": "Štítek účtu"
+  },
+  "config.server": {
+    "message": "URL serveru"
+  },
+  "config.user": {
+    "message": "Uživatelské jméno"
+  },
+  "config.password": {
+    "message": "Heslo (pro zachování stávajícího ponechte prázdné)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Aby nedocházelo k chybám synchronizace, nelze nastavení upravovat, dokud je účet zapnutý."
+  },
+  "config.save": {
+    "message": "Uložit"
+  },
+  "config.cancel": {
+    "message": "Zrušit"
+  },
+  "config.close": {
+    "message": "Zavřít"
+  },
+  "config.error.missingAccountId": {
+    "message": "Chybí identifikátor účtu."
+  },
+  "config.error.loadFailed": {
+    "message": "Nepodařilo se načíst účet."
+  },
+  "config.error.accountNameRequired": {
+    "message": "Název účtu je povinný."
+  },
+  "config.error.saveFailed": {
+    "message": "Uložení selhalo"
+  },
+
+  "config.section.account": {
+    "message": "Účet"
+  },
+  "config.section.connection": {
+    "message": "Připojení"
+  },
+  "config.section.protocol": {
+    "message": "Protokol"
+  },
+  "config.section.contacts": {
+    "message": "Kontakty"
+  },
+  "config.section.calendar": {
+    "message": "Kalendář"
+  },
+
+  "config.account.accountType": {
+    "message": "Typ účtu"
+  },
+  "config.account.signedInAs": {
+    "message": "Přihlášen(a) jako"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "Verze ActiveSync"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automaticky (použít verzi preferovanou serverem)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Aktuálně dohodnuto: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "ID zařízení"
+  },
+  "config.protocol.provision": {
+    "message": "Vynutit provisioning"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Některé servery (např. Kerio) vyžadují, aby provisioning byl odeslán před jakýmkoli jiným příkazem. Většina serverů – včetně Microsoft Exchange a Microsoft 365 – si o něj automaticky řekne, když je třeba; u nich nemusíte tuto volbu zapínat ručně."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Přepsat zobrazované jméno tvarem „Křestní jméno“ + „Příjmení“"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Oddělovač víceřádkových jmen"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Konec řádku"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Čárka"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Okno synchronizace"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Všechny události"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Poslední 2 týdny"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Poslední měsíc"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Poslední 3 měsíce"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Posledních 6 měsíců"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Synchronizovat opakující se události/úkoly a výjimky"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Experimentální – ve výchozím stavu vypnuto. Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Neplatný výběr verze ActiveSync."
+  },
+
+  "warning.reauthFailed": {
+    "message": "Opětovné ověření se nedokončilo. Pro nový pokus klikněte na „Přihlásit se znovu“."
   }
 }

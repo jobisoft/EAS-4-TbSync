@@ -1,5 +1,6 @@
 import { EasProvider } from "./modules/eas-provider.mjs";
 import { startAuth } from "./modules/eas/oauth.mjs";
+import { discoverEasServer } from "./modules/eas/autodiscover.mjs";
 import { runUpgrades, enqueueUpgradesForUpdate } from "./modules/upgrades.mjs";
 
 /**
@@ -38,6 +39,29 @@ browser.runtime.onMessage.addListener(async msg => {
       return { ok: true, result };
     } catch (err) {
       return { ok: false, error: err.message ?? String(err), code: err.code ?? null };
+    }
+  }
+  if (msg?.type === "eas.discoverServer") {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 30_000);
+      try {
+        const result = await discoverEasServer({
+          email: msg.email,
+          password: msg.password,
+          signal: controller.signal,
+        });
+        return { ok: true, result };
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch (err) {
+      return {
+        ok: false,
+        error: err.message ?? String(err),
+        code: err.code ?? null,
+        details: err.details ?? null,
+      };
     }
   }
   if (msg?.type === "eas.createAccount") {

@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Szolgáltatói kiegészítő a TbSync-hez, amely névjegyeket, naptárakat és feladatokat szinkronizál Exchange ActiveSync-kiszolgálóval."
+  },
+
   "folder.trashPrefix": {
     "message": "Kuka"
+  },
+
+  "setup.title": {
+    "message": "Exchange ActiveSync-fiók (EAS) hozzáadása"
+  },
+  "setup.intro": {
+    "message": "Válassza ki a hozzáadni kívánt Exchange ActiveSync-fiók típusát."
+  },
+
+  "setup.accountType": {
+    "message": "Fióktípus"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Microsoft 365 vállalati / munkahelyi bérlők."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Személyes Microsoft-fiók"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com és más, magánfelhasználók számára létrehozott Microsoft-fiókok."
+  },
+  "setup.accountType.auto": {
+    "message": "Automatikus felismerés"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "A megadott e-mail-cím alapján kikeresi az EAS-kiszolgáló címét. A legtöbb Exchange és EAS-kompatibilis szolgáltatóval működik."
+  },
+  "setup.accountType.custom": {
+    "message": "Egyéni EAS-kiszolgáló"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Bármilyen EAS-kompatibilis kiszolgáló. Felhasználónévvel és jelszóval történő hitelesítés."
+  },
+
+  "setup.auto.email": {
+    "message": "E-mail-cím"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Keresés"
+  },
+  "setup.auto.status.searching": {
+    "message": "Kiszolgáló-beállítások keresése…"
+  },
+  "setup.auto.error.title": {
+    "message": "Nem található EAS-kiszolgáló"
+  },
+  "setup.auto.error.auth": {
+    "message": "A felhasználónevet vagy a jelszót elutasította a rendszer. Ellenőrizze a helyesírást, vagy használja az „Egyéni EAS-kiszolgáló” lehetőséget."
+  },
+  "setup.auto.error.network": {
+    "message": "A felfedezési végpontok nem érhetők el. Ellenőrizze az internetkapcsolatot."
+  },
+  "setup.auto.error.noServer": {
+    "message": "A felfedezés befejeződött, de nem érkezett EAS-kiszolgáló-bejelentés. Lehet, hogy a kiszolgáló nem támogatja az automatikus felismerést."
+  },
+  "setup.auto.error.tried": {
+    "message": "Próbált végpontok:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Ha a szolgáltatójához kézi beállítás szükséges, válassza az „Egyéni EAS-kiszolgáló” lehetőséget."
+  },
+
+  "setup.oauth.email": {
+    "message": "Microsoft-fiók e-mail-címe"
+  },
+  "setup.oauth.signIn": {
+    "message": "Bejelentkezés Microsoft-fiókkal"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Adja meg a Microsoft-fiók e-mail-címét."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "A bejelentkezés meg lett szakítva."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "A bejelentkezés sikertelen"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "A bejelentkezés sikertelen: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Fiók neve"
+  },
+  "setup.server": {
+    "message": "Kiszolgáló URL-címe"
+  },
+  "setup.serverHint": {
+    "message": "Példa: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Felhasználónév"
+  },
+  "setup.password": {
+    "message": "Jelszó"
+  },
+  "setup.authButton": {
+    "message": "Fiók létrehozása"
+  },
+  "setup.cancelButton": {
+    "message": "Mégse"
+  },
+  "setup.error.labelRequired": {
+    "message": "Adjon meg fióknevet."
+  },
+  "setup.error.serverRequired": {
+    "message": "Adja meg a kiszolgáló URL-címét."
+  },
+  "setup.error.userRequired": {
+    "message": "Adja meg a felhasználónevet."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Adja meg a jelszót."
+  },
+  "setup.error.missingToken": {
+    "message": "Hiányzó beállítási token. Nyissa meg ezt az ablakot a TbSync-en keresztül."
+  },
+  "setup.error.createFailed": {
+    "message": "A fiók létrehozása nem sikerült"
+  },
+
+  "config.title": {
+    "message": "Exchange-fiók beállításai"
+  },
+  "config.label": {
+    "message": "Fiók neve"
+  },
+  "config.server": {
+    "message": "Kiszolgáló URL-címe"
+  },
+  "config.user": {
+    "message": "Felhasználónév"
+  },
+  "config.password": {
+    "message": "Jelszó (a jelenlegi megtartásához hagyja üresen)"
+  },
+  "config.readOnlyBanner": {
+    "message": "A szinkronizálási hibák elkerülése érdekében a beállításokat a fiók engedélyezett állapotában nem lehet szerkeszteni."
+  },
+  "config.save": {
+    "message": "Mentés"
+  },
+  "config.cancel": {
+    "message": "Mégse"
+  },
+  "config.close": {
+    "message": "Bezárás"
+  },
+  "config.error.missingAccountId": {
+    "message": "Hiányzó fiókazonosító."
+  },
+  "config.error.loadFailed": {
+    "message": "A fiók betöltése sikertelen."
+  },
+  "config.error.accountNameRequired": {
+    "message": "A fiók neve kötelező."
+  },
+  "config.error.saveFailed": {
+    "message": "A mentés sikertelen"
+  },
+
+  "config.section.account": {
+    "message": "Fiók"
+  },
+  "config.section.connection": {
+    "message": "Kapcsolat"
+  },
+  "config.section.protocol": {
+    "message": "Protokoll"
+  },
+  "config.section.contacts": {
+    "message": "Névjegyek"
+  },
+  "config.section.calendar": {
+    "message": "Naptár"
+  },
+
+  "config.account.accountType": {
+    "message": "Fióktípus"
+  },
+  "config.account.signedInAs": {
+    "message": "Bejelentkezve mint"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "ActiveSync-verzió"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automatikus (a kiszolgáló által preferált verzió használata)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Jelenleg egyeztetett: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "Eszközazonosító"
+  },
+  "config.protocol.provision": {
+    "message": "Provisioning kényszerítése"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Egyes kiszolgálók (pl. Kerio) megkövetelik, hogy a provisioning más parancs előtt érkezzen meg. A legtöbb kiszolgáló – köztük a Microsoft Exchange és a Microsoft 365 – automatikusan kéri, ha szükséges; ezeknél nem kell kézzel bekapcsolni ezt a beállítást."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "A megjelenített név felülírása ezzel: „Keresztnév” + „Vezetéknév”"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Többsoros név elválasztó"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Sortörés"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Vessző"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Szinkronizálási időszak"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Összes esemény"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Utolsó 2 hét"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Utolsó hónap"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Utolsó 3 hónap"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Utolsó 6 hónap"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Ismétlődő események/feladatok és kivételek szinkronizálása"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Kísérleti — alapértelmezetten kikapcsolva. Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Érvénytelen ActiveSync-verzió kiválasztva."
+  },
+
+  "warning.reauthFailed": {
+    "message": "Az újrahitelesítés nem fejeződött be. Kattintson az „Újra bejelentkezés” gombra a próbálkozáshoz."
   }
 }

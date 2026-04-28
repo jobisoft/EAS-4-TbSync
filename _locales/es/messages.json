@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Complemento de proveedor para TbSync que sincroniza contactos, calendarios y tareas con un servidor de Exchange ActiveSync."
+  },
+
   "folder.trashPrefix": {
     "message": "Papelera"
+  },
+
+  "setup.title": {
+    "message": "Añadir una cuenta de Exchange ActiveSync (EAS)"
+  },
+  "setup.intro": {
+    "message": "Elija el tipo de cuenta de Exchange ActiveSync que quiere añadir."
+  },
+
+  "setup.accountType": {
+    "message": "Tipo de cuenta"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Tenants corporativos / de trabajo de Microsoft 365."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Cuenta personal de Microsoft"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com y otras cuentas de Microsoft de uso personal."
+  },
+  "setup.accountType.auto": {
+    "message": "Detección automática"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Busca la URL del servidor EAS a partir de su dirección de correo. Funciona con la mayoría de los proveedores de Exchange y compatibles con EAS."
+  },
+  "setup.accountType.custom": {
+    "message": "Servidor EAS personalizado"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Cualquier servidor compatible con EAS. Autenticación con nombre de usuario y contraseña."
+  },
+
+  "setup.auto.email": {
+    "message": "Dirección de correo"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Detectar"
+  },
+  "setup.auto.status.searching": {
+    "message": "Buscando la configuración del servidor…"
+  },
+  "setup.auto.error.title": {
+    "message": "No se ha podido encontrar un servidor EAS"
+  },
+  "setup.auto.error.auth": {
+    "message": "El nombre de usuario o la contraseña fueron rechazados. Compruebe la ortografía o use «Servidor EAS personalizado»."
+  },
+  "setup.auto.error.network": {
+    "message": "No se ha podido contactar con los puntos de descubrimiento. Compruebe su conexión a Internet."
+  },
+  "setup.auto.error.noServer": {
+    "message": "El descubrimiento finalizó pero no se anunció ningún servidor EAS. Es posible que el servidor no admita la detección automática."
+  },
+  "setup.auto.error.tried": {
+    "message": "Puntos consultados:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Si su proveedor requiere configuración manual, elija «Servidor EAS personalizado»."
+  },
+
+  "setup.oauth.email": {
+    "message": "Correo de la cuenta de Microsoft"
+  },
+  "setup.oauth.signIn": {
+    "message": "Iniciar sesión con Microsoft"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Introduzca el correo de su cuenta de Microsoft."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "Se ha cancelado el inicio de sesión."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Error al iniciar sesión"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Error al iniciar sesión: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Etiqueta de la cuenta"
+  },
+  "setup.server": {
+    "message": "URL del servidor"
+  },
+  "setup.serverHint": {
+    "message": "Ejemplo: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Nombre de usuario"
+  },
+  "setup.password": {
+    "message": "Contraseña"
+  },
+  "setup.authButton": {
+    "message": "Crear cuenta"
+  },
+  "setup.cancelButton": {
+    "message": "Cancelar"
+  },
+  "setup.error.labelRequired": {
+    "message": "Introduzca una etiqueta para la cuenta."
+  },
+  "setup.error.serverRequired": {
+    "message": "Introduzca la URL del servidor."
+  },
+  "setup.error.userRequired": {
+    "message": "Introduzca el nombre de usuario."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Introduzca la contraseña."
+  },
+  "setup.error.missingToken": {
+    "message": "Falta el token de configuración. Abra esta ventana a través de TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "No se ha podido crear la cuenta"
+  },
+
+  "config.title": {
+    "message": "Configuración de la cuenta de Exchange"
+  },
+  "config.label": {
+    "message": "Etiqueta de la cuenta"
+  },
+  "config.server": {
+    "message": "URL del servidor"
+  },
+  "config.user": {
+    "message": "Nombre de usuario"
+  },
+  "config.password": {
+    "message": "Contraseña (déjela en blanco para conservar la actual)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Para evitar errores de sincronización, la configuración no se puede editar mientras la cuenta esté habilitada."
+  },
+  "config.save": {
+    "message": "Guardar"
+  },
+  "config.cancel": {
+    "message": "Cancelar"
+  },
+  "config.close": {
+    "message": "Cerrar"
+  },
+  "config.error.missingAccountId": {
+    "message": "Falta el identificador de la cuenta."
+  },
+  "config.error.loadFailed": {
+    "message": "No se ha podido cargar la cuenta."
+  },
+  "config.error.accountNameRequired": {
+    "message": "El nombre de la cuenta es obligatorio."
+  },
+  "config.error.saveFailed": {
+    "message": "Error al guardar"
+  },
+
+  "config.section.account": {
+    "message": "Cuenta"
+  },
+  "config.section.connection": {
+    "message": "Conexión"
+  },
+  "config.section.protocol": {
+    "message": "Protocolo"
+  },
+  "config.section.contacts": {
+    "message": "Contactos"
+  },
+  "config.section.calendar": {
+    "message": "Calendario"
+  },
+
+  "config.account.accountType": {
+    "message": "Tipo de cuenta"
+  },
+  "config.account.signedInAs": {
+    "message": "Sesión iniciada como"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "Versión de ActiveSync"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automática (usar la versión preferida del servidor)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Negociada actualmente: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "ID del dispositivo"
+  },
+  "config.protocol.provision": {
+    "message": "Forzar el aprovisionamiento"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Algunos servidores (p. ej. Kerio) exigen enviar el aprovisionamiento antes de cualquier otra orden. La mayoría de servidores —incluidos Microsoft Exchange y Microsoft 365— lo solicitan automáticamente cuando es necesario; no es necesario activarlo manualmente para ellos."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Reemplazar el nombre mostrado por «Nombre» + «Apellidos»"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Separador de nombres en varias líneas"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Salto de línea"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Coma"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Ventana de sincronización"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Todos los eventos"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Últimas 2 semanas"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Último mes"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Últimos 3 meses"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Últimos 6 meses"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Sincronizar eventos/tareas recurrentes y excepciones"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Experimental: desactivado por defecto. Cuando está activado, las reglas de recurrencia y las excepciones por instancia se sincronizan en ambos sentidos con el servidor."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Selección de versión de ActiveSync no válida."
+  },
+
+  "warning.reauthFailed": {
+    "message": "La nueva autenticación no se completó. Pulse «Iniciar sesión de nuevo» para reintentarlo."
   }
 }

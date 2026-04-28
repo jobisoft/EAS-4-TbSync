@@ -32,11 +32,45 @@
   "setup.accountType.personalMs.hint": {
     "message": "outlook.com, hotmail.com, live.com and other consumer Microsoft accounts."
   },
+  "setup.accountType.auto": {
+    "message": "Auto-detect"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Look up the EAS server URL from your email address. Works for most Exchange and EAS-compatible providers."
+  },
   "setup.accountType.custom": {
     "message": "Custom EAS server"
   },
   "setup.accountType.custom.hint": {
     "message": "Any EAS-compatible server. Username and password authentication."
+  },
+
+  "setup.auto.email": {
+    "message": "Email address"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Discover"
+  },
+  "setup.auto.status.searching": {
+    "message": "Looking up server settings…"
+  },
+  "setup.auto.error.title": {
+    "message": "We couldn’t find an EAS server"
+  },
+  "setup.auto.error.auth": {
+    "message": "The username or password was rejected. Check spelling, or fall back to “Custom EAS server”."
+  },
+  "setup.auto.error.network": {
+    "message": "Could not reach the discovery endpoints. Check your internet connection."
+  },
+  "setup.auto.error.noServer": {
+    "message": "Discovery completed but no EAS server was advertised. The server may not support auto-detect."
+  },
+  "setup.auto.error.tried": {
+    "message": "Endpoints we tried:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "If your provider requires manual configuration, choose “Custom EAS server”."
   },
 
   "setup.oauth.email": {
@@ -219,6 +253,12 @@
   },
   "config.calendar.syncLimit.6months": {
     "message": "Last 6 months"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Sync recurring events / tasks and exceptions"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Experimental — off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
 
   "config.error.invalidAsVersion": {

@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "TbSync 用のプロバイダーアドオンで、Exchange ActiveSync サーバーと連絡先・カレンダー・タスクを同期します。"
+  },
+
   "folder.trashPrefix": {
     "message": "ごみ箱"
+  },
+
+  "setup.title": {
+    "message": "Exchange ActiveSync (EAS) アカウントを追加"
+  },
+  "setup.intro": {
+    "message": "追加する Exchange ActiveSync アカウントの種類を選んでください。"
+  },
+
+  "setup.accountType": {
+    "message": "アカウントの種類"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Microsoft 365 の法人 / 職場テナント。"
+  },
+  "setup.accountType.personalMs": {
+    "message": "個人用 Microsoft アカウント"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com、hotmail.com、live.com など、個人向けの Microsoft アカウント。"
+  },
+  "setup.accountType.auto": {
+    "message": "自動検出"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "メールアドレスから EAS サーバーの URL を検索します。ほとんどの Exchange / EAS 対応プロバイダーで動作します。"
+  },
+  "setup.accountType.custom": {
+    "message": "カスタム EAS サーバー"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "EAS 互換のあらゆるサーバー。ユーザー名とパスワードによる認証。"
+  },
+
+  "setup.auto.email": {
+    "message": "メールアドレス"
+  },
+  "setup.auto.discoverButton": {
+    "message": "検索"
+  },
+  "setup.auto.status.searching": {
+    "message": "サーバー設定を検索中…"
+  },
+  "setup.auto.error.title": {
+    "message": "EAS サーバーが見つかりませんでした"
+  },
+  "setup.auto.error.auth": {
+    "message": "ユーザー名またはパスワードが拒否されました。スペルを確認するか、「カスタム EAS サーバー」を使用してください。"
+  },
+  "setup.auto.error.network": {
+    "message": "検出エンドポイントに到達できませんでした。インターネット接続を確認してください。"
+  },
+  "setup.auto.error.noServer": {
+    "message": "検出は完了しましたが、EAS サーバーが応答しませんでした。サーバーが自動検出に対応していない可能性があります。"
+  },
+  "setup.auto.error.tried": {
+    "message": "試したエンドポイント:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "プロバイダーが手動設定を必要とする場合は、「カスタム EAS サーバー」を選んでください。"
+  },
+
+  "setup.oauth.email": {
+    "message": "Microsoft アカウントのメールアドレス"
+  },
+  "setup.oauth.signIn": {
+    "message": "Microsoft でサインイン"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Microsoft アカウントのメールアドレスを入力してください。"
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "サインインがキャンセルされました。"
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "サインインに失敗しました"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "サインインに失敗しました: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "アカウントのラベル"
+  },
+  "setup.server": {
+    "message": "サーバー URL"
+  },
+  "setup.serverHint": {
+    "message": "例: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "ユーザー名"
+  },
+  "setup.password": {
+    "message": "パスワード"
+  },
+  "setup.authButton": {
+    "message": "アカウントを作成"
+  },
+  "setup.cancelButton": {
+    "message": "キャンセル"
+  },
+  "setup.error.labelRequired": {
+    "message": "アカウントのラベルを入力してください。"
+  },
+  "setup.error.serverRequired": {
+    "message": "サーバー URL を入力してください。"
+  },
+  "setup.error.userRequired": {
+    "message": "ユーザー名を入力してください。"
+  },
+  "setup.error.passwordRequired": {
+    "message": "パスワードを入力してください。"
+  },
+  "setup.error.missingToken": {
+    "message": "セットアップトークンがありません。TbSync からこのウィンドウを開いてください。"
+  },
+  "setup.error.createFailed": {
+    "message": "アカウントを作成できませんでした"
+  },
+
+  "config.title": {
+    "message": "Exchange アカウントの設定"
+  },
+  "config.label": {
+    "message": "アカウントのラベル"
+  },
+  "config.server": {
+    "message": "サーバー URL"
+  },
+  "config.user": {
+    "message": "ユーザー名"
+  },
+  "config.password": {
+    "message": "パスワード (現在のパスワードを保持するには空欄のまま)"
+  },
+  "config.readOnlyBanner": {
+    "message": "同期エラーを防ぐため、アカウントが有効な間は設定を編集できません。"
+  },
+  "config.save": {
+    "message": "保存"
+  },
+  "config.cancel": {
+    "message": "キャンセル"
+  },
+  "config.close": {
+    "message": "閉じる"
+  },
+  "config.error.missingAccountId": {
+    "message": "アカウント識別子がありません。"
+  },
+  "config.error.loadFailed": {
+    "message": "アカウントの読み込みに失敗しました。"
+  },
+  "config.error.accountNameRequired": {
+    "message": "アカウント名は必須です。"
+  },
+  "config.error.saveFailed": {
+    "message": "保存に失敗しました"
+  },
+
+  "config.section.account": {
+    "message": "アカウント"
+  },
+  "config.section.connection": {
+    "message": "接続"
+  },
+  "config.section.protocol": {
+    "message": "プロトコル"
+  },
+  "config.section.contacts": {
+    "message": "連絡先"
+  },
+  "config.section.calendar": {
+    "message": "カレンダー"
+  },
+
+  "config.account.accountType": {
+    "message": "アカウントの種類"
+  },
+  "config.account.signedInAs": {
+    "message": "サインイン中のアカウント"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "ActiveSync バージョン"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "自動 (サーバーの推奨バージョンを使用)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "現在ネゴシエート済み: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "デバイス ID"
+  },
+  "config.protocol.provision": {
+    "message": "プロビジョニングを強制"
+  },
+  "config.protocol.provision.hint": {
+    "message": "一部のサーバー (Kerio など) は、他のコマンドより先にプロビジョニングを送信することを要求します。Microsoft Exchange や Microsoft 365 を含むほとんどのサーバーは必要に応じて自動的に要求するため、このオプションを手動で有効にする必要はありません。"
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "表示名を「名」+「姓」で上書き"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "複数行の名前の区切り"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "改行"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "カンマ"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "同期期間"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "すべての予定"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "直近 2 週間"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "直近 1 か月"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "直近 3 か月"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "直近 6 か月"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "繰り返しイベント/タスクと例外を同期"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "実験的機能 — 既定では無効。有効にすると、繰り返しルールとインスタンスごとの例外がサーバーと双方向で同期されます。"
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "ActiveSync バージョンの選択が無効です。"
+  },
+
+  "warning.reauthFailed": {
+    "message": "再認証が完了しませんでした。再試行するには「再サインイン」をクリックしてください。"
   }
 }

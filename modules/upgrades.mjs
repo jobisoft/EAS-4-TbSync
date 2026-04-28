@@ -43,10 +43,18 @@ export const UPGRADES = [
  *  Used to find the global OAuth client-ID slot. */
 const LEGACY_PREF_CLIENT_ID = "extensions.eas4tbsync.oauth.clientID";
 
+/** Legacy `maxitems` pref - sync WindowSize + push batch size. Default
+ *  was 50 ([provider.js:54](../../EAS-4-TbSync/content/provider.js#L54)). */
+const LEGACY_PREF_MAX_ITEMS = "extensions.eas4tbsync.maxitems";
+
 /** Storage.local key the new add-on reads at refresh time
  *  ([modules/eas/oauth.mjs](eas/oauth.mjs)). One value shared by all
  *  accounts in the profile, matching legacy semantics. */
 const STORAGE_KEY_CLIENT_ID = "tbsync.clientID";
+
+/** Storage.local key for the per-pull/push WindowSize cap. Read at sync
+ *  time by `eas/sync-runner.mjs`; default 25 when missing. */
+const STORAGE_KEY_MAX_ITEMS = "maxItems";
 
 /** nsILoginManager realm legacy used for EAS credentials
  *  ([content/includes/network.js:122](../../EAS-4-TbSync/content/includes/network.js#L122)).
@@ -182,6 +190,7 @@ export async function enqueueUpgradesForUpdate(previousVersion, currentVersion) 
  *  Each step is idempotent. */
 async function liftLegacyAccountState(provider) {
   await liftClientIDPref(provider);
+  await liftMaxItemsPref(provider);
 
   const accounts = await provider.listAccounts();
   for (const acc of accounts) {
@@ -212,6 +221,18 @@ async function liftFolderVisibility(provider, acc) {
   });
 }
 
+async function liftMaxItemsPref(provider) {
+  const existing = await browser.storage.local.get({ [STORAGE_KEY_MAX_ITEMS]: null });
+  if (existing[STORAGE_KEY_MAX_ITEMS] != null) return;
+  const value = await browser.LegacyPrefs.getUserPref(LEGACY_PREF_MAX_ITEMS);
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return;
+  await browser.storage.local.set({ [STORAGE_KEY_MAX_ITEMS]: value });
+  provider.reportEventLog({
+    level: "debug",
+    message: `[upgrade] lifted legacy '${LEGACY_PREF_MAX_ITEMS}' pref (${value}) into storage.local['${STORAGE_KEY_MAX_ITEMS}']`,
+  });
+}
+
 async function liftClientIDPref(provider) {
   const existing = await browser.storage.local.get({ [STORAGE_KEY_CLIENT_ID]: "" });
   if (existing[STORAGE_KEY_CLIENT_ID]) return;
@@ -234,7 +255,7 @@ async function liftHostAndHttpsToServer(provider, acc) {
   if (!url.endsWith("Microsoft-Server-ActiveSync")) url += "/Microsoft-Server-ActiveSync";
   await provider.updateAccount({
     accountId: acc.accountId,
-    patch: { custom: { server: url } },
+    patch: { custom: { server: url, host: null, https: null } },
   });
   provider.reportEventLog({
     level: "debug",

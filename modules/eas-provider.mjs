@@ -16,6 +16,7 @@
  *   - synckey         - per-folder Sync key ("0" before first Sync)
  *   - class           - EAS Class (e.g. "Contacts", "Calendar", "Tasks")
  *   - contactMap      - itemId → serverID (contacts only)
+ *   - itemMap         - itemId → serverID (calendars + tasks)
  *   - displayNameRaw  - server-supplied folder name; the visible
  *                       `displayName` is recomputed from this on every
  *                       push (with optional "Trash | " prefix)
@@ -23,9 +24,10 @@
  * the provider reads it from `getAccount` and clears entries via
  * `changelogRemove` / pre-tags writes via `changelogMarkServerWrite`.
  *
- * Contact sync is fully implemented (Stage 6, separate module). Calendar
- * and task folders are discovered and displayable, but `onSyncFolder`
- * returns `ok()` without touching server state.
+ * Sync entry points: `syncContactFolder` for contacts (vCard codec, TB
+ * address book), `syncCalendarFolder` / `syncTaskFolder` for calendars
+ * and tasks (iCal codec, TB calendar via the vendored experiment). All
+ * three share the framework in `eas/sync-runner.mjs`.
  */
 
 import {
@@ -33,11 +35,14 @@ import {
   TbSyncProviderImplementation,
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "./address-book.mjs";
+import * as calendarStore from "./calendar-store.mjs";
 import { DEBUG_STATUS_DELAY_MS } from "./debug.mjs";
 import { primeAuth, isOAuthAccount } from "./eas/oauth.mjs";
 import { negotiateAsVersion } from "./eas/connect.mjs";
 import { acquirePolicyKey, NO_POLICY_FOR_DEVICE } from "./eas/provision.mjs";
 import { runFolderSync } from "./eas/folder-sync.mjs";
+import { syncContactFolder } from "./eas/contact-sync.mjs";
+import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
 import { sendDeviceInformation } from "./eas/settings.mjs";
 import { NET_ERR } from "./network.mjs";
 
@@ -181,14 +186,14 @@ export class EasProvider extends TbSyncProviderImplementation {
     const folder = await this.#getFolder(accountId, folderId);
     if (!folder) return null;
     if (folder.targetID) {
-      await safeDeleteBook(folder.targetID);
+      await safeDeleteTarget(folder);
     }
     await this.updateFolder({
       accountId, folderId,
       patch: {
         targetID: null,
         targetName: null,
-        custom: { synckey: "0", contactMap: {} },
+        custom: { synckey: "0", contactMap: {}, itemMap: {} },
       },
     }).catch(() => { });
     return null;
@@ -409,24 +414,59 @@ export class EasProvider extends TbSyncProviderImplementation {
   async onSyncFolder({ accountId, folderId }) {
     const ctx = await this.#loadContext(accountId);
     if (!ctx) throw withCode(new Error("unknown account"), ERR.UNKNOWN_ACCOUNT);
-    const folder = ctx.folders.find(f => f.folderId === folderId);
+    let folder = ctx.folders.find(f => f.folderId === folderId);
     if (!folder) throw withCode(new Error("unknown folder"), ERR.UNKNOWN_FOLDER);
 
-    // Per the user's scope: calendar and task folders are discoverable but
-    // actual item sync is stubbed until the Calendar/Tasks codecs are
-    // ported. Return ok() so the sync coordinator records a success
-    // transition; no local state is changed.
-    if (folder.targetType !== "contacts") {
+    const tt = folder.targetType;
+    if (tt !== "contacts" && tt !== "calendars" && tt !== "tasks") {
+      // Folder kind we don't sync yet (e.g. notes / journal): record a
+      // success transition without touching server state.
       this.reportSyncState({ accountId, folderId, syncState: "sync" });
       await new Promise(r => setTimeout(r, DEBUG_STATUS_DELAY_MS));
       return ok();
     }
 
-    // Stage 6: real contact sync. Until the contact-sync module lands, the
-    // best we can do is return ok() with no work. The sync-coordinator
-    // will mark the folder status "success" which is acceptable for a
-    // skeleton build.
-    return ok();
+    if (isOAuthAccount(ctx.account.custom)) this.#primeAuth(ctx);
+
+    // Lazy-bind the local TB target on first sync (or after the user
+    // removed it manually).
+    if (tt === "contacts") {
+      if (!folder.targetID || !(await addressBook.bookExists(folder.targetID))) {
+        const name = localNameForFolder(folder, ctx);
+        const targetID = await addressBook.createBook(name);
+        await this.updateFolder({
+          accountId, folderId,
+          patch: { targetID, targetName: name },
+        });
+        folder = { ...folder, targetID, targetName: name };
+      }
+    } else {
+      if (!folder.targetID || !(await calendarStore.calendarExists(folder.targetID))) {
+        const name = localNameForFolder(folder, ctx);
+        const targetID = await calendarStore.createCalendar({
+          name, kind: tt === "calendars" ? "events" : "tasks",
+        });
+        await this.updateFolder({
+          accountId, folderId,
+          patch: { targetID, targetName: name },
+        });
+        folder = { ...folder, targetID, targetName: name };
+      }
+    }
+
+    this.reportSyncState({ accountId, folderId, syncState: "sync" });
+
+    const args = {
+      provider: this,
+      account: ctx.account,
+      folder,
+      accountId,
+      folderId,
+      asVersion: ctx.account.custom?.asversion ?? "14.1",
+    };
+    if (tt === "contacts") return await syncContactFolder(args);
+    if (tt === "calendars") return await syncCalendarFolder(args);
+    return await syncTaskFolder(args);
   }
 
   // ── Setup / config popup backings ─────────────────────────────────────
@@ -437,6 +477,8 @@ export class EasProvider extends TbSyncProviderImplementation {
    *   "office365" | "personal-ms": OAuth. Host is fixed by setup type
    *      (HOST_BY_SERVERTYPE), server URL is derived from host, refresh
    *      token comes from the consent popup.
+   *   "auto": basic auth. UI ran Autodiscover and supplies the resolved
+   *      server URL alongside the email + password.
    *   "custom": basic auth. User enters the full server URL + username +
    *      password. No host stored.
    *
@@ -451,15 +493,13 @@ export class EasProvider extends TbSyncProviderImplementation {
     if (servertype === "office365" || servertype === "personal-ms") {
       const { refreshToken, authenticatedUserEmail } = args;
       if (!refreshToken) throw new Error("OAuth refresh token is required");
-      const host = HOST_BY_SERVERTYPE[servertype];
-      const server = `https://${host}/Microsoft-Server-ActiveSync`;
+      const server = `https://${HOST_BY_SERVERTYPE[servertype]}/Microsoft-Server-ActiveSync`;
       const user = authenticatedUserEmail || args.loginHint || "";
       return {
         accountName: trimmedLabel,
         initialFolders: [],
         custom: {
           servertype,
-          host,
           server,
           user,
           // Plain-old basic-auth fields stay empty for OAuth accounts.
@@ -478,6 +518,33 @@ export class EasProvider extends TbSyncProviderImplementation {
           // is a pre-emptive override for servers that need provisioning
           // but don't return 449 (e.g. Kerio).
           provision: false,
+          syncrecurrence: false,
+        },
+      };
+    }
+
+    if (servertype === "auto") {
+      const email = String(args.email ?? args.user ?? "").trim();
+      const server = String(args.server ?? "").trim();
+      if (!email)            throw new Error("Email is required");
+      if (!server)           throw new Error("Server URL is required");
+      if (!args.password)    throw new Error("Password is required");
+      const label = String(args.label ?? "").trim() || email;
+      return {
+        accountName: label,
+        initialFolders: [],
+        custom: {
+          servertype: "auto",
+          server,
+          user: email,
+          password: args.password,
+          deviceId: generateDeviceId(),
+          devicetype: "TbSyncEAS",
+          asversion: "",
+          policykey: "0",
+          foldersynckey: "0",
+          provision: false,
+          syncrecurrence: false,
         },
       };
     }
@@ -506,6 +573,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         policykey: "0",
         foldersynckey: "0",
         provision: false,
+        syncrecurrence: false,
       },
     };
   }
@@ -527,7 +595,6 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Account-type discriminator + identity (read-only display).
       servertype: c.servertype ?? "custom",
       authenticatedUserEmail: c.authenticatedUserEmail ?? null,
-      host: c.host ?? "",
       // Protocol section.
       deviceId: c.deviceId ?? "",
       asVersion: c.asversion ?? "",
@@ -541,6 +608,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       contactsNameSeparator: c.seperator || "10",
       // Calendar section.
       calendarSyncLimit: c.synclimit || "7",
+      syncRecurrence: !!c.syncrecurrence,
     };
   }
 
@@ -592,6 +660,9 @@ export class EasProvider extends TbSyncProviderImplementation {
       }
       customPatch.synclimit = v;
     }
+    if ("syncRecurrence" in patch) {
+      customPatch.syncrecurrence = !!patch.syncRecurrence;
+    }
 
     const outgoing = { ...topLevelPatch };
     if (Object.keys(customPatch).length) outgoing.custom = customPatch;
@@ -620,7 +691,7 @@ export class EasProvider extends TbSyncProviderImplementation {
   async #deleteAccountTargets(folderList) {
     for (const folder of folderList) {
       if (folder.targetID) {
-        await safeDeleteBook(folder.targetID);
+        await safeDeleteTarget(folder);
       }
     }
   }
@@ -628,12 +699,26 @@ export class EasProvider extends TbSyncProviderImplementation {
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-async function safeDeleteBook(targetID) {
+async function safeDeleteTarget(folder) {
   try {
-    await addressBook.deleteBook(targetID);
+    if (folder.targetType === "calendars" || folder.targetType === "tasks") {
+      await calendarStore.deleteCalendar(folder.targetID);
+    } else {
+      await addressBook.deleteBook(folder.targetID);
+    }
   } catch (err) {
-    console.warn(`[eas-4-tbsync] delete book ${targetID} failed:`, err?.message ?? err);
+    console.warn(`[eas-4-tbsync] delete target ${folder.targetID} failed:`, err?.message ?? err);
   }
+}
+
+/** Resolve the local TB address-book / calendar name for a folder.
+ *  Reuses whatever the user (or a previous bind) put in
+ *  `folder.targetName`; otherwise falls back to
+ *  `${displayName} (${accountName})`. */
+function localNameForFolder(folder, ctx) {
+  const stored = folder?.targetName?.trim?.();
+  if (stored) return stored;
+  return `${folder.displayName} (${ctx.account.accountName})`;
 }
 
 /** EAS requires a stable device identifier. 32 hex chars is the de-facto

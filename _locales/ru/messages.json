@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Дополнение-провайдер для TbSync, синхронизирующее контакты, календари и задачи с сервером Exchange ActiveSync."
+  },
+
   "folder.trashPrefix": {
     "message": "Корзина"
+  },
+
+  "setup.title": {
+    "message": "Добавить учётную запись Exchange ActiveSync (EAS)"
+  },
+  "setup.intro": {
+    "message": "Выберите тип учётной записи Exchange ActiveSync, которую хотите добавить."
+  },
+
+  "setup.accountType": {
+    "message": "Тип учётной записи"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Корпоративные / рабочие тенанты Microsoft 365."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Личная учётная запись Microsoft"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com и другие пользовательские учётные записи Microsoft."
+  },
+  "setup.accountType.auto": {
+    "message": "Автоопределение"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Определяет URL-адрес EAS-сервера по вашему адресу электронной почты. Подходит для большинства Exchange и EAS-совместимых провайдеров."
+  },
+  "setup.accountType.custom": {
+    "message": "Пользовательский EAS-сервер"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Любой EAS-совместимый сервер. Аутентификация по имени пользователя и паролю."
+  },
+
+  "setup.auto.email": {
+    "message": "Адрес электронной почты"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Найти"
+  },
+  "setup.auto.status.searching": {
+    "message": "Поиск настроек сервера…"
+  },
+  "setup.auto.error.title": {
+    "message": "Не удалось найти EAS-сервер"
+  },
+  "setup.auto.error.auth": {
+    "message": "Имя пользователя или пароль отклонены. Проверьте написание или используйте «Пользовательский EAS-сервер»."
+  },
+  "setup.auto.error.network": {
+    "message": "Не удалось связаться с конечными точками обнаружения. Проверьте подключение к интернету."
+  },
+  "setup.auto.error.noServer": {
+    "message": "Обнаружение завершилось, но ни один EAS-сервер не был объявлен. Сервер может не поддерживать автоопределение."
+  },
+  "setup.auto.error.tried": {
+    "message": "Опробованные конечные точки:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Если ваш провайдер требует ручной настройки, выберите «Пользовательский EAS-сервер»."
+  },
+
+  "setup.oauth.email": {
+    "message": "Эл. почта учётной записи Microsoft"
+  },
+  "setup.oauth.signIn": {
+    "message": "Войти через Microsoft"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Введите эл. почту вашей учётной записи Microsoft."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "Вход отменён."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Не удалось войти"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Не удалось войти: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Метка учётной записи"
+  },
+  "setup.server": {
+    "message": "URL-адрес сервера"
+  },
+  "setup.serverHint": {
+    "message": "Пример: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Имя пользователя"
+  },
+  "setup.password": {
+    "message": "Пароль"
+  },
+  "setup.authButton": {
+    "message": "Создать учётную запись"
+  },
+  "setup.cancelButton": {
+    "message": "Отмена"
+  },
+  "setup.error.labelRequired": {
+    "message": "Введите метку учётной записи."
+  },
+  "setup.error.serverRequired": {
+    "message": "Введите URL-адрес сервера."
+  },
+  "setup.error.userRequired": {
+    "message": "Введите имя пользователя."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Введите пароль."
+  },
+  "setup.error.missingToken": {
+    "message": "Отсутствует токен настройки. Откройте это окно через TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "Не удалось создать учётную запись"
+  },
+
+  "config.title": {
+    "message": "Настройки учётной записи Exchange"
+  },
+  "config.label": {
+    "message": "Метка учётной записи"
+  },
+  "config.server": {
+    "message": "URL-адрес сервера"
+  },
+  "config.user": {
+    "message": "Имя пользователя"
+  },
+  "config.password": {
+    "message": "Пароль (оставьте пустым, чтобы сохранить текущий)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Чтобы избежать ошибок синхронизации, настройки нельзя изменять, пока учётная запись включена."
+  },
+  "config.save": {
+    "message": "Сохранить"
+  },
+  "config.cancel": {
+    "message": "Отмена"
+  },
+  "config.close": {
+    "message": "Закрыть"
+  },
+  "config.error.missingAccountId": {
+    "message": "Отсутствует идентификатор учётной записи."
+  },
+  "config.error.loadFailed": {
+    "message": "Не удалось загрузить учётную запись."
+  },
+  "config.error.accountNameRequired": {
+    "message": "Имя учётной записи обязательно."
+  },
+  "config.error.saveFailed": {
+    "message": "Не удалось сохранить"
+  },
+
+  "config.section.account": {
+    "message": "Учётная запись"
+  },
+  "config.section.connection": {
+    "message": "Соединение"
+  },
+  "config.section.protocol": {
+    "message": "Протокол"
+  },
+  "config.section.contacts": {
+    "message": "Контакты"
+  },
+  "config.section.calendar": {
+    "message": "Календарь"
+  },
+
+  "config.account.accountType": {
+    "message": "Тип учётной записи"
+  },
+  "config.account.signedInAs": {
+    "message": "Вы вошли как"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "Версия ActiveSync"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Автоматически (использовать предпочтительную версию сервера)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Согласована в данный момент: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "Идентификатор устройства"
+  },
+  "config.protocol.provision": {
+    "message": "Принудительная инициализация (provisioning)"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Некоторые серверы (например, Kerio) требуют отправки provisioning-команды до любых других. Большинство серверов — включая Microsoft Exchange и Microsoft 365 — запрашивают её автоматически при необходимости; для них вручную включать эту опцию не требуется."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Заменить отображаемое имя на «Имя» + «Фамилия»"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Разделитель многострочных имён"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Перенос строки"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Запятая"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Период синхронизации"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Все события"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Последние 2 недели"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Последний месяц"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Последние 3 месяца"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Последние 6 месяцев"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Синхронизировать повторяющиеся события/задачи и исключения"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Экспериментально — по умолчанию выключено. При включении правила повторения и исключения для отдельных экземпляров синхронизируются с сервером в обе стороны."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Выбрана недопустимая версия ActiveSync."
+  },
+
+  "warning.reauthFailed": {
+    "message": "Повторная аутентификация не завершена. Нажмите «Войти снова», чтобы повторить попытку."
   }
 }

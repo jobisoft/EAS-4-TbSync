@@ -26,11 +26,13 @@ const KNOWN_AS_VERSIONS = ["2.5", "14.0", "14.1", "16.1"];
 
 const TYPE_OFFICE365   = "office365";
 const TYPE_PERSONAL_MS = "personal-ms";
+const TYPE_AUTO        = "auto";
 const TYPE_CUSTOM      = "custom";
 
 function deriveAccountType(account) {
   if (account.servertype === TYPE_OFFICE365)   return TYPE_OFFICE365;
   if (account.servertype === TYPE_PERSONAL_MS) return TYPE_PERSONAL_MS;
+  if (account.servertype === TYPE_AUTO)        return TYPE_AUTO;
   return TYPE_CUSTOM;
 }
 
@@ -39,7 +41,7 @@ const FIELD_IDS = [
   "server", "user", "password",
   "as-version-selected", "provision",
   "contacts-display-override", "contacts-name-separator",
-  "calendar-sync-limit",
+  "calendar-sync-limit", "sync-recurrence",
 ];
 
 function $(id) { return document.getElementById(id); }
@@ -80,6 +82,11 @@ async function load() {
         hint:  i18n("setup.accountType.personalMs.hint", ""),
       },
       {
+        value: TYPE_AUTO,
+        label: i18n("setup.accountType.auto", "Auto-detect"),
+        hint:  i18n("setup.accountType.auto.hint", ""),
+      },
+      {
         value: TYPE_CUSTOM,
         label: i18n("setup.accountType.custom", "Custom EAS server"),
         hint:  i18n("setup.accountType.custom.hint", ""),
@@ -94,14 +101,20 @@ async function load() {
     $("oauth-identity").textContent = account.authenticatedUserEmail;
   }
 
-  // ── Connection section (custom EAS only) ───────────────────────────────
-  if (accountType !== TYPE_CUSTOM) {
-    $("connection-section").hidden = true;
-  } else {
+  // ── Connection section ─────────────────────────────────────────────────
+  // Visible for custom EAS and auto-detect accounts. For auto-detect, the
+  // server and user came from the Autodiscover response and stay readonly;
+  // only the password is editable.
+  if (accountType === TYPE_CUSTOM || accountType === TYPE_AUTO) {
     $("connection-section").hidden = false;
     $("server").value = account.server ?? "";
     $("user").value   = account.user ?? "";
+    const lockServerUser = accountType === TYPE_AUTO;
+    $("server").readOnly = lockServerUser;
+    $("user").readOnly   = lockServerUser;
     // Password is always blank on load.
+  } else {
+    $("connection-section").hidden = true;
   }
 
   // ── Protocol section ───────────────────────────────────────────────────
@@ -115,6 +128,7 @@ async function load() {
 
   // ── Calendar section ───────────────────────────────────────────────────
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
+  $("sync-recurrence").checked = !!account.syncRecurrence;
 
   applyReadOnly();
 }
@@ -194,12 +208,15 @@ async function onSave() {
     contactsDisplayOverride: $("contacts-display-override").checked,
     contactsNameSeparator: $("contacts-name-separator").value,
     calendarSyncLimit: $("calendar-sync-limit").value,
+    syncRecurrence: $("sync-recurrence").checked,
   };
 
-  // Connection fields only flow through for the custom EAS-server type.
+  // Connection fields only flow through when the section is visible. For
+  // auto-detect accounts the server/user inputs are readOnly, so only the
+  // (optional) password actually changes.
   if (!$("connection-section").hidden) {
-    patch.server = $("server").value.trim();
-    patch.user   = $("user").value.trim();
+    if (!$("server").readOnly) patch.server = $("server").value.trim();
+    if (!$("user").readOnly)   patch.user   = $("user").value.trim();
     const pw = $("password").value;
     if (pw) patch.password = pw;
   }

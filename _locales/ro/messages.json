@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Modul furnizor pentru TbSync care sincronizează contacte, calendare și activități cu un server Exchange ActiveSync."
+  },
+
   "folder.trashPrefix": {
-    "message": "Trash"
+    "message": "Coș de gunoi"
+  },
+
+  "setup.title": {
+    "message": "Adaugă un cont Exchange ActiveSync (EAS)"
+  },
+  "setup.intro": {
+    "message": "Alege tipul de cont Exchange ActiveSync pe care vrei să îl adaugi."
+  },
+
+  "setup.accountType": {
+    "message": "Tip de cont"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Tenanți Microsoft 365 corporate / de serviciu."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Cont Microsoft personal"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com și alte conturi Microsoft pentru utilizatori obișnuiți."
+  },
+  "setup.accountType.auto": {
+    "message": "Detectare automată"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Caută URL-ul serverului EAS pe baza adresei tale de e-mail. Funcționează cu majoritatea furnizorilor Exchange și compatibili EAS."
+  },
+  "setup.accountType.custom": {
+    "message": "Server EAS personalizat"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Orice server compatibil EAS. Autentificare cu nume de utilizator și parolă."
+  },
+
+  "setup.auto.email": {
+    "message": "Adresă de e-mail"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Detectează"
+  },
+  "setup.auto.status.searching": {
+    "message": "Se caută setările serverului…"
+  },
+  "setup.auto.error.title": {
+    "message": "Nu s-a putut găsi un server EAS"
+  },
+  "setup.auto.error.auth": {
+    "message": "Numele de utilizator sau parola au fost respinse. Verifică ortografia sau folosește „Server EAS personalizat”."
+  },
+  "setup.auto.error.network": {
+    "message": "Nu s-a putut contacta endpoint-urile de descoperire. Verifică-ți conexiunea la internet."
+  },
+  "setup.auto.error.noServer": {
+    "message": "Descoperirea s-a încheiat, dar nu a fost anunțat niciun server EAS. E posibil ca serverul să nu accepte detectarea automată."
+  },
+  "setup.auto.error.tried": {
+    "message": "Endpoint-uri încercate:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Dacă furnizorul tău cere configurare manuală, alege „Server EAS personalizat”."
+  },
+
+  "setup.oauth.email": {
+    "message": "E-mail-ul contului Microsoft"
+  },
+  "setup.oauth.signIn": {
+    "message": "Conectează-te cu Microsoft"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Introdu adresa de e-mail a contului tău Microsoft."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "Conectarea a fost anulată."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Conectarea a eșuat"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Conectarea a eșuat: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Etichetă cont"
+  },
+  "setup.server": {
+    "message": "URL server"
+  },
+  "setup.serverHint": {
+    "message": "Exemplu: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Nume de utilizator"
+  },
+  "setup.password": {
+    "message": "Parolă"
+  },
+  "setup.authButton": {
+    "message": "Creează contul"
+  },
+  "setup.cancelButton": {
+    "message": "Anulează"
+  },
+  "setup.error.labelRequired": {
+    "message": "Introdu o etichetă pentru cont."
+  },
+  "setup.error.serverRequired": {
+    "message": "Introdu URL-ul serverului."
+  },
+  "setup.error.userRequired": {
+    "message": "Introdu numele de utilizator."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Introdu parola."
+  },
+  "setup.error.missingToken": {
+    "message": "Lipsește token-ul de configurare. Deschide această fereastră prin TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "Nu s-a putut crea contul"
+  },
+
+  "config.title": {
+    "message": "Setări cont Exchange"
+  },
+  "config.label": {
+    "message": "Etichetă cont"
+  },
+  "config.server": {
+    "message": "URL server"
+  },
+  "config.user": {
+    "message": "Nume de utilizator"
+  },
+  "config.password": {
+    "message": "Parolă (lasă necompletat pentru a păstra parola actuală)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Pentru a preveni erorile de sincronizare, setările nu pot fi editate cât timp contul este activat."
+  },
+  "config.save": {
+    "message": "Salvează"
+  },
+  "config.cancel": {
+    "message": "Anulează"
+  },
+  "config.close": {
+    "message": "Închide"
+  },
+  "config.error.missingAccountId": {
+    "message": "Identificator de cont lipsă."
+  },
+  "config.error.loadFailed": {
+    "message": "Nu s-a putut încărca contul."
+  },
+  "config.error.accountNameRequired": {
+    "message": "Numele contului este obligatoriu."
+  },
+  "config.error.saveFailed": {
+    "message": "Salvarea a eșuat"
+  },
+
+  "config.section.account": {
+    "message": "Cont"
+  },
+  "config.section.connection": {
+    "message": "Conexiune"
+  },
+  "config.section.protocol": {
+    "message": "Protocol"
+  },
+  "config.section.contacts": {
+    "message": "Contacte"
+  },
+  "config.section.calendar": {
+    "message": "Calendar"
+  },
+
+  "config.account.accountType": {
+    "message": "Tip de cont"
+  },
+  "config.account.signedInAs": {
+    "message": "Conectat ca"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "Versiune ActiveSync"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automată (folosește versiunea preferată de server)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Negociată în prezent: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "ID dispozitiv"
+  },
+  "config.protocol.provision": {
+    "message": "Forțează provisioning-ul"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Unele servere (ex. Kerio) cer ca provisioning-ul să fie trimis înaintea oricărei alte comenzi. Majoritatea serverelor — inclusiv Microsoft Exchange și Microsoft 365 — îl solicită automat când e nevoie; nu trebuie să-l activezi manual pentru acestea."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Suprascrie numele afișat cu „Prenume” + „Nume”"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Separator pentru nume pe mai multe rânduri"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Rând nou"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Virgulă"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Fereastră de sincronizare"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Toate evenimentele"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Ultimele 2 săptămâni"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Luna trecută"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Ultimele 3 luni"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Ultimele 6 luni"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Sincronizează evenimentele/activitățile recurente și excepțiile"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Experimental — dezactivat implicit. Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Selecție de versiune ActiveSync nevalidă."
+  },
+
+  "warning.reauthFailed": {
+    "message": "Reautentificarea nu a fost finalizată. Apasă „Conectează-te din nou” pentru a reîncerca."
   }
 }

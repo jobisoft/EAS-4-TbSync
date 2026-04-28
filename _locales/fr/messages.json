@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Module fournisseur pour TbSync qui synchronise les contacts, les agendas et les tâches avec un serveur Exchange ActiveSync."
+  },
+
   "folder.trashPrefix": {
     "message": "Corbeille"
+  },
+
+  "setup.title": {
+    "message": "Ajouter un compte Exchange ActiveSync (EAS)"
+  },
+  "setup.intro": {
+    "message": "Choisissez le type de compte Exchange ActiveSync à ajouter."
+  },
+
+  "setup.accountType": {
+    "message": "Type de compte"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Locataires Microsoft 365 entreprise / professionnels."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Compte Microsoft personnel"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com et autres comptes Microsoft grand public."
+  },
+  "setup.accountType.auto": {
+    "message": "Détection automatique"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Recherche l’URL du serveur EAS à partir de votre adresse e-mail. Fonctionne avec la plupart des fournisseurs Exchange et compatibles EAS."
+  },
+  "setup.accountType.custom": {
+    "message": "Serveur EAS personnalisé"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Tout serveur compatible EAS. Authentification par nom d’utilisateur et mot de passe."
+  },
+
+  "setup.auto.email": {
+    "message": "Adresse e-mail"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Rechercher"
+  },
+  "setup.auto.status.searching": {
+    "message": "Recherche des paramètres du serveur…"
+  },
+  "setup.auto.error.title": {
+    "message": "Aucun serveur EAS trouvé"
+  },
+  "setup.auto.error.auth": {
+    "message": "Le nom d’utilisateur ou le mot de passe a été refusé. Vérifiez l’orthographe ou utilisez « Serveur EAS personnalisé »."
+  },
+  "setup.auto.error.network": {
+    "message": "Impossible de joindre les points de terminaison de découverte. Vérifiez votre connexion Internet."
+  },
+  "setup.auto.error.noServer": {
+    "message": "La découverte est terminée mais aucun serveur EAS n’a été annoncé. Le serveur ne prend peut-être pas en charge la détection automatique."
+  },
+  "setup.auto.error.tried": {
+    "message": "Points de terminaison essayés :"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Si votre fournisseur exige une configuration manuelle, choisissez « Serveur EAS personnalisé »."
+  },
+
+  "setup.oauth.email": {
+    "message": "Adresse e-mail du compte Microsoft"
+  },
+  "setup.oauth.signIn": {
+    "message": "Se connecter avec Microsoft"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Veuillez saisir l’adresse e-mail de votre compte Microsoft."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "La connexion a été annulée."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Échec de la connexion"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Échec de la connexion : $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Libellé du compte"
+  },
+  "setup.server": {
+    "message": "URL du serveur"
+  },
+  "setup.serverHint": {
+    "message": "Exemple : https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Nom d’utilisateur"
+  },
+  "setup.password": {
+    "message": "Mot de passe"
+  },
+  "setup.authButton": {
+    "message": "Créer le compte"
+  },
+  "setup.cancelButton": {
+    "message": "Annuler"
+  },
+  "setup.error.labelRequired": {
+    "message": "Veuillez saisir un libellé de compte."
+  },
+  "setup.error.serverRequired": {
+    "message": "Veuillez saisir l’URL du serveur."
+  },
+  "setup.error.userRequired": {
+    "message": "Veuillez saisir le nom d’utilisateur."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Veuillez saisir le mot de passe."
+  },
+  "setup.error.missingToken": {
+    "message": "Jeton de configuration manquant. Ouvrez cette fenêtre via TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "Impossible de créer le compte"
+  },
+
+  "config.title": {
+    "message": "Paramètres du compte Exchange"
+  },
+  "config.label": {
+    "message": "Libellé du compte"
+  },
+  "config.server": {
+    "message": "URL du serveur"
+  },
+  "config.user": {
+    "message": "Nom d’utilisateur"
+  },
+  "config.password": {
+    "message": "Mot de passe (laisser vide pour conserver l’actuel)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Pour éviter les erreurs de synchronisation, les paramètres ne peuvent pas être modifiés tant que le compte est activé."
+  },
+  "config.save": {
+    "message": "Enregistrer"
+  },
+  "config.cancel": {
+    "message": "Annuler"
+  },
+  "config.close": {
+    "message": "Fermer"
+  },
+  "config.error.missingAccountId": {
+    "message": "Identifiant de compte manquant."
+  },
+  "config.error.loadFailed": {
+    "message": "Impossible de charger le compte."
+  },
+  "config.error.accountNameRequired": {
+    "message": "Le nom du compte est requis."
+  },
+  "config.error.saveFailed": {
+    "message": "Échec de l’enregistrement"
+  },
+
+  "config.section.account": {
+    "message": "Compte"
+  },
+  "config.section.connection": {
+    "message": "Connexion"
+  },
+  "config.section.protocol": {
+    "message": "Protocole"
+  },
+  "config.section.contacts": {
+    "message": "Contacts"
+  },
+  "config.section.calendar": {
+    "message": "Agenda"
+  },
+
+  "config.account.accountType": {
+    "message": "Type de compte"
+  },
+  "config.account.signedInAs": {
+    "message": "Connecté en tant que"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "Version ActiveSync"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automatique (utiliser la version préférée du serveur)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Version négociée actuellement : $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "ID de l’appareil"
+  },
+  "config.protocol.provision": {
+    "message": "Forcer le provisioning"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Certains serveurs (par ex. Kerio) exigent l’envoi du provisioning avant toute autre commande. La plupart des serveurs — y compris Microsoft Exchange et Microsoft 365 — le demandent automatiquement quand c’est nécessaire ; vous n’avez pas besoin d’activer cette option manuellement pour eux."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Remplacer le nom affiché par « Prénom » + « Nom »"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Séparateur de noms multilignes"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Saut de ligne"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Virgule"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Fenêtre de synchronisation"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Tous les évènements"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "2 dernières semaines"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Mois dernier"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "3 derniers mois"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "6 derniers mois"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Synchroniser les évènements/tâches récurrents et les exceptions"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Expérimental — désactivé par défaut. Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Version ActiveSync sélectionnée non valide."
+  },
+
+  "warning.reauthFailed": {
+    "message": "La réauthentification ne s’est pas terminée. Cliquez sur « Se reconnecter » pour réessayer."
   }
 }

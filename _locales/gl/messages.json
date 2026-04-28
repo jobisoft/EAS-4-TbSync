@@ -1,5 +1,271 @@
 {
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Complemento provedor para TbSync que sincroniza contactos, calendarios e tarefas cun servidor Exchange ActiveSync."
+  },
+
   "folder.trashPrefix": {
     "message": "Papeleira"
+  },
+
+  "setup.title": {
+    "message": "Engadir unha conta de Exchange ActiveSync (EAS)"
+  },
+  "setup.intro": {
+    "message": "Escolla o tipo de conta de Exchange ActiveSync que quere engadir."
+  },
+
+  "setup.accountType": {
+    "message": "Tipo de conta"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Tenants corporativos / de traballo de Microsoft 365."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Conta persoal de Microsoft"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com e outras contas Microsoft de uso persoal."
+  },
+  "setup.accountType.auto": {
+    "message": "Detección automática"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Busca o URL do servidor EAS a partir do seu enderezo de correo. Funciona coa maioría de provedores Exchange e compatibles con EAS."
+  },
+  "setup.accountType.custom": {
+    "message": "Servidor EAS personalizado"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Calquera servidor compatible con EAS. Autenticación con nome de usuario e contrasinal."
+  },
+
+  "setup.auto.email": {
+    "message": "Enderezo de correo"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Detectar"
+  },
+  "setup.auto.status.searching": {
+    "message": "Buscando a configuración do servidor…"
+  },
+  "setup.auto.error.title": {
+    "message": "Non se atopou ningún servidor EAS"
+  },
+  "setup.auto.error.auth": {
+    "message": "O nome de usuario ou o contrasinal foron rexeitados. Comprobe a ortografía ou use «Servidor EAS personalizado»."
+  },
+  "setup.auto.error.network": {
+    "message": "Non se puido contactar cos puntos de descubrimento. Comprobe a súa conexión a Internet."
+  },
+  "setup.auto.error.noServer": {
+    "message": "O descubrimento rematou pero non se anunciou ningún servidor EAS. É posible que o servidor non admita a detección automática."
+  },
+  "setup.auto.error.tried": {
+    "message": "Puntos consultados:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Se o seu provedor require configuración manual, escolla «Servidor EAS personalizado»."
+  },
+
+  "setup.oauth.email": {
+    "message": "Correo da conta de Microsoft"
+  },
+  "setup.oauth.signIn": {
+    "message": "Iniciar sesión con Microsoft"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Introduza o correo da súa conta de Microsoft."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "O inicio de sesión foi cancelado."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Erro ao iniciar sesión"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Erro ao iniciar sesión: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+
+  "setup.accountName": {
+    "message": "Etiqueta da conta"
+  },
+  "setup.server": {
+    "message": "URL do servidor"
+  },
+  "setup.serverHint": {
+    "message": "Exemplo: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Nome de usuario"
+  },
+  "setup.password": {
+    "message": "Contrasinal"
+  },
+  "setup.authButton": {
+    "message": "Crear conta"
+  },
+  "setup.cancelButton": {
+    "message": "Cancelar"
+  },
+  "setup.error.labelRequired": {
+    "message": "Introduza unha etiqueta para a conta."
+  },
+  "setup.error.serverRequired": {
+    "message": "Introduza o URL do servidor."
+  },
+  "setup.error.userRequired": {
+    "message": "Introduza o nome de usuario."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Introduza o contrasinal."
+  },
+  "setup.error.missingToken": {
+    "message": "Falta o token de configuración. Abra esta xanela a través de TbSync."
+  },
+  "setup.error.createFailed": {
+    "message": "Non se puido crear a conta"
+  },
+
+  "config.title": {
+    "message": "Configuración da conta de Exchange"
+  },
+  "config.label": {
+    "message": "Etiqueta da conta"
+  },
+  "config.server": {
+    "message": "URL do servidor"
+  },
+  "config.user": {
+    "message": "Nome de usuario"
+  },
+  "config.password": {
+    "message": "Contrasinal (déixeo en branco para conservar o actual)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Para evitar erros de sincronización, a configuración non se pode editar mentres a conta estea activa."
+  },
+  "config.save": {
+    "message": "Gardar"
+  },
+  "config.cancel": {
+    "message": "Cancelar"
+  },
+  "config.close": {
+    "message": "Pechar"
+  },
+  "config.error.missingAccountId": {
+    "message": "Falta o identificador da conta."
+  },
+  "config.error.loadFailed": {
+    "message": "Non se puido cargar a conta."
+  },
+  "config.error.accountNameRequired": {
+    "message": "O nome da conta é obrigatorio."
+  },
+  "config.error.saveFailed": {
+    "message": "Erro ao gardar"
+  },
+
+  "config.section.account": {
+    "message": "Conta"
+  },
+  "config.section.connection": {
+    "message": "Conexión"
+  },
+  "config.section.protocol": {
+    "message": "Protocolo"
+  },
+  "config.section.contacts": {
+    "message": "Contactos"
+  },
+  "config.section.calendar": {
+    "message": "Calendario"
+  },
+
+  "config.account.accountType": {
+    "message": "Tipo de conta"
+  },
+  "config.account.signedInAs": {
+    "message": "Sesión iniciada como"
+  },
+
+  "config.protocol.asVersion": {
+    "message": "Versión de ActiveSync"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automática (usar a versión preferida do servidor)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Negociada actualmente: $VERSION$",
+    "placeholders": {
+      "version": { "content": "$1", "example": "14.1" }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "ID do dispositivo"
+  },
+  "config.protocol.provision": {
+    "message": "Forzar o aprovisionamento"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Algúns servidores (p. ex. Kerio) requiren enviar o aprovisionamento antes de calquera outra orde. A maioría dos servidores —incluídos Microsoft Exchange e Microsoft 365— solicítano automaticamente cando é preciso; non é necesario activalo manualmente para eles."
+  },
+
+  "config.contacts.displayOverride": {
+    "message": "Substituír o nome amosado por «Nome» + «Apelidos»"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Separador de nomes en varias liñas"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Salto de liña"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Coma"
+  },
+
+  "config.calendar.syncLimit": {
+    "message": "Xanela de sincronización"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Todos os eventos"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Últimas 2 semanas"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Último mes"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Últimos 3 meses"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Últimos 6 meses"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Sincronizar eventos/tarefas recorrentes e excepcións"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Experimental — desactivado por defecto. Cando se activa, as regras de recorrencia e as excepcións por instancia sincronízanse nos dous sentidos co servidor."
+  },
+
+  "config.error.invalidAsVersion": {
+    "message": "Selección de versión de ActiveSync non válida."
+  },
+
+  "warning.reauthFailed": {
+    "message": "A nova autenticación non se completou. Prema en «Iniciar sesión de novo» para tentar de novo."
   }
 }
