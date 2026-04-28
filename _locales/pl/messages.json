@@ -6,7 +6,7 @@
     "message": "Provider add-on for TbSync that synchronizes contacts, calendars, and tasks with an Exchange ActiveSync server."
   },
   "folder.trashPrefix": {
-    "message": "Trash"
+    "message": "Kosz"
   },
   "setup.title": {
     "message": "Add an Exchange ActiveSync account (EAS)"
@@ -42,7 +42,7 @@
     "message": "Any EAS-compatible server. Username and password authentication."
   },
   "setup.auto.email": {
-    "message": "Email address"
+    "message": "Adres e-mail"
   },
   "setup.auto.discoverButton": {
     "message": "Discover"
@@ -96,34 +96,34 @@
     "message": "Account label"
   },
   "setup.server": {
-    "message": "Server URL"
+    "message": "URL serwera"
   },
   "setup.serverHint": {
     "message": "Example: https://mail.example.com/Microsoft-Server-ActiveSync"
   },
   "setup.user": {
-    "message": "Username"
+    "message": "Nazwa użytkownika"
   },
   "setup.password": {
-    "message": "Password"
+    "message": "Hasło"
   },
   "setup.authButton": {
-    "message": "Create account"
+    "message": "Utwórz konto"
   },
   "setup.cancelButton": {
-    "message": "Cancel"
+    "message": "Anuluj"
   },
   "setup.error.labelRequired": {
     "message": "Please enter an account label."
   },
   "setup.error.serverRequired": {
-    "message": "Please enter the server URL."
+    "message": "Wprowadź adres URL serwera."
   },
   "setup.error.userRequired": {
-    "message": "Please enter the username."
+    "message": "Proszę wprowadzić nazwę użytkownika."
   },
   "setup.error.passwordRequired": {
-    "message": "Please enter the password."
+    "message": "Proszę wprowadzić hasło."
   },
   "setup.error.missingToken": {
     "message": "Missing setup token. Open this window through TbSync."
@@ -138,10 +138,10 @@
     "message": "Account label"
   },
   "config.server": {
-    "message": "Server URL"
+    "message": "URL serwera"
   },
   "config.user": {
-    "message": "Username"
+    "message": "Nazwa użytkownika"
   },
   "config.password": {
     "message": "Password (leave blank to keep the current one)"
@@ -150,13 +150,13 @@
     "message": "To prevent synchronization errors, settings cannot be edited while the account is enabled."
   },
   "config.save": {
-    "message": "Save"
+    "message": "Zapisz"
   },
   "config.cancel": {
-    "message": "Cancel"
+    "message": "Anuluj"
   },
   "config.close": {
-    "message": "Close"
+    "message": "Zamknij"
   },
   "config.error.missingAccountId": {
     "message": "Missing account identifier."
@@ -165,34 +165,34 @@
     "message": "Failed to load account."
   },
   "config.error.accountNameRequired": {
-    "message": "Account name is required."
+    "message": "Nazwa konta jest wymagana."
   },
   "config.error.saveFailed": {
     "message": "Save failed"
   },
   "config.section.account": {
-    "message": "Account"
+    "message": "Konto"
   },
   "config.section.connection": {
-    "message": "Connection"
+    "message": "Połączenie"
   },
   "config.section.protocol": {
-    "message": "Protocol"
+    "message": "Protokół"
   },
   "config.section.contacts": {
-    "message": "Contacts"
+    "message": "Kontakty"
   },
   "config.section.calendar": {
-    "message": "Calendar"
+    "message": "Kalendarz"
   },
   "config.account.accountType": {
     "message": "Account type"
   },
   "config.account.signedInAs": {
-    "message": "Signed in as"
+    "message": "Zalogowano jako"
   },
   "config.protocol.asVersion": {
-    "message": "ActiveSync version"
+    "message": "Wersja ActiveSync"
   },
   "config.protocol.asVersion.auto": {
     "message": "Automatic (use server's preferred version)"
@@ -207,7 +207,7 @@
     }
   },
   "config.protocol.deviceId": {
-    "message": "Device ID"
+    "message": "ID urządzenia"
   },
   "config.protocol.provision": {
     "message": "Enforce provisioning"
@@ -231,30 +231,81 @@
     "message": "Sync window"
   },
   "config.calendar.syncLimit.all": {
-    "message": "All events"
+    "message": "Wszystkie wydarzenia"
   },
   "config.calendar.syncLimit.2weeks": {
-    "message": "Last 2 weeks"
+    "message": "Ostatnie 2 tygodnie"
   },
   "config.calendar.syncLimit.1month": {
-    "message": "Last month"
+    "message": "Ostatni miesiąc"
   },
   "config.calendar.syncLimit.3months": {
-    "message": "Last 3 months"
+    "message": "Ostatnie 3 miesiące"
   },
   "config.calendar.syncLimit.6months": {
-    "message": "Last 6 months"
+    "message": "Ostatnie 6 miesięcy"
   },
   "config.calendar.syncRecurrence": {
     "message": "Sync recurring events / tasks and exceptions"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental — off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
+    "message": "Experimental - off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
   "config.error.invalidAsVersion": {
     "message": "Invalid ActiveSync version selection."
   },
   "warning.reauthFailed": {
     "message": "Re-authentication did not complete. Click \"Sign in again\" to retry."
+  },
+  "options.title": {
+    "message": "EAS-4-TbSync - Advanced settings"
+  },
+  "options.intro": {
+    "message": "These settings affect every EAS account in this profile. The defaults work for almost everyone, only change a value if you have a specific reason to. Leave a field empty to fall back to the bundled default."
+  },
+  "options.section.network": {
+    "message": "Network"
+  },
+  "options.section.sync": {
+    "message": "Sync"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Connection timeout (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maximum time to wait for a response from the EAS server before giving up. Increase this if you sync over slow or unreliable links and see frequent timeouts. Default: 90000 ms (90 seconds)."
+  },
+  "options.useragent": {
+    "message": "User-Agent header"
+  },
+  "options.useragent.hint": {
+    "message": "HTTP User-Agent string sent with every EAS request. A few servers refuse the default and require a specific value to allow the connection. Default: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Device type"
+  },
+  "options.devicetype.hint": {
+    "message": "EAS DeviceType value sent in the request URL. A few servers reject unknown device types. Default: TbSync."
+  },
+  "options.maxitems": {
+    "message": "Items per sync batch"
+  },
+  "options.maxitems.hint": {
+    "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. Default: 25."
+  },
+  "options.mstodo": {
+    "message": "Microsoft To Do compatibility mode"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do publishes tasks with a date-only due date and no start date, so reminders render at midnight. When enabled, an incoming task with a reminder is rewritten so its start and due date both equal the reminder time, and the reminder fires exactly when the task is due. Only enable this when encountering issues and trying an alternative to the default behavior."
+  },
+  "options.clientid": {
+    "message": "Custom OAuth client ID"
+  },
+  "options.clientid.hint": {
+    "message": "Microsoft Entra Client ID used when signing in to Microsoft accounts. Leave empty to use the default client ID registered by John Bieling (author of the EAS provider)."
   }
 }
