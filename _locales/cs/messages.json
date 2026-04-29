@@ -377,5 +377,19 @@
     "message": "zařízení blokováno pro tohoto uživatele"
   },
   "eas.sync.error.accessDenied.130": { "message": "přístup odepřen" },
-  "eas.sync.error.accessDenied.131": { "message": "účet zakázán" }
+  "eas.sync.error.accessDenied.131": { "message": "účet zakázán" },
+  "eas.network.error.transport": {
+    "message": "Chyba přenosu EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Odpověď není WBXML (první bajty: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Vyčerpány pokusy o opětovné připojení - server neodpověděl"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Server vrátil 451 bez hlavičky X-MS-Location"
+  }
 }

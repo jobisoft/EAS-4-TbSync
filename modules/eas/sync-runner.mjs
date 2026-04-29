@@ -47,6 +47,7 @@ import {
   ok,
   warning as warningStatus,
   error as errorStatus,
+  accountRerun,
 } from "../../vendor/tbsync/provider.mjs";
 
 const STATUS_OK = "1";
@@ -173,12 +174,17 @@ export async function runItemSync({
       continue;
     }
     if (result.code === "HIERARCHY") {
+      // Server signalled Sync Status 12: the FolderSync state we're
+      // working against is stale. Reset foldersynckey so the next
+      // FolderSync starts from "0", and signal an account-level rerun -
+      // matches legacy `resyncAccount` for `Sync.12` (sync.js:751-753).
+      // Host's sync-coordinator caps the rerun count for loop protection.
       await provider.updateAccount({
         accountId,
         patch: { custom: { foldersynckey: "0" } },
       });
-      return warningStatus(
-        "Folder hierarchy changed on the server - refresh the folder list and retry",
+      return accountRerun(
+        "Folder hierarchy changed on the server - rerunning account sync",
       );
     }
     if (result.code === "BUSY") {

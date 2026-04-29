@@ -379,5 +379,19 @@
   "eas.sync.error.accessDenied.130": { "message": "アクセスが拒否されました" },
   "eas.sync.error.accessDenied.131": {
     "message": "アカウントが無効になっています"
+  },
+  "eas.network.error.transport": {
+    "message": "EAS 転送エラー (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "応答が WBXML ではありません (先頭バイト: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "ネットワーク再試行が尽きました - サーバーが応答しませんでした"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "サーバーが X-MS-Location ヘッダーなしで 451 を返しました"
   }
 }

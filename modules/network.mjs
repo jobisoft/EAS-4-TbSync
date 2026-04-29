@@ -50,16 +50,19 @@ export const NET_ERR = {
 
 export class EasHttpError extends Error {
   constructor(code, status, options = {}) {
-    // The default human-readable message omits the `E:*` code on purpose:
-    // the code is for programmatic dispatch (`err.code === NET_ERR.X`),
-    // and surfacing it in UI strings exposes internal identifiers. Host
-    // sync-coordinator already prefers `err.message` for non-host-predefined
-    // codes, so this is what end users see when E:HTTP / E:HOST_REDIRECT /
-    // E:PROVISION_REQUIRED bubbles up. NET_ERR.NETWORK / NET_ERR.AUTH never
-    // surface this string because the host has localised translations.
-    super(options.message ?? `EAS transport error (HTTP ${status})`, {
-      cause: options.cause,
-    });
+    // Messages from this class can surface in the manager UI (the host's
+    // sync-coordinator falls back to `err.message` for codes outside its
+    // PREDEFINED_ERROR_CODES set, which includes E:HTTP / E:HOST_REDIRECT
+    // / E:PROVISION_REQUIRED). Default message is provider-localized via
+    // `eas.network.error.transport`; callers may override with a more
+    // specific localized message.
+    super(
+      options.message ??
+        browser.i18n.getMessage("eas.network.error.transport", [
+          String(status),
+        ]),
+      { cause: options.cause },
+    );
     this.name = "EasHttpError";
     this.code = code;
     this.status = status;
@@ -162,7 +165,10 @@ export async function easRequest({ account, command, body, asVersion }) {
         .map((b) => b.toString(16).padStart(2, "0"))
         .join(" ");
       throw new EasHttpError(NET_ERR.HTTP, resp.status, {
-        message: `Response is not WBXML (first bytes: ${head})`,
+        message: browser.i18n.getMessage(
+          "eas.network.error.responseNotWbxml",
+          [head],
+        ),
       });
     }
 
@@ -341,17 +347,26 @@ async function fetchWithTimeout(url, init) {
   }
   // Unreachable: the loop either returns or throws.
   throw new EasHttpError(NET_ERR.NETWORK, 0, {
-    message: "fetchWithTimeout: exhausted retries",
+    message: browser.i18n.getMessage("eas.network.error.retriesExhausted"),
   });
 }
 
 function redirectError(resp) {
   const newLocation = resp.headers.get("X-MS-Location");
+  if (!newLocation) {
+    // Per MS-ASHTTP, a 451 MUST carry an X-MS-Location pointing to the
+    // new EAS endpoint. Without it the response is malformed - fail loud
+    // as a generic HTTP error rather than dressing it up as a redirect
+    // that the caller can't act on anyway.
+    return new EasHttpError(NET_ERR.HTTP, 451, {
+      message: browser.i18n.getMessage(
+        "eas.network.error.redirectMissingLocation",
+      ),
+    });
+  }
   return new EasHttpError(NET_ERR.HOST_REDIRECT, 451, {
-    message: newLocation
-      ? `Server moved to ${newLocation}`
-      : "Server requested a redirect (no X-MS-Location)",
-    newLocation: newLocation ?? null,
+    message: `Server moved to ${newLocation}`,
+    newLocation,
   });
 }
 

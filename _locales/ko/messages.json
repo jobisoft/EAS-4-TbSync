@@ -377,5 +377,19 @@
     "message": "이 사용자에 대해 장치가 차단되었습니다"
   },
   "eas.sync.error.accessDenied.130": { "message": "접근이 거부되었습니다" },
-  "eas.sync.error.accessDenied.131": { "message": "계정이 비활성화되었습니다" }
+  "eas.sync.error.accessDenied.131": { "message": "계정이 비활성화되었습니다" },
+  "eas.network.error.transport": {
+    "message": "EAS 전송 오류 (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "응답이 WBXML이 아닙니다 (선행 바이트: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "네트워크 재시도가 소진되었습니다 - 서버가 응답하지 않았습니다"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "서버가 X-MS-Location 헤더 없이 451을 반환했습니다"
+  }
 }

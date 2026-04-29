@@ -377,5 +377,19 @@
     "message": "dispozitivul este blocat pentru acest utilizator"
   },
   "eas.sync.error.accessDenied.130": { "message": "acces refuzat" },
-  "eas.sync.error.accessDenied.131": { "message": "cont dezactivat" }
+  "eas.sync.error.accessDenied.131": { "message": "cont dezactivat" },
+  "eas.network.error.transport": {
+    "message": "Eroare de transport EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Răspunsul nu este WBXML (primii octeți: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Reîncercările de rețea s-au epuizat - serverul nu a răspuns"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Serverul a returnat 451 fără antetul X-MS-Location"
+  }
 }

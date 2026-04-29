@@ -377,5 +377,19 @@
     "message": "dispositivo bloqueado para este usuário"
   },
   "eas.sync.error.accessDenied.130": { "message": "acesso negado" },
-  "eas.sync.error.accessDenied.131": { "message": "conta desabilitada" }
+  "eas.sync.error.accessDenied.131": { "message": "conta desabilitada" },
+  "eas.network.error.transport": {
+    "message": "Erro de transporte EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "A resposta não é WBXML (primeiros bytes: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Tentativas de rede esgotadas - o servidor não respondeu"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "O servidor retornou 451 sem o cabeçalho X-MS-Location"
+  }
 }

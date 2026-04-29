@@ -377,5 +377,19 @@
     "message": "l’appareil est bloqué pour cet utilisateur"
   },
   "eas.sync.error.accessDenied.130": { "message": "accès refusé" },
-  "eas.sync.error.accessDenied.131": { "message": "compte désactivé" }
+  "eas.sync.error.accessDenied.131": { "message": "compte désactivé" },
+  "eas.network.error.transport": {
+    "message": "Erreur de transport EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "La réponse n'est pas du WBXML (premiers octets : $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Tentatives réseau épuisées - le serveur n'a pas répondu"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Le serveur a renvoyé 451 sans en-tête X-MS-Location"
+  }
 }

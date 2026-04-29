@@ -377,5 +377,19 @@
     "message": "устройството е блокирано за този потребител"
   },
   "eas.sync.error.accessDenied.130": { "message": "достъпът е отказан" },
-  "eas.sync.error.accessDenied.131": { "message": "профилът е изключен" }
+  "eas.sync.error.accessDenied.131": { "message": "профилът е изключен" },
+  "eas.network.error.transport": {
+    "message": "Грешка при пренос на EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Отговорът не е WBXML (първи байтове: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Опитите за повторно свързване са изчерпани - сървърът не отговори"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Сървърът върна 451 без заглавна част X-MS-Location"
+  }
 }

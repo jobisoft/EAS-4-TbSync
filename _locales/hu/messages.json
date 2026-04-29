@@ -377,5 +377,19 @@
     "message": "az eszköz blokkolva van ennél a felhasználónál"
   },
   "eas.sync.error.accessDenied.130": { "message": "hozzáférés megtagadva" },
-  "eas.sync.error.accessDenied.131": { "message": "fiók letiltva" }
+  "eas.sync.error.accessDenied.131": { "message": "fiók letiltva" },
+  "eas.network.error.transport": {
+    "message": "EAS átviteli hiba (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "A válasz nem WBXML (első bájtok: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Hálózati újrapróbálkozások kimerültek - a kiszolgáló nem válaszolt"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "A kiszolgáló 451-et adott vissza X-MS-Location fejléc nélkül"
+  }
 }

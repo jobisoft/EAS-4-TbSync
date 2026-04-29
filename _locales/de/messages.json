@@ -374,5 +374,19 @@
     "message": "Gerät ist für diesen Benutzer gesperrt"
   },
   "eas.sync.error.accessDenied.130": { "message": "Zugriff verweigert" },
-  "eas.sync.error.accessDenied.131": { "message": "Konto deaktiviert" }
+  "eas.sync.error.accessDenied.131": { "message": "Konto deaktiviert" },
+  "eas.network.error.transport": {
+    "message": "EAS-Übertragungsfehler (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Antwort ist kein WBXML (erste Bytes: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Netzwerk-Wiederholungen erschöpft - Server hat nicht geantwortet"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Server hat 451 ohne X-MS-Location-Header zurückgegeben"
+  }
 }

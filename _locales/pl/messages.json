@@ -377,5 +377,19 @@
     "message": "urządzenie zablokowane dla tego użytkownika"
   },
   "eas.sync.error.accessDenied.130": { "message": "odmowa dostępu" },
-  "eas.sync.error.accessDenied.131": { "message": "konto wyłączone" }
+  "eas.sync.error.accessDenied.131": { "message": "konto wyłączone" },
+  "eas.network.error.transport": {
+    "message": "Błąd transportu EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Odpowiedź nie jest WBXML (pierwsze bajty: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Wyczerpano ponowne próby sieciowe - serwer nie odpowiedział"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Serwer zwrócił 451 bez nagłówka X-MS-Location"
+  }
 }

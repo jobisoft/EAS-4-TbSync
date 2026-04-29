@@ -377,5 +377,19 @@
     "message": "enheten är blockerad för den här användaren"
   },
   "eas.sync.error.accessDenied.130": { "message": "åtkomst nekad" },
-  "eas.sync.error.accessDenied.131": { "message": "kontot är inaktiverat" }
+  "eas.sync.error.accessDenied.131": { "message": "kontot är inaktiverat" },
+  "eas.network.error.transport": {
+    "message": "EAS-transportfel (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Svaret är inte WBXML (första byten: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Nätverksåterförsök uttömda - servern svarade inte"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Servern returnerade 451 utan X-MS-Location-rubrik"
+  }
 }

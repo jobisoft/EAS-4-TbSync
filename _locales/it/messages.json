@@ -377,5 +377,19 @@
     "message": "dispositivo bloccato per questo utente"
   },
   "eas.sync.error.accessDenied.130": { "message": "accesso negato" },
-  "eas.sync.error.accessDenied.131": { "message": "account disabilitato" }
+  "eas.sync.error.accessDenied.131": { "message": "account disabilitato" },
+  "eas.network.error.transport": {
+    "message": "Errore di trasporto EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "La risposta non è WBXML (primi byte: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Tentativi di rete esauriti - il server non ha risposto"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Il server ha restituito 451 senza intestazione X-MS-Location"
+  }
 }

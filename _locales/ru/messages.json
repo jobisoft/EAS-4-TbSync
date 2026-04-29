@@ -377,5 +377,19 @@
     "message": "устройство заблокировано для этого пользователя"
   },
   "eas.sync.error.accessDenied.130": { "message": "доступ запрещён" },
-  "eas.sync.error.accessDenied.131": { "message": "учётная запись отключена" }
+  "eas.sync.error.accessDenied.131": { "message": "учётная запись отключена" },
+  "eas.network.error.transport": {
+    "message": "Ошибка передачи EAS (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Ответ не является WBXML (первые байты: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Сетевые повторы исчерпаны - сервер не ответил"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Сервер вернул 451 без заголовка X-MS-Location"
+  }
 }

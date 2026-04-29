@@ -350,5 +350,53 @@
   },
   "options.clientid.hint": {
     "message": "Microsoft Entra Client ID used when signing in to Microsoft accounts. Leave empty to use the default client ID registered by John Bieling (author of the EAS provider)."
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Server rejected the sync request as invalid (code $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Server denied sync access: $REASON$ (code $STATUS$)",
+    "placeholders": {
+      "reason": {
+        "content": "$1",
+        "example": "device type missing or invalid"
+      },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": {
+    "message": "device type missing or invalid"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "Active Directory access denied"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "user is disabled for sync"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "user is on a new mailbox and cannot sync"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "user is on a legacy mailbox and cannot sync"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "device is blocked for this user"
+  },
+  "eas.sync.error.accessDenied.130": { "message": "access denied" },
+  "eas.sync.error.accessDenied.131": { "message": "account is disabled" },
+  "eas.network.error.transport": {
+    "message": "EAS transport error (HTTP $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "500" } }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Response is not WBXML (first bytes: $BYTES$)",
+    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Network retries exhausted - server did not respond"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Server returned 451 without an X-MS-Location header"
   }
 }
