@@ -20,7 +20,7 @@
  * still releases it.
  */
 
-import { finalizeFolderListForPush } from "./eas-provider.mjs";
+import { easTypeToFolderType, finalizeFolderListForPush } from "./eas-provider.mjs";
 
 const UPGRADE_QUEUE_KEY = "eas.upgradeQueue";
 
@@ -75,7 +75,7 @@ export const UPGRADES = [
         try {
           await liftHostAndHttpsToServer(provider, acc);
           await liftCredentials(provider, acc);
-          await liftFolderVisibility(provider, acc);
+          await fixFolders(provider, acc);
         } catch (err) {
           provider.reportEventLog({
             level: "warning",
@@ -208,16 +208,26 @@ async function liftPref(provider, {
   }
 }
 
-async function liftFolderVisibility(provider, acc) {
+/** Re-derive host-shape per-folder fields the legacy migration couldn't:
+ *  - `targetType` from EAS-specific `custom.type` (legacy stored task
+ *    folders with the same `"calendar"` string Lightning uses for both
+ *    calendars and task lists, so the host migrator's static
+ *    `calendar → calendars` mapping mis-labels tasks as calendars).
+ *  - Trash visibility flags via `finalizeFolderListForPush`. */
+async function fixFolders(provider, acc) {
   const rv = await provider.getAccount(acc.accountId);
   const folders = rv?.folders ?? [];
   if (!folders.length) return;
-  const patched = await finalizeFolderListForPush(folders);
+  const retyped = folders.map(f => ({
+    ...f,
+    targetType: easTypeToFolderType(f.custom?.type) ?? f.targetType,
+  }));
+  const patched = await finalizeFolderListForPush(retyped);
   await provider.pushFolderList({ accountId: acc.accountId, folders: patched });
   provider.reportEventLog({
     level: "debug",
     accountId: acc.accountId,
-    message: `[upgrade] applied trash visibility to ${patched.length} folder(s)`,
+    message: `[upgrade] re-derived targetType + trash visibility for ${patched.length} folder(s)`,
   });
 }
 
