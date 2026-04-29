@@ -52,6 +52,11 @@ const STATUS_INVALID = "6";
 const STATUS_CONFLICT = "7";
 const STATUS_OBJECT_NOT_FOUND = "8";
 const STATUS_FOLDER_HIERARCHY = "12";
+// Server temporarily unavailable / busy. Legacy paused autosync for 30
+// minutes on this; we mirror that by writing `noAutosyncUntil` on the
+// account so the host's autosync ticker skips it for the duration.
+const STATUS_BUSY = "110";
+const BUSY_BACKOFF_MS = 30 * 60 * 1000;
 
 const MAX_PULL_BATCHES = 50;
 const POST_PUSH_WAIT_MS = 2000;
@@ -127,6 +132,22 @@ export async function runItemSync({
       });
       return warningStatus("Folder hierarchy changed on the server - refresh the folder list and retry");
     }
+    if (result.code === "BUSY") {
+      // Server signalled "temporarily unavailable" (Sync Status 110).
+      // Suppress autosync for 30 minutes via the host-recognized
+      // top-level `noAutosyncUntil` field; the user can still trigger a
+      // manual sync, which will retry the request immediately.
+      await provider.updateAccount({
+        accountId,
+        patch: { noAutosyncUntil: Date.now() + BUSY_BACKOFF_MS },
+      }).catch(() => { });
+      provider.reportEventLog({
+        level: "warning",
+        accountId, folderId,
+        message: `[${itemKind.changelogKind}-sync] server busy (Status 110); autosync paused for 30 min`,
+      });
+      return warningStatus("Server busy - autosync paused for 30 minutes");
+    }
     return result.status ?? ok();
   }
   return errorStatus("Repeated synckey reset - giving up");
@@ -170,6 +191,7 @@ async function runOneSync({
     });
     if (boot.code === "RESYNC")    return await finishWith(ctx, { code: "RESYNC" });
     if (boot.code === "HIERARCHY") return await finishWith(ctx, { code: "HIERARCHY" });
+    if (boot.code === "BUSY")      return await finishWith(ctx, { code: "BUSY" });
     if (boot.error)                return await finishWith(ctx, { status: errorStatus(boot.error) });
     ctx.synckey = boot.synckey;
     ctx.syncKeyDirty = true;
@@ -246,6 +268,7 @@ async function pullPhase(ctx) {
     const r = await sendSync({ account: ctx.account, asVersion: ctx.asVersion, body });
     if (r.code === "RESYNC") return { code: "RESYNC" };
     if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
+    if (r.code === "BUSY") return { code: "BUSY" };
     if (r.error) return { status: errorStatus(r.error) };
 
     if (r.commands) {
@@ -322,6 +345,7 @@ async function pushPhase(ctx, userEdits) {
 
     if (r.code === "RESYNC") return { code: "RESYNC" };
     if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
+    if (r.code === "BUSY") return { code: "BUSY" };
 
     if (r.code === "MALFORMED") {
       if (slice.length > 1) {
@@ -709,6 +733,7 @@ async function sendSync({ account, asVersion, body }) {
 function parseSyncResponse(doc) {
   const top = readPath(doc, ["Status"]);
   if (top && top !== STATUS_OK) {
+    if (top === STATUS_BUSY) return { code: "BUSY", topStatus: top };
     return { error: `Sync top status ${top}` };
   }
   const collection = doc.getElementsByTagName("Collection")[0];
@@ -718,6 +743,7 @@ function parseSyncResponse(doc) {
   if (collStatus !== STATUS_OK) {
     if (collStatus === STATUS_RESYNC)           return { code: "RESYNC", collStatus };
     if (collStatus === STATUS_FOLDER_HIERARCHY) return { code: "HIERARCHY", collStatus };
+    if (collStatus === STATUS_BUSY)             return { code: "BUSY", collStatus };
     if (collStatus === STATUS_MALFORMED || collStatus === STATUS_INVALID) {
       return { code: "MALFORMED", collStatus };
     }

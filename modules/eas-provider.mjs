@@ -38,6 +38,7 @@ import * as calendarStore from "./calendar-store.mjs";
 import { DEBUG_STATUS_DELAY_MS } from "./debug.mjs";
 import { primeAuth, isOAuthAccount } from "./eas/oauth.mjs";
 import { negotiateAsVersion } from "./eas/connect.mjs";
+import { discoverEasServer } from "./eas/autodiscover.mjs";
 import { acquirePolicyKey, NO_POLICY_FOR_DEVICE } from "./eas/provision.mjs";
 import { runFolderSync } from "./eas/folder-sync.mjs";
 import { syncContactFolder } from "./eas/contact-sync.mjs";
@@ -241,20 +242,66 @@ export class EasProvider extends TbSyncProviderImplementation {
    *  refresh).
    *
    *  HTTP 451 (X-MS-Location host migration) is caught at the top and
-   *  triggers a one-shot retry against the new host. */
-  async #connectAndDiscoverFolders(accountId, redirectsRemaining = 1) {
+   *  triggers a one-shot retry against the new host. A network-layer
+   *  failure on a `servertype === "auto"` account triggers a one-shot
+   *  Autodiscover re-run in case the cached MobileSync URL has rotated. */
+  async #connectAndDiscoverFolders(accountId, redirectsRemaining = 1, rediscoversRemaining = 1) {
     try {
       await this.#doConnectAndDiscover(accountId);
     } catch (err) {
-      if (err.code !== NET_ERR.HOST_REDIRECT || !err.newLocation || redirectsRemaining <= 0) {
-        throw err;
+      if (err.code === NET_ERR.HOST_REDIRECT && err.newLocation && redirectsRemaining > 0) {
+        await this.updateAccount({
+          accountId,
+          patch: { custom: { server: err.newLocation } },
+        });
+        await this.#connectAndDiscoverFolders(accountId, redirectsRemaining - 1, rediscoversRemaining);
+        return;
       }
-      await this.updateAccount({
-        accountId,
-        patch: { custom: { server: err.newLocation } },
-      });
-      await this.#connectAndDiscoverFolders(accountId, redirectsRemaining - 1);
+      if (err.code === NET_ERR.NETWORK && rediscoversRemaining > 0) {
+        const rediscovered = await this.#rediscoverServerUrl(accountId);
+        if (rediscovered) {
+          await this.#connectAndDiscoverFolders(accountId, redirectsRemaining, rediscoversRemaining - 1);
+          return;
+        }
+      }
+      throw err;
     }
+  }
+
+  /** Re-run Autodiscover for an `auto`-type account whose cached server
+   *  URL just failed with E:NETWORK. Returns `true` when a different URL
+   *  was found and persisted (caller should retry the connect once),
+   *  `false` for any reason that should leave the original error to
+   *  bubble up: account isn't `auto`, no cached password, autodiscover
+   *  itself failed, or the rediscovered URL matches what we already had
+   *  (a spurious-fault loop guard). */
+  async #rediscoverServerUrl(accountId) {
+    const ctx = await this.#loadContext(accountId);
+    const c = ctx?.account?.custom;
+    if (!c || c.servertype !== "auto" || !c.user || !c.password) return false;
+    let result;
+    try {
+      result = await discoverEasServer({ email: c.user, password: c.password });
+    } catch (err) {
+      this.reportEventLog({
+        level: "warning",
+        accountId,
+        message: `[autodiscover] runtime fallback failed: ${err?.message ?? String(err)}`,
+      });
+      return false;
+    }
+    const newUrl = result?.server;
+    if (!newUrl || newUrl === c.server) return false;
+    await this.updateAccount({
+      accountId,
+      patch: { custom: { server: newUrl } },
+    });
+    this.reportEventLog({
+      level: "debug",
+      accountId,
+      message: `[autodiscover] rotated server URL: ${c.server} -> ${newUrl}`,
+    });
+    return true;
   }
 
   async #doConnectAndDiscover(accountId) {
