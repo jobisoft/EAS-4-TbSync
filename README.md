@@ -1,6 +1,6 @@
 # EAS-4-TbSync
 
-This provider add-on adds Exchange ActiveSync (EAS v2.5, v14.0 & v16.1) synchronization capabilities to [TbSync](https://github.com/jobisoft/TbSync/).
+This provider add-on adds Exchange ActiveSync (EAS v2.5, v14.0, 14.1 & v16.1) synchronization capabilities to [TbSync](https://github.com/jobisoft/TbSync/).
 
 More information can be found in the [wiki](https://github.com/jobisoft/EAS-4-TbSync/wiki/About:-Provider-for-Exchange-ActiveSync) of this repository
 
@@ -10,7 +10,7 @@ To help translating this project, please visit [crowdin.com](https://crowdin.com
 
 ## External data sources
 
-* TbSync uses a [timezone mapping](https://github.com/mj1856/TimeZoneConverter/blob/master/src/TimeZoneConverter/Data/Mapping.csv.gz) provided by [Matt Johnson](https://github.com/mj1856)
+* TbSync uses a [timezone mapping](https://github.com/mattjohnsonpint/TimeZoneConverter/blob/master/src/TimeZoneConverter/Data/Mapping.csv.gz) provided by [Matt Johnson-Pint](https://github.com/mattjohnsonpint)
 
 
 ## Icon sources and attributions
