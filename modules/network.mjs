@@ -239,7 +239,7 @@ async function getDeviceType() {
   return DEFAULT_DEVICE_TYPE;
 }
 
-async function getUserAgent() {
+export async function getUserAgent() {
   try {
     const rv = await browser.storage.local.get({
       [CUSTOM_USER_AGENT_STORAGE_KEY]: "",

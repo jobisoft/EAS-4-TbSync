@@ -414,7 +414,24 @@ export class EasProvider extends TbSyncProviderImplementation {
 
     // The user can override negotiation via the config popup. "auto"
     // (the default) uses the negotiated value cached in account.custom.
+    // When a specific version is forced, validate it against the server's
+    // advertised list - matches legacy sync.js:107-108. We only enforce
+    // when `allowedEasVersions` is non-empty so a corrupted-state account
+    // isn't blocked from re-probing.
     const selected = ctx.account.custom?.asversionselected || "auto";
+    const allowedVersions = ctx.account.custom?.allowedEasVersions ?? [];
+    if (
+      selected !== "auto" &&
+      allowedVersions.length > 0 &&
+      !allowedVersions.includes(selected)
+    ) {
+      throw withCode(
+        new Error(
+          `Selected EAS version ${selected} is not advertised by the server (server: ${allowedVersions.join(", ")})`,
+        ),
+        ERR.UNKNOWN_COMMAND,
+      );
+    }
     const asVersion =
       selected === "auto" ? ctx.account.custom.asversion : selected;
 

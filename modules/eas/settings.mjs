@@ -19,28 +19,34 @@
 
 import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 import { createWBXML } from "../wbxml.mjs";
-import { easRequest } from "../network.mjs";
+import { easRequest, getUserAgent } from "../network.mjs";
 import { readPath } from "./wbxml-helpers.mjs";
 
-const MODEL = "TbSyncEAS";
-const FRIENDLY_NAME = "Thunderbird";
-const USER_AGENT = "TbSync-EAS/1.0";
+// Matches legacy network.js:832-833 verbatim. `Model` is the device-class
+// label Exchange surfaces in its mobile-device list; `FriendlyName` is the
+// per-account label - legacy strips the 4-char generator prefix off the
+// deviceId, we preserve the same call shape so multi-account installations
+// stay distinguishable in the Exchange admin UI.
+const MODEL = "Computer";
 
-function buildBody() {
+function buildBody({ deviceId, userAgent }) {
+  if (!deviceId) {
+    throw new Error("settings.buildBody: deviceId is required");
+  }
   const w = createWBXML();
   w.switchpage("Settings");
   w.otag("Settings");
   w.otag("DeviceInformation");
   w.otag("Set");
   w.atag("Model", MODEL);
-  w.atag("FriendlyName", FRIENDLY_NAME);
+  w.atag("FriendlyName", `TbSync on Device ${deviceId.slice(4)}`);
   w.atag(
     "OS",
     typeof navigator !== "undefined" && navigator.platform
       ? navigator.platform
       : "Unknown",
   );
-  w.atag("UserAgent", USER_AGENT);
+  w.atag("UserAgent", userAgent);
   w.ctag();
   w.ctag();
   w.ctag();
@@ -52,10 +58,14 @@ function buildBody() {
  *  "Settings" (the OPTIONS-probed command list) and `asVersion != "2.5"`.
  *  Returns null on success. */
 export async function sendDeviceInformation({ account, asVersion }) {
+  const userAgent = await getUserAgent();
   const { doc } = await easRequest({
     account,
     command: "Settings",
-    body: buildBody(),
+    body: buildBody({
+      deviceId: account?.custom?.deviceId,
+      userAgent,
+    }),
     asVersion,
   });
   if (!doc) {
