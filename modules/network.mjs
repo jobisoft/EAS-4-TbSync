@@ -19,9 +19,16 @@
  */
 
 import { decodeWBXML } from "./wbxml.mjs";
-import { getAccessToken, invalidateAccessToken, isOAuthAccount } from "./eas/oauth.mjs";
+import {
+  getAccessToken,
+  invalidateAccessToken,
+  isOAuthAccount,
+} from "./eas/oauth.mjs";
 import { reportEventLog } from "./eas-event-log.mjs";
-import { ANCHOR_MAILBOX_HOSTS, ANCHOR_MAILBOX_MARKER } from "./anchor-mailbox.mjs";
+import {
+  ANCHOR_MAILBOX_HOSTS,
+  ANCHOR_MAILBOX_MARKER,
+} from "./anchor-mailbox.mjs";
 
 const DEFAULT_USER_AGENT = "Thunderbird ActiveSync";
 const CUSTOM_USER_AGENT_STORAGE_KEY = "tbsync.useragent";
@@ -50,7 +57,9 @@ export class EasHttpError extends Error {
     // codes, so this is what end users see when E:HTTP / E:HOST_REDIRECT /
     // E:PROVISION_REQUIRED bubbles up. NET_ERR.NETWORK / NET_ERR.AUTH never
     // surface this string because the host has localised translations.
-    super(options.message ?? `EAS transport error (HTTP ${status})`, { cause: options.cause });
+    super(options.message ?? `EAS transport error (HTTP ${status})`, {
+      cause: options.cause,
+    });
     this.name = "EasHttpError";
     this.code = code;
     this.status = status;
@@ -62,20 +71,24 @@ export class EasHttpError extends Error {
  *  UTF-8, empty string table. Anything else is junk (HTML error page, JSON
  *  blob from a misconfigured server, etc.) and we reject it before feeding
  *  it to the decoder. */
-const WBXML_MAGIC = [0x03, 0x01, 0x6A, 0x00];
+const WBXML_MAGIC = [0x03, 0x01, 0x6a, 0x00];
 
 // ── Public API ────────────────────────────────────────────────────────────
 
 export async function easOptions({ account }) {
   const custom = account?.custom ?? {};
-  if (!custom.server) throw new Error("easOptions: account.custom.server is missing");
+  if (!custom.server)
+    throw new Error("easOptions: account.custom.server is missing");
   const authHeader = await buildAuthHeader(account);
   const headers = new Headers({
     Authorization: authHeader,
     "User-Agent": await getUserAgent(),
   });
   stampAnchorMailbox(headers, custom);
-  const resp = await fetchWithTimeout(custom.server, { method: "OPTIONS", headers });
+  const resp = await fetchWithTimeout(custom.server, {
+    method: "OPTIONS",
+    headers,
+  });
   if (resp.status === 401 || resp.status === 403) {
     throw new EasHttpError(NET_ERR.AUTH, resp.status);
   }
@@ -89,9 +102,12 @@ export async function easOptions({ account }) {
 
 export async function easRequest({ account, command, body, asVersion }) {
   const custom = account?.custom ?? {};
-  if (!custom.server) throw new Error("easRequest: account.custom.server is missing");
-  if (!custom.user) throw new Error("easRequest: account.custom.user is missing");
-  if (!custom.deviceId) throw new Error("easRequest: account.custom.deviceId is missing");
+  if (!custom.server)
+    throw new Error("easRequest: account.custom.server is missing");
+  if (!custom.user)
+    throw new Error("easRequest: account.custom.user is missing");
+  if (!custom.deviceId)
+    throw new Error("easRequest: account.custom.deviceId is missing");
 
   const url = new URL(custom.server);
   url.searchParams.set("Cmd", command);
@@ -132,7 +148,8 @@ export async function easRequest({ account, command, body, asVersion }) {
       }
       throw new EasHttpError(NET_ERR.AUTH, resp.status);
     }
-    if (resp.status === 449) throw new EasHttpError(NET_ERR.PROVISION_REQUIRED, 449);
+    if (resp.status === 449)
+      throw new EasHttpError(NET_ERR.PROVISION_REQUIRED, 449);
     if (resp.status === 451) throw redirectError(resp);
     if (!resp.ok) throw new EasHttpError(NET_ERR.HTTP, resp.status);
 
@@ -141,7 +158,9 @@ export async function easRequest({ account, command, body, asVersion }) {
 
     if (!hasWbxmlMagic(buf)) {
       logRecvText({ account, command, status: resp.status, buf });
-      const head = [...buf.slice(0, 4)].map(b => b.toString(16).padStart(2, "0")).join(" ");
+      const head = [...buf.slice(0, 4)]
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" ");
       throw new EasHttpError(NET_ERR.HTTP, resp.status, {
         message: `Response is not WBXML (first bytes: ${head})`,
       });
@@ -168,8 +187,11 @@ export async function easRequest({ account, command, body, asVersion }) {
 
 function logSendXML({ account, command, body }) {
   let xml;
-  try { xml = decodeWBXML(body); }
-  catch { xml = "<decode-failed>"; }
+  try {
+    xml = decodeWBXML(body);
+  } catch {
+    xml = "<decode-failed>";
+  }
   reportEventLog({
     level: "debug",
     accountId: account?.accountId,
@@ -189,8 +211,11 @@ function logRecvXML({ account, command, xml }) {
 
 function logRecvText({ account, command, status, buf }) {
   let text;
-  try { text = new TextDecoder("utf-8", { fatal: false }).decode(buf); }
-  catch { text = "<decode-failed>"; }
+  try {
+    text = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+  } catch {
+    text = "<decode-failed>";
+  }
   reportEventLog({
     level: "debug",
     accountId: account?.accountId,
@@ -201,34 +226,46 @@ function logRecvText({ account, command, status, buf }) {
 
 async function getDeviceType() {
   try {
-    const rv = await browser.storage.local.get({ [CUSTOM_DEVICE_TYPE_STORAGE_KEY]: "" });
+    const rv = await browser.storage.local.get({
+      [CUSTOM_DEVICE_TYPE_STORAGE_KEY]: "",
+    });
     const v = rv[CUSTOM_DEVICE_TYPE_STORAGE_KEY];
     if (typeof v === "string" && v.trim()) {
       return v.trim();
     }
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
   return DEFAULT_DEVICE_TYPE;
 }
 
 async function getUserAgent() {
   try {
-    const rv = await browser.storage.local.get({ [CUSTOM_USER_AGENT_STORAGE_KEY]: "" });
+    const rv = await browser.storage.local.get({
+      [CUSTOM_USER_AGENT_STORAGE_KEY]: "",
+    });
     const v = rv[CUSTOM_USER_AGENT_STORAGE_KEY];
     if (typeof v === "string" && v.trim()) {
       return v.trim();
     }
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
   return DEFAULT_USER_AGENT;
 }
 
 async function getConnectionTimeout() {
   try {
-    const rv = await browser.storage.local.get({ [CUSTOM_CONNECTION_TIMEOUT_STORAGE_KEY]: null });
+    const rv = await browser.storage.local.get({
+      [CUSTOM_CONNECTION_TIMEOUT_STORAGE_KEY]: null,
+    });
     const v = rv[CUSTOM_CONNECTION_TIMEOUT_STORAGE_KEY];
     if (typeof v === "number" && Number.isFinite(v) && v > 0) {
       return v;
     }
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
   return DEFAULT_CONNECTION_TIMEOUT_MS;
 }
 
@@ -238,12 +275,15 @@ async function getConnectionTimeout() {
  *  per-request avoids the shared cookie-jar race that would otherwise
  *  let two `personal-ms` accounts overwrite each other's anchor value
  *  during concurrent autosync. Hosts not in `ANCHOR_MAILBOX_HOSTS` are
- *  left alone — other EAS servers don't need (and ignore) the cookie. */
+ *  left alone - other EAS servers don't need (and ignore) the cookie. */
 function stampAnchorMailbox(headers, custom) {
   if (!custom?.server || !custom.user) return;
   let host;
-  try { host = new URL(custom.server).hostname; }
-  catch { return; }
+  try {
+    host = new URL(custom.server).hostname;
+  } catch {
+    return;
+  }
   if (!ANCHOR_MAILBOX_HOSTS.has(host)) return;
   headers.set(ANCHOR_MAILBOX_MARKER, custom.user);
 }
@@ -257,8 +297,10 @@ async function buildAuthHeader(account) {
     const token = await getAccessToken(account.accountId);
     return `Bearer ${token}`;
   }
-  if (!custom.user) throw new Error("buildAuthHeader: account.custom.user is missing");
-  if (custom.password == null) throw new Error("buildAuthHeader: account.custom.password is missing");
+  if (!custom.user)
+    throw new Error("buildAuthHeader: account.custom.user is missing");
+  if (custom.password == null)
+    throw new Error("buildAuthHeader: account.custom.password is missing");
   return basicAuthHeader(custom.user, custom.password);
 }
 
@@ -284,11 +326,13 @@ async function fetchWithTimeout(url, init) {
       if (attempt === 0) {
         // Brief pause before the retry so we don't immediately re-hit a
         // half-closed socket.
-        await new Promise(r => setTimeout(r, NETWORK_RETRY_DELAY_MS));
+        await new Promise((r) => setTimeout(r, NETWORK_RETRY_DELAY_MS));
         continue;
       }
       if (isTimeout) {
-        throw new EasHttpError(NET_ERR.NETWORK, 0, { message: "Connection timeout" });
+        throw new EasHttpError(NET_ERR.NETWORK, 0, {
+          message: "Connection timeout",
+        });
       }
       throw new EasHttpError(NET_ERR.NETWORK, 0, { cause: err });
     } finally {
@@ -296,13 +340,17 @@ async function fetchWithTimeout(url, init) {
     }
   }
   // Unreachable: the loop either returns or throws.
-  throw new EasHttpError(NET_ERR.NETWORK, 0, { message: "fetchWithTimeout: exhausted retries" });
+  throw new EasHttpError(NET_ERR.NETWORK, 0, {
+    message: "fetchWithTimeout: exhausted retries",
+  });
 }
 
 function redirectError(resp) {
   const newLocation = resp.headers.get("X-MS-Location");
   return new EasHttpError(NET_ERR.HOST_REDIRECT, 451, {
-    message: newLocation ? `Server moved to ${newLocation}` : "Server requested a redirect (no X-MS-Location)",
+    message: newLocation
+      ? `Server moved to ${newLocation}`
+      : "Server requested a redirect (no X-MS-Location)",
     newLocation: newLocation ?? null,
   });
 }
@@ -330,5 +378,12 @@ function parseList(headerValue) {
   // Dedupe: some EAS frontends (notably Office 365) emit
   // MS-ASProtocolCommands twice in the OPTIONS reply, which the Headers
   // API joins with ",". The list is a set in spirit.
-  return [...new Set(headerValue.split(",").map(s => s.trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      headerValue
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ];
 }

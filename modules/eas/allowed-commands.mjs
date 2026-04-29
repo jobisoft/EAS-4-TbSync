@@ -18,7 +18,7 @@ function readCommandList(account) {
 /** Strict check: did the OPTIONS probe explicitly advertise this
  *  command? Returns false when the probe never ran (no list yet) or
  *  when the list is empty. Use this for capabilities that should only
- *  light up when the server confirms support — e.g. Search/GAL or
+ *  light up when the server confirms support - e.g. Search/GAL or
  *  Settings/DeviceInformation. */
 export function easCommandAdvertised(account, command) {
   const cmds = readCommandList(account);
@@ -29,7 +29,7 @@ export function easCommandAdvertised(account, command) {
  *  explicitly says otherwise. Returns true when the list is missing /
  *  empty (no negative information) and falls back to a strict check
  *  when the list is populated. Use this for commands that nearly all
- *  servers support — e.g. GetItemEstimate — where the cost of skipping
+ *  servers support - e.g. GetItemEstimate - where the cost of skipping
  *  a real-world server that simply omits the list is worse than the
  *  cost of attempting an unsupported command and getting a clean
  *  rejection. */

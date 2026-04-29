@@ -43,14 +43,18 @@ import { easRequest } from "../network.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
-import { ok, warning as warningStatus, error as errorStatus } from "../../vendor/tbsync/provider.mjs";
+import {
+  ok,
+  warning as warningStatus,
+  error as errorStatus,
+} from "../../vendor/tbsync/provider.mjs";
 
 const STATUS_OK = "1";
 const STATUS_RESYNC = "3";
 const STATUS_MALFORMED = "4";
-const STATUS_TEMP_SERVER = "5";          // Temporary server issues / invalid item — soft fail
+const STATUS_TEMP_SERVER = "5"; // Temporary server issues / invalid item - soft fail
 const STATUS_INVALID = "6";
-const STATUS_CONFLICT = "7";              // Server's changes win — legacy treated as silent OK
+const STATUS_CONFLICT = "7"; // Server's changes win - legacy treated as silent OK
 const STATUS_OBJECT_NOT_FOUND = "8";
 const STATUS_FOLDER_HIERARCHY = "12";
 // Server temporarily unavailable / busy. Legacy paused autosync for 30
@@ -62,7 +66,7 @@ const BUSY_BACKOFF_MS = 30 * 60 * 1000;
 // Top-level Sync.Status codes that indicate a malformed wire-level
 // payload ([MS-ASCMD] §2.2.3.167.16). Distinct from collection-level
 // MALFORMED (4/6) because the server rejected the *transport* shape, not
-// per-item data — usually fatal until a code change ships.
+// per-item data - usually fatal until a code change ships.
 const STATUS_PROTOCOL_FAULT = new Set(["101", "102", "103"]);
 
 // Top-level "client / device / user not allowed" codes. Legacy bundled
@@ -72,7 +76,14 @@ const STATUS_PROTOCOL_FAULT = new Set(["101", "102", "103"]);
 // for the fix (admin disabled the device, user has no mailbox, …). See
 // [MS-ASCMD] §2.2.3.167.16.
 const STATUS_ACCESS_DENIED = new Set([
-  "109", "112", "126", "127", "128", "129", "130", "131",
+  "109",
+  "112",
+  "126",
+  "127",
+  "128",
+  "129",
+  "130",
+  "131",
 ]);
 
 const MAX_PULL_BATCHES = 50;
@@ -113,15 +124,23 @@ async function readMaxItems() {
 }
 
 async function readMsTodoCompat() {
-  const { msTodoCompat } = await browser.storage.local.get({ msTodoCompat: false });
+  const { msTodoCompat } = await browser.storage.local.get({
+    msTodoCompat: false,
+  });
   return msTodoCompat === true;
 }
 
 /* ── Entry point ──────────────────────────────────────────────────── */
 
 export async function runItemSync({
-  provider, account, folder, accountId, folderId, asVersion,
-  itemKind, defaultTimezone,
+  provider,
+  account,
+  folder,
+  accountId,
+  folderId,
+  asVersion,
+  itemKind,
+  defaultTimezone,
 }) {
   if (!folder.targetID) return errorStatus("No local target bound to folder");
   const collectionId = folder.custom?.serverID;
@@ -130,16 +149,27 @@ export async function runItemSync({
   let workingFolder = folder;
   for (let attempt = 0; attempt < 2; attempt++) {
     const result = await runOneSync({
-      provider, account, folder: workingFolder, accountId, folderId,
-      asVersion, collectionId, itemKind, defaultTimezone,
+      provider,
+      account,
+      folder: workingFolder,
+      accountId,
+      folderId,
+      asVersion,
+      collectionId,
+      itemKind,
+      defaultTimezone,
     });
     if (result.code === "RESYNC" && attempt === 0) {
       const reset = { synckey: "0", [itemKind.mapField]: {} };
       await provider.updateFolder({
-        accountId, folderId,
+        accountId,
+        folderId,
         patch: { custom: reset },
       });
-      workingFolder = { ...workingFolder, custom: { ...(workingFolder.custom ?? {}), ...reset } };
+      workingFolder = {
+        ...workingFolder,
+        custom: { ...(workingFolder.custom ?? {}), ...reset },
+      };
       continue;
     }
     if (result.code === "HIERARCHY") {
@@ -147,20 +177,25 @@ export async function runItemSync({
         accountId,
         patch: { custom: { foldersynckey: "0" } },
       });
-      return warningStatus("Folder hierarchy changed on the server - refresh the folder list and retry");
+      return warningStatus(
+        "Folder hierarchy changed on the server - refresh the folder list and retry",
+      );
     }
     if (result.code === "BUSY") {
       // Server signalled "temporarily unavailable" (Sync Status 110).
       // Suppress autosync for 30 minutes via the host-recognized
       // top-level `noAutosyncUntil` field; the user can still trigger a
       // manual sync, which will retry the request immediately.
-      await provider.updateAccount({
-        accountId,
-        patch: { noAutosyncUntil: Date.now() + BUSY_BACKOFF_MS },
-      }).catch(() => { });
+      await provider
+        .updateAccount({
+          accountId,
+          patch: { noAutosyncUntil: Date.now() + BUSY_BACKOFF_MS },
+        })
+        .catch(() => {});
       provider.reportEventLog({
         level: "warning",
-        accountId, folderId,
+        accountId,
+        folderId,
         message: `[${itemKind.changelogKind}-sync] server busy (Status 110); autosync paused for 30 min`,
       });
       return warningStatus("Server busy - autosync paused for 30 minutes");
@@ -173,8 +208,15 @@ export async function runItemSync({
 /* ── One full sync pass ───────────────────────────────────────────── */
 
 async function runOneSync({
-  provider, account, folder, accountId, folderId, asVersion,
-  collectionId, itemKind, defaultTimezone,
+  provider,
+  account,
+  folder,
+  accountId,
+  folderId,
+  asVersion,
+  collectionId,
+  itemKind,
+  defaultTimezone,
 }) {
   const separator = String(account.custom?.seperator ?? "10");
   let synckey = String(folder.custom?.synckey ?? "0");
@@ -182,8 +224,15 @@ async function runOneSync({
   const msTodoCompat = await readMsTodoCompat();
 
   const ctx = {
-    provider, account, accountId, folderId, folder,
-    targetID: folder.targetID, collectionId, separator, asVersion,
+    provider,
+    account,
+    accountId,
+    folderId,
+    folder,
+    targetID: folder.targetID,
+    collectionId,
+    separator,
+    asVersion,
     defaultTimezone,
     syncRecurrence: account.custom?.syncrecurrence === true,
     msTodoCompat,
@@ -200,16 +249,25 @@ async function runOneSync({
   // 1) Bootstrap if needed.
   if (synckey === "0" || !synckey) {
     const boot = await sendSync({
-      account, asVersion,
+      account,
+      asVersion,
       body: buildSyncBody({
-        synckey: "0", collectionId, asVersion, withChanges: false,
-        withCommands: null, className: itemKind.className, filterType: itemKind.filterType,
+        synckey: "0",
+        collectionId,
+        asVersion,
+        withChanges: false,
+        withCommands: null,
+        className: itemKind.className,
+        filterType: itemKind.filterType,
       }),
     });
-    if (boot.code === "RESYNC")    return await finishWith(ctx, { code: "RESYNC" });
-    if (boot.code === "HIERARCHY") return await finishWith(ctx, { code: "HIERARCHY" });
-    if (boot.code === "BUSY")      return await finishWith(ctx, { code: "BUSY" });
-    if (boot.error)                return await finishWith(ctx, { status: errorStatus(boot.error) });
+    if (boot.code === "RESYNC")
+      return await finishWith(ctx, { code: "RESYNC" });
+    if (boot.code === "HIERARCHY")
+      return await finishWith(ctx, { code: "HIERARCHY" });
+    if (boot.code === "BUSY") return await finishWith(ctx, { code: "BUSY" });
+    if (boot.error)
+      return await finishWith(ctx, { status: errorStatus(boot.error) });
     ctx.synckey = boot.synckey;
     ctx.syncKeyDirty = true;
   }
@@ -222,10 +280,11 @@ async function runOneSync({
 
   // 3) Push pass.
   const changelog = Array.isArray(folder.changelog) ? folder.changelog : [];
-  const userEdits = changelog.filter(e =>
-    e?.status === "added_by_user" ||
-    e?.status === "modified_by_user" ||
-    e?.status === "deleted_by_user"
+  const userEdits = changelog.filter(
+    (e) =>
+      e?.status === "added_by_user" ||
+      e?.status === "modified_by_user" ||
+      e?.status === "deleted_by_user",
   );
   let pushed = { changedAnything: false };
   if (userEdits.length) {
@@ -247,16 +306,18 @@ async function finishWith(ctx, result) {
   if (!ctx.syncKeyDirty && !ctx.idMapDirty) return result;
   const patch = {};
   if (ctx.syncKeyDirty) patch.synckey = ctx.synckey;
-  if (ctx.idMapDirty)   patch[ctx.itemKind.mapField] = ctx.idMap;
+  if (ctx.idMapDirty) patch[ctx.itemKind.mapField] = ctx.idMap;
   try {
     await ctx.provider.updateFolder({
-      accountId: ctx.accountId, folderId: ctx.folderId,
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
       patch: { custom: patch },
     });
   } catch (err) {
     ctx.provider.reportEventLog({
       level: "warning",
-      accountId: ctx.accountId, folderId: ctx.folderId,
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
       message: `[${ctx.itemKind.changelogKind}-sync] flush failed: ${err?.message ?? String(err)}`,
     });
   }
@@ -267,9 +328,12 @@ async function finishWith(ctx, result) {
 
 async function pullPhase(ctx) {
   const estimate = await runGetItemEstimate({
-    account: ctx.account, asVersion: ctx.asVersion,
-    collectionId: ctx.collectionId, synckey: ctx.synckey,
-    className: ctx.itemKind.className, filterType: ctx.itemKind.filterType,
+    account: ctx.account,
+    asVersion: ctx.asVersion,
+    collectionId: ctx.collectionId,
+    synckey: ctx.synckey,
+    className: ctx.itemKind.className,
+    filterType: ctx.itemKind.filterType,
   });
   let itemsDone = 0;
   let itemsTotal = estimate ?? 0;
@@ -277,12 +341,20 @@ async function pullPhase(ctx) {
 
   for (let batch = 0; batch < MAX_PULL_BATCHES; batch++) {
     const body = buildSyncBody({
-      synckey: ctx.synckey, collectionId: ctx.collectionId,
-      asVersion: ctx.asVersion, withChanges: true, withCommands: null,
-      className: ctx.itemKind.className, filterType: ctx.itemKind.filterType,
+      synckey: ctx.synckey,
+      collectionId: ctx.collectionId,
+      asVersion: ctx.asVersion,
+      withChanges: true,
+      withCommands: null,
+      className: ctx.itemKind.className,
+      filterType: ctx.itemKind.filterType,
       windowSize: ctx.maxItems,
     });
-    const r = await sendSync({ account: ctx.account, asVersion: ctx.asVersion, body });
+    const r = await sendSync({
+      account: ctx.account,
+      asVersion: ctx.asVersion,
+      body,
+    });
     if (r.code === "RESYNC") return { code: "RESYNC" };
     if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
     if (r.code === "BUSY") return { code: "BUSY" };
@@ -336,27 +408,42 @@ async function pushPhase(ctx, userEdits) {
     if (ctx.syncRecurrence) {
       for (const a of built.adds) {
         if (blobHasRecurrence(a.item.blob)) {
-          logRecurrence(ctx, `push add: itemId=${a.item.id}, clientId=${a.clientId}`, { ical: a.item.blob });
+          logRecurrence(
+            ctx,
+            `push add: itemId=${a.item.id}, clientId=${a.clientId}`,
+            { ical: a.item.blob },
+          );
         }
       }
       for (const m of built.mods) {
         if (blobHasRecurrence(m.item.blob)) {
-          logRecurrence(ctx, `push update: itemId=${m.item.id}, serverID=${m.serverID}`, { ical: m.item.blob });
+          logRecurrence(
+            ctx,
+            `push update: itemId=${m.item.id}, serverID=${m.serverID}`,
+            { ical: m.item.blob },
+          );
         }
       }
     }
 
     const r = await sendSync({
-      account: ctx.account, asVersion: ctx.asVersion,
+      account: ctx.account,
+      asVersion: ctx.asVersion,
       body: buildSyncBody({
-        synckey: ctx.synckey, collectionId: ctx.collectionId,
-        asVersion: ctx.asVersion, withChanges: false,
+        synckey: ctx.synckey,
+        collectionId: ctx.collectionId,
+        asVersion: ctx.asVersion,
+        withChanges: false,
         withCommands: {
-          ...built, separator: ctx.separator, asVersion: ctx.asVersion,
-          codec: ctx.itemKind.codec, defaultTimezone: ctx.defaultTimezone,
+          ...built,
+          separator: ctx.separator,
+          asVersion: ctx.asVersion,
+          codec: ctx.itemKind.codec,
+          defaultTimezone: ctx.defaultTimezone,
           syncRecurrence: ctx.syncRecurrence,
         },
-        className: ctx.itemKind.className, filterType: ctx.itemKind.filterType,
+        className: ctx.itemKind.className,
+        filterType: ctx.itemKind.filterType,
       }),
     });
 
@@ -373,7 +460,8 @@ async function pushPhase(ctx, userEdits) {
       failedItems.add(slice[0].itemId);
       ctx.provider.reportEventLog({
         level: "warning",
-        accountId: ctx.accountId, folderId: ctx.folderId,
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
         message: `[${ctx.itemKind.changelogKind}-sync] dropping item ${slice[0].itemId} after Status ${r.collStatus} on a single-item batch`,
       });
       itemsDone += 1;
@@ -409,16 +497,19 @@ async function buildPushBatch(ctx, slice) {
     } else if (entry.status === "modified_by_user") {
       const it = await ctx.store.get(entry.itemId);
       if (!it?.blob) continue;
-      const serverID = ctx.itemKind.codec.readEasServerIdFromBlob(it.blob)
-                    ?? ctx.idMap[entry.itemId];
+      const serverID =
+        ctx.itemKind.codec.readEasServerIdFromBlob(it.blob) ??
+        ctx.idMap[entry.itemId];
       if (!serverID) continue;
       mods.push({ entry, serverID, item: it });
     } else if (entry.status === "deleted_by_user") {
       const serverID = ctx.idMap[entry.itemId];
       if (!serverID) {
         await ctx.provider.changelogRemove({
-          accountId: ctx.accountId, folderId: ctx.folderId,
-          parentId: entry.parentId, itemId: entry.itemId,
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          parentId: entry.parentId,
+          itemId: entry.itemId,
         });
         continue;
       }
@@ -434,21 +525,29 @@ async function applyResponses(ctx, responses, sent) {
   for (const node of responses.adds) {
     const clientId = readPathFrom(node, ["ClientId"]);
     const serverId = readPathFrom(node, ["ServerId"]);
-    const status   = readPathFrom(node, ["Status"]);
-    const sentEntry = sent.adds.find(a => a.clientId === clientId);
+    const status = readPathFrom(node, ["Status"]);
+    const sentEntry = sent.adds.find((a) => a.clientId === clientId);
     if (!sentEntry) continue;
     if (status !== STATUS_OK || !serverId) continue;
-    const stamped = ctx.itemKind.codec.stampEasServerId(sentEntry.item.blob, serverId);
+    const stamped = ctx.itemKind.codec.stampEasServerId(
+      sentEntry.item.blob,
+      serverId,
+    );
     await ctx.provider.changelogMarkServerWrite({
-      accountId: ctx.accountId, folderId: ctx.folderId,
-      parentId: ctx.targetID, itemId: sentEntry.item.id,
-      status: "modified_by_server", kind: ctx.itemKind.changelogKind,
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      parentId: ctx.targetID,
+      itemId: sentEntry.item.id,
+      status: "modified_by_server",
+      kind: ctx.itemKind.changelogKind,
     });
     await ctx.store.update(sentEntry.item.id, stamped);
     mergeIdMap(ctx, { [sentEntry.item.id]: serverId });
     await ctx.provider.changelogRemove({
-      accountId: ctx.accountId, folderId: ctx.folderId,
-      parentId: sentEntry.entry.parentId, itemId: sentEntry.entry.itemId,
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      parentId: sentEntry.entry.parentId,
+      itemId: sentEntry.entry.itemId,
     });
   }
   for (const node of responses.changes) {
@@ -456,11 +555,13 @@ async function applyResponses(ctx, responses, sent) {
     if (status === STATUS_OK) continue;
     if (status === STATUS_CONFLICT || status === STATUS_OBJECT_NOT_FOUND) {
       const serverId = readPathFrom(node, ["ServerId"]);
-      const sentEntry = sent.mods.find(m => m.serverID === serverId);
+      const sentEntry = sent.mods.find((m) => m.serverID === serverId);
       if (sentEntry) {
         await ctx.provider.changelogRemove({
-          accountId: ctx.accountId, folderId: ctx.folderId,
-          parentId: sentEntry.entry.parentId, itemId: sentEntry.entry.itemId,
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          parentId: sentEntry.entry.parentId,
+          itemId: sentEntry.entry.itemId,
         });
       }
     }
@@ -468,32 +569,42 @@ async function applyResponses(ctx, responses, sent) {
   for (const node of responses.deletes) {
     const status = readPathFrom(node, ["Status"]);
     const serverId = readPathFrom(node, ["ServerId"]);
-    const sentEntry = sent.dels.find(d => d.serverID === serverId);
+    const sentEntry = sent.dels.find((d) => d.serverID === serverId);
     if (!sentEntry) continue;
     if (status === STATUS_OK || status === STATUS_OBJECT_NOT_FOUND) {
       await ctx.provider.changelogRemove({
-        accountId: ctx.accountId, folderId: ctx.folderId,
-        parentId: sentEntry.entry.parentId, itemId: sentEntry.entry.itemId,
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        parentId: sentEntry.entry.parentId,
+        itemId: sentEntry.entry.itemId,
       });
       removeIdMap(ctx, sentEntry.entry.itemId);
     }
   }
   for (const m of sent.mods) {
-    const ack = responses.changes.find(n => readPathFrom(n, ["ServerId"]) === m.serverID);
+    const ack = responses.changes.find(
+      (n) => readPathFrom(n, ["ServerId"]) === m.serverID,
+    );
     const status = ack ? readPathFrom(ack, ["Status"]) : STATUS_OK;
     if (!ack || status === STATUS_OK) {
       await ctx.provider.changelogRemove({
-        accountId: ctx.accountId, folderId: ctx.folderId,
-        parentId: m.entry.parentId, itemId: m.entry.itemId,
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        parentId: m.entry.parentId,
+        itemId: m.entry.itemId,
       });
     }
   }
   for (const d of sent.dels) {
-    const ack = responses.deletes.find(n => readPathFrom(n, ["ServerId"]) === d.serverID);
+    const ack = responses.deletes.find(
+      (n) => readPathFrom(n, ["ServerId"]) === d.serverID,
+    );
     if (!ack) {
       await ctx.provider.changelogRemove({
-        accountId: ctx.accountId, folderId: ctx.folderId,
-        parentId: d.entry.parentId, itemId: d.entry.itemId,
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        parentId: d.entry.parentId,
+        itemId: d.entry.itemId,
       });
       removeIdMap(ctx, d.entry.itemId);
     }
@@ -504,10 +615,22 @@ async function applyResponses(ctx, responses, sent) {
 
 async function applyServerCommands(ctx, commands) {
   let processed = 0;
-  for (const node of commands.adds)        { await applyAdd(ctx, node);    processed++; }
-  for (const node of commands.changes)     { await applyChange(ctx, node); processed++; }
-  for (const node of commands.deletes)     { await applyDelete(ctx, node); processed++; }
-  for (const node of commands.softDeletes) { await applyDelete(ctx, node); processed++; }
+  for (const node of commands.adds) {
+    await applyAdd(ctx, node);
+    processed++;
+  }
+  for (const node of commands.changes) {
+    await applyChange(ctx, node);
+    processed++;
+  }
+  for (const node of commands.deletes) {
+    await applyDelete(ctx, node);
+    processed++;
+  }
+  for (const node of commands.softDeletes) {
+    await applyDelete(ctx, node);
+    processed++;
+  }
   return processed;
 }
 
@@ -521,26 +644,36 @@ async function applyAdd(ctx, addNode) {
 
   const newId = crypto.randomUUID();
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
-    adNode: ad, serverID, asVersion: ctx.asVersion,
-    separator: ctx.separator, defaultTimezone: ctx.defaultTimezone,
+    adNode: ad,
+    serverID,
+    asVersion: ctx.asVersion,
+    separator: ctx.separator,
+    defaultTimezone: ctx.defaultTimezone,
     syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: newId,
   });
   await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId, folderId: ctx.folderId,
-    parentId: ctx.targetID, itemId: newId,
-    status: "added_by_server", kind: ctx.itemKind.changelogKind,
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    parentId: ctx.targetID,
+    itemId: newId,
+    status: "added_by_server",
+    kind: ctx.itemKind.changelogKind,
   });
   const createdId = await ctx.store.create(newId, blob);
   if (createdId !== newId) {
-    throw new Error(`store.create id mismatch: expected ${newId}, got ${createdId}`);
+    throw new Error(
+      `store.create id mismatch: expected ${newId}, got ${createdId}`,
+    );
   }
   await verifyRoundTrip(ctx, newId, blob, "create");
   ctx.byServerId.set(serverID, { itemId: newId, blob });
   mergeIdMap(ctx, { [newId]: serverID });
   if (blobHasRecurrence(blob)) {
-    logRecurrence(ctx, `pull add: itemId=${newId}, serverID=${serverID}`, { ical: blob });
+    logRecurrence(ctx, `pull add: itemId=${newId}, serverID=${serverID}`, {
+      ical: blob,
+    });
   }
 }
 
@@ -556,7 +689,11 @@ async function applyChange(ctx, changeNode) {
   // ServerId. Route to the codec's exception path; bail back to the
   // normal master update if the codec doesn't support it.
   const instanceId = readPathFrom(ad, ["InstanceId"]);
-  if (instanceId && ctx.syncRecurrence && ctx.itemKind.codec.applyInstanceChange) {
+  if (
+    instanceId &&
+    ctx.syncRecurrence &&
+    ctx.itemKind.codec.applyInstanceChange
+  ) {
     return applyExceptionChange(ctx, ad, existing, instanceId);
   }
   return applyChangeFromAd(ctx, ad, existing);
@@ -570,7 +707,10 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
   const codec = ctx.itemKind.codec;
   let nextBlob;
   if (deleted) {
-    nextBlob = codec.applyInstanceDelete?.({ ical: existing.blob, instanceUtc });
+    nextBlob = codec.applyInstanceDelete?.({
+      ical: existing.blob,
+      instanceUtc,
+    });
   } else {
     nextBlob = codec.applyInstanceChange?.({
       ical: existing.blob,
@@ -581,28 +721,48 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
     });
   }
   if (!nextBlob || nextBlob === existing.blob) {
-    logRecurrence(ctx, `pull 16.1 exception ${deleted ? "delete" : "change"} no-op: itemId=${existing.itemId}, instance=${instanceId}`, {
-      ical: existing.blob,
-    });
+    logRecurrence(
+      ctx,
+      `pull 16.1 exception ${deleted ? "delete" : "change"} no-op: itemId=${existing.itemId}, instance=${instanceId}`,
+      {
+        ical: existing.blob,
+      },
+    );
     return;
   }
 
   await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId, folderId: ctx.folderId,
-    parentId: ctx.targetID, itemId: existing.itemId,
-    status: "modified_by_server", kind: ctx.itemKind.changelogKind,
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    parentId: ctx.targetID,
+    itemId: existing.itemId,
+    status: "modified_by_server",
+    kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.update(existing.itemId, nextBlob);
-  await verifyRoundTrip(ctx, existing.itemId, nextBlob, deleted ? "exception-delete" : "exception-update");
-  logRecurrence(ctx, `pull 16.1 exception ${deleted ? "delete" : "change"} applied: itemId=${existing.itemId}, instance=${instanceId}`, {
-    before: existing.blob,
-    after: nextBlob,
-  });
+  await verifyRoundTrip(
+    ctx,
+    existing.itemId,
+    nextBlob,
+    deleted ? "exception-delete" : "exception-update",
+  );
+  logRecurrence(
+    ctx,
+    `pull 16.1 exception ${deleted ? "delete" : "change"} applied: itemId=${existing.itemId}, instance=${instanceId}`,
+    {
+      before: existing.blob,
+      after: nextBlob,
+    },
+  );
   // Re-key by the master's serverId (unchanged); keep the new blob.
-  const masterServerId = codec.readEasServerIdFromBlob(nextBlob)
-                       ?? codec.readEasServerIdFromBlob(existing.blob);
+  const masterServerId =
+    codec.readEasServerIdFromBlob(nextBlob) ??
+    codec.readEasServerIdFromBlob(existing.blob);
   if (masterServerId) {
-    ctx.byServerId.set(masterServerId, { itemId: existing.itemId, blob: nextBlob });
+    ctx.byServerId.set(masterServerId, {
+      itemId: existing.itemId,
+      blob: nextBlob,
+    });
   }
 }
 
@@ -629,14 +789,19 @@ async function applyChangeFromAd(ctx, ad, existing) {
     uid: existing.itemId,
   });
   await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId, folderId: ctx.folderId,
-    parentId: ctx.targetID, itemId: existing.itemId,
-    status: "modified_by_server", kind: ctx.itemKind.changelogKind,
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    parentId: ctx.targetID,
+    itemId: existing.itemId,
+    status: "modified_by_server",
+    kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.update(existing.itemId, blob);
   await verifyRoundTrip(ctx, existing.itemId, blob, "update");
-  ctx.byServerId.set(ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
-                     { itemId: existing.itemId, blob });
+  ctx.byServerId.set(
+    ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
+    { itemId: existing.itemId, blob },
+  );
   if (blobHasRecurrence(blob) || blobHasRecurrence(existing.blob)) {
     logRecurrence(ctx, `pull update: itemId=${existing.itemId}`, {
       before: existing.blob,
@@ -651,9 +816,12 @@ async function applyDelete(ctx, delNode) {
   const existing = ctx.byServerId.get(serverID);
   if (!existing) return;
   await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId, folderId: ctx.folderId,
-    parentId: ctx.targetID, itemId: existing.itemId,
-    status: "deleted_by_server", kind: ctx.itemKind.changelogKind,
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    parentId: ctx.targetID,
+    itemId: existing.itemId,
+    status: "deleted_by_server",
+    kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.delete(existing.itemId);
   ctx.byServerId.delete(serverID);
@@ -663,77 +831,109 @@ async function applyDelete(ctx, delNode) {
 /* ── Sync request building ────────────────────────────────────────── */
 
 function buildSyncBody({
-  synckey, collectionId, asVersion, withChanges, withCommands,
-  className, filterType, windowSize,
+  synckey,
+  collectionId,
+  asVersion,
+  withChanges,
+  withCommands,
+  className,
+  filterType,
+  windowSize,
 }) {
   const w = createWBXML();
   w.switchpage("AirSync");
   w.otag("Sync");
-    w.otag("Collections");
-      w.otag("Collection");
-        if (asVersion === "2.5") w.atag("Class", className);
-        w.atag("SyncKey", synckey);
-        w.atag("CollectionId", collectionId);
-        if (withChanges) {
-          w.atag("DeletesAsMoves");
-          w.atag("GetChanges");
-          w.atag("WindowSize", String(windowSize ?? 25));
-          if (asVersion !== "2.5") {
-            w.otag("Options");
-              w.atag("FilterType", String(filterType));
-              w.switchpage("AirSyncBase");
-              w.otag("BodyPreference");
-                w.atag("Type", "1");
-              w.ctag();
-              w.switchpage("AirSync");
-            w.ctag();
-          }
-        }
-        if (withCommands) appendCommands(w, withCommands);
+  w.otag("Collections");
+  w.otag("Collection");
+  if (asVersion === "2.5") w.atag("Class", className);
+  w.atag("SyncKey", synckey);
+  w.atag("CollectionId", collectionId);
+  if (withChanges) {
+    w.atag("DeletesAsMoves");
+    w.atag("GetChanges");
+    w.atag("WindowSize", String(windowSize ?? 25));
+    if (asVersion !== "2.5") {
+      w.otag("Options");
+      w.atag("FilterType", String(filterType));
+      w.switchpage("AirSyncBase");
+      w.otag("BodyPreference");
+      w.atag("Type", "1");
       w.ctag();
-    w.ctag();
+      w.switchpage("AirSync");
+      w.ctag();
+    }
+  }
+  if (withCommands) appendCommands(w, withCommands);
+  w.ctag();
+  w.ctag();
   w.ctag();
   return w.getBytes();
 }
 
-function appendCommands(w, { adds, mods, dels, separator, asVersion, codec, defaultTimezone, syncRecurrence }) {
+function appendCommands(
+  w,
+  {
+    adds,
+    mods,
+    dels,
+    separator,
+    asVersion,
+    codec,
+    defaultTimezone,
+    syncRecurrence,
+  },
+) {
   if (!adds.length && !mods.length && !dels.length) return;
   w.otag("Commands");
   for (const a of adds) {
     w.otag("Add");
-      w.atag("ClientId", a.clientId);
-      w.otag("ApplicationData");
-        codec.appendApplicationDataFromBlob({
-          builder: w, blob: a.item.blob, asVersion, separator, defaultTimezone, syncRecurrence,
-        });
-        w.switchpage("AirSync");
-      w.ctag();
+    w.atag("ClientId", a.clientId);
+    w.otag("ApplicationData");
+    codec.appendApplicationDataFromBlob({
+      builder: w,
+      blob: a.item.blob,
+      asVersion,
+      separator,
+      defaultTimezone,
+      syncRecurrence,
+    });
+    w.switchpage("AirSync");
+    w.ctag();
     w.ctag();
   }
   for (const m of mods) {
     w.otag("Change");
-      w.atag("ServerId", m.serverID);
-      w.otag("ApplicationData");
-        codec.appendApplicationDataFromBlob({
-          builder: w, blob: m.item.blob, asVersion, separator, defaultTimezone, syncRecurrence,
-        });
-        w.switchpage("AirSync");
-      w.ctag();
+    w.atag("ServerId", m.serverID);
+    w.otag("ApplicationData");
+    codec.appendApplicationDataFromBlob({
+      builder: w,
+      blob: m.item.blob,
+      asVersion,
+      separator,
+      defaultTimezone,
+      syncRecurrence,
+    });
+    w.switchpage("AirSync");
+    w.ctag();
     w.ctag();
     // 16.1 sends each modified/deleted exception as its own <Change>
     // with the master's ServerId. Codec opts in via `appendInstanceChanges`;
     // contacts and tasks don't expose it.
     if (syncRecurrence && asVersion === "16.1" && codec.appendInstanceChanges) {
       codec.appendInstanceChanges({
-        builder: w, blob: m.item.blob, serverID: m.serverID,
-        asVersion, defaultTimezone, syncRecurrence,
+        builder: w,
+        blob: m.item.blob,
+        serverID: m.serverID,
+        asVersion,
+        defaultTimezone,
+        syncRecurrence,
       });
       // codec leaves the builder on the AirSync codepage when it returns.
     }
   }
   for (const d of dels) {
     w.otag("Delete");
-      w.atag("ServerId", d.serverID);
+    w.atag("ServerId", d.serverID);
     w.ctag();
   }
   w.ctag();
@@ -742,7 +942,12 @@ function appendCommands(w, { adds, mods, dels, separator, asVersion, codec, defa
 /* ── Sync response parsing ────────────────────────────────────────── */
 
 async function sendSync({ account, asVersion, body }) {
-  const { doc } = await easRequest({ account, command: "Sync", body, asVersion });
+  const { doc } = await easRequest({
+    account,
+    command: "Sync",
+    body,
+    asVersion,
+  });
   if (!doc) return { error: "Empty Sync response" };
   return parseSyncResponse(doc);
 }
@@ -750,15 +955,25 @@ async function sendSync({ account, asVersion, body }) {
 function parseSyncResponse(doc) {
   const top = readPath(doc, ["Status"]);
   if (top && top !== STATUS_OK) {
-    if (top === STATUS_BUSY)             return { code: "BUSY", topStatus: top };
-    if (top === STATUS_RESYNC)           return { code: "RESYNC", topStatus: top };
-    if (top === STATUS_FOLDER_HIERARCHY) return { code: "HIERARCHY", topStatus: top };
+    if (top === STATUS_BUSY) return { code: "BUSY", topStatus: top };
+    if (top === STATUS_RESYNC) return { code: "RESYNC", topStatus: top };
+    if (top === STATUS_FOLDER_HIERARCHY)
+      return { code: "HIERARCHY", topStatus: top };
     if (STATUS_PROTOCOL_FAULT.has(top)) {
-      return { error: browser.i18n.getMessage("eas.sync.error.protocolFault", [top]) };
+      return {
+        error: browser.i18n.getMessage("eas.sync.error.protocolFault", [top]),
+      };
     }
     if (STATUS_ACCESS_DENIED.has(top)) {
-      const reason = browser.i18n.getMessage(`eas.sync.error.accessDenied.${top}`);
-      return { error: browser.i18n.getMessage("eas.sync.error.accessDenied", [reason, top]) };
+      const reason = browser.i18n.getMessage(
+        `eas.sync.error.accessDenied.${top}`,
+      );
+      return {
+        error: browser.i18n.getMessage("eas.sync.error.accessDenied", [
+          reason,
+          top,
+        ]),
+      };
     }
     return { error: `Sync top status ${top}` };
   }
@@ -770,9 +985,10 @@ function parseSyncResponse(doc) {
   // treated this as silent OK and continued. Per-item conflicts have
   // their own handling further down. Fall through to the success path.
   if (collStatus !== STATUS_OK && collStatus !== STATUS_CONFLICT) {
-    if (collStatus === STATUS_RESYNC)           return { code: "RESYNC", collStatus };
-    if (collStatus === STATUS_FOLDER_HIERARCHY) return { code: "HIERARCHY", collStatus };
-    if (collStatus === STATUS_BUSY)             return { code: "BUSY", collStatus };
+    if (collStatus === STATUS_RESYNC) return { code: "RESYNC", collStatus };
+    if (collStatus === STATUS_FOLDER_HIERARCHY)
+      return { code: "HIERARCHY", collStatus };
+    if (collStatus === STATUS_BUSY) return { code: "BUSY", collStatus };
     if (
       collStatus === STATUS_MALFORMED ||
       collStatus === STATUS_INVALID ||
@@ -791,10 +1007,16 @@ function parseSyncResponse(doc) {
   const cmdNode = childByTag(collection, "Commands");
   if (cmdNode) {
     commands = {
-      adds:        Array.from(cmdNode.children).filter(c => c.tagName === "Add"),
-      changes:     Array.from(cmdNode.children).filter(c => c.tagName === "Change"),
-      deletes:     Array.from(cmdNode.children).filter(c => c.tagName === "Delete"),
-      softDeletes: Array.from(cmdNode.children).filter(c => c.tagName === "SoftDelete"),
+      adds: Array.from(cmdNode.children).filter((c) => c.tagName === "Add"),
+      changes: Array.from(cmdNode.children).filter(
+        (c) => c.tagName === "Change",
+      ),
+      deletes: Array.from(cmdNode.children).filter(
+        (c) => c.tagName === "Delete",
+      ),
+      softDeletes: Array.from(cmdNode.children).filter(
+        (c) => c.tagName === "SoftDelete",
+      ),
     };
   }
 
@@ -802,9 +1024,13 @@ function parseSyncResponse(doc) {
   const respNode = childByTag(collection, "Responses");
   if (respNode) {
     responses = {
-      adds:    Array.from(respNode.children).filter(c => c.tagName === "Add"),
-      changes: Array.from(respNode.children).filter(c => c.tagName === "Change"),
-      deletes: Array.from(respNode.children).filter(c => c.tagName === "Delete"),
+      adds: Array.from(respNode.children).filter((c) => c.tagName === "Add"),
+      changes: Array.from(respNode.children).filter(
+        (c) => c.tagName === "Change",
+      ),
+      deletes: Array.from(respNode.children).filter(
+        (c) => c.tagName === "Delete",
+      ),
     };
   }
 
@@ -836,13 +1062,15 @@ function removeIdMap(ctx, itemId) {
 
 function reportProgress(ctx, itemsDone, itemsTotal) {
   ctx.provider.reportProgress({
-    accountId: ctx.accountId, folderId: ctx.folderId,
-    itemsDone, itemsTotal,
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    itemsDone,
+    itemsTotal,
   });
 }
 
 function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 function childByTag(node, tag) {
@@ -871,7 +1099,8 @@ async function verifyRoundTrip(ctx, itemId, expected, op) {
   } catch (err) {
     ctx.provider.reportEventLog({
       level: "debug",
-      accountId: ctx.accountId, folderId: ctx.folderId,
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
       message: `[${kind}-sync] roundtrip readback (${op}) failed for ${itemId}: ${err?.message ?? String(err)}`,
     });
     return;
@@ -880,7 +1109,8 @@ async function verifyRoundTrip(ctx, itemId, expected, op) {
   if (actual == null) {
     ctx.provider.reportEventLog({
       level: "debug",
-      accountId: ctx.accountId, folderId: ctx.folderId,
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
       message: `[${kind}-sync] roundtrip readback (${op}) returned no item for ${itemId}`,
     });
     return;
@@ -888,15 +1118,17 @@ async function verifyRoundTrip(ctx, itemId, expected, op) {
 
   const diff = diffComponentProperties(expected, actual, target);
   if (!diff) return;
-  if (!diff.dropped.length && !diff.added.length && !diff.changed.length) return;
+  if (!diff.dropped.length && !diff.added.length && !diff.changed.length)
+    return;
 
   const lines = [`[${kind}-sync] roundtrip mismatch on ${op} of ${itemId}`];
   if (diff.dropped.length) lines.push("dropped: " + diff.dropped.join(" | "));
-  if (diff.added.length)   lines.push("added:   " + diff.added.join(" | "));
+  if (diff.added.length) lines.push("added:   " + diff.added.join(" | "));
   if (diff.changed.length) lines.push("changed: " + diff.changed.join(" | "));
   ctx.provider.reportEventLog({
     level: "debug",
-    accountId: ctx.accountId, folderId: ctx.folderId,
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
     message: lines.join("\n"),
   });
 }
@@ -905,9 +1137,9 @@ async function verifyRoundTrip(ctx, itemId, expected, op) {
  *  parse and which subcomponent (if any) to compare. Returns null for
  *  kinds that don't have a known structured form. */
 function roundTripTargetFor(kind) {
-  if (kind === "event")   return { outer: "vcalendar", inner: "vevent" };
-  if (kind === "task")    return { outer: "vcalendar", inner: "vtodo" };
-  if (kind === "contact") return { outer: "vcard",     inner: null };
+  if (kind === "event") return { outer: "vcalendar", inner: "vevent" };
+  if (kind === "task") return { outer: "vcalendar", inner: "vtodo" };
+  if (kind === "contact") return { outer: "vcard", inner: null };
   return null;
 }
 
@@ -920,7 +1152,7 @@ function diffComponentProperties(expectedStr, actualStr, target) {
   if (!e || !a) return null;
 
   const dropped = [];
-  const added   = [];
+  const added = [];
   const changed = [];
 
   // Group both sides by property name. For each name compare sorted
@@ -938,7 +1170,8 @@ function diffComponentProperties(expectedStr, actualStr, target) {
       dropped.push(...eList);
       continue;
     }
-    if (eList.length === aList.length && eList.every((s, i) => s === aList[i])) continue;
+    if (eList.length === aList.length && eList.every((s, i) => s === aList[i]))
+      continue;
     // Same name, different content: report as changed.
     changed.push(`${name}: ${eList.join(",")} → ${aList.join(",")}`);
   }
@@ -947,8 +1180,11 @@ function diffComponentProperties(expectedStr, actualStr, target) {
 
 function innerProps(text, target) {
   let comp;
-  try { comp = new ICAL.Component(ICAL.parse(text)); }
-  catch { return null; }
+  try {
+    comp = new ICAL.Component(ICAL.parse(text));
+  } catch {
+    return null;
+  }
   // For iCal we descend into VEVENT/VTODO; for vCard the top-level
   // component itself holds the properties (no inner wrapper).
   const inner = target.inner ? comp.getFirstSubcomponent(target.inner) : comp;
@@ -969,20 +1205,23 @@ function innerProps(text, target) {
  *  isn't available. */
 function canonicalPropertyString(prop) {
   try {
-    const j = prop.toJSON();   // [name, paramsObj, valueType, ...values]
+    const j = prop.toJSON(); // [name, paramsObj, valueType, ...values]
     const name = j[0];
     const params = j[1] ?? {};
     const valueType = j[2];
     const values = j.slice(3);
     const paramKeys = Object.keys(params).sort();
     const paramStr = paramKeys
-      .map(k => `;${k.toUpperCase()}=${stringifyValue(params[k])}`)
+      .map((k) => `;${k.toUpperCase()}=${stringifyValue(params[k])}`)
       .join("");
     const valStr = values.map(stringifyValue).join(",");
     return `${name.toUpperCase()}${paramStr}${valueType ? "" : ""}:${valStr}`;
   } catch {
-    try { return prop.toICALString(); }
-    catch { return `${prop.name}:${stringifyValue(prop.getFirstValue())}`; }
+    try {
+      return prop.toICALString();
+    } catch {
+      return `${prop.name}:${stringifyValue(prop.getFirstValue())}`;
+    }
   }
 }
 
@@ -990,6 +1229,7 @@ function stringifyValue(v) {
   if (v == null) return "";
   if (typeof v === "string") return v;
   if (Array.isArray(v)) return v.map(stringifyValue).join(",");
-  if (typeof v === "object" && typeof v.toString === "function") return v.toString();
+  if (typeof v === "object" && typeof v.toString === "function")
+    return v.toString();
   return String(v);
 }

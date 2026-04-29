@@ -26,9 +26,14 @@
  *   setLocked: (locked: boolean) => void,
  * }}
  */
-export function createDropdown(rootEl, { options, value, locked = false, onChange }) {
+export function createDropdown(
+  rootEl,
+  { options, value, locked = false, onChange },
+) {
   if (!options?.length) throw new Error("createDropdown: options is required");
-  let currentValue = options.some(o => o.value === value) ? value : options[0].value;
+  let currentValue = options.some((o) => o.value === value)
+    ? value
+    : options[0].value;
   let isLocked = !!locked;
   let isOpen = false;
 
@@ -89,12 +94,15 @@ export function createDropdown(rootEl, { options, value, locked = false, onChang
   rootEl.replaceChildren(trigger, panel);
 
   function syncTrigger() {
-    const opt = options.find(o => o.value === currentValue) ?? options[0];
+    const opt = options.find((o) => o.value === currentValue) ?? options[0];
     currentLabel.textContent = opt.label;
     currentHint.textContent = opt.hint ?? "";
     for (const li of optionEls) {
       li.classList.toggle("selected", li.dataset.value === currentValue);
-      li.setAttribute("aria-selected", li.dataset.value === currentValue ? "true" : "false");
+      li.setAttribute(
+        "aria-selected",
+        li.dataset.value === currentValue ? "true" : "false",
+      );
     }
   }
 
@@ -121,7 +129,10 @@ export function createDropdown(rootEl, { options, value, locked = false, onChang
     panel.hidden = false;
     rootEl.dataset.state = "open";
     trigger.setAttribute("aria-expanded", "true");
-    const initialIdx = Math.max(0, options.findIndex(o => o.value === currentValue));
+    const initialIdx = Math.max(
+      0,
+      options.findIndex((o) => o.value === currentValue),
+    );
     focusOption(initialIdx);
     document.addEventListener("click", onDocClick, true);
     document.addEventListener("keydown", onDocKey, true);
@@ -174,7 +185,7 @@ export function createDropdown(rootEl, { options, value, locked = false, onChang
     if (isLocked) return;
     isOpen ? close() : open();
   });
-  trigger.addEventListener("keydown", e => {
+  trigger.addEventListener("keydown", (e) => {
     if (isLocked) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
@@ -193,6 +204,10 @@ export function createDropdown(rootEl, { options, value, locked = false, onChang
   return {
     getValue: () => currentValue,
     setValue: (v) => selectValue(v),
-    setLocked: (next) => { isLocked = !!next; if (isLocked) close(); applyLocked(); },
+    setLocked: (next) => {
+      isLocked = !!next;
+      if (isLocked) close();
+      applyLocked();
+    },
   };
 }

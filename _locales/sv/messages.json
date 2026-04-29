@@ -272,7 +272,7 @@
     "message": "Visa serverns globala adresslista som en skrivskyddad adressbok"
   },
   "config.gal.enabled.hint": {
-    "message": "Lägger till en adressbok per konto som fylls i på begäran när du skriver en sökfråga i Thunderbirds adressbokssökruta. Inget laddas ner eller lagras lokalt — varje sökning frågar servern."
+    "message": "Lägger till en adressbok per konto som fylls i på begäran när du skriver en sökfråga i Thunderbirds adressbokssökruta. Inget laddas ner eller lagras lokalt - varje sökning frågar servern."
   },
   "config.gal.notSupported": {
     "message": "Din server tillkännager inte Search-kommandot, så den globala adresslistan är inte tillgänglig för det här kontot."
@@ -285,7 +285,6 @@
   "warning.reauthFailed": {
     "message": "Återautentiseringen slutfördes inte. Klicka på \"Logga in igen\" för att försöka igen."
   },
-
 
   "options.title": {
     "message": "EAS-4-TbSync - Avancerade inställningar"
@@ -352,16 +351,31 @@
   "eas.sync.error.accessDenied": {
     "message": "Servern nekade synkroniseringsåtkomst: $REASON$ (kod $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "enhetstyp saknas eller är ogiltig" },
+      "reason": {
+        "content": "$1",
+        "example": "enhetstyp saknas eller är ogiltig"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "enhetstyp saknas eller är ogiltig" },
-  "eas.sync.error.accessDenied.112": { "message": "åtkomst till Active Directory nekad" },
-  "eas.sync.error.accessDenied.126": { "message": "användaren är inaktiverad för synkronisering" },
-  "eas.sync.error.accessDenied.127": { "message": "användaren är i en ny brevlåda och kan inte synkronisera" },
-  "eas.sync.error.accessDenied.128": { "message": "användaren är i en äldre brevlåda och kan inte synkronisera" },
-  "eas.sync.error.accessDenied.129": { "message": "enheten är blockerad för den här användaren" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "enhetstyp saknas eller är ogiltig"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "åtkomst till Active Directory nekad"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "användaren är inaktiverad för synkronisering"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "användaren är i en ny brevlåda och kan inte synkronisera"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "användaren är i en äldre brevlåda och kan inte synkronisera"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "enheten är blockerad för den här användaren"
+  },
   "eas.sync.error.accessDenied.130": { "message": "åtkomst nekad" },
   "eas.sync.error.accessDenied.131": { "message": "kontot är inaktiverat" }
 }

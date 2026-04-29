@@ -25,29 +25,49 @@ import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
 import { TimeZoneBlob, isAllZero } from "./timezone-blob.mjs";
 
-const X_EAS_SERVERID    = "X-EAS-SERVERID";
+const X_EAS_SERVERID = "X-EAS-SERVERID";
 const X_EAS_RESPONSETYPE = "X-EAS-RESPONSETYPE";
 const X_EAS_MEETINGSTATUS = "X-EAS-MEETINGSTATUS";
 
 // EAS BusyStatus → iCal TRANSP. Tentative (1) maps to "no TRANSP" so the
 // caller falls back to STATUS=TENTATIVE; the codec mirrors legacy here.
 const BUSYSTATUS_TO_TRANSP = {
-  "0": "TRANSPARENT", "1": null, "2": "OPAQUE", "3": "OPAQUE", "4": "OPAQUE",
+  0: "TRANSPARENT",
+  1: null,
+  2: "OPAQUE",
+  3: "OPAQUE",
+  4: "OPAQUE",
 };
 const TRANSP_TO_BUSYSTATUS = { TRANSPARENT: "0", OPAQUE: "2" };
 
 // EAS Sensitivity → iCal CLASS.
-const SENSITIVITY_TO_CLASS = { "0": "PUBLIC", "1": "PRIVATE", "2": "PRIVATE", "3": "CONFIDENTIAL" };
+const SENSITIVITY_TO_CLASS = {
+  0: "PUBLIC",
+  1: "PRIVATE",
+  2: "PRIVATE",
+  3: "CONFIDENTIAL",
+};
 const CLASS_TO_SENSITIVITY = { PUBLIC: "0", PRIVATE: "2", CONFIDENTIAL: "3" };
 
 // EAS AttendeeStatus → iCal PARTSTAT.
 const ATTENDEESTATUS_TO_PARTSTAT = {
-  "0": "NEEDS-ACTION", "2": "TENTATIVE", "3": "ACCEPTED", "4": "DECLINED", "5": "ACCEPTED",
+  0: "NEEDS-ACTION",
+  2: "TENTATIVE",
+  3: "ACCEPTED",
+  4: "DECLINED",
+  5: "ACCEPTED",
 };
 
 /* ── Reader: ApplicationData → iCal VEVENT ─────────────────────────── */
 
-export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, uid }) {
+export function applicationDataToIcal({
+  adNode,
+  serverID,
+  asVersion,
+  defaultTimezone,
+  syncRecurrence,
+  uid,
+}) {
   const vcal = newVCalendar();
   const vevent = new ICAL.Component(["vevent", [], []]);
   vcal.addSubcomponent(vevent);
@@ -69,7 +89,13 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
         vevent.addProperty(prop);
       }
     }
-    appendInboundExceptions({ adNode, vcal, vevent, asVersion, defaultTimezone });
+    appendInboundExceptions({
+      adNode,
+      vcal,
+      vevent,
+      asVersion,
+      defaultTimezone,
+    });
   }
 
   return vcal.toString();
@@ -84,8 +110,9 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
   const subject = readPathFrom(adNode, ["Subject"]);
   if (subject) vevent.updatePropertyWithValue("summary", subject);
 
-  const locDisplay = readPathFrom(adNode, ["Location", "DisplayName"])
-                  ?? readPathFrom(adNode, ["Location"]);
+  const locDisplay =
+    readPathFrom(adNode, ["Location", "DisplayName"]) ??
+    readPathFrom(adNode, ["Location"]);
   if (locDisplay) vevent.updatePropertyWithValue("location", locDisplay);
 
   // Body (codepage-aware; AirSyncBase ≥14.x).
@@ -105,9 +132,9 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
 
   // Start / End. EAS sends UTC strings; convert on the way in.
   const startUtc = readPathFrom(adNode, ["StartTime"]);
-  const endUtc   = readPathFrom(adNode, ["EndTime"]);
+  const endUtc = readPathFrom(adNode, ["EndTime"]);
   if (startUtc) writeDateProp(vevent, "dtstart", startUtc, tzId, allDay);
-  if (endUtc)   writeDateProp(vevent, "dtend",   endUtc,   tzId, allDay);
+  if (endUtc) writeDateProp(vevent, "dtend", endUtc, tzId, allDay);
 
   // DtStamp - preserve when present (AS ≤ 14.x); 16.1 omits.
   const dtStamp = readPathFrom(adNode, ["DtStamp"]);
@@ -140,7 +167,7 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
 
   // Organizer (omitted by server in 16.1).
   const orgEmail = readPathFrom(adNode, ["OrganizerEmail"]);
-  const orgName  = readPathFrom(adNode, ["OrganizerName"]);
+  const orgName = readPathFrom(adNode, ["OrganizerName"]);
   if (orgEmail) {
     const prop = new ICAL.Property("organizer", vevent);
     prop.setValue("mailto:" + orgEmail);
@@ -162,10 +189,14 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
 
   // Opaque pass-throughs.
   const respType = readPathFrom(adNode, ["ResponseType"]);
-  if (respType) vevent.updatePropertyWithValue(X_EAS_RESPONSETYPE.toLowerCase(), respType);
+  if (respType)
+    vevent.updatePropertyWithValue(X_EAS_RESPONSETYPE.toLowerCase(), respType);
   const meetingStatus = readPathFrom(adNode, ["MeetingStatus"]);
   if (meetingStatus) {
-    vevent.updatePropertyWithValue(X_EAS_MEETINGSTATUS.toLowerCase(), meetingStatus);
+    vevent.updatePropertyWithValue(
+      X_EAS_MEETINGSTATUS.toLowerCase(),
+      meetingStatus,
+    );
     // Map MeetingStatus to STATUS (CONFIRMED / CANCELLED).
     const ms = parseInt(meetingStatus, 10) || 0;
     if (ms & 0x4) vevent.updatePropertyWithValue("status", "CANCELLED");
@@ -181,7 +212,13 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
  *  Locates or creates the override VEVENT keyed by RECURRENCE-ID, then
  *  populates it from `adNode`. For deletions, the runner adds an EXDATE
  *  via `addExdateToMaster` instead. */
-export function applyInstanceChange({ ical, adNode, instanceUtc, asVersion, defaultTimezone }) {
+export function applyInstanceChange({
+  ical,
+  adNode,
+  instanceUtc,
+  asVersion,
+  defaultTimezone,
+}) {
   const vcal = parseVCalendar(ical);
   if (!vcal) return ical;
   const master = vcal.getFirstSubcomponent("vevent");
@@ -205,7 +242,12 @@ export function applyInstanceChange({ ical, adNode, instanceUtc, asVersion, defa
   const ridProp = new ICAL.Property("recurrence-id", override);
   ridProp.setValue(instanceUtcToIcalTime(instanceUtc));
   override.addProperty(ridProp);
-  populateVeventFromAd({ adNode: adNode, vevent: override, asVersion, defaultTimezone });
+  populateVeventFromAd({
+    adNode: adNode,
+    vevent: override,
+    asVersion,
+    defaultTimezone,
+  });
   return vcal.toString();
 }
 
@@ -222,12 +264,18 @@ export function applyInstanceChange({ ical, adNode, instanceUtc, asVersion, defa
  *  after closing the master `<Change>`. We emit zero or more sibling
  *  `<Change>` commands and leave the builder on AirSync.
  */
-export function appendInstanceChanges({ builder, blob, serverID, asVersion, defaultTimezone, syncRecurrence }) {
+export function appendInstanceChanges({
+  builder,
+  blob,
+  serverID,
+  asVersion,
+  defaultTimezone,
+  syncRecurrence,
+}) {
   if (asVersion !== "16.1") return;
   const vcal = parseVCalendar(blob);
   if (!vcal) return;
-  const master = vcal.getFirstSubcomponent("vevent")
-              ?? null;
+  const master = vcal.getFirstSubcomponent("vevent") ?? null;
   // parseVCalendar's first vevent may be an override if iCal order is
   // unusual; reuse the master picker instead.
   const masterVevent = pickMasterVevent(vcal) ?? master;
@@ -246,32 +294,36 @@ export function appendInstanceChanges({ builder, blob, serverID, asVersion, defa
 
   for (const ex of exdates) {
     builder.otag("Change");
-      builder.atag("ServerId", serverID);
-      builder.otag("ApplicationData");
-        builder.switchpage("AirSyncBase");
-        builder.atag("InstanceId", icalTimeToBasicUtc(ex));
-        builder.switchpage("Calendar");
-        builder.atag("Deleted", "1");
-        builder.switchpage("AirSync");
-      builder.ctag();
+    builder.atag("ServerId", serverID);
+    builder.otag("ApplicationData");
+    builder.switchpage("AirSyncBase");
+    builder.atag("InstanceId", icalTimeToBasicUtc(ex));
+    builder.switchpage("Calendar");
+    builder.atag("Deleted", "1");
+    builder.switchpage("AirSync");
+    builder.ctag();
     builder.ctag();
   }
   for (const override of overrides) {
     const rid = override.getFirstPropertyValue("recurrence-id");
     builder.otag("Change");
-      builder.atag("ServerId", serverID);
-      builder.otag("ApplicationData");
-        builder.switchpage("AirSyncBase");
-        builder.atag("InstanceId", icalTimeToBasicUtc(rid));
-        // appendApplicationDataFromIcal switches to Calendar at entry
-        // and may bounce to AirSyncBase for Body / Location, but always
-        // returns to Calendar before the closing tag.
-        appendApplicationDataFromIcal({
-          builder, ical: override, asVersion, defaultTimezone, syncRecurrence,
-          isException: true,
-        });
-        builder.switchpage("AirSync");
-      builder.ctag();
+    builder.atag("ServerId", serverID);
+    builder.otag("ApplicationData");
+    builder.switchpage("AirSyncBase");
+    builder.atag("InstanceId", icalTimeToBasicUtc(rid));
+    // appendApplicationDataFromIcal switches to Calendar at entry
+    // and may bounce to AirSyncBase for Body / Location, but always
+    // returns to Calendar before the closing tag.
+    appendApplicationDataFromIcal({
+      builder,
+      ical: override,
+      asVersion,
+      defaultTimezone,
+      syncRecurrence,
+      isException: true,
+    });
+    builder.switchpage("AirSync");
+    builder.ctag();
     builder.ctag();
   }
 }
@@ -304,7 +356,12 @@ export function applyInstanceDelete({ ical, instanceUtc }) {
 /* ── Writer: iCal VEVENT → ApplicationData WBXML ───────────────────── */
 
 export function appendApplicationDataFromIcal({
-  builder, ical, asVersion, defaultTimezone, syncRecurrence, isException = false,
+  builder,
+  ical,
+  asVersion,
+  defaultTimezone,
+  syncRecurrence,
+  isException = false,
 }) {
   // Exception bodies are emitted from a vevent we've already parsed;
   // accept either a string or a pre-parsed component for nested calls.
@@ -327,8 +384,8 @@ export function appendApplicationDataFromIcal({
   }
 
   const dtstart = vevent.getFirstProperty("dtstart");
-  const dtend   = vevent.getFirstProperty("dtend");
-  const allDay  = isAllDayProp(dtstart) && isAllDayProp(dtend);
+  const dtend = vevent.getFirstProperty("dtend");
+  const allDay = isAllDayProp(dtstart) && isAllDayProp(dtend);
   builder.atag("AllDayEvent", allDay ? "1" : "0");
 
   // Body.
@@ -357,7 +414,10 @@ export function appendApplicationDataFromIcal({
   // DtStamp (≤14.x).
   if (asVersion !== "16.1") {
     const ds = vevent.getFirstProperty("dtstamp");
-    builder.atag("DtStamp", ds ? toBasicUtc(ds.getFirstValue()) : nowBasicUtc());
+    builder.atag(
+      "DtStamp",
+      ds ? toBasicUtc(ds.getFirstValue()) : nowBasicUtc(),
+    );
   }
 
   // EndTime. AS 16.1 all-day uses a "fake local as UTC" form
@@ -373,7 +433,7 @@ export function appendApplicationDataFromIcal({
   } else if (location) {
     builder.switchpage("AirSyncBase");
     builder.otag("Location");
-      builder.atag("DisplayName", location);
+    builder.atag("DisplayName", location);
     builder.ctag();
     builder.switchpage("Calendar");
   }
@@ -382,7 +442,8 @@ export function appendApplicationDataFromIcal({
   const alarm = vevent.getFirstSubcomponent("valarm");
   if (alarm) {
     const minutes = alarmMinutes(alarm, dtstart);
-    if (minutes != null && minutes >= 0) builder.atag("Reminder", String(minutes));
+    if (minutes != null && minutes >= 0)
+      builder.atag("Reminder", String(minutes));
   }
 
   // Sensitivity.
@@ -410,25 +471,33 @@ export function appendApplicationDataFromIcal({
     } else {
       const cancelled = status === "CANCELLED";
       const orgProp = vevent.getFirstProperty("organizer");
-      const isReceived = orgProp ? !!stripMailto(orgProp.getFirstValue()) &&
-                                    !ownerMatchesOrganizer(orgProp) : false;
+      const isReceived = orgProp
+        ? !!stripMailto(orgProp.getFirstValue()) &&
+          !ownerMatchesOrganizer(orgProp)
+        : false;
       if (cancelled) builder.atag("MeetingStatus", isReceived ? "7" : "5");
-      else            builder.atag("MeetingStatus", isReceived ? "3" : "1");
+      else builder.atag("MeetingStatus", isReceived ? "3" : "1");
 
       builder.otag("Attendees");
       for (const a of attendees) {
         builder.otag("Attendee");
-          builder.atag("Email", stripMailto(a.getFirstValue()));
-          const cn = a.getParameter("cn") ?? stripMailto(a.getFirstValue()).split("@")[0];
-          builder.atag("Name", cn);
-          if (asVersion !== "2.5") {
-            const role = a.getParameter("role");
-            const cutype = a.getParameter("cutype");
-            let type = "2";
-            if (cutype === "RESOURCE" || cutype === "ROOM" || role === "NON-PARTICIPANT") type = "3";
-            else if (role === "REQ-PARTICIPANT" || role === "CHAIR") type = "1";
-            builder.atag("AttendeeType", type);
-          }
+        builder.atag("Email", stripMailto(a.getFirstValue()));
+        const cn =
+          a.getParameter("cn") ?? stripMailto(a.getFirstValue()).split("@")[0];
+        builder.atag("Name", cn);
+        if (asVersion !== "2.5") {
+          const role = a.getParameter("role");
+          const cutype = a.getParameter("cutype");
+          let type = "2";
+          if (
+            cutype === "RESOURCE" ||
+            cutype === "ROOM" ||
+            role === "NON-PARTICIPANT"
+          )
+            type = "3";
+          else if (role === "REQ-PARTICIPANT" || role === "CHAIR") type = "1";
+          builder.atag("AttendeeType", type);
+        }
         builder.ctag();
       }
       builder.ctag();
@@ -442,7 +511,7 @@ export function appendApplicationDataFromIcal({
       const cats = catsProp.getValues();
       if (cats.length) {
         builder.otag("Categories");
-          for (const c of cats) builder.atag("Category", String(c));
+        for (const c of cats) builder.atag("Category", String(c));
         builder.ctag();
       } else if (asVersion !== "16.1") {
         builder.atag("Categories");
@@ -461,7 +530,12 @@ export function appendApplicationDataFromIcal({
     if (rrule) appendRecurrence(builder, rrule, dtstart);
     if (asVersion !== "16.1") {
       appendOutboundExceptions({
-        builder, vcal, vevent, asVersion, defaultTimezone, syncRecurrence,
+        builder,
+        vcal,
+        vevent,
+        asVersion,
+        defaultTimezone,
+        syncRecurrence,
       });
     }
   }
@@ -519,7 +593,9 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay) {
     const d = parseEasUtc(easUtc);
     if (!d) return;
     const date = new ICAL.Time({
-      year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
       isDate: true,
     });
     prop.setValue(date);
@@ -527,8 +603,12 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay) {
     const d = parseEasUtc(easUtc);
     if (!d) return;
     const time = new ICAL.Time({
-      year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
-      hour: d.getUTCHours(), minute: d.getUTCMinutes(), second: d.getUTCSeconds(),
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
+      hour: d.getUTCHours(),
+      minute: d.getUTCMinutes(),
+      second: d.getUTCSeconds(),
       isDate: false,
     });
     if (tzId === "UTC") time.zone = ICAL.Timezone.utcTimezone;
@@ -550,17 +630,21 @@ function parseEasUtc(s) {
 
 function toBasicUtc(value) {
   if (!value) return nowBasicUtc();
-  const d = (value instanceof ICAL.Time) ? value.toJSDate() : new Date(value);
+  const d = value instanceof ICAL.Time ? value.toJSDate() : new Date(value);
   return formatBasicUtc(d);
 }
 
 function formatBasicUtc(d) {
-  const pad = n => String(n).padStart(2, "0");
-  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
-         `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+  const pad = (n) => String(n).padStart(2, "0");
+  return (
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
+    `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
+  );
 }
 
-function nowBasicUtc() { return formatBasicUtc(new Date()); }
+function nowBasicUtc() {
+  return formatBasicUtc(new Date());
+}
 
 /** Read a property's date as `YYYYMMDDT000000Z` from the *local-clock*
  *  year/month/day, with no UTC conversion. Mirrors legacy
@@ -568,7 +652,7 @@ function nowBasicUtc() { return formatBasicUtc(new Date()); }
 function fakeLocalAsUtcDate(prop) {
   if (!prop) return nowBasicUtc();
   const v = prop.getFirstValue();
-  const pad = n => String(n).padStart(2, "0");
+  const pad = (n) => String(n).padStart(2, "0");
   if (v instanceof ICAL.Time) {
     return `${v.year}${pad(v.month)}${pad(v.day)}T000000Z`;
   }
@@ -599,7 +683,13 @@ function isAllDayProp(prop) {
  *  either add an EXDATE to the master (`Deleted=1`) or build an override
  *  VEVENT keyed by RECURRENCE-ID. Mirrors legacy `setItemRecurrence` at
  *  sync.js:1344-1372. */
-function appendInboundExceptions({ adNode, vcal, vevent, asVersion, defaultTimezone }) {
+function appendInboundExceptions({
+  adNode,
+  vcal,
+  vevent,
+  asVersion,
+  defaultTimezone,
+}) {
   const wrapper = childByTag(adNode, "Exceptions");
   if (!wrapper) return;
   const masterUid = stringOf(vevent.getFirstPropertyValue("uid"));
@@ -622,7 +712,12 @@ function appendInboundExceptions({ adNode, vcal, vevent, asVersion, defaultTimez
     const ridProp = new ICAL.Property("recurrence-id", override);
     ridProp.setValue(jsDateToIcalUtcTime(ridDate));
     override.addProperty(ridProp);
-    populateVeventFromAd({ adNode: exc, vevent: override, asVersion, defaultTimezone });
+    populateVeventFromAd({
+      adNode: exc,
+      vevent: override,
+      asVersion,
+      defaultTimezone,
+    });
   }
 }
 
@@ -631,7 +726,14 @@ function appendInboundExceptions({ adNode, vcal, vevent, asVersion, defaultTimez
  *  share the master's UID and carry RECURRENCE-ID). 2.5/14.x only -
  *  16.1 sends each exception as its own `<Change>` at the runner level.
  *  Mirrors legacy `getItemRecurrence` at sync.js:1488-1505. */
-function appendOutboundExceptions({ builder, vcal, vevent, asVersion, defaultTimezone, syncRecurrence }) {
+function appendOutboundExceptions({
+  builder,
+  vcal,
+  vevent,
+  asVersion,
+  defaultTimezone,
+  syncRecurrence,
+}) {
   if (!vcal) return;
   const masterUid = stringOf(vevent.getFirstPropertyValue("uid"));
   const exdates = collectExdates(vevent);
@@ -647,22 +749,26 @@ function appendOutboundExceptions({ builder, vcal, vevent, asVersion, defaultTim
   builder.otag("Exceptions");
   for (const ex of exdates) {
     builder.otag("Exception");
-      builder.atag("ExceptionStartTime", icalTimeToBasicUtc(ex));
-      builder.atag("Deleted", "1");
+    builder.atag("ExceptionStartTime", icalTimeToBasicUtc(ex));
+    builder.atag("Deleted", "1");
     builder.ctag();
   }
   for (const override of overrides) {
     const rid = override.getFirstPropertyValue("recurrence-id");
     builder.otag("Exception");
-      builder.atag("ExceptionStartTime", icalTimeToBasicUtc(rid));
-      // Recurse into the writer in exception-mode. We're already on the
-      // Calendar codepage; the recursive call may switch to AirSyncBase
-      // (Body / Location 16.1) and switches back to Calendar before
-      // returning, so we resume cleanly here.
-      appendApplicationDataFromIcal({
-        builder, ical: override, asVersion, defaultTimezone, syncRecurrence,
-        isException: true,
-      });
+    builder.atag("ExceptionStartTime", icalTimeToBasicUtc(rid));
+    // Recurse into the writer in exception-mode. We're already on the
+    // Calendar codepage; the recursive call may switch to AirSyncBase
+    // (Body / Location 16.1) and switches back to Calendar before
+    // returning, so we resume cleanly here.
+    appendApplicationDataFromIcal({
+      builder,
+      ical: override,
+      asVersion,
+      defaultTimezone,
+      syncRecurrence,
+      isException: true,
+    });
     builder.ctag();
   }
   builder.ctag();
@@ -695,8 +801,12 @@ function collectExdates(vevent) {
 
 function jsDateToIcalUtcTime(d) {
   const t = new ICAL.Time({
-    year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
-    hour: d.getUTCHours(), minute: d.getUTCMinutes(), second: d.getUTCSeconds(),
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth() + 1,
+    day: d.getUTCDate(),
+    hour: d.getUTCHours(),
+    minute: d.getUTCMinutes(),
+    second: d.getUTCSeconds(),
     isDate: false,
   });
   t.zone = ICAL.Timezone.utcTimezone;
@@ -725,7 +835,10 @@ function appendDisplayAlarm(vevent, minutesBeforeStart) {
   const alarm = new ICAL.Component(["valarm", [], []]);
   alarm.updatePropertyWithValue("action", "DISPLAY");
   const trig = new ICAL.Property("trigger", alarm);
-  const dur = new ICAL.Duration({ minutes: Math.abs(minutesBeforeStart), isNegative: minutesBeforeStart > 0 });
+  const dur = new ICAL.Duration({
+    minutes: Math.abs(minutesBeforeStart),
+    isNegative: minutesBeforeStart > 0,
+  });
   trig.setValue(dur);
   alarm.addProperty(trig);
   vevent.addSubcomponent(alarm);
@@ -737,7 +850,7 @@ function alarmMinutes(alarm, dtstartProp) {
   const v = trig.getFirstValue();
   if (v instanceof ICAL.Duration) {
     const total = v.toSeconds();
-    return Math.round(-total / 60);   // EAS minutes = before start, positive
+    return Math.round(-total / 60); // EAS minutes = before start, positive
   }
   if (v instanceof ICAL.Time && dtstartProp) {
     const start = dtstartProp.getFirstValue();
@@ -760,11 +873,19 @@ function collectAttendees(adNode) {
     if (!email) continue;
     const item = { email, cn: readPathFrom(a, ["Name"]) };
     const status = readPathFrom(a, ["AttendeeStatus"]);
-    if (status) item.partstat = ATTENDEESTATUS_TO_PARTSTAT[status] ?? "NEEDS-ACTION";
+    if (status)
+      item.partstat = ATTENDEESTATUS_TO_PARTSTAT[status] ?? "NEEDS-ACTION";
     const type = readPathFrom(a, ["AttendeeType"]);
-    if (type === "1")      { item.role = "REQ-PARTICIPANT"; item.cutype = "INDIVIDUAL"; }
-    else if (type === "2") { item.role = "OPT-PARTICIPANT"; item.cutype = "INDIVIDUAL"; }
-    else if (type === "3") { item.role = "NON-PARTICIPANT"; item.cutype = "RESOURCE"; }
+    if (type === "1") {
+      item.role = "REQ-PARTICIPANT";
+      item.cutype = "INDIVIDUAL";
+    } else if (type === "2") {
+      item.role = "OPT-PARTICIPANT";
+      item.cutype = "INDIVIDUAL";
+    } else if (type === "3") {
+      item.role = "NON-PARTICIPANT";
+      item.cutype = "RESOURCE";
+    }
     out.push(item);
   }
   return out;
@@ -786,8 +907,14 @@ function stripMailto(s) {
 
 function recurrenceToRrule(recNode) {
   const type = readPathFrom(recNode, ["Type"]);
-  const freq = ({ "0": "DAILY", "1": "WEEKLY", "2": "MONTHLY", "3": "MONTHLY",
-                  "5": "YEARLY", "6": "YEARLY" })[type];
+  const freq = {
+    0: "DAILY",
+    1: "WEEKLY",
+    2: "MONTHLY",
+    3: "MONTHLY",
+    5: "YEARLY",
+    6: "YEARLY",
+  }[type];
   if (!freq) return null;
   const parts = [`FREQ=${freq}`];
   const interval = readPathFrom(recNode, ["Interval"]);
@@ -801,8 +928,8 @@ function recurrenceToRrule(recNode) {
     const ical = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
     for (let i = 0; i < 7; i++) if (bits & (1 << i)) days.push(ical[i]);
     if (days.length) {
-      const prefix = week === "5" ? "-1" : (week ? String(week) : "");
-      parts.push("BYDAY=" + days.map(d => prefix + d).join(","));
+      const prefix = week === "5" ? "-1" : week ? String(week) : "";
+      parts.push("BYDAY=" + days.map((d) => prefix + d).join(","));
     }
   }
   const dom = readPathFrom(recNode, ["DayOfMonth"]);
@@ -819,30 +946,31 @@ function recurrenceToRrule(recNode) {
 }
 
 function appendRecurrence(builder, rruleProp, dtstartProp) {
-  const r = rruleProp.getFirstValue();   // ICAL.Recur
+  const r = rruleProp.getFirstValue(); // ICAL.Recur
   if (!r) return;
 
   const freq = r.freq;
   const startDate = dtstartProp?.getFirstValue();
   let type = 0;
   let monthDays = r.parts?.BYMONTHDAY ?? [];
-  let weekDays  = (r.parts?.BYDAY ?? []).slice();
-  let months    = r.parts?.BYMONTH ?? [];
-  const weeks   = [];
+  let weekDays = (r.parts?.BYDAY ?? []).slice();
+  let months = r.parts?.BYMONTH ?? [];
+  const weeks = [];
 
   // Unpack ±NDD style days into weekDays + weekOfMonth.
   for (let i = 0; i < weekDays.length; i++) {
     const m = /^([+-]?\d*)(SU|MO|TU|WE|TH|FR|SA)$/.exec(weekDays[i]);
     if (!m) continue;
     const n = parseInt(m[1] || "0", 10);
-    const dow = ["SU","MO","TU","WE","TH","FR","SA"].indexOf(m[2]) + 1;
+    const dow = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"].indexOf(m[2]) + 1;
     weekDays[i] = dow;
     if (n) weeks[i] = n === -1 ? 5 : n;
   }
 
   if (freq === "WEEKLY") {
     type = 1;
-    if (!weekDays.length && startDate) weekDays = [(startDate.dayOfWeek?.() ?? 1)];
+    if (!weekDays.length && startDate)
+      weekDays = [startDate.dayOfWeek?.() ?? 1];
   } else if (freq === "MONTHLY" && weeks.length) {
     type = 3;
   } else if (freq === "MONTHLY") {
@@ -857,18 +985,18 @@ function appendRecurrence(builder, rruleProp, dtstartProp) {
   }
 
   builder.otag("Recurrence");
-    builder.atag("Type", String(type));
-    if (monthDays[0]) builder.atag("DayOfMonth", String(monthDays[0]));
-    if (weekDays.length) {
-      let bits = 0;
-      for (const d of weekDays) bits |= 1 << (d - 1);
-      builder.atag("DayOfWeek", String(bits));
-    }
-    builder.atag("Interval", String(r.interval ?? 1));
-    if (months.length) builder.atag("MonthOfYear", String(months[0]));
-    if (r.count) builder.atag("Occurrences", String(r.count));
-    else if (r.until) builder.atag("Until", toBasicUtc(r.until));
-    if (weeks.length) builder.atag("WeekOfMonth", String(weeks[0]));
+  builder.atag("Type", String(type));
+  if (monthDays[0]) builder.atag("DayOfMonth", String(monthDays[0]));
+  if (weekDays.length) {
+    let bits = 0;
+    for (const d of weekDays) bits |= 1 << (d - 1);
+    builder.atag("DayOfWeek", String(bits));
+  }
+  builder.atag("Interval", String(r.interval ?? 1));
+  if (months.length) builder.atag("MonthOfYear", String(months[0]));
+  if (r.count) builder.atag("Occurrences", String(r.count));
+  else if (r.until) builder.atag("Until", toBasicUtc(r.until));
+  if (weeks.length) builder.atag("WeekOfMonth", String(weeks[0]));
   builder.ctag();
 }
 
@@ -883,9 +1011,10 @@ function appendBody(builder, vevent, asVersion) {
   }
   builder.switchpage("AirSyncBase");
   builder.otag("Body");
-    builder.atag("Type", "1");
-    if (asVersion !== "16.1") builder.atag("EstimatedDataSize", String((desc ?? "").length));
-    builder.atag("Data", desc ?? "");
+  builder.atag("Type", "1");
+  if (asVersion !== "16.1")
+    builder.atag("EstimatedDataSize", String((desc ?? "").length));
+  builder.atag("Data", desc ?? "");
   builder.ctag();
   builder.switchpage("Calendar");
 }
@@ -905,8 +1034,11 @@ function newVCalendar() {
 
 function parseVCalendar(ical) {
   if (!ical) return null;
-  try { return new ICAL.Component(ICAL.parse(ical)); }
-  catch { return null; }
+  try {
+    return new ICAL.Component(ICAL.parse(ical));
+  } catch {
+    return null;
+  }
 }
 
 function parseFirstVevent(ical) {
@@ -942,8 +1074,11 @@ function collectChildren(adNode, wrapperTag, childTag) {
     if (c.tagName === childTag) {
       const t = c.textContent;
       if (t != null) {
-        try { out.push(decodeURIComponent(t)); }
-        catch { out.push(t); }
+        try {
+          out.push(decodeURIComponent(t));
+        } catch {
+          out.push(t);
+        }
       }
     }
   }

@@ -14,14 +14,16 @@ const ENDPOINT_TEMPLATES = [
 ];
 
 const STAGGER_MS = 200;
-const REQUEST_SCHEMA  = "http://schemas.microsoft.com/exchange/autodiscover/mobilesync/requestschema/2006";
-const RESPONSE_SCHEMA = "http://schemas.microsoft.com/exchange/autodiscover/mobilesync/responseschema/2006";
+const REQUEST_SCHEMA =
+  "http://schemas.microsoft.com/exchange/autodiscover/mobilesync/requestschema/2006";
+const RESPONSE_SCHEMA =
+  "http://schemas.microsoft.com/exchange/autodiscover/mobilesync/responseschema/2006";
 const REDIRECT_LIMIT = 5;
 
 export const DISCOVER_ERR = {
-  AUTH:      "E:AUTH",
+  AUTH: "E:AUTH",
   NO_SERVER: "E:NO_SERVER",
-  NETWORK:   "E:NETWORK",
+  NETWORK: "E:NETWORK",
   CANCELLED: "E:CANCELLED",
 };
 
@@ -37,17 +39,21 @@ export class DiscoverError extends Error {
 export async function discoverEasServer({ email, password, signal }) {
   const at = email?.indexOf?.("@") ?? -1;
   if (at < 1 || at === email.length - 1) {
-    throw new DiscoverError(DISCOVER_ERR.NO_SERVER, "Invalid email address", { tried: [] });
+    throw new DiscoverError(DISCOVER_ERR.NO_SERVER, "Invalid email address", {
+      tried: [],
+    });
   }
   const domain = email.slice(at + 1);
-  const urls = ENDPOINT_TEMPLATES.map(t => t.replace("{domain}", domain));
+  const urls = ENDPOINT_TEMPLATES.map((t) => t.replace("{domain}", domain));
 
   const tried = [];
-  const attempts = urls.map((url, i) => (async () => {
-    await sleep(i * STAGGER_MS, signal);
-    if (signal?.aborted) throw makeCancel();
-    return tryUrl(url, email, password, signal, tried, REDIRECT_LIMIT);
-  })());
+  const attempts = urls.map((url, i) =>
+    (async () => {
+      await sleep(i * STAGGER_MS, signal);
+      if (signal?.aborted) throw makeCancel();
+      return tryUrl(url, email, password, signal, tried, REDIRECT_LIMIT);
+    })(),
+  );
 
   const settled = await Promise.allSettled(attempts);
   for (const r of settled) {
@@ -55,19 +61,37 @@ export async function discoverEasServer({ email, password, signal }) {
       return { server: r.value.server, user: r.value.user };
     }
   }
-  const cancelled = settled.find(r => r.status === "rejected" && r.reason?.code === DISCOVER_ERR.CANCELLED);
+  const cancelled = settled.find(
+    (r) => r.status === "rejected" && r.reason?.code === DISCOVER_ERR.CANCELLED,
+  );
   if (cancelled) throw cancelled.reason;
 
-  const allAuth = settled.every(r => r.status === "fulfilled" && r.value?.error === "auth");
-  const anyAuth = settled.some(r => r.status === "fulfilled" && r.value?.error === "auth");
-  const everyNetwork = settled.every(r => r.status === "fulfilled" && r.value?.error === "network");
+  const allAuth = settled.every(
+    (r) => r.status === "fulfilled" && r.value?.error === "auth",
+  );
+  const anyAuth = settled.some(
+    (r) => r.status === "fulfilled" && r.value?.error === "auth",
+  );
+  const everyNetwork = settled.every(
+    (r) => r.status === "fulfilled" && r.value?.error === "network",
+  );
   if (allAuth || anyAuth) {
-    throw new DiscoverError(DISCOVER_ERR.AUTH, "Credentials rejected", { tried });
+    throw new DiscoverError(DISCOVER_ERR.AUTH, "Credentials rejected", {
+      tried,
+    });
   }
   if (everyNetwork) {
-    throw new DiscoverError(DISCOVER_ERR.NETWORK, "Could not reach any discovery endpoint", { tried });
+    throw new DiscoverError(
+      DISCOVER_ERR.NETWORK,
+      "Could not reach any discovery endpoint",
+      { tried },
+    );
   }
-  throw new DiscoverError(DISCOVER_ERR.NO_SERVER, "No MobileSync server found", { tried });
+  throw new DiscoverError(
+    DISCOVER_ERR.NO_SERVER,
+    "No MobileSync server found",
+    { tried },
+  );
 }
 
 async function tryUrl(url, user, password, signal, tried, redirectsLeft) {
@@ -81,8 +105,8 @@ async function tryUrl(url, user, password, signal, tried, redirectsLeft) {
       method: "POST",
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
-        "User-Agent":   "Thunderbird ActiveSync",
-        Authorization:  "Basic " + btoa(`${user}:${password}`),
+        "User-Agent": "Thunderbird ActiveSync",
+        Authorization: "Basic " + btoa(`${user}:${password}`),
       },
       body: buildRequestBody(user),
       redirect: "follow",
@@ -90,7 +114,11 @@ async function tryUrl(url, user, password, signal, tried, redirectsLeft) {
     });
   } catch (err) {
     if (err?.name === "AbortError") throw makeCancel();
-    tried.push({ url, status: "network", message: err?.message ?? String(err) });
+    tried.push({
+      url,
+      status: "network",
+      message: err?.message ?? String(err),
+    });
     return { error: "network" };
   }
 
@@ -118,7 +146,14 @@ async function tryUrl(url, user, password, signal, tried, redirectsLeft) {
 
   const redirectEl = action.querySelector(":scope > Redirect");
   if (redirectEl?.textContent?.trim()) {
-    return tryUrl(url, redirectEl.textContent.trim(), password, signal, tried, redirectsLeft - 1);
+    return tryUrl(
+      url,
+      redirectEl.textContent.trim(),
+      password,
+      signal,
+      tried,
+      redirectsLeft - 1,
+    );
   }
 
   const servers = action.querySelectorAll(":scope > Settings > Server");
@@ -147,9 +182,17 @@ function buildRequestBody(email) {
 }
 
 function escapeXml(s) {
-  return String(s).replace(/[<>&'"]/g, c => ({
-    "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;",
-  })[c]);
+  return String(s).replace(
+    /[<>&'"]/g,
+    (c) =>
+      ({
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;",
+        "'": "&apos;",
+        '"': "&quot;",
+      })[c],
+  );
 }
 
 function sleep(ms, signal) {
@@ -157,8 +200,15 @@ function sleep(ms, signal) {
     if (!ms) return resolve();
     const timer = setTimeout(resolve, ms);
     if (signal) {
-      const onAbort = () => { clearTimeout(timer); reject(makeCancel()); };
-      if (signal.aborted) { clearTimeout(timer); reject(makeCancel()); return; }
+      const onAbort = () => {
+        clearTimeout(timer);
+        reject(makeCancel());
+      };
+      if (signal.aborted) {
+        clearTimeout(timer);
+        reject(makeCancel());
+        return;
+      }
       signal.addEventListener("abort", onAbort, { once: true });
     }
   });

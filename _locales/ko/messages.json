@@ -286,7 +286,6 @@
     "message": "재인증이 완료되지 않았습니다. \"다시 로그인\"을 클릭하여 다시 시도하세요."
   },
 
-
   "options.title": {
     "message": "EAS-4-TbSync - 고급 설정"
   },
@@ -352,16 +351,31 @@
   "eas.sync.error.accessDenied": {
     "message": "서버가 동기화 접근을 거부했습니다: $REASON$ (코드 $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "장치 유형이 없거나 잘못되었습니다" },
+      "reason": {
+        "content": "$1",
+        "example": "장치 유형이 없거나 잘못되었습니다"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "장치 유형이 없거나 잘못되었습니다" },
-  "eas.sync.error.accessDenied.112": { "message": "Active Directory 접근이 거부되었습니다" },
-  "eas.sync.error.accessDenied.126": { "message": "사용자가 동기화에 대해 비활성화되었습니다" },
-  "eas.sync.error.accessDenied.127": { "message": "사용자가 새 메일박스에 있어 동기화할 수 없습니다" },
-  "eas.sync.error.accessDenied.128": { "message": "사용자가 이전 메일박스에 있어 동기화할 수 없습니다" },
-  "eas.sync.error.accessDenied.129": { "message": "이 사용자에 대해 장치가 차단되었습니다" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "장치 유형이 없거나 잘못되었습니다"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "Active Directory 접근이 거부되었습니다"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "사용자가 동기화에 대해 비활성화되었습니다"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "사용자가 새 메일박스에 있어 동기화할 수 없습니다"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "사용자가 이전 메일박스에 있어 동기화할 수 없습니다"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "이 사용자에 대해 장치가 차단되었습니다"
+  },
   "eas.sync.error.accessDenied.130": { "message": "접근이 거부되었습니다" },
   "eas.sync.error.accessDenied.131": { "message": "계정이 비활성화되었습니다" }
 }

@@ -30,23 +30,34 @@ const X_EAS_SERVERID = "x-eas-serverid";
  *  through `X-EAS-<TAG>` properties so the server's value comes back
  *  unchanged on push. */
 const PASS_THROUGH_FIELDS = [
-  "Alias", "WeightedRank", "YomiCompanyName", "YomiFirstName", "YomiLastName",
-  "CompressedRTF", "MMS", "ManagerName", "AssistantName", "Spouse",
-  "OfficeLocation", "CustomerId", "GovernmentId", "AccountName",
+  "Alias",
+  "WeightedRank",
+  "YomiCompanyName",
+  "YomiFirstName",
+  "YomiLastName",
+  "CompressedRTF",
+  "MMS",
+  "ManagerName",
+  "AssistantName",
+  "Spouse",
+  "OfficeLocation",
+  "CustomerId",
+  "GovernmentId",
+  "AccountName",
 ];
 
 /** EAS phone fields without a standard TYPE: kept as TEL with an
  *  `x-<key>` type so they round-trip cleanly. */
 const X_PHONE_TYPES = {
   AssistantPhoneNumber: "x-assistant",
-  CarPhoneNumber:       "x-car",
-  RadioPhoneNumber:     "x-radio",
-  CompanyMainPhone:     "x-company-main",
+  CarPhoneNumber: "x-car",
+  RadioPhoneNumber: "x-radio",
+  CompanyMainPhone: "x-company-main",
 };
 
 const PHONE_KEYS_BY_TYPE = invertMap({
-  cell:     "MobilePhoneNumber",
-  pager:    "PagerNumber",
+  cell: "MobilePhoneNumber",
+  pager: "PagerNumber",
 });
 
 /* ── Reader: ApplicationData → vCard ───────────────────────────────── */
@@ -58,7 +69,13 @@ const PHONE_KEYS_BY_TYPE = invertMap({
  *    asVersion   "2.5" | "14.0" | "14.1" | "16.1" - selects body codepage
  *    separator   ASCII char code (string) for multi-line address streets
  *    uid         optional vCard UID to embed (TB derives the contact id from it) */
-export async function applicationDataToVCard({ adNode, serverID, asVersion, separator, uid }) {
+export async function applicationDataToVCard({
+  adNode,
+  serverID,
+  asVersion,
+  separator,
+  uid,
+}) {
   const comp = newVCard();
   if (uid) comp.addPropertyWithValue("uid", uid);
   comp.addPropertyWithValue(X_EAS_SERVERID, serverID);
@@ -86,7 +103,12 @@ export async function applicationDataToVCard({ adNode, serverID, asVersion, sepa
 /** Append Contacts / Contacts2 / AirSyncBase tags onto an open
  *  `<ApplicationData>` builder. Caller is responsible for switching the
  *  codepage back afterwards if more sibling commands follow. */
-export function appendApplicationDataFromVCard({ builder, vCard, asVersion, separator }) {
+export function appendApplicationDataFromVCard({
+  builder,
+  vCard,
+  asVersion,
+  separator,
+}) {
   const comp = parseVCard(vCard);
   if (!comp) return;
 
@@ -132,11 +154,11 @@ export function stampEasServerId(vCard, serverID) {
 /* ── Names ──────────────────────────────────────────────────────────── */
 
 function readNames(adNode, comp) {
-  const last   = readPathFrom(adNode, ["LastName"])   ?? "";
-  const first  = readPathFrom(adNode, ["FirstName"])  ?? "";
+  const last = readPathFrom(adNode, ["LastName"]) ?? "";
+  const first = readPathFrom(adNode, ["FirstName"]) ?? "";
   const middle = readPathFrom(adNode, ["MiddleName"]) ?? "";
-  const title  = readPathFrom(adNode, ["Title"])      ?? "";
-  const suffix = readPathFrom(adNode, ["Suffix"])     ?? "";
+  const title = readPathFrom(adNode, ["Title"]) ?? "";
+  const suffix = readPathFrom(adNode, ["Suffix"]) ?? "";
   if (last || first || middle || title || suffix) {
     const prop = new ICAL.Property("n", comp);
     prop.setValue([last, first, middle, title, suffix]);
@@ -148,12 +170,12 @@ function writeNames(b, comp) {
   const n = comp.getFirstProperty("n");
   if (!n) return;
   const v = n.getFirstValue();
-  const arr = Array.isArray(v) ? v : (v ? [v] : []);
-  emitIf(b, "LastName",   arr[0]);
-  emitIf(b, "FirstName",  arr[1]);
+  const arr = Array.isArray(v) ? v : v ? [v] : [];
+  emitIf(b, "LastName", arr[0]);
+  emitIf(b, "FirstName", arr[1]);
   emitIf(b, "MiddleName", arr[2]);
-  emitIf(b, "Title",      arr[3]);
-  emitIf(b, "Suffix",     arr[4]);
+  emitIf(b, "Title", arr[3]);
+  emitIf(b, "Suffix", arr[4]);
 }
 
 /* ── FileAs / formatted name ───────────────────────────────────────── */
@@ -205,14 +227,17 @@ async function extractBareEmail(raw) {
     const parsed = await messenger.messengerUtilities.parseMailboxString(raw);
     const first = Array.isArray(parsed) ? parsed[0] : null;
     if (first?.email) return first.email;
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
   return raw;
 }
 
 function writeEmails(b, comp) {
   const fn = stringOf(comp.getFirstPropertyValue("fn")).trim();
-  const emails = comp.getAllProperties("email")
-    .map(p => stringOf(p.getFirstValue()).trim())
+  const emails = comp
+    .getAllProperties("email")
+    .map((p) => stringOf(p.getFirstValue()).trim())
     .filter(Boolean);
   for (let i = 0; i < Math.min(emails.length, 3); i++) {
     b.atag(`Email${i + 1}Address`, formatMailboxForServer(emails[i], fn));
@@ -257,14 +282,14 @@ function writeWeb(b, comp) {
 function readPhones(adNode, comp) {
   // Single-occurrence + the second slots (Home2, Business2). Each EAS
   // tag becomes a separate TEL property with appropriate TYPE params.
-  addPhone(adNode, comp, "MobilePhoneNumber",   ["cell"]);
-  addPhone(adNode, comp, "PagerNumber",         ["pager"]);
-  addPhone(adNode, comp, "HomeFaxNumber",       ["home", "fax"]);
-  addPhone(adNode, comp, "HomePhoneNumber",     ["home", "voice"]);
-  addPhone(adNode, comp, "Home2PhoneNumber",    ["home", "voice"]);
+  addPhone(adNode, comp, "MobilePhoneNumber", ["cell"]);
+  addPhone(adNode, comp, "PagerNumber", ["pager"]);
+  addPhone(adNode, comp, "HomeFaxNumber", ["home", "fax"]);
+  addPhone(adNode, comp, "HomePhoneNumber", ["home", "voice"]);
+  addPhone(adNode, comp, "Home2PhoneNumber", ["home", "voice"]);
   addPhone(adNode, comp, "BusinessPhoneNumber", ["work", "voice"]);
-  addPhone(adNode, comp, "Business2PhoneNumber",["work", "voice"]);
-  addPhone(adNode, comp, "BusinessFaxNumber",   ["work", "fax"]);
+  addPhone(adNode, comp, "Business2PhoneNumber", ["work", "voice"]);
+  addPhone(adNode, comp, "BusinessFaxNumber", ["work", "fax"]);
   for (const [tag, xtype] of Object.entries(X_PHONE_TYPES)) {
     addPhone(adNode, comp, tag, [xtype]);
   }
@@ -283,8 +308,12 @@ function writePhones(b, comp) {
   // Bucket TEL properties by their type set. We emit at most two for
   // home/work to cover Home2/Business2.
   const buckets = {
-    cell: [], pager: [], homeFax: [], workFax: [],
-    home: [], work: [],
+    cell: [],
+    pager: [],
+    homeFax: [],
+    workFax: [],
+    home: [],
+    work: [],
   };
   const xPhones = {}; // x-assistant/x-car/etc. → first value wins
   for (const p of comp.getAllProperties("tel")) {
@@ -293,26 +322,50 @@ function writePhones(b, comp) {
     const types = paramTypes(p);
     const has = (t) => types.includes(t);
     let placed = false;
-    for (const [xtype, easTag] of Object.entries(X_PHONE_TYPES).map(([t, x]) => [x, t])) {
-      if (has(xtype)) { xPhones[easTag] = value; placed = true; break; }
+    for (const [xtype, easTag] of Object.entries(X_PHONE_TYPES).map(
+      ([t, x]) => [x, t],
+    )) {
+      if (has(xtype)) {
+        xPhones[easTag] = value;
+        placed = true;
+        break;
+      }
     }
     if (placed) continue;
-    if (has("cell"))  { buckets.cell.push(value);    continue; }
-    if (has("pager")) { buckets.pager.push(value);   continue; }
-    if (has("fax") && has("home"))   { buckets.homeFax.push(value); continue; }
-    if (has("fax") && has("work"))   { buckets.workFax.push(value); continue; }
-    if (has("home")) { buckets.home.push(value);    continue; }
-    if (has("work")) { buckets.work.push(value);    continue; }
+    if (has("cell")) {
+      buckets.cell.push(value);
+      continue;
+    }
+    if (has("pager")) {
+      buckets.pager.push(value);
+      continue;
+    }
+    if (has("fax") && has("home")) {
+      buckets.homeFax.push(value);
+      continue;
+    }
+    if (has("fax") && has("work")) {
+      buckets.workFax.push(value);
+      continue;
+    }
+    if (has("home")) {
+      buckets.home.push(value);
+      continue;
+    }
+    if (has("work")) {
+      buckets.work.push(value);
+      continue;
+    }
     // Untagged or unknown → drop into home as legacy did.
     buckets.home.push(value);
   }
-  emitIf(b, "MobilePhoneNumber",    buckets.cell[0]);
-  emitIf(b, "PagerNumber",          buckets.pager[0]);
-  emitIf(b, "HomeFaxNumber",        buckets.homeFax[0]);
-  emitIf(b, "BusinessFaxNumber",    buckets.workFax[0]);
-  emitIf(b, "HomePhoneNumber",      buckets.home[0]);
-  emitIf(b, "Home2PhoneNumber",     buckets.home[1]);
-  emitIf(b, "BusinessPhoneNumber",  buckets.work[0]);
+  emitIf(b, "MobilePhoneNumber", buckets.cell[0]);
+  emitIf(b, "PagerNumber", buckets.pager[0]);
+  emitIf(b, "HomeFaxNumber", buckets.homeFax[0]);
+  emitIf(b, "BusinessFaxNumber", buckets.workFax[0]);
+  emitIf(b, "HomePhoneNumber", buckets.home[0]);
+  emitIf(b, "Home2PhoneNumber", buckets.home[1]);
+  emitIf(b, "BusinessPhoneNumber", buckets.work[0]);
   emitIf(b, "Business2PhoneNumber", buckets.work[1]);
   for (const [tag, value] of Object.entries(xPhones)) emitIf(b, tag, value);
 }
@@ -320,24 +373,36 @@ function writePhones(b, comp) {
 /* ── Addresses (Home / Business / Other) ───────────────────────────── */
 
 const ADDRESS_KINDS = [
-  { wbxmlPrefix: "HomeAddress",     types: ["home"] },
+  { wbxmlPrefix: "HomeAddress", types: ["home"] },
   { wbxmlPrefix: "BusinessAddress", types: ["work"] },
-  { wbxmlPrefix: "OtherAddress",    types: [] },
+  { wbxmlPrefix: "OtherAddress", types: [] },
 ];
 
 function readAddresses(adNode, comp, separator) {
   for (const kind of ADDRESS_KINDS) {
     const street = readPathFrom(adNode, [kind.wbxmlPrefix + "Street"]) ?? "";
-    const city   = readPathFrom(adNode, [kind.wbxmlPrefix + "City"])   ?? "";
-    const state  = readPathFrom(adNode, [kind.wbxmlPrefix + "State"])  ?? "";
-    const zip    = readPathFrom(adNode, [kind.wbxmlPrefix + "PostalCode"]) ?? "";
+    const city = readPathFrom(adNode, [kind.wbxmlPrefix + "City"]) ?? "";
+    const state = readPathFrom(adNode, [kind.wbxmlPrefix + "State"]) ?? "";
+    const zip = readPathFrom(adNode, [kind.wbxmlPrefix + "PostalCode"]) ?? "";
     const country = readPathFrom(adNode, [kind.wbxmlPrefix + "Country"]) ?? "";
     if (!street && !city && !state && !zip && !country) continue;
     const streetParts = splitStreet(street, separator);
     const prop = new ICAL.Property("adr", comp);
-    if (kind.types.length) prop.setParameter("type", kind.types.length === 1 ? kind.types[0] : kind.types);
+    if (kind.types.length)
+      prop.setParameter(
+        "type",
+        kind.types.length === 1 ? kind.types[0] : kind.types,
+      );
     // ADR shape: pobox, ext, street, locality, region, postal, country.
-    prop.setValue(["", "", streetParts.length === 1 ? streetParts[0] : streetParts, city, state, zip, country]);
+    prop.setValue([
+      "",
+      "",
+      streetParts.length === 1 ? streetParts[0] : streetParts,
+      city,
+      state,
+      zip,
+      country,
+    ]);
     comp.addProperty(prop);
   }
 }
@@ -351,21 +416,27 @@ function writeAddresses(b, comp, separator) {
       const types = paramTypes(p);
       if (kind.types.length === 0) {
         // Match an ADR with no relevant work/home TYPE.
-        if (!types.includes("home") && !types.includes("work")) { chosen = p; break; }
-      } else if (kind.types.every(t => types.includes(t))) {
-        chosen = p; break;
+        if (!types.includes("home") && !types.includes("work")) {
+          chosen = p;
+          break;
+        }
+      } else if (kind.types.every((t) => types.includes(t))) {
+        chosen = p;
+        break;
       }
     }
     if (!chosen) continue;
     matched.add(chosen);
     const v = chosen.getFirstValue();
     const arr = Array.isArray(v) ? v : [];
-    const street = Array.isArray(arr[2]) ? joinStreet(arr[2], separator) : (arr[2] ?? "");
-    emitIf(b, kind.wbxmlPrefix + "Street",     street);
-    emitIf(b, kind.wbxmlPrefix + "City",       arr[3]);
-    emitIf(b, kind.wbxmlPrefix + "State",      arr[4]);
+    const street = Array.isArray(arr[2])
+      ? joinStreet(arr[2], separator)
+      : (arr[2] ?? "");
+    emitIf(b, kind.wbxmlPrefix + "Street", street);
+    emitIf(b, kind.wbxmlPrefix + "City", arr[3]);
+    emitIf(b, kind.wbxmlPrefix + "State", arr[4]);
     emitIf(b, kind.wbxmlPrefix + "PostalCode", arr[5]);
-    emitIf(b, kind.wbxmlPrefix + "Country",    arr[6]);
+    emitIf(b, kind.wbxmlPrefix + "Country", arr[6]);
   }
 }
 
@@ -390,8 +461,8 @@ function separatorChar(separator) {
 
 function readOrganization(adNode, comp) {
   const company = readPathFrom(adNode, ["CompanyName"]) ?? "";
-  const dept    = readPathFrom(adNode, ["Department"]) ?? "";
-  const title   = readPathFrom(adNode, ["JobTitle"]) ?? "";
+  const dept = readPathFrom(adNode, ["Department"]) ?? "";
+  const title = readPathFrom(adNode, ["JobTitle"]) ?? "";
   if (company || dept) {
     const prop = new ICAL.Property("org", comp);
     prop.setValue(dept ? [company, dept] : company);
@@ -404,9 +475,9 @@ function writeOrganization(b, comp) {
   const org = comp.getFirstProperty("org");
   if (org) {
     const v = org.getFirstValue();
-    const arr = Array.isArray(v) ? v : (v ? [v] : []);
+    const arr = Array.isArray(v) ? v : v ? [v] : [];
     emitIf(b, "CompanyName", arr[0]);
-    emitIf(b, "Department",  arr[1]);
+    emitIf(b, "Department", arr[1]);
   }
   emitIf(b, "JobTitle", stringOf(comp.getFirstPropertyValue("title")));
 }
@@ -431,9 +502,9 @@ function writeNote(b, comp, asVersion) {
   if (useAirSyncBaseBody(asVersion)) {
     b.switchpage("AirSyncBase");
     b.otag("Body");
-      b.atag("Type", "1");
-      b.atag("EstimatedDataSize", String(note.length));
-      b.atag("Data", note);
+    b.atag("Type", "1");
+    b.atag("EstimatedDataSize", String(note.length));
+    b.atag("Data", note);
     b.ctag();
     b.switchpage("Contacts2");
   } else {
@@ -514,7 +585,10 @@ function readIMs(adNode, comp) {
 }
 
 function writeIMs(b, comp) {
-  const ims = comp.getAllProperties("impp").map(p => stringOf(p.getFirstValue())).filter(Boolean);
+  const ims = comp
+    .getAllProperties("impp")
+    .map((p) => stringOf(p.getFirstValue()))
+    .filter(Boolean);
   for (let i = 0; i < Math.min(ims.length, 3); i++) {
     const tag = i === 0 ? "IMAddress" : `IMAddress${i + 1}`;
     b.atag(tag, ims[i]);
@@ -533,14 +607,19 @@ function readChildren(adNode, comp) {
       if (t) names.push(t);
     }
   }
-  if (names.length) comp.addPropertyWithValue("x-eas-children", JSON.stringify(names));
+  if (names.length)
+    comp.addPropertyWithValue("x-eas-children", JSON.stringify(names));
 }
 
 function writeChildren(b, comp) {
   const raw = stringOf(comp.getFirstPropertyValue("x-eas-children"));
   if (!raw) return;
   let names;
-  try { names = JSON.parse(raw); } catch { return; }
+  try {
+    names = JSON.parse(raw);
+  } catch {
+    return;
+  }
   if (!Array.isArray(names) || !names.length) return;
   b.otag("Children");
   for (const n of names) if (n) b.atag("Child", String(n));
@@ -577,8 +656,11 @@ function newVCard() {
 
 function parseVCard(vCard) {
   if (typeof vCard !== "string" || !vCard.trim()) return null;
-  try { return new ICAL.Component(ICAL.parse(vCard)); }
-  catch { return null; }
+  try {
+    return new ICAL.Component(ICAL.parse(vCard));
+  } catch {
+    return null;
+  }
 }
 
 function emitIf(b, tag, value) {
@@ -590,7 +672,7 @@ function paramTypes(prop) {
   const raw = prop.getParameter("type");
   if (!raw) return [];
   const arr = Array.isArray(raw) ? raw : [raw];
-  return arr.map(t => String(t).toLowerCase());
+  return arr.map((t) => String(t).toLowerCase());
 }
 
 function stringOf(v) {
@@ -621,8 +703,11 @@ function childByTag(node, tag) {
 
 function decodeIfNeeded(text) {
   if (text == null) return "";
-  try { return decodeURIComponent(text); }
-  catch { return text; }
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
 }
 
 function invertMap(obj) {

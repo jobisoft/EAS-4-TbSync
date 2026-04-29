@@ -15,10 +15,21 @@ import {
 
 const codec = {
   async applicationDataToBlob({ adNode, serverID, asVersion, separator, uid }) {
-    return await applicationDataToVCard({ adNode, serverID, asVersion, separator, uid });
+    return await applicationDataToVCard({
+      adNode,
+      serverID,
+      asVersion,
+      separator,
+      uid,
+    });
   },
   appendApplicationDataFromBlob({ builder, blob, asVersion, separator }) {
-    return appendApplicationDataFromVCard({ builder, vCard: blob, asVersion, separator });
+    return appendApplicationDataFromVCard({
+      builder,
+      vCard: blob,
+      asVersion,
+      separator,
+    });
   },
   readEasServerIdFromBlob: readEasServerIdFromVCard,
   stampEasServerId,
@@ -28,7 +39,7 @@ function contactStoreFactory(targetID) {
   return {
     async list() {
       const all = await addressBook.listContacts(targetID);
-      return all.map(c => ({ id: c.id, blob: c.vCard }));
+      return all.map((c) => ({ id: c.id, blob: c.vCard }));
     },
     async get(id) {
       const c = await addressBook.getContact(id);
@@ -58,9 +69,21 @@ const contactItemKind = {
   storeFactory: contactStoreFactory,
 };
 
-export async function syncContactFolder({ provider, account, folder, accountId, folderId, asVersion }) {
+export async function syncContactFolder({
+  provider,
+  account,
+  folder,
+  accountId,
+  folderId,
+  asVersion,
+}) {
   return runItemSync({
-    provider, account, folder, accountId, folderId, asVersion,
+    provider,
+    account,
+    folder,
+    accountId,
+    folderId,
+    asVersion,
     itemKind: contactItemKind,
   });
 }

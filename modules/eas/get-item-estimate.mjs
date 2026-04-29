@@ -17,16 +17,31 @@ import { readPath } from "./wbxml-helpers.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 
 export async function runGetItemEstimate({
-  account, asVersion, collectionId, synckey,
-  className = "Contacts", filterType = "0",
+  account,
+  asVersion,
+  collectionId,
+  synckey,
+  className = "Contacts",
+  filterType = "0",
 }) {
   if (!easCommandLikelyAvailable(account, "GetItemEstimate")) return null;
   if (!collectionId || !synckey || synckey === "0") return null;
 
   let resp;
   try {
-    const body = buildBody({ asVersion, collectionId, synckey, className, filterType });
-    resp = await easRequest({ account, command: "GetItemEstimate", body, asVersion });
+    const body = buildBody({
+      asVersion,
+      collectionId,
+      synckey,
+      className,
+      filterType,
+    });
+    resp = await easRequest({
+      account,
+      command: "GetItemEstimate",
+      body,
+      asVersion,
+    });
   } catch {
     return null;
   }
@@ -41,32 +56,38 @@ export async function runGetItemEstimate({
   return Number.isFinite(n) ? n : null;
 }
 
-function buildBody({ asVersion, collectionId, synckey, className, filterType }) {
+function buildBody({
+  asVersion,
+  collectionId,
+  synckey,
+  className,
+  filterType,
+}) {
   const w = createWBXML();
   w.switchpage("GetItemEstimate");
   w.otag("GetItemEstimate");
-    w.otag("Collections");
-      w.otag("Collection");
-        if (asVersion === "2.5") {
-          w.atag("Class", className);
-          w.atag("CollectionId", collectionId);
-          w.switchpage("AirSync");
-          w.atag("FilterType", filterType);
-          w.atag("SyncKey", synckey);
-          w.switchpage("GetItemEstimate");
-        } else {
-          w.switchpage("AirSync");
-          w.atag("SyncKey", synckey);
-          w.switchpage("GetItemEstimate");
-          w.atag("CollectionId", collectionId);
-          w.switchpage("AirSync");
-          w.otag("Options");
-            w.atag("Class", className);
-          w.ctag();
-          w.switchpage("GetItemEstimate");
-        }
-      w.ctag();
+  w.otag("Collections");
+  w.otag("Collection");
+  if (asVersion === "2.5") {
+    w.atag("Class", className);
+    w.atag("CollectionId", collectionId);
+    w.switchpage("AirSync");
+    w.atag("FilterType", filterType);
+    w.atag("SyncKey", synckey);
+    w.switchpage("GetItemEstimate");
+  } else {
+    w.switchpage("AirSync");
+    w.atag("SyncKey", synckey);
+    w.switchpage("GetItemEstimate");
+    w.atag("CollectionId", collectionId);
+    w.switchpage("AirSync");
+    w.otag("Options");
+    w.atag("Class", className);
     w.ctag();
+    w.switchpage("GetItemEstimate");
+  }
+  w.ctag();
+  w.ctag();
   w.ctag();
   return w.getBytes();
 }

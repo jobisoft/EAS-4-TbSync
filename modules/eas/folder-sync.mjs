@@ -35,7 +35,7 @@ function buildFolderSyncBody(currentKey) {
   const w = createWBXML();
   w.switchpage("FolderHierarchy");
   w.otag("FolderSync");
-    w.atag("SyncKey", currentKey);
+  w.atag("SyncKey", currentKey);
   w.ctag();
   return w.getBytes();
 }
@@ -71,7 +71,9 @@ export async function runFolderSync({ account, asVersion }) {
 
   const status = readPath(doc, ["Status"]);
   if (status !== "1") {
-    const err = new Error(`FolderSync rejected (Status=${status ?? "missing"})`);
+    const err = new Error(
+      `FolderSync rejected (Status=${status ?? "missing"})`,
+    );
     err.code = ERR.UNKNOWN_COMMAND;
     err.folderSyncStatus = status;
     throw err;
@@ -79,12 +81,15 @@ export async function runFolderSync({ account, asVersion }) {
 
   const synckey = readPath(doc, ["SyncKey"]);
   if (!synckey) {
-    throw withCode(new Error("FolderSync response missing SyncKey"), ERR.UNKNOWN_COMMAND);
+    throw withCode(
+      new Error("FolderSync response missing SyncKey"),
+      ERR.UNKNOWN_COMMAND,
+    );
   }
 
   return {
     synckey,
-    adds:    readFolderEntries(doc, "Add"),
+    adds: readFolderEntries(doc, "Add"),
     updates: readFolderEntries(doc, "Update"),
     deletes: readFolderEntries(doc, "Delete"),
   };

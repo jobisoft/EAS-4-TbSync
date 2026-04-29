@@ -272,7 +272,7 @@
     "message": "Показвай Глобалния адресен списък на сървъра като адресна книга само за четене"
   },
   "config.gal.enabled.hint": {
-    "message": "Добавя директория за този акаунт, която се попълва в движение, когато въведете заявка в полето за търсене в адресната книга на Thunderbird. Нищо не се изтегля или съхранява локално — всяко търсене се изпраща към сървъра."
+    "message": "Добавя директория за този акаунт, която се попълва в движение, когато въведете заявка в полето за търсене в адресната книга на Thunderbird. Нищо не се изтегля или съхранява локално - всяко търсене се изпраща към сървъра."
   },
   "config.gal.notSupported": {
     "message": "Вашият сървър не поддържа командата Search, така че Глобалният адресен списък не е наличен за този акаунт."
@@ -285,7 +285,6 @@
   "warning.reauthFailed": {
     "message": "Повторното удостоверяване не беше завършено. Натиснете „Вход отново“, за да опитате пак."
   },
-
 
   "options.title": {
     "message": "EAS-4-TbSync - Разширени настройки"
@@ -352,16 +351,31 @@
   "eas.sync.error.accessDenied": {
     "message": "Сървърът отказа достъп за синхронизация: $REASON$ (код $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "видът устройство липсва или е невалиден" },
+      "reason": {
+        "content": "$1",
+        "example": "видът устройство липсва или е невалиден"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "видът устройство липсва или е невалиден" },
-  "eas.sync.error.accessDenied.112": { "message": "отказан достъп до Active Directory" },
-  "eas.sync.error.accessDenied.126": { "message": "потребителят е изключен за синхронизация" },
-  "eas.sync.error.accessDenied.127": { "message": "потребителят е в нова пощенска кутия и не може да синхронизира" },
-  "eas.sync.error.accessDenied.128": { "message": "потребителят е в стара пощенска кутия и не може да синхронизира" },
-  "eas.sync.error.accessDenied.129": { "message": "устройството е блокирано за този потребител" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "видът устройство липсва или е невалиден"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "отказан достъп до Active Directory"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "потребителят е изключен за синхронизация"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "потребителят е в нова пощенска кутия и не може да синхронизира"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "потребителят е в стара пощенска кутия и не може да синхронизира"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "устройството е блокирано за този потребител"
+  },
   "eas.sync.error.accessDenied.130": { "message": "достъпът е отказан" },
   "eas.sync.error.accessDenied.131": { "message": "профилът е изключен" }
 }

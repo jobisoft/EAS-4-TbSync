@@ -12,7 +12,7 @@
  *     another's. That XPCOM-only mechanism isn't reachable from a
  *     MailExtension background page. A naive `browser.cookies.set` into
  *     the shared jar races between concurrent syncs of two `personal-ms`
- *     accounts (autosync fires both in parallel — see the host's
+ *     accounts (autosync fires both in parallel - see the host's
  *     `onAutosyncTick`).
  *
  *  2. Microsoft sends the cookie back with `SameSite=None` but no
@@ -35,11 +35,15 @@ export const ANCHOR_MAILBOX_HOSTS = new Set(["eas.outlook.com"]);
  *  never reaches the wire. */
 export const ANCHOR_MAILBOX_MARKER = "X-EAS-Anchor-Mailbox";
 
-const FILTER_URLS = Array.from(ANCHOR_MAILBOX_HOSTS).map(h => `https://${h}/*`);
+const FILTER_URLS = Array.from(ANCHOR_MAILBOX_HOSTS).map(
+  (h) => `https://${h}/*`,
+);
 
 export function installAnchorMailboxInjector() {
   if (!browser.webRequest?.onBeforeSendHeaders) {
-    console.warn("[eas-4-tbsync] webRequest API unavailable; anchor-mailbox cookie injection disabled");
+    console.warn(
+      "[eas-4-tbsync] webRequest API unavailable; anchor-mailbox cookie injection disabled",
+    );
     return;
   }
   browser.webRequest.onBeforeSendHeaders.addListener(
@@ -56,7 +60,10 @@ function rewriteHeaders(details) {
   let mailbox = null;
   const filtered = [];
   for (const h of headers) {
-    if (h.name && h.name.toLowerCase() === ANCHOR_MAILBOX_MARKER.toLowerCase()) {
+    if (
+      h.name &&
+      h.name.toLowerCase() === ANCHOR_MAILBOX_MARKER.toLowerCase()
+    ) {
       mailbox = h.value ?? null;
     } else {
       filtered.push(h);
@@ -68,14 +75,14 @@ function rewriteHeaders(details) {
   if (!mailbox) return {};
 
   // Replace any pre-existing DefaultAnchorMailbox in the Cookie header
-  // (defensive — should not happen now that we no longer set the cookie
+  // (defensive - should not happen now that we no longer set the cookie
   // ourselves, but another extension might).
   const ours = `DefaultAnchorMailbox=${mailbox}`;
-  const cookieHeader = filtered.find(h => h.name?.toLowerCase() === "cookie");
+  const cookieHeader = filtered.find((h) => h.name?.toLowerCase() === "cookie");
   if (cookieHeader) {
     const stripped = String(cookieHeader.value || "")
       .split(/;\s*/)
-      .filter(p => p && !/^DefaultAnchorMailbox=/i.test(p))
+      .filter((p) => p && !/^DefaultAnchorMailbox=/i.test(p))
       .join("; ");
     cookieHeader.value = stripped ? `${stripped}; ${ours}` : ours;
   } else {

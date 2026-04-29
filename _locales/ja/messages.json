@@ -286,7 +286,6 @@
     "message": "再認証が完了しませんでした。再試行するには「再サインイン」をクリックしてください。"
   },
 
-
   "options.title": {
     "message": "EAS-4-TbSync - 詳細設定"
   },
@@ -352,16 +351,33 @@
   "eas.sync.error.accessDenied": {
     "message": "サーバーは同期アクセスを拒否しました: $REASON$ (コード $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "デバイスの種類が見つからないか無効です" },
+      "reason": {
+        "content": "$1",
+        "example": "デバイスの種類が見つからないか無効です"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "デバイスの種類が見つからないか無効です" },
-  "eas.sync.error.accessDenied.112": { "message": "Active Directory アクセスが拒否されました" },
-  "eas.sync.error.accessDenied.126": { "message": "ユーザーは同期が無効になっています" },
-  "eas.sync.error.accessDenied.127": { "message": "ユーザーは新しいメールボックスにあり同期できません" },
-  "eas.sync.error.accessDenied.128": { "message": "ユーザーは旧メールボックスにあり同期できません" },
-  "eas.sync.error.accessDenied.129": { "message": "デバイスがこのユーザーに対してブロックされています" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "デバイスの種類が見つからないか無効です"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "Active Directory アクセスが拒否されました"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "ユーザーは同期が無効になっています"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "ユーザーは新しいメールボックスにあり同期できません"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "ユーザーは旧メールボックスにあり同期できません"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "デバイスがこのユーザーに対してブロックされています"
+  },
   "eas.sync.error.accessDenied.130": { "message": "アクセスが拒否されました" },
-  "eas.sync.error.accessDenied.131": { "message": "アカウントが無効になっています" }
+  "eas.sync.error.accessDenied.131": {
+    "message": "アカウントが無効になっています"
+  }
 }

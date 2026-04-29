@@ -272,7 +272,7 @@
     "message": "Mostrar a lista de endereços global do servidor como um catálogo somente leitura"
   },
   "config.gal.enabled.hint": {
-    "message": "Adiciona um catálogo de endereços por conta, que é preenchido em tempo real quando você digita uma consulta no campo de busca do catálogo de endereços do Thunderbird. Nada é baixado ou armazenado localmente — cada busca consulta o servidor."
+    "message": "Adiciona um catálogo de endereços por conta, que é preenchido em tempo real quando você digita uma consulta no campo de busca do catálogo de endereços do Thunderbird. Nada é baixado ou armazenado localmente - cada busca consulta o servidor."
   },
   "config.gal.notSupported": {
     "message": "Seu servidor não anuncia o comando Search, portanto a lista de endereços global não está disponível para esta conta."
@@ -285,7 +285,6 @@
   "warning.reauthFailed": {
     "message": "A reautenticação não foi concluída. Clique em “Entrar novamente” para tentar de novo."
   },
-
 
   "options.title": {
     "message": "EAS-4-TbSync - Configurações avançadas"
@@ -352,16 +351,31 @@
   "eas.sync.error.accessDenied": {
     "message": "O servidor negou o acesso à sincronização: $REASON$ (código $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "tipo de dispositivo ausente ou inválido" },
+      "reason": {
+        "content": "$1",
+        "example": "tipo de dispositivo ausente ou inválido"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "tipo de dispositivo ausente ou inválido" },
-  "eas.sync.error.accessDenied.112": { "message": "acesso ao Active Directory negado" },
-  "eas.sync.error.accessDenied.126": { "message": "usuário desabilitado para sincronização" },
-  "eas.sync.error.accessDenied.127": { "message": "o usuário está em uma caixa de correio nova e não pode sincronizar" },
-  "eas.sync.error.accessDenied.128": { "message": "o usuário está em uma caixa de correio legada e não pode sincronizar" },
-  "eas.sync.error.accessDenied.129": { "message": "dispositivo bloqueado para este usuário" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "tipo de dispositivo ausente ou inválido"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "acesso ao Active Directory negado"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "usuário desabilitado para sincronização"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "o usuário está em uma caixa de correio nova e não pode sincronizar"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "o usuário está em uma caixa de correio legada e não pode sincronizar"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "dispositivo bloqueado para este usuário"
+  },
   "eas.sync.error.accessDenied.130": { "message": "acesso negado" },
   "eas.sync.error.accessDenied.131": { "message": "conta desabilitada" }
 }

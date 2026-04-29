@@ -24,10 +24,12 @@ export async function negotiateAsVersion({ account }) {
       ERR.UNKNOWN_COMMAND,
     );
   }
-  const asVersion = SUPPORTED.find(v => serverVersions.includes(v));
+  const asVersion = SUPPORTED.find((v) => serverVersions.includes(v));
   if (!asVersion) {
     throw withCode(
-      new Error(`No mutually-supported EAS version (server: ${serverVersions.join(",")})`),
+      new Error(
+        `No mutually-supported EAS version (server: ${serverVersions.join(",")})`,
+      ),
       ERR.UNKNOWN_COMMAND,
     );
   }

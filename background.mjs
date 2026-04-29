@@ -28,14 +28,14 @@ const provider = new EasProvider();
  *  constructed, `init()` returned, host port open). The upgrade runner
  *  awaits this before issuing any host RPC. */
 export const providerReady = (async () => {
-  await new Promise(resolve => provider.onceConnectedToHost(resolve));
+  await new Promise((resolve) => provider.onceConnectedToHost(resolve));
 })();
 
 // Internal messages from our own UI pages (setup.html, config.html).
 // Errors are returned as structured { ok, error, code } rather than thrown,
 // because runtime.sendMessage serialisation drops Error.code and the dialogs
 // need the code to distinguish user-cancel from real failures.
-browser.runtime.onMessage.addListener(async msg => {
+browser.runtime.onMessage.addListener(async (msg) => {
   if (msg?.type === "eas.startOAuth") {
     try {
       const result = await startAuth({
@@ -44,7 +44,11 @@ browser.runtime.onMessage.addListener(async msg => {
       });
       return { ok: true, result };
     } catch (err) {
-      return { ok: false, error: err.message ?? String(err), code: err.code ?? null };
+      return {
+        ok: false,
+        error: err.message ?? String(err),
+        code: err.code ?? null,
+      };
     }
   }
   if (msg?.type === "eas.discoverServer") {
@@ -78,7 +82,11 @@ browser.runtime.onMessage.addListener(async msg => {
       const result = await provider.createAccountFromSetup(args);
       return { ok: true, result };
     } catch (err) {
-      return { ok: false, error: err.message ?? String(err), code: err.code ?? null };
+      return {
+        ok: false,
+        error: err.message ?? String(err),
+        code: err.code ?? null,
+      };
     }
   }
   if (msg?.type === "eas.getAccount") {
@@ -86,7 +94,11 @@ browser.runtime.onMessage.addListener(async msg => {
       const result = await provider.getAccountForConfig(msg.accountId);
       return { ok: true, result };
     } catch (err) {
-      return { ok: false, error: err.message ?? String(err), code: err.code ?? null };
+      return {
+        ok: false,
+        error: err.message ?? String(err),
+        code: err.code ?? null,
+      };
     }
   }
   if (msg?.type === "eas.saveAccount") {
@@ -97,7 +109,11 @@ browser.runtime.onMessage.addListener(async msg => {
       });
       return { ok: true, result };
     } catch (err) {
-      return { ok: false, error: err.message ?? String(err), code: err.code ?? null };
+      return {
+        ok: false,
+        error: err.message ?? String(err),
+        code: err.code ?? null,
+      };
     }
   }
   return undefined;

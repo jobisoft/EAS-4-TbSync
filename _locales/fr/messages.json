@@ -286,7 +286,6 @@
     "message": "La réauthentification ne s’est pas terminée. Cliquez sur « Se reconnecter » pour réessayer."
   },
 
-
   "options.title": {
     "message": "EAS-4-TbSync - Paramètres avancés"
   },
@@ -352,16 +351,31 @@
   "eas.sync.error.accessDenied": {
     "message": "Le serveur a refusé l’accès à la synchronisation : $REASON$ (code $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "type d’appareil manquant ou invalide" },
+      "reason": {
+        "content": "$1",
+        "example": "type d’appareil manquant ou invalide"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "type d’appareil manquant ou invalide" },
-  "eas.sync.error.accessDenied.112": { "message": "accès Active Directory refusé" },
-  "eas.sync.error.accessDenied.126": { "message": "utilisateur désactivé pour la synchronisation" },
-  "eas.sync.error.accessDenied.127": { "message": "l’utilisateur est sur une nouvelle boîte aux lettres et ne peut pas synchroniser" },
-  "eas.sync.error.accessDenied.128": { "message": "l’utilisateur est sur une boîte aux lettres héritée et ne peut pas synchroniser" },
-  "eas.sync.error.accessDenied.129": { "message": "l’appareil est bloqué pour cet utilisateur" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "type d’appareil manquant ou invalide"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "accès Active Directory refusé"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "utilisateur désactivé pour la synchronisation"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "l’utilisateur est sur une nouvelle boîte aux lettres et ne peut pas synchroniser"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "l’utilisateur est sur une boîte aux lettres héritée et ne peut pas synchroniser"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "l’appareil est bloqué pour cet utilisateur"
+  },
   "eas.sync.error.accessDenied.130": { "message": "accès refusé" },
   "eas.sync.error.accessDenied.131": { "message": "compte désactivé" }
 }

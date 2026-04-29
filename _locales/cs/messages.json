@@ -224,7 +224,7 @@
     "message": "Vynutit provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Některé servery (např. Kerio) vyžadují, aby provisioning byl odeslán před jakýmkoli jiným příkazem. Většina serverů – včetně Microsoft Exchange a Microsoft 365 – si o něj automaticky řekne, když je třeba; u nich nemusíte tuto volbu zapínat ručně."
+    "message": "Některé servery (např. Kerio) vyžadují, aby provisioning byl odeslán před jakýmkoli jiným příkazem. Většina serverů - včetně Microsoft Exchange a Microsoft 365 - si o něj automaticky řekne, když je třeba; u nich nemusíte tuto volbu zapínat ručně."
   },
 
   "config.contacts.displayOverride": {
@@ -262,7 +262,7 @@
     "message": "Synchronizovat opakující se události/úkoly a výjimky"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimentální – ve výchozím stavu vypnuto. Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
+    "message": "Experimentální - ve výchozím stavu vypnuto. Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
   },
 
   "config.section.gal": {
@@ -272,7 +272,7 @@
     "message": "Zobrazovat globální seznam adres serveru jako adresář jen pro čtení"
   },
   "config.gal.enabled.hint": {
-    "message": "Přidá adresář pro tento účet, který se naplní za běhu, když do vyhledávacího pole v adresáři aplikace Thunderbird zadáte dotaz. Nic se nestahuje ani neukládá lokálně — každý dotaz směřuje na server."
+    "message": "Přidá adresář pro tento účet, který se naplní za běhu, když do vyhledávacího pole v adresáři aplikace Thunderbird zadáte dotaz. Nic se nestahuje ani neukládá lokálně - každý dotaz směřuje na server."
   },
   "config.gal.notSupported": {
     "message": "Váš server neoznamuje příkaz Search, takže globální seznam adres není pro tento účet k dispozici."
@@ -285,7 +285,6 @@
   "warning.reauthFailed": {
     "message": "Opětovné ověření se nedokončilo. Pro nový pokus klikněte na „Přihlásit se znovu“."
   },
-
 
   "options.title": {
     "message": "EAS-4-TbSync - Pokročilá nastavení"
@@ -352,16 +351,31 @@
   "eas.sync.error.accessDenied": {
     "message": "Server odmítl přístup k synchronizaci: $REASON$ (kód $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "typ zařízení chybí nebo je neplatný" },
+      "reason": {
+        "content": "$1",
+        "example": "typ zařízení chybí nebo je neplatný"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "typ zařízení chybí nebo je neplatný" },
-  "eas.sync.error.accessDenied.112": { "message": "přístup k Active Directory zamítnut" },
-  "eas.sync.error.accessDenied.126": { "message": "uživatel zakázán pro synchronizaci" },
-  "eas.sync.error.accessDenied.127": { "message": "uživatel v nové schránce nemůže synchronizovat" },
-  "eas.sync.error.accessDenied.128": { "message": "uživatel ve staré schránce nemůže synchronizovat" },
-  "eas.sync.error.accessDenied.129": { "message": "zařízení blokováno pro tohoto uživatele" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "typ zařízení chybí nebo je neplatný"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "přístup k Active Directory zamítnut"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "uživatel zakázán pro synchronizaci"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "uživatel v nové schránce nemůže synchronizovat"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "uživatel ve staré schránce nemůže synchronizovat"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "zařízení blokováno pro tohoto uživatele"
+  },
   "eas.sync.error.accessDenied.130": { "message": "přístup odepřen" },
   "eas.sync.error.accessDenied.131": { "message": "účet zakázán" }
 }

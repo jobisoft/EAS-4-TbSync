@@ -20,7 +20,10 @@
  * still releases it.
  */
 
-import { easTypeToFolderType, finalizeFolderListForPush } from "./eas-provider.mjs";
+import {
+  easTypeToFolderType,
+  finalizeFolderListForPush,
+} from "./eas-provider.mjs";
 
 const UPGRADE_QUEUE_KEY = "eas.upgradeQueue";
 
@@ -49,7 +52,6 @@ export const UPGRADES = [
             "extensions.eas4tbsync.oauth.clientID": "oauth.clientID",
             "extensions.eas4tbsync.clientID.useragent": "tbsync.useragent",
             "extensions.eas4tbsync.clientID.type": "tbsync.type",
-
           },
           validate: (v) => typeof v === "string" && !!v.trim(),
           transform: (v) => v.trim(),
@@ -63,7 +65,7 @@ export const UPGRADES = [
           validate: (v) => typeof v === "boolean",
           transform: (v) => v,
           logValue: (v) => ` (${v})`,
-        }
+        },
       ];
 
       for (const migration of PREF_MIGRATIONS) {
@@ -100,7 +102,8 @@ export function compareVersions(a, b) {
   const pa = String(a).split(".").map(Number);
   const pb = String(b).split(".").map(Number);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const x = pa[i] ?? 0, y = pb[i] ?? 0;
+    const x = pa[i] ?? 0,
+      y = pb[i] ?? 0;
     if (x !== y) return x - y;
   }
   return 0;
@@ -138,12 +141,18 @@ export function runUpgrades(provider) {
 
       const remaining = [];
       for (const id of queue) {
-        const upgrade = UPGRADES.find(u => u.id === id);
-        if (!upgrade) continue;  // unknown id - silently drop
+        const upgrade = UPGRADES.find((u) => u.id === id);
+        if (!upgrade) continue; // unknown id - silently drop
         try {
-          provider.reportEventLog({ level: "debug", message: `[upgrade] ${id} starting` });
+          provider.reportEventLog({
+            level: "debug",
+            message: `[upgrade] ${id} starting`,
+          });
           await upgrade.run(provider);
-          provider.reportEventLog({ level: "debug", message: `[upgrade] ${id} done` });
+          provider.reportEventLog({
+            level: "debug",
+            message: `[upgrade] ${id} done`,
+          });
         } catch (err) {
           provider.reportEventLog({
             level: "error",
@@ -156,9 +165,14 @@ export function runUpgrades(provider) {
       await browser.storage.local.set({ [UPGRADE_QUEUE_KEY]: remaining });
     } finally {
       if (lockAcquired) {
-        await provider.setProviderUpgradeLock(false).catch(err =>
-          console.warn("[eas-4-tbsync] failed to release upgrade lock:", err?.message ?? String(err))
-        );
+        await provider
+          .setProviderUpgradeLock(false)
+          .catch((err) =>
+            console.warn(
+              "[eas-4-tbsync] failed to release upgrade lock:",
+              err?.message ?? String(err),
+            ),
+          );
         provider.reportEventLog({
           level: "debug",
           message: `[upgrade] exiting upgrade mode - sync and account/resource modifications re-enabled`,
@@ -173,13 +187,15 @@ export function runUpgrades(provider) {
 /** Compute the set of upgrades triggered by an update transition and
  *  merge their IDs into the persistent queue. No-op when nothing
  *  applies. Returns the new queue length. */
-export async function enqueueUpgradesForUpdate(previousVersion, currentVersion) {
-  const triggered = UPGRADES
-    .filter(u =>
-      compareVersions(previousVersion, u.splitVersion) < 0
-      && compareVersions(u.splitVersion, currentVersion) <= 0
-    )
-    .map(u => u.id);
+export async function enqueueUpgradesForUpdate(
+  previousVersion,
+  currentVersion,
+) {
+  const triggered = UPGRADES.filter(
+    (u) =>
+      compareVersions(previousVersion, u.splitVersion) < 0 &&
+      compareVersions(u.splitVersion, currentVersion) <= 0,
+  ).map((u) => u.id);
   if (!triggered.length) return 0;
   const rv = await browser.storage.local.get({ [UPGRADE_QUEUE_KEY]: [] });
   const next = Array.from(new Set([...rv[UPGRADE_QUEUE_KEY], ...triggered]));
@@ -189,12 +205,7 @@ export async function enqueueUpgradesForUpdate(previousVersion, currentVersion) 
 
 // ── Upgrade helpers for legacy migrations─────────────────────────────────────
 
-async function liftPref(provider, {
-  keys,
-  validate,
-  transform,
-  logValue,
-}) {
+async function liftPref(provider, { keys, validate, transform, logValue }) {
   for (const [legacyKey, storageKey] of Object.entries(keys)) {
     const value = await browser.LegacyPrefs.getUserPref(legacyKey);
     if (!validate(value)) continue;
@@ -214,12 +225,19 @@ async function liftPref(provider, {
  *  provider can assume an array on `account.custom.allowedEasCommands`
  *  without sniffing for the legacy string form. Some EAS frontends emit
  *  MS-ASProtocolCommands twice, so the legacy raw header value can carry
- *  the same command twice — `Set` collapses those at upgrade time. */
+ *  the same command twice - `Set` collapses those at upgrade time. */
 async function normalizeAllowedEasCommands(provider, acc) {
   const cmds = acc.custom?.allowedEasCommands;
   if (Array.isArray(cmds)) return;
   if (typeof cmds !== "string" || !cmds.length) return;
-  const arr = [...new Set(cmds.split(",").map(s => s.trim()).filter(Boolean))];
+  const arr = [
+    ...new Set(
+      cmds
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ];
   await provider.updateAccount({
     accountId: acc.accountId,
     patch: { custom: { allowedEasCommands: arr } },
@@ -241,7 +259,7 @@ async function fixFolders(provider, acc) {
   const rv = await provider.getAccount(acc.accountId);
   const folders = rv?.folders ?? [];
   if (!folders.length) return;
-  const retyped = folders.map(f => ({
+  const retyped = folders.map((f) => ({
     ...f,
     targetType: easTypeToFolderType(f.custom?.type) ?? f.targetType,
   }));
@@ -261,7 +279,8 @@ async function liftHostAndHttpsToServer(provider, acc) {
   const protocol = acc.custom?.https ? "https://" : "http://";
   let url = protocol + host;
   while (url.endsWith("/")) url = url.slice(0, -1);
-  if (!url.endsWith("Microsoft-Server-ActiveSync")) url += "/Microsoft-Server-ActiveSync";
+  if (!url.endsWith("Microsoft-Server-ActiveSync"))
+    url += "/Microsoft-Server-ActiveSync";
   await provider.updateAccount({
     accountId: acc.accountId,
     patch: { custom: { server: url, host: null, https: null } },
@@ -316,8 +335,11 @@ async function liftCredentials(provider, acc) {
 
   if (isOAuthLegacy) {
     let refreshToken = "";
-    try { refreshToken = JSON.parse(stored)?.refresh ?? ""; }
-    catch { /* malformed blob; refreshToken stays empty */ }
+    try {
+      refreshToken = JSON.parse(stored)?.refresh ?? "";
+    } catch {
+      /* malformed blob; refreshToken stays empty */
+    }
     if (!refreshToken) {
       provider.reportEventLog({
         level: "warning",
@@ -332,7 +354,7 @@ async function liftCredentials(provider, acc) {
         custom: {
           refreshToken,
           authenticatedUserEmail: c.authenticatedUserEmail ?? null,
-        }
+        },
       },
     });
     provider.reportEventLog({
@@ -348,7 +370,7 @@ async function liftCredentials(provider, acc) {
     patch: {
       custom: {
         password: stored,
-      }
+      },
     },
   });
   provider.reportEventLog({

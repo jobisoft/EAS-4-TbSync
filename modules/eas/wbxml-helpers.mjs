@@ -42,10 +42,13 @@ function decodeText(text) {
   if (text == null) return null;
   if (text === "") return "";
   let raw;
-  try { raw = decodeURIComponent(text); }
-  catch { return text; }
   try {
-    const bytes = Uint8Array.from(raw, c => c.charCodeAt(0) & 0xFF);
+    raw = decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+  try {
+    const bytes = Uint8Array.from(raw, (c) => c.charCodeAt(0) & 0xff);
     return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
   } catch {
     return raw;

@@ -12,7 +12,7 @@
 const ICAL_FORMAT = "ical";
 
 const STORAGE_TYPE = "storage";
-const STORAGE_URL  = "moz-storage-calendar://";
+const STORAGE_URL = "moz-storage-calendar://";
 
 /* ── Calendar level ───────────────────────────────────────────────── */
 
@@ -30,7 +30,9 @@ export async function createCalendar({ name, kind, color }) {
     throw new Error("createCalendar requires a non-empty name");
   }
   if (kind !== "events" && kind !== "tasks") {
-    throw new Error(`createCalendar requires kind: 'events' | 'tasks' (got ${kind})`);
+    throw new Error(
+      `createCalendar requires kind: 'events' | 'tasks' (got ${kind})`,
+    );
   }
   const props = {
     name: name.trim(),
@@ -110,7 +112,8 @@ export async function createItem(calendarId, { id, type, ical }) {
   if (!type) throw new Error("createItem requires a type");
   if (!ical) throw new Error("createItem requires an iCal string");
   const created = await messenger.calendar.items.create(calendarId, {
-    id, type,
+    id,
+    type,
     format: ICAL_FORMAT,
     item: ical,
     returnFormat: ICAL_FORMAT,

@@ -26,26 +26,32 @@ const i18n = (key, fallback, substitutions) =>
 const params = new URLSearchParams(location.search);
 const setupToken = params.get("setupToken");
 
-const TYPE_OFFICE365   = "office365";
+const TYPE_OFFICE365 = "office365";
 const TYPE_PERSONAL_MS = "personal-ms";
-const TYPE_AUTO        = "auto";
-const TYPE_CUSTOM      = "custom";
+const TYPE_AUTO = "auto";
+const TYPE_CUSTOM = "custom";
 
-function $(id) { return document.getElementById(id); }
-function val(id) { return $(id).value.trim(); }
+function $(id) {
+  return document.getElementById(id);
+}
+function val(id) {
+  return $(id).value.trim();
+}
 
 function showError(message) {
   const el = $("error");
   el.textContent = message;
   el.classList.add("visible");
 }
-function clearError() { $("error").classList.remove("visible"); }
+function clearError() {
+  $("error").classList.remove("visible");
+}
 
 function applyType(type) {
   const isOAuth = type === TYPE_OFFICE365 || type === TYPE_PERSONAL_MS;
-  const isAuto  = type === TYPE_AUTO;
+  const isAuto = type === TYPE_AUTO;
   $("oauth-panel").hidden = !isOAuth;
-  $("auto-panel").hidden  = !isAuto;
+  $("auto-panel").hidden = !isAuto;
   $("basic-panel").hidden = isOAuth || isAuto;
   $("btn-submit").textContent = isOAuth
     ? i18n("setup.oauth.signIn", "Sign in with Microsoft")
@@ -62,12 +68,22 @@ async function submitOAuth(type) {
   const email = val("oauth-email");
 
   if (!email) {
-    showError(i18n("setup.oauth.error.emailRequired", "Please enter your Microsoft account email."));
+    showError(
+      i18n(
+        "setup.oauth.error.emailRequired",
+        "Please enter your Microsoft account email.",
+      ),
+    );
     $("oauth-email").focus();
     return;
   }
   if (!setupToken) {
-    showError(i18n("setup.error.missingToken", "Missing setup token. Open this window through TbSync."));
+    showError(
+      i18n(
+        "setup.error.missingToken",
+        "Missing setup token. Open this window through TbSync.",
+      ),
+    );
     return;
   }
 
@@ -83,8 +99,14 @@ async function submitOAuth(type) {
       servertype: type,
     });
     if (!authReply?.ok) {
-      if (authReply?.code === "E:CANCELLED") { btn.disabled = false; return; }
-      throw new Error(authReply?.error ?? i18n("setup.oauth.error.signInFailed", "Sign-in failed"));
+      if (authReply?.code === "E:CANCELLED") {
+        btn.disabled = false;
+        return;
+      }
+      throw new Error(
+        authReply?.error ??
+          i18n("setup.oauth.error.signInFailed", "Sign-in failed"),
+      );
     }
     const tokens = authReply.result;
 
@@ -97,7 +119,10 @@ async function submitOAuth(type) {
       loginHint: email,
     });
     if (!reply?.ok) {
-      throw new Error(reply?.error ?? i18n("setup.error.createFailed", "Could not create the account"));
+      throw new Error(
+        reply?.error ??
+          i18n("setup.error.createFailed", "Could not create the account"),
+      );
     }
     await browser.runtime.sendMessage({
       type: "tbsync-setup-completed",
@@ -114,26 +139,50 @@ async function submitOAuth(type) {
 }
 
 async function submitAuto() {
-  const email    = val("auto-email");
+  const email = val("auto-email");
   const password = $("auto-password").value;
 
-  if (!email)    { showError(i18n("setup.oauth.error.emailRequired", "Please enter your email address.")); $("auto-email").focus();    return; }
-  if (!password) { showError(i18n("setup.error.passwordRequired",    "Please enter the password."));        $("auto-password").focus(); return; }
+  if (!email) {
+    showError(
+      i18n(
+        "setup.oauth.error.emailRequired",
+        "Please enter your email address.",
+      ),
+    );
+    $("auto-email").focus();
+    return;
+  }
+  if (!password) {
+    showError(
+      i18n("setup.error.passwordRequired", "Please enter the password."),
+    );
+    $("auto-password").focus();
+    return;
+  }
   if (!setupToken) {
-    showError(i18n("setup.error.missingToken", "Missing setup token. Open this window through TbSync."));
+    showError(
+      i18n(
+        "setup.error.missingToken",
+        "Missing setup token. Open this window through TbSync.",
+      ),
+    );
     return;
   }
 
   const btn = $("btn-submit");
   const status = $("auto-status");
   btn.disabled = true;
-  status.textContent = i18n("setup.auto.status.searching", "Looking up server settings…");
+  status.textContent = i18n(
+    "setup.auto.status.searching",
+    "Looking up server settings…",
+  );
   status.hidden = false;
 
   try {
     const reply = await browser.runtime.sendMessage({
       type: "eas.discoverServer",
-      email, password,
+      email,
+      password,
     });
 
     if (!reply?.ok) {
@@ -144,12 +193,16 @@ async function submitAuto() {
     const created = await browser.runtime.sendMessage({
       type: "eas.createAccount",
       servertype: TYPE_AUTO,
-      email, password,
+      email,
+      password,
       server: reply.result.server,
       user: reply.result.user || email,
     });
     if (!created?.ok) {
-      throw new Error(created?.error ?? i18n("setup.error.createFailed", "Could not create the account"));
+      throw new Error(
+        created?.error ??
+          i18n("setup.error.createFailed", "Could not create the account"),
+      );
     }
     await browser.runtime.sendMessage({
       type: "tbsync-setup-completed",
@@ -160,7 +213,12 @@ async function submitAuto() {
     });
     window.close();
   } catch (err) {
-    showAutoError({ ok: false, code: null, error: err?.message ?? String(err), details: null });
+    showAutoError({
+      ok: false,
+      code: null,
+      error: err?.message ?? String(err),
+      details: null,
+    });
   } finally {
     if (!document.hidden) {
       btn.disabled = false;
@@ -170,9 +228,9 @@ async function submitAuto() {
 }
 
 function showAutoError(reply) {
-  const detailEl   = $("auto-error-detail");
+  const detailEl = $("auto-error-detail");
   const triedLabel = $("auto-error-tried-label");
-  const triedList  = $("auto-error-tried");
+  const triedList = $("auto-error-tried");
   const code = reply?.code ?? null;
 
   let msgKey, msgFallback;
@@ -204,17 +262,44 @@ function showAutoError(reply) {
 }
 
 async function submitBasic() {
-  const label    = val("account-name");
-  const server   = val("server");
-  const user     = val("user");
+  const label = val("account-name");
+  const server = val("server");
+  const user = val("user");
   const password = $("password").value;
 
-  if (!label)    { showError(i18n("setup.error.labelRequired",    "Please enter an account label."));   $("account-name").focus(); return; }
-  if (!server)   { showError(i18n("setup.error.serverRequired",   "Please enter the server URL."));     $("server").focus();       return; }
-  if (!user)     { showError(i18n("setup.error.userRequired",     "Please enter the username."));       $("user").focus();         return; }
-  if (!password) { showError(i18n("setup.error.passwordRequired", "Please enter the password."));       $("password").focus();     return; }
+  if (!label) {
+    showError(
+      i18n("setup.error.labelRequired", "Please enter an account label."),
+    );
+    $("account-name").focus();
+    return;
+  }
+  if (!server) {
+    showError(
+      i18n("setup.error.serverRequired", "Please enter the server URL."),
+    );
+    $("server").focus();
+    return;
+  }
+  if (!user) {
+    showError(i18n("setup.error.userRequired", "Please enter the username."));
+    $("user").focus();
+    return;
+  }
+  if (!password) {
+    showError(
+      i18n("setup.error.passwordRequired", "Please enter the password."),
+    );
+    $("password").focus();
+    return;
+  }
   if (!setupToken) {
-    showError(i18n("setup.error.missingToken", "Missing setup token. Open this window through TbSync."));
+    showError(
+      i18n(
+        "setup.error.missingToken",
+        "Missing setup token. Open this window through TbSync.",
+      ),
+    );
     return;
   }
 
@@ -224,10 +309,16 @@ async function submitBasic() {
     const reply = await browser.runtime.sendMessage({
       type: "eas.createAccount",
       servertype: TYPE_CUSTOM,
-      label, server, user, password,
+      label,
+      server,
+      user,
+      password,
     });
     if (!reply?.ok) {
-      throw new Error(reply?.error ?? i18n("setup.error.createFailed", "Could not create the account"));
+      throw new Error(
+        reply?.error ??
+          i18n("setup.error.createFailed", "Could not create the account"),
+      );
     }
     await browser.runtime.sendMessage({
       type: "tbsync-setup-completed",
@@ -247,7 +338,7 @@ async function onSubmit() {
   clearError();
   const type = typeDropdown.getValue();
   if (type === TYPE_CUSTOM) return submitBasic();
-  if (type === TYPE_AUTO)   return submitAuto();
+  if (type === TYPE_AUTO) return submitAuto();
   return submitOAuth(type);
 }
 
@@ -260,22 +351,22 @@ typeDropdown = createDropdown($("account-type"), {
     {
       value: TYPE_OFFICE365,
       label: i18n("setup.accountType.office365", "Office 365 Business"),
-      hint:  i18n("setup.accountType.office365.hint", ""),
+      hint: i18n("setup.accountType.office365.hint", ""),
     },
     {
       value: TYPE_PERSONAL_MS,
       label: i18n("setup.accountType.personalMs", "Personal Microsoft account"),
-      hint:  i18n("setup.accountType.personalMs.hint", ""),
+      hint: i18n("setup.accountType.personalMs.hint", ""),
     },
     {
       value: TYPE_AUTO,
       label: i18n("setup.accountType.auto", "Auto-detect"),
-      hint:  i18n("setup.accountType.auto.hint", ""),
+      hint: i18n("setup.accountType.auto.hint", ""),
     },
     {
       value: TYPE_CUSTOM,
       label: i18n("setup.accountType.custom", "Custom EAS server"),
-      hint:  i18n("setup.accountType.custom.hint", ""),
+      hint: i18n("setup.accountType.custom.hint", ""),
     },
   ],
   value: TYPE_OFFICE365,
@@ -286,12 +377,14 @@ applyType(typeDropdown.getValue());
 
 $("btn-cancel").addEventListener("click", () => window.close());
 $("btn-submit").addEventListener("click", onSubmit);
-$("auto-error-close").addEventListener("click", () => $("auto-error-popover").hidePopover());
+$("auto-error-close").addEventListener("click", () =>
+  $("auto-error-popover").hidePopover(),
+);
 
 // ESC closes the dialog; Enter while focused in a text input fires the
 // primary action (when enabled and visible). `defaultPrevented` lets the
 // dropdown's own Escape handler swallow the key when its panel is open.
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown", (e) => {
   if (e.defaultPrevented) return;
   if (e.key === "Escape") {
     window.close();

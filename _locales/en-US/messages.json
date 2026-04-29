@@ -272,7 +272,7 @@
     "message": "Show the server's Global Address List as a read-only address book"
   },
   "config.gal.enabled.hint": {
-    "message": "Adds a per-account directory that is populated on the fly when you type a query into Thunderbird's address book search. Nothing is downloaded or stored locally — each search asks the server."
+    "message": "Adds a per-account directory that is populated on the fly when you type a query into Thunderbird's address book search. Nothing is downloaded or stored locally - each search asks the server."
   },
   "config.gal.notSupported": {
     "message": "Your server does not advertise the Search command, so the Global Address List is not available for this account."

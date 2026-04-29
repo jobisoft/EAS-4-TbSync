@@ -224,7 +224,7 @@
     "message": "Provisioning kényszerítése"
   },
   "config.protocol.provision.hint": {
-    "message": "Egyes kiszolgálók (pl. Kerio) megkövetelik, hogy a provisioning más parancs előtt érkezzen meg. A legtöbb kiszolgáló – köztük a Microsoft Exchange és a Microsoft 365 – automatikusan kéri, ha szükséges; ezeknél nem kell kézzel bekapcsolni ezt a beállítást."
+    "message": "Egyes kiszolgálók (pl. Kerio) megkövetelik, hogy a provisioning más parancs előtt érkezzen meg. A legtöbb kiszolgáló - köztük a Microsoft Exchange és a Microsoft 365 - automatikusan kéri, ha szükséges; ezeknél nem kell kézzel bekapcsolni ezt a beállítást."
   },
 
   "config.contacts.displayOverride": {
@@ -272,7 +272,7 @@
     "message": "A kiszolgáló globális címlistájának megjelenítése írásvédett címjegyzékként"
   },
   "config.gal.enabled.hint": {
-    "message": "Hozzáad egy fiókhoz tartozó címjegyzéket, amely menet közben töltődik fel, amikor lekérdezést ír be a Thunderbird címjegyzék keresőmezőjébe. Helyben semmi sem töltődik le vagy tárolódik – minden keresés a kiszolgálót kérdezi le."
+    "message": "Hozzáad egy fiókhoz tartozó címjegyzéket, amely menet közben töltődik fel, amikor lekérdezést ír be a Thunderbird címjegyzék keresőmezőjébe. Helyben semmi sem töltődik le vagy tárolódik - minden keresés a kiszolgálót kérdezi le."
   },
   "config.gal.notSupported": {
     "message": "A kiszolgálója nem hirdeti a Search parancsot, így a globális címlista nem érhető el ehhez a fiókhoz."
@@ -285,7 +285,6 @@
   "warning.reauthFailed": {
     "message": "Az újrahitelesítés nem fejeződött be. Kattintson az „Újra bejelentkezés” gombra a próbálkozáshoz."
   },
-
 
   "options.title": {
     "message": "EAS-4-TbSync - Speciális beállítások"
@@ -352,16 +351,31 @@
   "eas.sync.error.accessDenied": {
     "message": "A szerver megtagadta a szinkronizálási hozzáférést: $REASON$ (kód: $STATUS$)",
     "placeholders": {
-      "reason": { "content": "$1", "example": "az eszköz típusa hiányzik vagy érvénytelen" },
+      "reason": {
+        "content": "$1",
+        "example": "az eszköz típusa hiányzik vagy érvénytelen"
+      },
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "az eszköz típusa hiányzik vagy érvénytelen" },
-  "eas.sync.error.accessDenied.112": { "message": "Active Directory hozzáférés megtagadva" },
-  "eas.sync.error.accessDenied.126": { "message": "a felhasználó szinkronizálása letiltva" },
-  "eas.sync.error.accessDenied.127": { "message": "a felhasználó új postafiókban van, és nem tud szinkronizálni" },
-  "eas.sync.error.accessDenied.128": { "message": "a felhasználó régi postafiókban van, és nem tud szinkronizálni" },
-  "eas.sync.error.accessDenied.129": { "message": "az eszköz blokkolva van ennél a felhasználónál" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "az eszköz típusa hiányzik vagy érvénytelen"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "Active Directory hozzáférés megtagadva"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "a felhasználó szinkronizálása letiltva"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "a felhasználó új postafiókban van, és nem tud szinkronizálni"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "a felhasználó régi postafiókban van, és nem tud szinkronizálni"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "az eszköz blokkolva van ennél a felhasználónál"
+  },
   "eas.sync.error.accessDenied.130": { "message": "hozzáférés megtagadva" },
   "eas.sync.error.accessDenied.131": { "message": "fiók letiltva" }
 }

@@ -10,15 +10,18 @@ import { localizeDocument } from "../../vendor/i18n/i18n.mjs";
 const $ = (id) => document.getElementById(id);
 
 const STRING_FIELDS = [
-  { key: "timeout",          inputId: "opt-timeout",    type: "number" },
-  { key: "tbsync.useragent", inputId: "opt-useragent",  type: "string" },
-  { key: "tbsync.type",      inputId: "opt-devicetype", type: "string" },
-  { key: "maxItems",         inputId: "opt-maxitems",   type: "number" },
-  { key: "oauth.clientID",   inputId: "opt-clientid",   type: "string" },
+  { key: "timeout", inputId: "opt-timeout", type: "number" },
+  { key: "tbsync.useragent", inputId: "opt-useragent", type: "string" },
+  { key: "tbsync.type", inputId: "opt-devicetype", type: "string" },
+  { key: "maxItems", inputId: "opt-maxitems", type: "number" },
+  { key: "oauth.clientID", inputId: "opt-clientid", type: "string" },
 ];
 
 async function load() {
-  const keys = STRING_FIELDS.map(f => f.key).concat("msTodoCompat", "showItemsInTrash");
+  const keys = STRING_FIELDS.map((f) => f.key).concat(
+    "msTodoCompat",
+    "showItemsInTrash",
+  );
   const stored = await browser.storage.local.get(keys);
 
   for (const f of STRING_FIELDS) {
@@ -44,7 +47,7 @@ function bindStringField({ key, inputId, type }) {
         // Reject invalid input: revert to whatever is currently stored.
         const stored = await browser.storage.local.get({ [key]: null });
         const v = stored[key];
-        e.target.value = (v === null || v === undefined) ? "" : String(v);
+        e.target.value = v === null || v === undefined ? "" : String(v);
         return;
       }
       await browser.storage.local.set({ [key]: n });
@@ -59,7 +62,7 @@ function bindStringField({ key, inputId, type }) {
 function bindCheckbox(inputId, key) {
   $(inputId).addEventListener("change", async (e) => {
     if (e.target.checked) await browser.storage.local.set({ [key]: true });
-    else                  await browser.storage.local.remove(key);
+    else await browser.storage.local.remove(key);
   });
 }
 

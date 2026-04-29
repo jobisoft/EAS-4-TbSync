@@ -39,14 +39,14 @@ function buildSearchBody(query) {
   const w = createWBXML();
   w.switchpage("Search");
   w.otag("Search");
-    w.otag("Store");
-      w.atag("Name", "GAL");
-      w.atag("Query", query);
-      w.otag("Options");
-        // Range is required by Z-Push and harmless to Exchange.
-        w.atag("Range", RANGE);
-      w.ctag();
-    w.ctag();
+  w.otag("Store");
+  w.atag("Name", "GAL");
+  w.atag("Query", query);
+  w.otag("Options");
+  // Range is required by Z-Push and harmless to Exchange.
+  w.atag("Range", RANGE);
+  w.ctag();
+  w.ctag();
   w.ctag();
   return w.getBytes();
 }
@@ -79,30 +79,30 @@ function readProperties(resultNode, companyName) {
   const r = (tag) => readPathFrom(resultNode, ["Properties", tag]);
 
   const out = {};
-  const firstName   = r("FirstName");
-  const lastName    = r("LastName");
+  const firstName = r("FirstName");
+  const lastName = r("LastName");
   const displayName = r("DisplayName");
-  const email       = r("EmailAddress");
-  const mobile      = r("MobilePhone");
-  const home        = r("HomePhone");
-  const work        = r("Phone");
+  const email = r("EmailAddress");
+  const mobile = r("MobilePhone");
+  const home = r("HomePhone");
+  const work = r("Phone");
   // Properties.Title is the person's job title; Properties.Office is the
   // department / office location. (The legacy add-on shipped these
   // swapped against the EAS schema; the corrected mapping is here.)
-  const jobTitle    = r("Title");
-  const department  = r("Office");
+  const jobTitle = r("Title");
+  const department = r("Office");
 
   if (!firstName && !lastName && !displayName && !email) return null;
 
-  if (firstName)   out.FirstName      = firstName;
-  if (lastName)    out.LastName       = lastName;
-  if (displayName) out.DisplayName    = displayName;
-  if (email)       out.PrimaryEmail   = email;
-  if (mobile)      out.CellularNumber = mobile;
-  if (home)        out.HomePhone      = home;
-  if (work)        out.WorkPhone      = work;
-  if (jobTitle)    out.JobTitle       = jobTitle;
-  if (department)  out.Department     = department;
-  if (companyName) out.Company        = companyName;
+  if (firstName) out.FirstName = firstName;
+  if (lastName) out.LastName = lastName;
+  if (displayName) out.DisplayName = displayName;
+  if (email) out.PrimaryEmail = email;
+  if (mobile) out.CellularNumber = mobile;
+  if (home) out.HomePhone = home;
+  if (work) out.WorkPhone = work;
+  if (jobTitle) out.JobTitle = jobTitle;
+  if (department) out.Department = department;
+  if (companyName) out.Company = companyName;
   return out;
 }

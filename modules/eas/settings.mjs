@@ -30,14 +30,19 @@ function buildBody() {
   const w = createWBXML();
   w.switchpage("Settings");
   w.otag("Settings");
-    w.otag("DeviceInformation");
-      w.otag("Set");
-        w.atag("Model", MODEL);
-        w.atag("FriendlyName", FRIENDLY_NAME);
-        w.atag("OS", typeof navigator !== "undefined" && navigator.platform ? navigator.platform : "Unknown");
-        w.atag("UserAgent", USER_AGENT);
-      w.ctag();
-    w.ctag();
+  w.otag("DeviceInformation");
+  w.otag("Set");
+  w.atag("Model", MODEL);
+  w.atag("FriendlyName", FRIENDLY_NAME);
+  w.atag(
+    "OS",
+    typeof navigator !== "undefined" && navigator.platform
+      ? navigator.platform
+      : "Unknown",
+  );
+  w.atag("UserAgent", USER_AGENT);
+  w.ctag();
+  w.ctag();
   w.ctag();
   return w.getBytes();
 }

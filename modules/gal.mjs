@@ -34,13 +34,14 @@ function galAddressBookName(account) {
   // Suffix the account name so multiple accounts don't collide in the
   // directory tree. Localized via the same i18n that backs the rest of
   // the UI; falls back to English when the key is missing.
-  const suffix = browser.i18n.getMessage("gal.addressBookSuffix") || "Global Address List";
+  const suffix =
+    browser.i18n.getMessage("gal.addressBookSuffix") || "Global Address List";
   const base = account.accountName || account.accountId;
-  return `${base} — ${suffix}`;
+  return `${base} - ${suffix}`;
 }
 
 function searchSupported(account) {
-  // The per-account toggle defaults to "enabled" — undefined / missing
+  // The per-account toggle defaults to "enabled" - undefined / missing
   // counts as on, only an explicit `false` disables. New accounts get
   // GAL automatically; existing-pre-toggle accounts behave unchanged.
   if (account.custom?.galenabled === false) return false;
@@ -66,7 +67,7 @@ export async function enableGal({ provider, account }) {
     try {
       // Reload the account each time so we pick up token / server-URL
       // changes that happened since enableGal ran. `getAccount` returns
-      // a `{ account, folders }` wrapper — unwrap before use.
+      // a `{ account, folders }` wrapper - unwrap before use.
       const rv = await provider.getAccount(accountId);
       const fresh = rv?.account;
       if (!fresh || !searchSupported(fresh)) {
@@ -123,7 +124,9 @@ export async function disableGal({ provider, accountId }) {
   listeners.delete(accountId);
 
   try {
-    messenger.addressBooks.provider.onSearchRequest.removeListener(entry.callback);
+    messenger.addressBooks.provider.onSearchRequest.removeListener(
+      entry.callback,
+    );
   } catch (err) {
     provider.reportEventLog?.({
       level: "debug",
@@ -136,7 +139,7 @@ export async function disableGal({ provider, accountId }) {
     await messenger.addressBooks.delete(entry.addressBookId);
   } catch {
     // The directory may persist if the API does not allow deletion of
-    // provider-created books; that's acceptable — searches simply stop
+    // provider-created books; that's acceptable - searches simply stop
     // returning anything once the listener is gone.
   }
 }

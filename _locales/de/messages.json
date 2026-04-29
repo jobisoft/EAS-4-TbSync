@@ -224,7 +224,7 @@
     "message": "Provisionierung erzwingen"
   },
   "config.protocol.provision.hint": {
-    "message": "Einige Server (z. B. Kerio) verlangen, dass die Provisionierung vor allen anderen Befehlen gesendet wird. Die meisten Server – einschließlich Microsoft Exchange und Microsoft 365 – fordern sie bei Bedarf automatisch an; für diese müssen Sie diese Option nicht manuell aktivieren."
+    "message": "Einige Server (z. B. Kerio) verlangen, dass die Provisionierung vor allen anderen Befehlen gesendet wird. Die meisten Server - einschließlich Microsoft Exchange und Microsoft 365 - fordern sie bei Bedarf automatisch an; für diese müssen Sie diese Option nicht manuell aktivieren."
   },
 
   "config.contacts.displayOverride": {
@@ -262,7 +262,7 @@
     "message": "Wiederkehrende Termine/Aufgaben und Ausnahmen synchronisieren"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimentell – standardmäßig deaktiviert. Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
+    "message": "Experimentell - standardmäßig deaktiviert. Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
   },
 
   "config.section.gal": {
@@ -272,7 +272,7 @@
     "message": "Globale Adressliste des Servers als schreibgeschütztes Adressbuch anzeigen"
   },
   "config.gal.enabled.hint": {
-    "message": "Fügt ein kontospezifisches Adressbuch hinzu, das beim Eintippen einer Suchanfrage in das Adressbuch-Suchfeld von Thunderbird dynamisch befüllt wird. Es wird nichts lokal heruntergeladen oder gespeichert – jede Suche fragt direkt den Server ab."
+    "message": "Fügt ein kontospezifisches Adressbuch hinzu, das beim Eintippen einer Suchanfrage in das Adressbuch-Suchfeld von Thunderbird dynamisch befüllt wird. Es wird nichts lokal heruntergeladen oder gespeichert - jede Suche fragt direkt den Server ab."
   },
   "config.gal.notSupported": {
     "message": "Ihr Server unterstützt den Search-Befehl nicht, daher ist die Globale Adressliste für dieses Konto nicht verfügbar."
@@ -286,12 +286,11 @@
     "message": "Erneute Anmeldung wurde nicht abgeschlossen. Klicken Sie auf „Erneut anmelden“, um es erneut zu versuchen."
   },
 
-
   "options.title": {
-    "message": "EAS-4-TbSync – Erweiterte Einstellungen"
+    "message": "EAS-4-TbSync - Erweiterte Einstellungen"
   },
   "options.intro": {
-    "message": "Diese Einstellungen wirken sich auf jedes EAS-Konto in diesem Profil aus. Die Standardwerte sind für fast alle Benutzer geeignet – ändern Sie einen Wert nur, wenn Sie einen bestimmten Grund dafür haben. Lassen Sie ein Feld leer, um auf den mitgelieferten Standardwert zurückzugreifen."
+    "message": "Diese Einstellungen wirken sich auf jedes EAS-Konto in diesem Profil aus. Die Standardwerte sind für fast alle Benutzer geeignet - ändern Sie einen Wert nur, wenn Sie einen bestimmten Grund dafür haben. Lassen Sie ein Feld leer, um auf den mitgelieferten Standardwert zurückzugreifen."
   },
   "options.section.network": {
     "message": "Netzwerk"
@@ -318,7 +317,7 @@
     "message": "Gerätetyp"
   },
   "options.devicetype.hint": {
-    "message": "EAS-DeviceType-Wert, der in der Anfrage-URL gesendet wird. Einige Server lehnen unbekannte Gerätetypen ab – versuchen Sie einen Wert wie WindowsOutlook15 oder iPhone, wenn Ihr Anbieter den Standard nicht akzeptiert. Standard: TbSync."
+    "message": "EAS-DeviceType-Wert, der in der Anfrage-URL gesendet wird. Einige Server lehnen unbekannte Gerätetypen ab - versuchen Sie einen Wert wie WindowsOutlook15 oder iPhone, wenn Ihr Anbieter den Standard nicht akzeptiert. Standard: TbSync."
   },
   "options.maxitems": {
     "message": "Elemente pro Synchronisationsschritt"
@@ -337,7 +336,7 @@
     "message": "Elemente in Papierkorb-Ordnern anzeigen"
   },
   "options.showItemsInTrash.hint": {
-    "message": "Einige Server bewahren gelöschte Kalender, Adressbücher und Aufgabenlisten in einem Papierkorb-Ordner auf, anstatt sie endgültig zu entfernen. Standardmäßig werden diese in der Ordnerliste ausgeblendet. Aktivieren Sie diese Option, um sie sichtbar zu machen – sie werden mit einem lokalisierten „Papierkorb | “-Präfix angezeigt, damit Sie sie unterscheiden und entscheiden können, ob sie synchronisiert werden sollen. Wird beim nächsten Aktualisieren der Ordnerliste wirksam."
+    "message": "Einige Server bewahren gelöschte Kalender, Adressbücher und Aufgabenlisten in einem Papierkorb-Ordner auf, anstatt sie endgültig zu entfernen. Standardmäßig werden diese in der Ordnerliste ausgeblendet. Aktivieren Sie diese Option, um sie sichtbar zu machen - sie werden mit einem lokalisierten „Papierkorb | “-Präfix angezeigt, damit Sie sie unterscheiden und entscheiden können, ob sie synchronisiert werden sollen. Wird beim nächsten Aktualisieren der Ordnerliste wirksam."
   },
   "options.clientid": {
     "message": "Eigene OAuth-Client-ID"
@@ -356,12 +355,24 @@
       "status": { "content": "$2", "example": "109" }
     }
   },
-  "eas.sync.error.accessDenied.109": { "message": "Gerätetyp fehlt oder ungültig" },
-  "eas.sync.error.accessDenied.112": { "message": "Active-Directory-Zugriff verweigert" },
-  "eas.sync.error.accessDenied.126": { "message": "Benutzer für Synchronisation deaktiviert" },
-  "eas.sync.error.accessDenied.127": { "message": "Benutzer im neuen Postfach kann nicht synchronisieren" },
-  "eas.sync.error.accessDenied.128": { "message": "Benutzer im alten Postfach kann nicht synchronisieren" },
-  "eas.sync.error.accessDenied.129": { "message": "Gerät ist für diesen Benutzer gesperrt" },
+  "eas.sync.error.accessDenied.109": {
+    "message": "Gerätetyp fehlt oder ungültig"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "Active-Directory-Zugriff verweigert"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "Benutzer für Synchronisation deaktiviert"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "Benutzer im neuen Postfach kann nicht synchronisieren"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "Benutzer im alten Postfach kann nicht synchronisieren"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "Gerät ist für diesen Benutzer gesperrt"
+  },
   "eas.sync.error.accessDenied.130": { "message": "Zugriff verweigert" },
   "eas.sync.error.accessDenied.131": { "message": "Konto deaktiviert" }
 }

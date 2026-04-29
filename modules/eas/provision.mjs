@@ -28,18 +28,20 @@ import { easRequest } from "../network.mjs";
 import { readPath } from "./wbxml-helpers.mjs";
 
 function policyTypeFor(asVersion) {
-  return asVersion === "2.5" ? "MS-WAP-Provisioning-XML" : "MS-EAS-Provisioning-WBXML";
+  return asVersion === "2.5"
+    ? "MS-WAP-Provisioning-XML"
+    : "MS-EAS-Provisioning-WBXML";
 }
 
 function buildInitialBody(asVersion) {
   const w = createWBXML();
   w.switchpage("Provision");
   w.otag("Provision");
-    w.otag("Policies");
-      w.otag("Policy");
-        w.atag("PolicyType", policyTypeFor(asVersion));
-      w.ctag();
-    w.ctag();
+  w.otag("Policies");
+  w.otag("Policy");
+  w.atag("PolicyType", policyTypeFor(asVersion));
+  w.ctag();
+  w.ctag();
   w.ctag();
   return w.getBytes();
 }
@@ -48,13 +50,13 @@ function buildAckBody(asVersion, policyKey) {
   const w = createWBXML();
   w.switchpage("Provision");
   w.otag("Provision");
-    w.otag("Policies");
-      w.otag("Policy");
-        w.atag("PolicyType", policyTypeFor(asVersion));
-        w.atag("PolicyKey", policyKey);
-        w.atag("Status", "1");
-      w.ctag();
-    w.ctag();
+  w.otag("Policies");
+  w.otag("Policy");
+  w.atag("PolicyType", policyTypeFor(asVersion));
+  w.atag("PolicyKey", policyKey);
+  w.atag("Status", "1");
+  w.ctag();
+  w.ctag();
   w.ctag();
   return w.getBytes();
 }
@@ -78,7 +80,11 @@ export async function acquirePolicyKey({ account, asVersion }) {
   // Bootstrap state for iter 0: provision flag on, policykey "0". The
   // network layer will then send `X-MS-PolicyKey: 0` on the first request,
   // matching legacy behaviour.
-  account.custom = { ...(account.custom ?? {}), provision: true, policykey: "0" };
+  account.custom = {
+    ...(account.custom ?? {}),
+    provision: true,
+    policykey: "0",
+  };
 
   const initial = await easRequest({
     account,
@@ -86,7 +92,8 @@ export async function acquirePolicyKey({ account, asVersion }) {
     body: buildInitialBody(asVersion),
     asVersion,
   });
-  if (!initial.doc) throw withCode(new Error("Empty Provision response"), ERR.UNKNOWN_COMMAND);
+  if (!initial.doc)
+    throw withCode(new Error("Empty Provision response"), ERR.UNKNOWN_COMMAND);
 
   const provisionStatus = readPath(initial.doc, ["Status"]);
   if (provisionStatus !== "1") {
@@ -103,13 +110,18 @@ export async function acquirePolicyKey({ account, asVersion }) {
   }
   if (policyStatus !== "1") {
     throw withCode(
-      new Error(`Provision policy rejected (PolicyStatus=${policyStatus ?? "missing"})`),
+      new Error(
+        `Provision policy rejected (PolicyStatus=${policyStatus ?? "missing"})`,
+      ),
       ERR.UNKNOWN_COMMAND,
     );
   }
   const tempKey = readPath(initial.doc, ["Policies", "Policy", "PolicyKey"]);
   if (!tempKey) {
-    throw withCode(new Error("Provision response missing PolicyKey"), ERR.UNKNOWN_COMMAND);
+    throw withCode(
+      new Error("Provision response missing PolicyKey"),
+      ERR.UNKNOWN_COMMAND,
+    );
   }
 
   // Iter 1: temp key becomes the X-MS-PolicyKey header on the ACK request.
@@ -121,7 +133,11 @@ export async function acquirePolicyKey({ account, asVersion }) {
     body: buildAckBody(asVersion, tempKey),
     asVersion,
   });
-  if (!ack.doc) throw withCode(new Error("Empty Provision ACK response"), ERR.UNKNOWN_COMMAND);
+  if (!ack.doc)
+    throw withCode(
+      new Error("Empty Provision ACK response"),
+      ERR.UNKNOWN_COMMAND,
+    );
 
   const ackStatus = readPath(ack.doc, ["Status"]);
   if (ackStatus !== "1") {
@@ -132,7 +148,10 @@ export async function acquirePolicyKey({ account, asVersion }) {
   }
   const finalKey = readPath(ack.doc, ["Policies", "Policy", "PolicyKey"]);
   if (!finalKey) {
-    throw withCode(new Error("Provision ACK response missing PolicyKey"), ERR.UNKNOWN_COMMAND);
+    throw withCode(
+      new Error("Provision ACK response missing PolicyKey"),
+      ERR.UNKNOWN_COMMAND,
+    );
   }
   account.custom.policykey = finalKey;
   return finalKey;

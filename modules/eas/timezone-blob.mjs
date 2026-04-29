@@ -35,7 +35,8 @@ export class TimeZoneBlob {
 
   get easTimeZone64() {
     let s = "";
-    for (let i = 0; i < SIZE; i++) s += String.fromCharCode(this.buf.getUint8(i));
+    for (let i = 0; i < SIZE; i++)
+      s += String.fromCharCode(this.buf.getUint8(i));
     return btoa(s);
   }
 
@@ -60,40 +61,96 @@ export class TimeZoneBlob {
   _getSystemtime(off) {
     const buf = this.buf;
     return {
-      get wYear()         { return buf.getUint16(off + 0,  true); },
-      get wMonth()        { return buf.getUint16(off + 2,  true); },
-      get wDayOfWeek()    { return buf.getUint16(off + 4,  true); },
-      get wDay()          { return buf.getUint16(off + 6,  true); },
-      get wHour()         { return buf.getUint16(off + 8,  true); },
-      get wMinute()       { return buf.getUint16(off + 10, true); },
-      get wSecond()       { return buf.getUint16(off + 12, true); },
-      get wMilliseconds() { return buf.getUint16(off + 14, true); },
-      set wYear(v)         { buf.setUint16(off + 0,  v, true); },
-      set wMonth(v)        { buf.setUint16(off + 2,  v, true); },
-      set wDayOfWeek(v)    { buf.setUint16(off + 4,  v, true); },
-      set wDay(v)          { buf.setUint16(off + 6,  v, true); },
-      set wHour(v)         { buf.setUint16(off + 8,  v, true); },
-      set wMinute(v)       { buf.setUint16(off + 10, v, true); },
-      set wSecond(v)       { buf.setUint16(off + 12, v, true); },
-      set wMilliseconds(v) { buf.setUint16(off + 14, v, true); },
+      get wYear() {
+        return buf.getUint16(off + 0, true);
+      },
+      get wMonth() {
+        return buf.getUint16(off + 2, true);
+      },
+      get wDayOfWeek() {
+        return buf.getUint16(off + 4, true);
+      },
+      get wDay() {
+        return buf.getUint16(off + 6, true);
+      },
+      get wHour() {
+        return buf.getUint16(off + 8, true);
+      },
+      get wMinute() {
+        return buf.getUint16(off + 10, true);
+      },
+      get wSecond() {
+        return buf.getUint16(off + 12, true);
+      },
+      get wMilliseconds() {
+        return buf.getUint16(off + 14, true);
+      },
+      set wYear(v) {
+        buf.setUint16(off + 0, v, true);
+      },
+      set wMonth(v) {
+        buf.setUint16(off + 2, v, true);
+      },
+      set wDayOfWeek(v) {
+        buf.setUint16(off + 4, v, true);
+      },
+      set wDay(v) {
+        buf.setUint16(off + 6, v, true);
+      },
+      set wHour(v) {
+        buf.setUint16(off + 8, v, true);
+      },
+      set wMinute(v) {
+        buf.setUint16(off + 10, v, true);
+      },
+      set wSecond(v) {
+        buf.setUint16(off + 12, v, true);
+      },
+      set wMilliseconds(v) {
+        buf.setUint16(off + 14, v, true);
+      },
     };
   }
 
-  get standardDate()  { return this._getSystemtime(68); }
-  get daylightDate()  { return this._getSystemtime(152); }
+  get standardDate() {
+    return this._getSystemtime(68);
+  }
+  get daylightDate() {
+    return this._getSystemtime(152);
+  }
 
-  get utcOffset()     { return this.buf.getInt32(0, true); }
-  set utcOffset(v)    { this.buf.setInt32(0, v, true); }
+  get utcOffset() {
+    return this.buf.getInt32(0, true);
+  }
+  set utcOffset(v) {
+    this.buf.setInt32(0, v, true);
+  }
 
-  get standardBias()  { return this.buf.getInt32(84, true); }
-  set standardBias(v) { this.buf.setInt32(84, v, true); }
-  get daylightBias()  { return this.buf.getInt32(168, true); }
-  set daylightBias(v) { this.buf.setInt32(168, v, true); }
+  get standardBias() {
+    return this.buf.getInt32(84, true);
+  }
+  set standardBias(v) {
+    this.buf.setInt32(84, v, true);
+  }
+  get daylightBias() {
+    return this.buf.getInt32(168, true);
+  }
+  set daylightBias(v) {
+    this.buf.setInt32(168, v, true);
+  }
 
-  get standardName()  { return this._getStr(4); }
-  set standardName(v) { this._setStr(4, v); }
-  get daylightName()  { return this._getStr(88); }
-  set daylightName(v) { this._setStr(88, v); }
+  get standardName() {
+    return this._getStr(4);
+  }
+  set standardName(v) {
+    this._setStr(4, v);
+  }
+  get daylightName() {
+    return this._getStr(88);
+  }
+  set daylightName(v) {
+    this._setStr(88, v);
+  }
 }
 
 /** True when the blob is all zero (server didn't send useful TZ data). */

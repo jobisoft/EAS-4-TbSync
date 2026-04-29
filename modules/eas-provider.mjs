@@ -30,7 +30,9 @@
  */
 
 import {
-  ERR, withCode, ok,
+  ERR,
+  withCode,
+  ok,
   TbSyncProviderImplementation,
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "./address-book.mjs";
@@ -76,7 +78,7 @@ const ALLOWED_CALENDAR_SYNC_LIMITS = ["0", "4", "5", "6", "7"];
 
 /** Setup-type → fixed EAS host. Only the OAuth setup types appear here. */
 const HOST_BY_SERVERTYPE = {
-  "office365":   "outlook.office365.com",
+  office365: "outlook.office365.com",
   "personal-ms": "eas.outlook.com",
 };
 
@@ -91,15 +93,15 @@ const EAS_TYPE_TO_TBSYNC = {
   // 4: Default deleted items (ignored)
   // 5: Default sent items (ignored)
   // 6: Default outbox (ignored)
-  7: "tasks",      // Default Tasks
-  8: "calendars",  // Default Calendar
-  9: "contacts",   // Default Contacts
+  7: "tasks", // Default Tasks
+  8: "calendars", // Default Calendar
+  9: "contacts", // Default Contacts
   // 10: Default Notes (ignored)
   // 11: Default Journal (ignored)
   // 12: User-created email (ignored)
   13: "calendars", // User-created Calendar
-  14: "contacts",  // User-created Contacts
-  15: "tasks",     // User-created Tasks
+  14: "contacts", // User-created Contacts
+  15: "tasks", // User-created Tasks
 };
 
 export function easTypeToFolderType(type) {
@@ -109,10 +111,14 @@ export function easTypeToFolderType(type) {
 /** Class string sent in Sync Collection. */
 export function folderTypeToEasClass(folderType) {
   switch (folderType) {
-    case "contacts": return "Contacts";
-    case "calendars": return "Calendar";
-    case "tasks": return "Tasks";
-    default: return null;
+    case "contacts":
+      return "Contacts";
+    case "calendars":
+      return "Calendar";
+    case "tasks":
+      return "Tasks";
+    default:
+      return null;
   }
 }
 
@@ -141,7 +147,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     // Point the wire-level event-log sink at the host. Wire code
     // (`network.mjs`) emits debug entries for every WBXML send/receive;
     // before this binding the calls silently no-op.
-    setEventLogSink(args => this.reportEventLog(args));
+    setEventLogSink((args) => this.reportEventLog(args));
   }
 
   // ── Base-class hooks ───────────────────────────────────────────────────
@@ -154,7 +160,9 @@ export class EasProvider extends TbSyncProviderImplementation {
     await enableGalForAllAccounts(this);
     return null;
   }
-  async onCancelSync(_args) { return null; }
+  async onCancelSync(_args) {
+    return null;
+  }
 
   // ── Account lifecycle ──────────────────────────────────────────────────
 
@@ -181,14 +189,14 @@ export class EasProvider extends TbSyncProviderImplementation {
     // doesn't need clearing here.
     await this.#deleteAccountTargets(ctx.folders);
     // Force a fresh FolderSync on re-enable. Also invalidate the OPTIONS
-    // probe cache so the next enable re-runs the probe — this is the
+    // probe cache so the next enable re-runs the probe - this is the
     // backfill path for users on 5.0.1 whose `allowedEasCommands` was
     // never persisted (or has otherwise diverged from the server's
     // current capability list). Existing-enabled accounts are left alone.
     await this.updateAccount({
       accountId,
       patch: { custom: { foldersynckey: "0", lastEasOptionsUpdate: 0 } },
-    }).catch(() => { });
+    }).catch(() => {});
     return null;
   }
 
@@ -204,7 +212,9 @@ export class EasProvider extends TbSyncProviderImplementation {
 
   // ── Folder lifecycle ──────────────────────────────────────────────────
 
-  async onFolderEnabled() { return null; }
+  async onFolderEnabled() {
+    return null;
+  }
 
   async onFolderDisabled({ accountId, folderId }) {
     const folder = await this.#getFolder(accountId, folderId);
@@ -213,13 +223,14 @@ export class EasProvider extends TbSyncProviderImplementation {
       await safeDeleteTarget(folder);
     }
     await this.updateFolder({
-      accountId, folderId,
+      accountId,
+      folderId,
       patch: {
         targetID: null,
         targetName: null,
         custom: { synckey: "0", contactMap: {}, itemMap: {} },
       },
-    }).catch(() => { });
+    }).catch(() => {});
     return null;
   }
 
@@ -245,22 +256,38 @@ export class EasProvider extends TbSyncProviderImplementation {
    *  triggers a one-shot retry against the new host. A network-layer
    *  failure on a `servertype === "auto"` account triggers a one-shot
    *  Autodiscover re-run in case the cached MobileSync URL has rotated. */
-  async #connectAndDiscoverFolders(accountId, redirectsRemaining = 1, rediscoversRemaining = 1) {
+  async #connectAndDiscoverFolders(
+    accountId,
+    redirectsRemaining = 1,
+    rediscoversRemaining = 1,
+  ) {
     try {
       await this.#doConnectAndDiscover(accountId);
     } catch (err) {
-      if (err.code === NET_ERR.HOST_REDIRECT && err.newLocation && redirectsRemaining > 0) {
+      if (
+        err.code === NET_ERR.HOST_REDIRECT &&
+        err.newLocation &&
+        redirectsRemaining > 0
+      ) {
         await this.updateAccount({
           accountId,
           patch: { custom: { server: err.newLocation } },
         });
-        await this.#connectAndDiscoverFolders(accountId, redirectsRemaining - 1, rediscoversRemaining);
+        await this.#connectAndDiscoverFolders(
+          accountId,
+          redirectsRemaining - 1,
+          rediscoversRemaining,
+        );
         return;
       }
       if (err.code === NET_ERR.NETWORK && rediscoversRemaining > 0) {
         const rediscovered = await this.#rediscoverServerUrl(accountId);
         if (rediscovered) {
-          await this.#connectAndDiscoverFolders(accountId, redirectsRemaining, rediscoversRemaining - 1);
+          await this.#connectAndDiscoverFolders(
+            accountId,
+            redirectsRemaining,
+            rediscoversRemaining - 1,
+          );
           return;
         }
       }
@@ -317,19 +344,24 @@ export class EasProvider extends TbSyncProviderImplementation {
     // list. Even when the user has forced a version via asversionselected,
     // we still run the probe so the config popup can show the
     // server-advertised list and the negotiated default.
-    const lastOptionsUpdate = Number(ctx.account.custom?.lastEasOptionsUpdate ?? 0);
-    const needsOptionsProbe = !ctx.account.custom?.asversion ||
-      (Date.now() - lastOptionsUpdate) > OPTIONS_REPROBE_MS;
+    const lastOptionsUpdate = Number(
+      ctx.account.custom?.lastEasOptionsUpdate ?? 0,
+    );
+    const needsOptionsProbe =
+      !ctx.account.custom?.asversion ||
+      Date.now() - lastOptionsUpdate > OPTIONS_REPROBE_MS;
     if (needsOptionsProbe) {
       const negotiated = await negotiateAsVersion({ account: ctx.account });
       await this.updateAccount({
         accountId,
-        patch: { custom: {
-          asversion: negotiated.asVersion,
-          allowedEasVersions: negotiated.allowedAsVersions,
-          allowedEasCommands: negotiated.allowedCommands,
-          lastEasOptionsUpdate: Date.now(),
-        }},
+        patch: {
+          custom: {
+            asversion: negotiated.asVersion,
+            allowedEasVersions: negotiated.allowedAsVersions,
+            allowedEasCommands: negotiated.allowedCommands,
+            lastEasOptionsUpdate: Date.now(),
+          },
+        },
       });
       ctx = await this.#loadContext(accountId);
     }
@@ -337,14 +369,21 @@ export class EasProvider extends TbSyncProviderImplementation {
     // The user can override negotiation via the config popup. "auto"
     // (the default) uses the negotiated value cached in account.custom.
     const selected = ctx.account.custom?.asversionselected || "auto";
-    const asVersion = (selected === "auto") ? ctx.account.custom.asversion : selected;
+    const asVersion =
+      selected === "auto" ? ctx.account.custom.asversion : selected;
 
     // 2) Pre-emptive Provision (legacy "Kerio" semantics). When the
     // user has flipped the toggle on - or a previous 449 stuck it on -
     // and we have no policy key cached, run Provision before any other
     // command. Servers that don't return 449 (e.g. Kerio) need this.
-    if (ctx.account.custom?.provision === true && (ctx.account.custom?.policykey ?? "0") === "0") {
-      const result = await acquirePolicyKey({ account: ctx.account, asVersion });
+    if (
+      ctx.account.custom?.provision === true &&
+      (ctx.account.custom?.policykey ?? "0") === "0"
+    ) {
+      const result = await acquirePolicyKey({
+        account: ctx.account,
+        asVersion,
+      });
       if (result === NO_POLICY_FOR_DEVICE) {
         // Server demanded Provision but has no policy to apply.
         // Disable the flag and abort; user can retry, the server may
@@ -372,7 +411,8 @@ export class EasProvider extends TbSyncProviderImplementation {
 
     // 4) FolderSync, with provision/sync-key recovery loops.
     const priorFolderSyncKey = ctx.account.custom?.foldersynckey ?? "0";
-    const { syncResult, ctx: ctxAfterSync } = await this.#runFolderSyncWithRecovery(accountId, ctx, asVersion);
+    const { syncResult, ctx: ctxAfterSync } =
+      await this.#runFolderSyncWithRecovery(accountId, ctx, asVersion);
     ctx = ctxAfterSync;
 
     // 5) Apply Add/Update/Delete to the host's folder list.
@@ -384,10 +424,17 @@ export class EasProvider extends TbSyncProviderImplementation {
     //      storage write + broadcast.
     if (priorFolderSyncKey === "0") {
       const initial = syncResult.adds
-        .map(a => folderDescriptorFromAdd(a))
+        .map((a) => folderDescriptorFromAdd(a))
         .filter(Boolean);
-      await this.pushFolderList({ accountId, folders: await finalizeFolderListForPush(initial) });
-    } else if (syncResult.adds.length || syncResult.updates.length || syncResult.deletes.length) {
+      await this.pushFolderList({
+        accountId,
+        folders: await finalizeFolderListForPush(initial),
+      });
+    } else if (
+      syncResult.adds.length ||
+      syncResult.updates.length ||
+      syncResult.deletes.length
+    ) {
       const merged = await mergeFolderDeltas(ctx.folders, syncResult);
       await this.pushFolderList({ accountId, folders: merged });
     }
@@ -409,7 +456,10 @@ export class EasProvider extends TbSyncProviderImplementation {
     let resetSyncKey = false;
     while (true) {
       try {
-        const syncResult = await runFolderSync({ account: ctx.account, asVersion });
+        const syncResult = await runFolderSync({
+          account: ctx.account,
+          asVersion,
+        });
         return { syncResult, ctx };
       } catch (err) {
         const provisionRequired =
@@ -483,15 +533,16 @@ export class EasProvider extends TbSyncProviderImplementation {
   async onSyncFolder({ accountId, folderId }) {
     const ctx = await this.#loadContext(accountId);
     if (!ctx) throw withCode(new Error("unknown account"), ERR.UNKNOWN_ACCOUNT);
-    let folder = ctx.folders.find(f => f.folderId === folderId);
-    if (!folder) throw withCode(new Error("unknown folder"), ERR.UNKNOWN_FOLDER);
+    let folder = ctx.folders.find((f) => f.folderId === folderId);
+    if (!folder)
+      throw withCode(new Error("unknown folder"), ERR.UNKNOWN_FOLDER);
 
     const tt = folder.targetType;
     if (tt !== "contacts" && tt !== "calendars" && tt !== "tasks") {
       // Folder kind we don't sync yet (e.g. notes / journal): record a
       // success transition without touching server state.
       this.reportSyncState({ accountId, folderId, syncState: "sync" });
-      await new Promise(r => setTimeout(r, DEBUG_STATUS_DELAY_MS));
+      await new Promise((r) => setTimeout(r, DEBUG_STATUS_DELAY_MS));
       return ok();
     }
 
@@ -500,23 +551,32 @@ export class EasProvider extends TbSyncProviderImplementation {
     // Lazy-bind the local TB target on first sync (or after the user
     // removed it manually).
     if (tt === "contacts") {
-      if (!folder.targetID || !(await addressBook.bookExists(folder.targetID))) {
+      if (
+        !folder.targetID ||
+        !(await addressBook.bookExists(folder.targetID))
+      ) {
         const name = localNameForFolder(folder, ctx);
         const targetID = await addressBook.createBook(name);
         await this.updateFolder({
-          accountId, folderId,
+          accountId,
+          folderId,
           patch: { targetID, targetName: name },
         });
         folder = { ...folder, targetID, targetName: name };
       }
     } else {
-      if (!folder.targetID || !(await calendarStore.calendarExists(folder.targetID))) {
+      if (
+        !folder.targetID ||
+        !(await calendarStore.calendarExists(folder.targetID))
+      ) {
         const name = localNameForFolder(folder, ctx);
         const targetID = await calendarStore.createCalendar({
-          name, kind: tt === "calendars" ? "events" : "tasks",
+          name,
+          kind: tt === "calendars" ? "events" : "tasks",
         });
         await this.updateFolder({
-          accountId, folderId,
+          accountId,
+          folderId,
           patch: { targetID, targetName: name },
         });
         folder = { ...folder, targetID, targetName: name };
@@ -594,9 +654,9 @@ export class EasProvider extends TbSyncProviderImplementation {
     if (servertype === "auto") {
       const email = String(args.email ?? args.user ?? "").trim();
       const server = String(args.server ?? "").trim();
-      if (!email)            throw new Error("Email is required");
-      if (!server)           throw new Error("Server URL is required");
-      if (!args.password)    throw new Error("Password is required");
+      if (!email) throw new Error("Email is required");
+      if (!server) throw new Error("Server URL is required");
+      if (!args.password) throw new Error("Password is required");
       const label = String(args.label ?? "").trim() || email;
       return {
         accountName: label,
@@ -664,7 +724,9 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Protocol section.
       deviceId: c.deviceId ?? "",
       asVersion: c.asversion ?? "",
-      allowedAsVersions: Array.isArray(c.allowedEasVersions) ? c.allowedEasVersions : [],
+      allowedAsVersions: Array.isArray(c.allowedEasVersions)
+        ? c.allowedEasVersions
+        : [],
       asVersionSelected: c.asversionselected ?? "auto",
       // Legacy default is off. The 449 self-correction path will flip
       // it on automatically when the server demands provisioning.
@@ -695,7 +757,11 @@ export class EasProvider extends TbSyncProviderImplementation {
 
     if ("accountName" in patch) {
       const trimmed = String(patch.accountName ?? "").trim();
-      if (!trimmed) throw withCode(new Error("Account name is required"), ERR.UNKNOWN_ACCOUNT);
+      if (!trimmed)
+        throw withCode(
+          new Error("Account name is required"),
+          ERR.UNKNOWN_ACCOUNT,
+        );
       topLevelPatch.accountName = trimmed;
     }
     for (const key of ["server", "user"]) {
@@ -708,7 +774,10 @@ export class EasProvider extends TbSyncProviderImplementation {
     if ("asVersionSelected" in patch) {
       const v = String(patch.asVersionSelected ?? "");
       if (!ALLOWED_AS_VERSION_SELECTIONS.includes(v)) {
-        throw withCode(new Error("Invalid ActiveSync version selection"), ERR.UNKNOWN_COMMAND);
+        throw withCode(
+          new Error("Invalid ActiveSync version selection"),
+          ERR.UNKNOWN_COMMAND,
+        );
       }
       customPatch.asversionselected = v;
     }
@@ -721,14 +790,20 @@ export class EasProvider extends TbSyncProviderImplementation {
     if ("contactsNameSeparator" in patch) {
       const v = String(patch.contactsNameSeparator ?? "");
       if (!ALLOWED_NAME_SEPARATORS.includes(v)) {
-        throw withCode(new Error("Invalid name-separator selection"), ERR.UNKNOWN_COMMAND);
+        throw withCode(
+          new Error("Invalid name-separator selection"),
+          ERR.UNKNOWN_COMMAND,
+        );
       }
       customPatch.seperator = v;
     }
     if ("calendarSyncLimit" in patch) {
       const v = String(patch.calendarSyncLimit ?? "");
       if (!ALLOWED_CALENDAR_SYNC_LIMITS.includes(v)) {
-        throw withCode(new Error("Invalid calendar sync limit"), ERR.UNKNOWN_COMMAND);
+        throw withCode(
+          new Error("Invalid calendar sync limit"),
+          ERR.UNKNOWN_COMMAND,
+        );
       }
       customPatch.synclimit = v;
     }
@@ -773,7 +848,7 @@ export class EasProvider extends TbSyncProviderImplementation {
 
   async #getFolder(accountId, folderId) {
     const ctx = await this.#loadContext(accountId);
-    return ctx?.folders.find(f => f.folderId === folderId) ?? null;
+    return ctx?.folders.find((f) => f.folderId === folderId) ?? null;
   }
 
   async #deleteAccountTargets(folderList) {
@@ -795,7 +870,10 @@ async function safeDeleteTarget(folder) {
       await addressBook.deleteBook(folder.targetID);
     }
   } catch (err) {
-    console.warn(`[eas-4-tbsync] delete target ${folder.targetID} failed:`, err?.message ?? err);
+    console.warn(
+      `[eas-4-tbsync] delete target ${folder.targetID} failed:`,
+      err?.message ?? err,
+    );
   }
 }
 
@@ -814,7 +892,7 @@ function localNameForFolder(folder, ctx) {
 function generateDeviceId() {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** Map a FolderSync `<Add>` entry into the host folder-descriptor shape.
@@ -913,7 +991,10 @@ async function mergeFolderDeltas(existingFolders, delta) {
     const existing = byServerID.get(upd.serverID);
     if (!existing) continue;
     const targetType = easTypeToFolderType(upd.type) ?? existing.targetType;
-    const rawName = upd.displayName || existing.custom?.displayNameRaw || existing.displayName;
+    const rawName =
+      upd.displayName ||
+      existing.custom?.displayNameRaw ||
+      existing.displayName;
     byServerID.set(upd.serverID, {
       ...existing,
       targetType,
@@ -935,7 +1016,10 @@ async function mergeFolderDeltas(existingFolders, delta) {
     if (existing) {
       // Add for a serverID we already track → treat as update (legacy).
       const targetType = easTypeToFolderType(add.type) ?? existing.targetType;
-      const rawName = add.displayName || existing.custom?.displayNameRaw || existing.displayName;
+      const rawName =
+        add.displayName ||
+        existing.custom?.displayNameRaw ||
+        existing.displayName;
       byServerID.set(add.serverID, {
         ...existing,
         targetType,
@@ -966,8 +1050,8 @@ export async function finalizeFolderListForPush(folders) {
   const showItemsInTrash = await readShowItemsInTrash();
   const trashServerIDs = buildTrashServerIDs(folders);
   return folders
-    .map(f => applyTrashVisibility(f, trashServerIDs, showItemsInTrash))
-    .map(f => ({
+    .map((f) => applyTrashVisibility(f, trashServerIDs, showItemsInTrash))
+    .map((f) => ({
       folderId: f.folderId,
       targetType: f.targetType,
       displayName: f.displayName,

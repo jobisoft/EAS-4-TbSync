@@ -26,7 +26,7 @@
 
 import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 
-/** 
+/**
  * Default Application (client) ID, registered in Microsoft Entra ID with
  * the nativeclient redirect URI.
  */
@@ -46,30 +46,39 @@ const CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY = "oauth.clientID";
  */
 export async function getGlobalClientID() {
   try {
-    const rv = await browser.storage.local.get({ [CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY]: "" });
+    const rv = await browser.storage.local.get({
+      [CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY]: "",
+    });
     const v = rv[CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY];
     if (typeof v === "string" && v.trim()) return v.trim();
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
   return DEFAULT_OAUTH_CLIENT_ID;
 }
 
-const AUTH_ENDPOINT = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-const TOKEN_ENDPOINT = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
-const REDIRECT_URI = "https://login.microsoftonline.com/common/oauth2/nativeclient";
+const AUTH_ENDPOINT =
+  "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+const TOKEN_ENDPOINT =
+  "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+const REDIRECT_URI =
+  "https://login.microsoftonline.com/common/oauth2/nativeclient";
 
 /** Microsoft scope strings keyed by `account.custom.servertype`. Only
  *  the OAuth-capable setup types (`office365`, `personal-ms`) appear
  *  here. */
 const SCOPE_BY_SERVERTYPE = {
-  "office365":   "offline_access https://outlook.office.com/.default",
-  "personal-ms": "offline_access https://outlook.office.com/EAS.AccessAsUser.All",
+  office365: "offline_access https://outlook.office.com/.default",
+  "personal-ms":
+    "offline_access https://outlook.office.com/EAS.AccessAsUser.All",
 };
 
 /** Look up the OAuth scope for a given setup-type. Throws if the type
  *  is not OAuth-capable. */
 export function scopeForServertype(servertype) {
   const scope = SCOPE_BY_SERVERTYPE[servertype];
-  if (!scope) throw new Error(`OAuth scope unknown for servertype '${servertype}'`);
+  if (!scope)
+    throw new Error(`OAuth scope unknown for servertype '${servertype}'`);
   return scope;
 }
 
@@ -141,22 +150,28 @@ export async function startAuth({ loginHint, servertype }) {
   const error = parsed.searchParams.get("error");
   if (error) {
     const desc = parsed.searchParams.get("error_description") ?? "";
-    throw withCode(new Error(`Microsoft returned: ${error} ${desc}`.trim()), ERR.AUTH);
+    throw withCode(
+      new Error(`Microsoft returned: ${error} ${desc}`.trim()),
+      ERR.AUTH,
+    );
   }
   const code = parsed.searchParams.get("code");
   const returnedState = parsed.searchParams.get("state");
-  if (!code) throw withCode(new Error("No authorization code in response"), ERR.AUTH);
-  if (returnedState !== state) throw withCode(new Error("OAuth state mismatch (possible CSRF)"), ERR.AUTH);
+  if (!code)
+    throw withCode(new Error("No authorization code in response"), ERR.AUTH);
+  if (returnedState !== state)
+    throw withCode(new Error("OAuth state mismatch (possible CSRF)"), ERR.AUTH);
 
   const tokens = await exchangeCode({ clientID, code, scope });
   if (!tokens.refresh_token) {
     throw withCode(new Error("No refresh_token in token response"), ERR.AUTH);
   }
-  const authenticatedUserEmail = decodeIdTokenEmail(tokens.id_token) ?? loginHint ?? null;
+  const authenticatedUserEmail =
+    decodeIdTokenEmail(tokens.id_token) ?? loginHint ?? null;
   return {
     refreshToken: tokens.refresh_token,
-    accessToken:  tokens.access_token,
-    expiresIn:    tokens.expires_in,
+    accessToken: tokens.access_token,
+    expiresIn: tokens.expires_in,
     authenticatedUserEmail,
   };
 }
@@ -177,7 +192,10 @@ async function exchangeCode({ clientID, code, scope }) {
   });
   const text = await resp.text().catch(() => "");
   if (!resp.ok) {
-    throw withCode(new Error(`Token exchange failed (${resp.status}): ${text}`), ERR.AUTH);
+    throw withCode(
+      new Error(`Token exchange failed (${resp.status}): ${text}`),
+      ERR.AUTH,
+    );
   }
   try {
     return JSON.parse(text);
@@ -198,7 +216,10 @@ export async function getAccessToken(accountId) {
   }
   const auth = authCache.get(accountId);
   if (!auth) {
-    throw withCode(new Error("OAuth auth not primed - call primeAuth first"), ERR.AUTH);
+    throw withCode(
+      new Error("OAuth auth not primed - call primeAuth first"),
+      ERR.AUTH,
+    );
   }
   const fresh = await refreshAccessToken(auth);
   accessTokenCache.set(accountId, {
@@ -236,7 +257,7 @@ export async function refreshAccessToken({ refreshToken, servertype }) {
     const isInvalidGrant = resp.status === 400 && /invalid_grant/.test(text);
     throw withCode(
       new Error(`Token refresh failed (${resp.status}): ${text}`),
-      isInvalidGrant ? ERR.AUTH : ERR.NETWORK
+      isInvalidGrant ? ERR.AUTH : ERR.NETWORK,
     );
   }
   try {
@@ -292,7 +313,11 @@ async function runConsentPopup(authUrl) {
       if (done) return;
       done = true;
       cleanup();
-      try { browser.windows.remove(popup.id); } catch { /* already gone */ }
+      try {
+        browser.windows.remove(popup.id);
+      } catch {
+        /* already gone */
+      }
       fn(value);
     };
 

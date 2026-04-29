@@ -1,6 +1,6 @@
 /**
  * Tiny indirection so wire-level code (`network.mjs`, etc.) can emit
- * host event-log entries without importing the provider — which would
+ * host event-log entries without importing the provider - which would
  * close a circular import.
  *
  * The provider points the sink at its inherited `reportEventLog`
@@ -21,5 +21,9 @@ export function setEventLogSink(fn) {
 
 export function reportEventLog(args) {
   if (!sink) return;
-  try { sink(args); } catch { /* never break the wire path */ }
+  try {
+    sink(args);
+  } catch {
+    /* never break the wire path */
+  }
 }

@@ -15,15 +15,28 @@ import { readPathFrom } from "./wbxml-helpers.mjs";
 
 const X_EAS_SERVERID = "X-EAS-SERVERID";
 
-const IMPORTANCE_TO_PRIORITY = { "0": "9", "1": "5", "2": "1" };
-const PRIORITY_TO_IMPORTANCE = { "9": "0", "5": "1", "1": "2" };
+const IMPORTANCE_TO_PRIORITY = { 0: "9", 1: "5", 2: "1" };
+const PRIORITY_TO_IMPORTANCE = { 9: "0", 5: "1", 1: "2" };
 
-const SENSITIVITY_TO_CLASS = { "0": "PUBLIC", "1": "PRIVATE", "2": "PRIVATE", "3": "CONFIDENTIAL" };
+const SENSITIVITY_TO_CLASS = {
+  0: "PUBLIC",
+  1: "PRIVATE",
+  2: "PRIVATE",
+  3: "CONFIDENTIAL",
+};
 const CLASS_TO_SENSITIVITY = { PUBLIC: "0", PRIVATE: "2", CONFIDENTIAL: "3" };
 
 /* ── Reader: ApplicationData → iCal VTODO ──────────────────────────── */
 
-export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTimezone, syncRecurrence, msTodoCompat, uid }) {
+export function applicationDataToIcal({
+  adNode,
+  serverID,
+  asVersion,
+  defaultTimezone,
+  syncRecurrence,
+  msTodoCompat,
+  uid,
+}) {
   const vcal = newVCalendar();
   const vtodo = new ICAL.Component(["vtodo", [], []]);
   vcal.addSubcomponent(vtodo);
@@ -44,9 +57,10 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
 
   // Reminder is read up-front so the MS To-Do compatibility hack can pin
   // DTSTART/DUE to the reminder time before they are written.
-  const reminderTime = readPathFrom(adNode, ["ReminderSet"]) === "1"
-    ? readPathFrom(adNode, ["ReminderTime"])
-    : null;
+  const reminderTime =
+    readPathFrom(adNode, ["ReminderSet"]) === "1"
+      ? readPathFrom(adNode, ["ReminderTime"])
+      : null;
   const msTodoOverride = msTodoCompat === true && !!reminderTime;
 
   // StartDate / DueDate with Utc* pairing for offset extraction.
@@ -54,7 +68,7 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
     // MS To-Do only ships date-only due dates; pin both ends to the
     // reminder so Lightning renders the task on the correct day.
     writeUtcDateProp(vtodo, "dtstart", reminderTime);
-    writeUtcDateProp(vtodo, "due",     reminderTime);
+    writeUtcDateProp(vtodo, "due", reminderTime);
   } else {
     const startUtc = readPathFrom(adNode, ["UtcStartDate"]);
     if (startUtc) writeUtcDateProp(vtodo, "dtstart", startUtc);
@@ -65,7 +79,10 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
   // Importance → PRIORITY.
   const importance = readPathFrom(adNode, ["Importance"]);
   if (importance && IMPORTANCE_TO_PRIORITY[importance]) {
-    vtodo.updatePropertyWithValue("priority", IMPORTANCE_TO_PRIORITY[importance]);
+    vtodo.updatePropertyWithValue(
+      "priority",
+      IMPORTANCE_TO_PRIORITY[importance],
+    );
   }
   // Sensitivity → CLASS.
   const sens = readPathFrom(adNode, ["Sensitivity"]);
@@ -85,7 +102,7 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
   // Reminder.
   if (reminderTime) {
     if (msTodoOverride) appendStartRelativeAlarm(vtodo, 0);
-    else                appendAbsoluteAlarm(vtodo, reminderTime);
+    else appendAbsoluteAlarm(vtodo, reminderTime);
   }
 
   // Categories.
@@ -114,7 +131,13 @@ export function applicationDataToIcal({ adNode, serverID, asVersion, defaultTime
 
 /* ── Writer: iCal VTODO → ApplicationData WBXML ────────────────────── */
 
-export function appendApplicationDataFromIcal({ builder, ical, asVersion, defaultTimezone, syncRecurrence }) {
+export function appendApplicationDataFromIcal({
+  builder,
+  ical,
+  asVersion,
+  defaultTimezone,
+  syncRecurrence,
+}) {
   const vtodo = parseFirstVtodo(ical);
   if (!vtodo) return;
 
@@ -152,7 +175,7 @@ export function appendApplicationDataFromIcal({ builder, ical, asVersion, defaul
     const cats = catsProp.getValues();
     if (cats.length) {
       builder.otag("Categories");
-        for (const c of cats) builder.atag("Category", String(c));
+      for (const c of cats) builder.atag("Category", String(c));
       builder.ctag();
     } else if (asVersion !== "16.1") {
       builder.atag("Categories");
@@ -173,7 +196,11 @@ export function appendApplicationDataFromIcal({ builder, ical, asVersion, defaul
   if (status === "COMPLETED") {
     builder.atag("Complete", "1");
     const completedProp = vtodo.getFirstProperty("completed");
-    if (completedProp) builder.atag("DateCompleted", toExtendedIsoUtc(completedProp.getFirstValue()));
+    if (completedProp)
+      builder.atag(
+        "DateCompleted",
+        toExtendedIsoUtc(completedProp.getFirstValue()),
+      );
   } else {
     builder.atag("Complete", "0");
   }
@@ -221,8 +248,12 @@ function writeUtcDateProp(vtodo, name, easDateStr) {
   const d = parseExtendedIso(easDateStr);
   if (!d) return;
   const time = new ICAL.Time({
-    year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
-    hour: d.getUTCHours(), minute: d.getUTCMinutes(), second: d.getUTCSeconds(),
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth() + 1,
+    day: d.getUTCDate(),
+    hour: d.getUTCHours(),
+    minute: d.getUTCMinutes(),
+    second: d.getUTCSeconds(),
     isDate: false,
   });
   time.zone = ICAL.Timezone.utcTimezone;
@@ -238,17 +269,19 @@ function parseExtendedIso(s) {
 }
 
 function toExtendedIsoUtc(value) {
-  const d = (value instanceof ICAL.Time) ? value.toJSDate() : new Date(value);
+  const d = value instanceof ICAL.Time ? value.toJSDate() : new Date(value);
   return d.toISOString();
 }
 
 /** EAS Tasks "local" date strings: encode local time as if it were UTC.
  *  Mirrors `getIsoUtcString(date, true, true)` from legacy tools.js. */
 function fakeLocalAsUtc(value) {
-  const d = (value instanceof ICAL.Time) ? value.toJSDate() : new Date(value);
-  const pad = n => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
-         `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.000Z`;
+  const d = value instanceof ICAL.Time ? value.toJSDate() : new Date(value);
+  const pad = (n) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.000Z`
+  );
 }
 
 /* ── Alarm helpers ─────────────────────────────────────────────────── */
@@ -270,8 +303,12 @@ function appendAbsoluteAlarm(vtodo, easUtcStr) {
   alarm.updatePropertyWithValue("action", "DISPLAY");
   const trig = new ICAL.Property("trigger", alarm);
   const time = new ICAL.Time({
-    year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
-    hour: d.getUTCHours(), minute: d.getUTCMinutes(), second: d.getUTCSeconds(),
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth() + 1,
+    day: d.getUTCDate(),
+    hour: d.getUTCHours(),
+    minute: d.getUTCMinutes(),
+    second: d.getUTCSeconds(),
   });
   time.zone = ICAL.Timezone.utcTimezone;
   trig.setValue(time);
@@ -305,9 +342,10 @@ function appendBody(builder, vtodo, asVersion) {
   }
   builder.switchpage("AirSyncBase");
   builder.otag("Body");
-    builder.atag("Type", "1");
-    if (asVersion !== "16.1") builder.atag("EstimatedDataSize", String((desc ?? "").length));
-    builder.atag("Data", desc ?? "");
+  builder.atag("Type", "1");
+  if (asVersion !== "16.1")
+    builder.atag("EstimatedDataSize", String((desc ?? "").length));
+  builder.atag("Data", desc ?? "");
   builder.ctag();
   builder.switchpage("Tasks");
 }
@@ -316,8 +354,14 @@ function appendBody(builder, vtodo, asVersion) {
 
 function recurrenceToRrule(recNode) {
   const type = readPathFrom(recNode, ["Type"]);
-  const freq = ({ "0": "DAILY", "1": "WEEKLY", "2": "MONTHLY", "3": "MONTHLY",
-                  "5": "YEARLY", "6": "YEARLY" })[type];
+  const freq = {
+    0: "DAILY",
+    1: "WEEKLY",
+    2: "MONTHLY",
+    3: "MONTHLY",
+    5: "YEARLY",
+    6: "YEARLY",
+  }[type];
   if (!freq) return null;
   const parts = [`FREQ=${freq}`];
   const interval = readPathFrom(recNode, ["Interval"]);
@@ -330,8 +374,8 @@ function recurrenceToRrule(recNode) {
     const days = [];
     for (let i = 0; i < 7; i++) if (bits & (1 << i)) days.push(ical[i]);
     if (days.length) {
-      const prefix = week === "5" ? "-1" : (week ? String(week) : "");
-      parts.push("BYDAY=" + days.map(d => prefix + d).join(","));
+      const prefix = week === "5" ? "-1" : week ? String(week) : "";
+      parts.push("BYDAY=" + days.map((d) => prefix + d).join(","));
     }
   }
   const dom = readPathFrom(recNode, ["DayOfMonth"]);
@@ -349,16 +393,16 @@ function appendRecurrence(builder, rruleProp, startProp, localStart) {
   const r = rruleProp.getFirstValue();
   if (!r) return;
   let type = 0;
-  if      (r.freq === "DAILY")   type = 0;
-  else if (r.freq === "WEEKLY")  type = 1;
+  if (r.freq === "DAILY") type = 0;
+  else if (r.freq === "WEEKLY") type = 1;
   else if (r.freq === "MONTHLY") type = 2;
-  else if (r.freq === "YEARLY")  type = 5;
+  else if (r.freq === "YEARLY") type = 5;
   builder.otag("Recurrence");
-    builder.atag("Type", String(type));
-    builder.atag("Start", localStart);
-    builder.atag("Interval", String(r.interval ?? 1));
-    if (r.count) builder.atag("Occurrences", String(r.count));
-    else if (r.until) builder.atag("Until", toExtendedIsoUtc(r.until));
+  builder.atag("Type", String(type));
+  builder.atag("Start", localStart);
+  builder.atag("Interval", String(r.interval ?? 1));
+  if (r.count) builder.atag("Occurrences", String(r.count));
+  else if (r.until) builder.atag("Until", toExtendedIsoUtc(r.until));
   builder.ctag();
 }
 
@@ -373,8 +417,11 @@ function newVCalendar() {
 
 function parseVCalendar(ical) {
   if (!ical) return null;
-  try { return new ICAL.Component(ICAL.parse(ical)); }
-  catch { return null; }
+  try {
+    return new ICAL.Component(ICAL.parse(ical));
+  } catch {
+    return null;
+  }
 }
 
 function parseFirstVtodo(ical) {
@@ -403,8 +450,11 @@ function collectChildren(adNode, wrapperTag, childTag) {
     if (c.tagName === childTag) {
       const t = c.textContent;
       if (t != null) {
-        try { out.push(decodeURIComponent(t)); }
-        catch { out.push(t); }
+        try {
+          out.push(decodeURIComponent(t));
+        } catch {
+          out.push(t);
+        }
       }
     }
   }

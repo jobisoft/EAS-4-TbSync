@@ -24,44 +24,61 @@ const readOnly = params.get("readOnly") === "1";
 
 const KNOWN_AS_VERSIONS = ["2.5", "14.0", "14.1", "16.1"];
 
-const TYPE_OFFICE365   = "office365";
+const TYPE_OFFICE365 = "office365";
 const TYPE_PERSONAL_MS = "personal-ms";
-const TYPE_AUTO        = "auto";
-const TYPE_CUSTOM      = "custom";
+const TYPE_AUTO = "auto";
+const TYPE_CUSTOM = "custom";
 
 function deriveAccountType(account) {
-  if (account.servertype === TYPE_OFFICE365)   return TYPE_OFFICE365;
+  if (account.servertype === TYPE_OFFICE365) return TYPE_OFFICE365;
   if (account.servertype === TYPE_PERSONAL_MS) return TYPE_PERSONAL_MS;
-  if (account.servertype === TYPE_AUTO)        return TYPE_AUTO;
+  if (account.servertype === TYPE_AUTO) return TYPE_AUTO;
   return TYPE_CUSTOM;
 }
 
 const FIELD_IDS = [
   "account-name",
-  "server", "user", "password",
-  "as-version-selected", "provision",
-  "contacts-display-override", "contacts-name-separator",
-  "calendar-sync-limit", "sync-recurrence",
+  "server",
+  "user",
+  "password",
+  "as-version-selected",
+  "provision",
+  "contacts-display-override",
+  "contacts-name-separator",
+  "calendar-sync-limit",
+  "sync-recurrence",
   "gal-enabled",
 ];
 
-function $(id) { return document.getElementById(id); }
+function $(id) {
+  return document.getElementById(id);
+}
 
 function showError(message) {
   const el = $("error");
   el.textContent = message;
   el.classList.add("visible");
 }
-function clearError() { $("error").classList.remove("visible"); }
+function clearError() {
+  $("error").classList.remove("visible");
+}
 
 async function load() {
   if (!accountId) {
-    showError(i18n("config.error.missingAccountId", "Missing account identifier."));
+    showError(
+      i18n("config.error.missingAccountId", "Missing account identifier."),
+    );
     return;
   }
-  const reply = await browser.runtime.sendMessage({ type: "eas.getAccount", accountId });
+  const reply = await browser.runtime.sendMessage({
+    type: "eas.getAccount",
+    accountId,
+  });
   if (!reply?.ok) {
-    showError(reply?.error ?? i18n("config.error.loadFailed", "Failed to load account."));
+    showError(
+      reply?.error ??
+        i18n("config.error.loadFailed", "Failed to load account."),
+    );
     return;
   }
   const account = reply.result;
@@ -75,22 +92,25 @@ async function load() {
       {
         value: TYPE_OFFICE365,
         label: i18n("setup.accountType.office365", "Office 365 Business"),
-        hint:  i18n("setup.accountType.office365.hint", ""),
+        hint: i18n("setup.accountType.office365.hint", ""),
       },
       {
         value: TYPE_PERSONAL_MS,
-        label: i18n("setup.accountType.personalMs", "Personal Microsoft account"),
-        hint:  i18n("setup.accountType.personalMs.hint", ""),
+        label: i18n(
+          "setup.accountType.personalMs",
+          "Personal Microsoft account",
+        ),
+        hint: i18n("setup.accountType.personalMs.hint", ""),
       },
       {
         value: TYPE_AUTO,
         label: i18n("setup.accountType.auto", "Auto-detect"),
-        hint:  i18n("setup.accountType.auto.hint", ""),
+        hint: i18n("setup.accountType.auto.hint", ""),
       },
       {
         value: TYPE_CUSTOM,
         label: i18n("setup.accountType.custom", "Custom EAS server"),
-        hint:  i18n("setup.accountType.custom.hint", ""),
+        hint: i18n("setup.accountType.custom.hint", ""),
       },
     ],
     value: accountType,
@@ -109,10 +129,10 @@ async function load() {
   if (accountType === TYPE_CUSTOM || accountType === TYPE_AUTO) {
     $("connection-section").hidden = false;
     $("server").value = account.server ?? "";
-    $("user").value   = account.user ?? "";
+    $("user").value = account.user ?? "";
     const lockServerUser = accountType === TYPE_AUTO;
     $("server").readOnly = lockServerUser;
-    $("user").readOnly   = lockServerUser;
+    $("user").readOnly = lockServerUser;
     // Password is always blank on load.
   } else {
     $("connection-section").hidden = true;
@@ -145,7 +165,7 @@ async function load() {
     $("gal-enabled").disabled = true;
     $("gal-enabled-hint").textContent = i18n(
       "config.gal.notSupported",
-      "Your server does not advertise the Search command, so the Global Address List is not available."
+      "Your server does not advertise the Search command, so the Global Address List is not available.",
     );
   }
 }
@@ -176,7 +196,9 @@ function updateAsVersionHint(account) {
   const sel = $("as-version-selected");
   const hintEl = $("as-version-hint");
   if (sel.value === "auto" && account.asVersion) {
-    hintEl.textContent = i18n("config.protocol.asVersion.negotiatedHint", "", [account.asVersion]);
+    hintEl.textContent = i18n("config.protocol.asVersion.negotiatedHint", "", [
+      account.asVersion,
+    ]);
   } else {
     hintEl.textContent = "";
   }
@@ -185,8 +207,10 @@ function updateAsVersionHint(account) {
 function applyReadOnly() {
   const banner = $("readonly-banner");
   if (readOnly) {
-    banner.textContent = i18n("config.readOnlyBanner",
-      "To prevent synchronization errors, settings cannot be edited while the account is enabled.");
+    banner.textContent = i18n(
+      "config.readOnlyBanner",
+      "To prevent synchronization errors, settings cannot be edited while the account is enabled.",
+    );
     banner.classList.add("visible");
   } else {
     banner.classList.remove("visible");
@@ -208,13 +232,23 @@ async function onSave() {
 
   const accountName = $("account-name").value.trim();
   if (!accountName) {
-    showError(i18n("config.error.accountNameRequired", "Account name is required."));
+    showError(
+      i18n("config.error.accountNameRequired", "Account name is required."),
+    );
     return;
   }
 
   const asVersionSelected = $("as-version-selected").value;
-  if (asVersionSelected !== "auto" && !KNOWN_AS_VERSIONS.includes(asVersionSelected)) {
-    showError(i18n("config.error.invalidAsVersion", "Invalid ActiveSync version selection."));
+  if (
+    asVersionSelected !== "auto" &&
+    !KNOWN_AS_VERSIONS.includes(asVersionSelected)
+  ) {
+    showError(
+      i18n(
+        "config.error.invalidAsVersion",
+        "Invalid ActiveSync version selection.",
+      ),
+    );
     return;
   }
 
@@ -229,7 +263,7 @@ async function onSave() {
   };
 
   // Only thread `galEnabled` through when the field is actually
-  // interactive — sending a forced-off value for an unsupported server
+  // interactive - sending a forced-off value for an unsupported server
   // would clobber the per-account preference if support is restored.
   if (!$("gal-enabled").disabled) {
     patch.galEnabled = $("gal-enabled").checked;
@@ -240,16 +274,22 @@ async function onSave() {
   // (optional) password actually changes.
   if (!$("connection-section").hidden) {
     if (!$("server").readOnly) patch.server = $("server").value.trim();
-    if (!$("user").readOnly)   patch.user   = $("user").value.trim();
+    if (!$("user").readOnly) patch.user = $("user").value.trim();
     const pw = $("password").value;
     if (pw) patch.password = pw;
   }
 
   $("btn-save").disabled = true;
   try {
-    const reply = await browser.runtime.sendMessage({ type: "eas.saveAccount", accountId, patch });
+    const reply = await browser.runtime.sendMessage({
+      type: "eas.saveAccount",
+      accountId,
+      patch,
+    });
     if (!reply?.ok) {
-      throw new Error(reply?.error ?? i18n("config.error.saveFailed", "Save failed"));
+      throw new Error(
+        reply?.error ?? i18n("config.error.saveFailed", "Save failed"),
+      );
     }
     window.close();
   } catch (err) {
@@ -266,7 +306,7 @@ $("btn-save").addEventListener("click", onSave);
 // ESC closes the dialog; Enter while focused in a text input fires the
 // primary action (when enabled and visible). `defaultPrevented` lets the
 // dropdown's own Escape handler swallow the key when its panel is open.
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown", (e) => {
   if (e.defaultPrevented) return;
   if (e.key === "Escape") {
     window.close();
