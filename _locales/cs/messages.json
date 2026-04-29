@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "ID aplikace (klienta) Microsoft Entra ID používané při přihlašování k Office 365 / osobním účtům Microsoft. Ponechte prázdné, abyste použili výchozí ID aplikace zaregistrované Johnem Bielingem (autorem poskytovatele EAS). Vlastní hodnotu zadávejte pouze tehdy, pokud to vyžaduje administrátor vašeho tenanta."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Server odmítl požadavek synchronizace jako vadný (kód $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Server odmítl přístup k synchronizaci: $REASON$ (kód $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "typ zařízení chybí nebo je neplatný" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "typ zařízení chybí nebo je neplatný" },
+  "eas.sync.error.accessDenied.112": { "message": "přístup k Active Directory zamítnut" },
+  "eas.sync.error.accessDenied.126": { "message": "uživatel zakázán pro synchronizaci" },
+  "eas.sync.error.accessDenied.127": { "message": "uživatel v nové schránce nemůže synchronizovat" },
+  "eas.sync.error.accessDenied.128": { "message": "uživatel ve staré schránce nemůže synchronizovat" },
+  "eas.sync.error.accessDenied.129": { "message": "zařízení blokováno pro tohoto uživatele" },
+  "eas.sync.error.accessDenied.130": { "message": "přístup odepřen" },
+  "eas.sync.error.accessDenied.131": { "message": "účet zakázán" }
 }

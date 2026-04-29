@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "Identyfikator aplikacji (klienta) Microsoft Entra ID używany podczas logowania do Office 365 / osobistych kont Microsoft. Pozostaw puste, aby użyć domyślnego identyfikatora aplikacji zarejestrowanego przez Johna Bielinga (autora dostawcy EAS). Wprowadź własny tylko wtedy, gdy wymaga tego administrator dzierżawy."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Serwer odrzucił żądanie synchronizacji jako nieprawidłowe (kod $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Serwer odmówił dostępu do synchronizacji: $REASON$ (kod $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "brak typu urządzenia lub nieprawidłowy" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "brak typu urządzenia lub nieprawidłowy" },
+  "eas.sync.error.accessDenied.112": { "message": "odmowa dostępu do Active Directory" },
+  "eas.sync.error.accessDenied.126": { "message": "użytkownik wyłączony dla synchronizacji" },
+  "eas.sync.error.accessDenied.127": { "message": "użytkownik na nowej skrzynce nie może synchronizować" },
+  "eas.sync.error.accessDenied.128": { "message": "użytkownik na starej skrzynce nie może synchronizować" },
+  "eas.sync.error.accessDenied.129": { "message": "urządzenie zablokowane dla tego użytkownika" },
+  "eas.sync.error.accessDenied.130": { "message": "odmowa dostępu" },
+  "eas.sync.error.accessDenied.131": { "message": "konto wyłączone" }
 }

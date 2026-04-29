@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "ID applicazione (client) Microsoft Entra ID utilizzato per accedere a Office 365 / account Microsoft personali. Lascia vuoto per utilizzare l’ID applicazione predefinito registrato da John Bieling (autore del provider EAS). Imposta il tuo solo se l’amministratore del tenant lo richiede."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Il server ha rifiutato la richiesta di sincronizzazione come non valida (codice $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Il server ha negato l’accesso alla sincronizzazione: $REASON$ (codice $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "tipo di dispositivo mancante o non valido" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "tipo di dispositivo mancante o non valido" },
+  "eas.sync.error.accessDenied.112": { "message": "accesso ad Active Directory negato" },
+  "eas.sync.error.accessDenied.126": { "message": "utente disabilitato per la sincronizzazione" },
+  "eas.sync.error.accessDenied.127": { "message": "l’utente è su una cassetta postale nuova e non può sincronizzare" },
+  "eas.sync.error.accessDenied.128": { "message": "l’utente è su una cassetta postale legacy e non può sincronizzare" },
+  "eas.sync.error.accessDenied.129": { "message": "dispositivo bloccato per questo utente" },
+  "eas.sync.error.accessDenied.130": { "message": "accesso negato" },
+  "eas.sync.error.accessDenied.131": { "message": "account disabilitato" }
 }

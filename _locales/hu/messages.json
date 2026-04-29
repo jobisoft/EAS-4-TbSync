@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "A Microsoft Entra ID alkalmazásazonosító (kliens), amelyet az Office 365 / személyes Microsoft-fiókokba való bejelentkezéskor használ. Hagyja üresen az alapértelmezett, John Bieling (az EAS-szolgáltató szerzője) által regisztrált alkalmazásazonosító használatához. Csak akkor adja meg a sajátját, ha a bérlő rendszergazdája ezt megköveteli."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "A szerver helytelennek nyilvánította a szinkronizálási kérést (kód: $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "A szerver megtagadta a szinkronizálási hozzáférést: $REASON$ (kód: $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "az eszköz típusa hiányzik vagy érvénytelen" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "az eszköz típusa hiányzik vagy érvénytelen" },
+  "eas.sync.error.accessDenied.112": { "message": "Active Directory hozzáférés megtagadva" },
+  "eas.sync.error.accessDenied.126": { "message": "a felhasználó szinkronizálása letiltva" },
+  "eas.sync.error.accessDenied.127": { "message": "a felhasználó új postafiókban van, és nem tud szinkronizálni" },
+  "eas.sync.error.accessDenied.128": { "message": "a felhasználó régi postafiókban van, és nem tud szinkronizálni" },
+  "eas.sync.error.accessDenied.129": { "message": "az eszköz blokkolva van ennél a felhasználónál" },
+  "eas.sync.error.accessDenied.130": { "message": "hozzáférés megtagadva" },
+  "eas.sync.error.accessDenied.131": { "message": "fiók letiltva" }
 }

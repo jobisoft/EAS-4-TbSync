@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "ID-ul aplicației (client) Microsoft Entra ID utilizat la conectarea la Office 365 / conturile personale Microsoft. Lăsați gol pentru a utiliza ID-ul implicit al aplicației înregistrat de John Bieling (autorul furnizorului EAS). Setați-l pe al dvs. doar dacă administratorul tenantului dvs. cere acest lucru."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Serverul a respins cererea de sincronizare ca fiind incorectă (cod $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Serverul a refuzat accesul de sincronizare: $REASON$ (cod $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "tipul dispozitivului lipsește sau este nevalid" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "tipul dispozitivului lipsește sau este nevalid" },
+  "eas.sync.error.accessDenied.112": { "message": "acces Active Directory refuzat" },
+  "eas.sync.error.accessDenied.126": { "message": "utilizator dezactivat pentru sincronizare" },
+  "eas.sync.error.accessDenied.127": { "message": "utilizatorul se află într-o căsuță poștală nouă și nu poate sincroniza" },
+  "eas.sync.error.accessDenied.128": { "message": "utilizatorul se află într-o căsuță poștală veche și nu poate sincroniza" },
+  "eas.sync.error.accessDenied.129": { "message": "dispozitivul este blocat pentru acest utilizator" },
+  "eas.sync.error.accessDenied.130": { "message": "acces refuzat" },
+  "eas.sync.error.accessDenied.131": { "message": "cont dezactivat" }
 }

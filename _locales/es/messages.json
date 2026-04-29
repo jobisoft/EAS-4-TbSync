@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "ID de aplicación (cliente) de Microsoft Entra ID utilizado al iniciar sesión en Office 365 / cuentas Microsoft personales. Deje vacío para usar el ID de aplicación predeterminado registrado por John Bieling (autor del proveedor EAS). Defina el suyo propio solo si el administrador de su inquilino lo requiere."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "El servidor rechazó la solicitud de sincronización como malformada (código $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "El servidor denegó el acceso de sincronización: $REASON$ (código $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "tipo de dispositivo ausente o no válido" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "tipo de dispositivo ausente o no válido" },
+  "eas.sync.error.accessDenied.112": { "message": "acceso a Active Directory denegado" },
+  "eas.sync.error.accessDenied.126": { "message": "usuario deshabilitado para sincronización" },
+  "eas.sync.error.accessDenied.127": { "message": "el usuario está en un buzón nuevo y no puede sincronizar" },
+  "eas.sync.error.accessDenied.128": { "message": "el usuario está en un buzón heredado y no puede sincronizar" },
+  "eas.sync.error.accessDenied.129": { "message": "dispositivo bloqueado para este usuario" },
+  "eas.sync.error.accessDenied.130": { "message": "acceso denegado" },
+  "eas.sync.error.accessDenied.131": { "message": "cuenta deshabilitada" }
 }

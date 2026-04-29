@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "Office 365 / 개인 Microsoft 계정에 로그인할 때 사용되는 Microsoft Entra ID 애플리케이션(클라이언트) ID입니다. EAS 공급자의 작성자인 John Bieling이 등록한 기본 애플리케이션 ID를 사용하려면 비워 두세요. 테넌트 관리자가 요구하는 경우에만 직접 설정하세요."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "서버가 동기화 요청을 잘못된 형식으로 거부했습니다 (코드 $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "서버가 동기화 접근을 거부했습니다: $REASON$ (코드 $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "장치 유형이 없거나 잘못되었습니다" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "장치 유형이 없거나 잘못되었습니다" },
+  "eas.sync.error.accessDenied.112": { "message": "Active Directory 접근이 거부되었습니다" },
+  "eas.sync.error.accessDenied.126": { "message": "사용자가 동기화에 대해 비활성화되었습니다" },
+  "eas.sync.error.accessDenied.127": { "message": "사용자가 새 메일박스에 있어 동기화할 수 없습니다" },
+  "eas.sync.error.accessDenied.128": { "message": "사용자가 이전 메일박스에 있어 동기화할 수 없습니다" },
+  "eas.sync.error.accessDenied.129": { "message": "이 사용자에 대해 장치가 차단되었습니다" },
+  "eas.sync.error.accessDenied.130": { "message": "접근이 거부되었습니다" },
+  "eas.sync.error.accessDenied.131": { "message": "계정이 비활성화되었습니다" }
 }

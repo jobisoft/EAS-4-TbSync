@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "Идентификатор на приложение (клиент) в Microsoft Entra ID, използван при влизане в Office 365 / лични акаунти в Microsoft. Оставете празно, за да използвате стандартния ID на приложението, регистриран от Джон Билинг (автор на EAS доставчика). Задавайте собствен само ако администраторът на вашия наемател го изисква."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Сървърът отхвърли заявката за синхронизация като неправилна (код $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Сървърът отказа достъп за синхронизация: $REASON$ (код $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "видът устройство липсва или е невалиден" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "видът устройство липсва или е невалиден" },
+  "eas.sync.error.accessDenied.112": { "message": "отказан достъп до Active Directory" },
+  "eas.sync.error.accessDenied.126": { "message": "потребителят е изключен за синхронизация" },
+  "eas.sync.error.accessDenied.127": { "message": "потребителят е в нова пощенска кутия и не може да синхронизира" },
+  "eas.sync.error.accessDenied.128": { "message": "потребителят е в стара пощенска кутия и не може да синхронизира" },
+  "eas.sync.error.accessDenied.129": { "message": "устройството е блокирано за този потребител" },
+  "eas.sync.error.accessDenied.130": { "message": "достъпът е отказан" },
+  "eas.sync.error.accessDenied.131": { "message": "профилът е изключен" }
 }

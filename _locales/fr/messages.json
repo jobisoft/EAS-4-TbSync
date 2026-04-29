@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "ID d’application (client) Microsoft Entra ID utilisé lors de la connexion à Office 365 / aux comptes Microsoft personnels. Laissez vide pour utiliser l’ID d’application par défaut enregistré par John Bieling (auteur du fournisseur EAS). Ne définissez le vôtre que si votre administrateur de tenant l’exige."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Le serveur a rejeté la requête de synchronisation comme malformée (code $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Le serveur a refusé l’accès à la synchronisation : $REASON$ (code $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "type d’appareil manquant ou invalide" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "type d’appareil manquant ou invalide" },
+  "eas.sync.error.accessDenied.112": { "message": "accès Active Directory refusé" },
+  "eas.sync.error.accessDenied.126": { "message": "utilisateur désactivé pour la synchronisation" },
+  "eas.sync.error.accessDenied.127": { "message": "l’utilisateur est sur une nouvelle boîte aux lettres et ne peut pas synchroniser" },
+  "eas.sync.error.accessDenied.128": { "message": "l’utilisateur est sur une boîte aux lettres héritée et ne peut pas synchroniser" },
+  "eas.sync.error.accessDenied.129": { "message": "l’appareil est bloqué pour cet utilisateur" },
+  "eas.sync.error.accessDenied.130": { "message": "accès refusé" },
+  "eas.sync.error.accessDenied.131": { "message": "compte désactivé" }
 }

@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "Microsoft-Entra-ID-Anwendungs-ID (Client), die beim Anmelden bei Office 365 / persönlichen Microsoft-Konten verwendet wird. Lassen Sie das Feld leer, um die Standard-Anwendungs-ID zu verwenden, die von John Bieling (Autor des EAS-Providers) registriert wurde. Setzen Sie eine eigene ID nur, wenn Ihr Mandantenadministrator dies verlangt."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Server hat die Synchronisationsanfrage als ungültig abgelehnt (Code $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Server hat den Synchronisationszugriff verweigert: $REASON$ (Code $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "Gerätetyp fehlt oder ungültig" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "Gerätetyp fehlt oder ungültig" },
+  "eas.sync.error.accessDenied.112": { "message": "Active-Directory-Zugriff verweigert" },
+  "eas.sync.error.accessDenied.126": { "message": "Benutzer für Synchronisation deaktiviert" },
+  "eas.sync.error.accessDenied.127": { "message": "Benutzer im neuen Postfach kann nicht synchronisieren" },
+  "eas.sync.error.accessDenied.128": { "message": "Benutzer im alten Postfach kann nicht synchronisieren" },
+  "eas.sync.error.accessDenied.129": { "message": "Gerät ist für diesen Benutzer gesperrt" },
+  "eas.sync.error.accessDenied.130": { "message": "Zugriff verweigert" },
+  "eas.sync.error.accessDenied.131": { "message": "Konto deaktiviert" }
 }

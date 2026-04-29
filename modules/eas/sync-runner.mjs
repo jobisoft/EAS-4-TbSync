@@ -48,8 +48,9 @@ import { ok, warning as warningStatus, error as errorStatus } from "../../vendor
 const STATUS_OK = "1";
 const STATUS_RESYNC = "3";
 const STATUS_MALFORMED = "4";
+const STATUS_TEMP_SERVER = "5";          // Temporary server issues / invalid item — soft fail
 const STATUS_INVALID = "6";
-const STATUS_CONFLICT = "7";
+const STATUS_CONFLICT = "7";              // Server's changes win — legacy treated as silent OK
 const STATUS_OBJECT_NOT_FOUND = "8";
 const STATUS_FOLDER_HIERARCHY = "12";
 // Server temporarily unavailable / busy. Legacy paused autosync for 30
@@ -57,6 +58,22 @@ const STATUS_FOLDER_HIERARCHY = "12";
 // account so the host's autosync ticker skips it for the duration.
 const STATUS_BUSY = "110";
 const BUSY_BACKOFF_MS = 30 * 60 * 1000;
+
+// Top-level Sync.Status codes that indicate a malformed wire-level
+// payload ([MS-ASCMD] §2.2.3.167.16). Distinct from collection-level
+// MALFORMED (4/6) because the server rejected the *transport* shape, not
+// per-item data — usually fatal until a code change ships.
+const STATUS_PROTOCOL_FAULT = new Set(["101", "102", "103"]);
+
+// Top-level "client / device / user not allowed" codes. Legacy bundled
+// these as `global.clientdenied`; the new code surfaces each with a
+// short human-readable label localized via the provider's _locales (see
+// `eas.sync.error.accessDenied.<code>`) so the user has a starting point
+// for the fix (admin disabled the device, user has no mailbox, …). See
+// [MS-ASCMD] §2.2.3.167.16.
+const STATUS_ACCESS_DENIED = new Set([
+  "109", "112", "126", "127", "128", "129", "130", "131",
+]);
 
 const MAX_PULL_BATCHES = 50;
 const POST_PUSH_WAIT_MS = 2000;
@@ -733,18 +750,35 @@ async function sendSync({ account, asVersion, body }) {
 function parseSyncResponse(doc) {
   const top = readPath(doc, ["Status"]);
   if (top && top !== STATUS_OK) {
-    if (top === STATUS_BUSY) return { code: "BUSY", topStatus: top };
+    if (top === STATUS_BUSY)             return { code: "BUSY", topStatus: top };
+    if (top === STATUS_RESYNC)           return { code: "RESYNC", topStatus: top };
+    if (top === STATUS_FOLDER_HIERARCHY) return { code: "HIERARCHY", topStatus: top };
+    if (STATUS_PROTOCOL_FAULT.has(top)) {
+      return { error: browser.i18n.getMessage("eas.sync.error.protocolFault", [top]) };
+    }
+    if (STATUS_ACCESS_DENIED.has(top)) {
+      const reason = browser.i18n.getMessage(`eas.sync.error.accessDenied.${top}`);
+      return { error: browser.i18n.getMessage("eas.sync.error.accessDenied", [reason, top]) };
+    }
     return { error: `Sync top status ${top}` };
   }
   const collection = doc.getElementsByTagName("Collection")[0];
   if (!collection) return { error: "Sync response missing Collection" };
 
   const collStatus = readPathFrom(collection, ["Status"]) ?? STATUS_OK;
-  if (collStatus !== STATUS_OK) {
+  // STATUS_CONFLICT at collection level: server-wins conflict, legacy
+  // treated this as silent OK and continued. Per-item conflicts have
+  // their own handling further down. Fall through to the success path.
+  if (collStatus !== STATUS_OK && collStatus !== STATUS_CONFLICT) {
     if (collStatus === STATUS_RESYNC)           return { code: "RESYNC", collStatus };
     if (collStatus === STATUS_FOLDER_HIERARCHY) return { code: "HIERARCHY", collStatus };
     if (collStatus === STATUS_BUSY)             return { code: "BUSY", collStatus };
-    if (collStatus === STATUS_MALFORMED || collStatus === STATUS_INVALID) {
+    if (
+      collStatus === STATUS_MALFORMED ||
+      collStatus === STATUS_INVALID ||
+      collStatus === STATUS_TEMP_SERVER ||
+      collStatus === STATUS_OBJECT_NOT_FOUND
+    ) {
       return { code: "MALFORMED", collStatus };
     }
     return { error: `Sync collection status ${collStatus}`, collStatus };

@@ -344,5 +344,24 @@
   },
   "options.clientid.hint": {
     "message": "Идентификатор приложения (клиента) Microsoft Entra ID, используемый при входе в Office 365 / личные учётные записи Microsoft. Оставьте пустым, чтобы использовать стандартный ID приложения, зарегистрированный Джоном Билингом (автором EAS-провайдера). Задавайте собственный только в том случае, если этого требует администратор вашего тенанта."
-  }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Сервер отклонил запрос синхронизации как некорректный (код $STATUS$)",
+    "placeholders": { "status": { "content": "$1", "example": "101" } }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Сервер отказал в доступе к синхронизации: $REASON$ (код $STATUS$)",
+    "placeholders": {
+      "reason": { "content": "$1", "example": "тип устройства отсутствует или недопустим" },
+      "status": { "content": "$2", "example": "109" }
+    }
+  },
+  "eas.sync.error.accessDenied.109": { "message": "тип устройства отсутствует или недопустим" },
+  "eas.sync.error.accessDenied.112": { "message": "доступ к Active Directory запрещён" },
+  "eas.sync.error.accessDenied.126": { "message": "пользователь отключён для синхронизации" },
+  "eas.sync.error.accessDenied.127": { "message": "пользователь в новом почтовом ящике не может синхронизировать" },
+  "eas.sync.error.accessDenied.128": { "message": "пользователь в устаревшем почтовом ящике не может синхронизировать" },
+  "eas.sync.error.accessDenied.129": { "message": "устройство заблокировано для этого пользователя" },
+  "eas.sync.error.accessDenied.130": { "message": "доступ запрещён" },
+  "eas.sync.error.accessDenied.131": { "message": "учётная запись отключена" }
 }

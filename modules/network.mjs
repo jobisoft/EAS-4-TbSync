@@ -43,7 +43,14 @@ export const NET_ERR = {
 
 export class EasHttpError extends Error {
   constructor(code, status, options = {}) {
-    super(options.message ?? `EAS transport error ${code} (HTTP ${status})`, { cause: options.cause });
+    // The default human-readable message omits the `E:*` code on purpose:
+    // the code is for programmatic dispatch (`err.code === NET_ERR.X`),
+    // and surfacing it in UI strings exposes internal identifiers. Host
+    // sync-coordinator already prefers `err.message` for non-host-predefined
+    // codes, so this is what end users see when E:HTTP / E:HOST_REDIRECT /
+    // E:PROVISION_REQUIRED bubbles up. NET_ERR.NETWORK / NET_ERR.AUTH never
+    // surface this string because the host has localised translations.
+    super(options.message ?? `EAS transport error (HTTP ${status})`, { cause: options.cause });
     this.name = "EasHttpError";
     this.code = code;
     this.status = status;
