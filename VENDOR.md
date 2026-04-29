@@ -6,11 +6,9 @@ This file lists files that were not created by this project and are maintained u
 
 ## calendar Experiments API
 
-- **Files** : `/experiments/calendar/**` (subset; `calendar.calendars`, `calendar.items`, `calendar.timezones`, `calendar.provider`)
-- **Source** : https://github.com/thunderbird/webext-experiments/tree/main/calendar/experiments/calendar
-- **Commit** : b7f7cb3e76807903a785a03784d6e7df7b213f21
+- **Files** : `/experiments/calendar/*`
+- **Source** : https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fthunderbird%2Fwebext-experiments%2Ftree%2Fb7f7cb3e76807903a785a03784d6e7df7b213f21%2Fcalendar%2Fexperiments%2Fcalendar
 - **License** : MPL 2.0
-- **Note** : Mirror byte-for-byte with the host copy at `tbsync-new/experiments/calendar/`. `calendarItemAction` / `calendarItemDetails` are intentionally not vendored. We don't author a custom calendar type (no `calendar_provider` entry in the manifest's top-level), but the `calendar_provider` experiment is still registered because its `onStartup` is what sets up the `resource://experiments-calendar-${uuid}/` substitution that the other parent scripts use to import `ext-calendar-utils.sys.mjs`.
 
 ---
 
@@ -19,9 +17,9 @@ This file lists files that were not created by this project and are maintained u
 - **File** : `/vendor/ical.min.js`
 - **Source** : https://github.com/kewisch/ical.js/releases/download/v2.2.1/ical.min.js
 - **Version** : v2.2.1
-- **License** : MPL 2.0 (see header of [ical.min.js](./vendor/ical.min.js))
+- **License** : MPL 2.0 (see header of [ical.min.js](./ical.min.js))
 
----
+--- 
 
 ## i18n.mjs
 
@@ -31,7 +29,7 @@ This file lists files that were not created by this project and are maintained u
 
 ---
 
-## tbsync
+## tbsync (still subject to review)
 
-- **Files** : `/vendor/tbsync/protocol.mjs`, `/vendor/tbsync/status.mjs`, `/vendor/tbsync/provider.mjs`
-- **Source** : `tbsync-new/tbsync/` in the TbSync host repo (canonical). Mirror byte-for-byte; do not edit in this provider.
+- **Files** : `/vendor/tbsync/*`
+- **Source** : https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fjobisoft%2FTbSync%2Ftree%2Fdb16a2bf89960bd88f666e416973bdc1f0f79dbd%2Ftbsync
