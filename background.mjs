@@ -2,6 +2,7 @@ import { EasProvider } from "./modules/eas-provider.mjs";
 import { startAuth } from "./modules/eas/oauth.mjs";
 import { discoverEasServer } from "./modules/eas/autodiscover.mjs";
 import { runUpgrades, enqueueUpgradesForUpdate } from "./modules/upgrades.mjs";
+import { installAnchorMailboxInjector } from "./modules/anchor-mailbox.mjs";
 
 /**
  * Provider entry point. All port / handshake plumbing lives inside the
@@ -15,6 +16,11 @@ import { runUpgrades, enqueueUpgradesForUpdate } from "./modules/upgrades.mjs";
  * book observer; the provider is a pure consumer of the host's changelog
  * queue for contact sync.
  */
+
+// Register the anchor-mailbox webRequest listener before the provider
+// constructs and starts issuing requests, so the very first OPTIONS /
+// FolderSync of the boot is already cookie-injected.
+installAnchorMailboxInjector();
 
 const provider = new EasProvider();
 

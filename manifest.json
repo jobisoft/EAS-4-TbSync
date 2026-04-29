@@ -24,7 +24,8 @@
     "addressBooks",
     "notifications",
     "tabs",
-    "cookies",
+    "webRequest",
+    "webRequestBlocking",
     "<all_urls>"
   ],
   "background": {
