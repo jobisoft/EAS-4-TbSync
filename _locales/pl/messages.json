@@ -10,6 +10,10 @@
     "message": "Kosz"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Globalna lista adresów"
+  },
+
   "setup.title": {
     "message": "Dodaj konto Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Eksperymentalne - domyślnie wyłączone. Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
+  },
+
+  "config.section.gal": {
+    "message": "Globalna lista adresów"
+  },
+  "config.gal.enabled": {
+    "message": "Pokaż globalną listę adresów serwera jako książkę adresową tylko do odczytu"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Dodaje katalog dla każdego konta, który jest wypełniany na bieżąco, gdy wpiszesz zapytanie w polu wyszukiwania książki adresowej Thunderbirda. Nic nie jest pobierane ani przechowywane lokalnie — każde wyszukiwanie pyta serwer."
+  },
+  "config.gal.notSupported": {
+    "message": "Twój serwer nie ogłasza polecenia Search, więc globalna lista adresów nie jest dostępna dla tego konta."
   },
 
   "config.error.invalidAsVersion": {

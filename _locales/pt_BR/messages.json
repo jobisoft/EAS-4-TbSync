@@ -10,6 +10,10 @@
     "message": "Lixeira"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Lista de Endereços Global"
+  },
+
   "setup.title": {
     "message": "Adicionar uma conta Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimental - desativado por padrão. Quando ativado, as regras de recorrência e as exceções por instância são sincronizadas nos dois sentidos com o servidor."
+  },
+
+  "config.section.gal": {
+    "message": "Lista de Endereços Global"
+  },
+  "config.gal.enabled": {
+    "message": "Mostrar a lista de endereços global do servidor como um catálogo somente leitura"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Adiciona um catálogo de endereços por conta, que é preenchido em tempo real quando você digita uma consulta no campo de busca do catálogo de endereços do Thunderbird. Nada é baixado ou armazenado localmente — cada busca consulta o servidor."
+  },
+  "config.gal.notSupported": {
+    "message": "Seu servidor não anuncia o comando Search, portanto a lista de endereços global não está disponível para esta conta."
   },
 
   "config.error.invalidAsVersion": {

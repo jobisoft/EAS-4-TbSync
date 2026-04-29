@@ -10,6 +10,10 @@
     "message": "Koš"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Globální seznam adres"
+  },
+
   "setup.title": {
     "message": "Přidat účet Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimentální – ve výchozím stavu vypnuto. Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
+  },
+
+  "config.section.gal": {
+    "message": "Globální seznam adres"
+  },
+  "config.gal.enabled": {
+    "message": "Zobrazovat globální seznam adres serveru jako adresář jen pro čtení"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Přidá adresář pro tento účet, který se naplní za běhu, když do vyhledávacího pole v adresáři aplikace Thunderbird zadáte dotaz. Nic se nestahuje ani neukládá lokálně — každý dotaz směřuje na server."
+  },
+  "config.gal.notSupported": {
+    "message": "Váš server neoznamuje příkaz Search, takže globální seznam adres není pro tento účet k dispozici."
   },
 
   "config.error.invalidAsVersion": {

@@ -10,6 +10,10 @@
     "message": "Kuka"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Globális címlista"
+  },
+
   "setup.title": {
     "message": "Exchange ActiveSync-fiók (EAS) hozzáadása"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Kísérleti - alapértelmezetten kikapcsolva. Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
+  },
+
+  "config.section.gal": {
+    "message": "Globális címlista"
+  },
+  "config.gal.enabled": {
+    "message": "A kiszolgáló globális címlistájának megjelenítése írásvédett címjegyzékként"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Hozzáad egy fiókhoz tartozó címjegyzéket, amely menet közben töltődik fel, amikor lekérdezést ír be a Thunderbird címjegyzék keresőmezőjébe. Helyben semmi sem töltődik le vagy tárolódik – minden keresés a kiszolgálót kérdezi le."
+  },
+  "config.gal.notSupported": {
+    "message": "A kiszolgálója nem hirdeti a Search parancsot, így a globális címlista nem érhető el ehhez a fiókhoz."
   },
 
   "config.error.invalidAsVersion": {

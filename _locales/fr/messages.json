@@ -10,6 +10,10 @@
     "message": "Corbeille"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Liste d’adresses globale"
+  },
+
   "setup.title": {
     "message": "Ajouter un compte Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Expérimental - désactivé par défaut. Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
+  },
+
+  "config.section.gal": {
+    "message": "Liste d’adresses globale"
+  },
+  "config.gal.enabled": {
+    "message": "Afficher la liste d’adresses globale du serveur comme un carnet d’adresses en lecture seule"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Ajoute un carnet d’adresses par compte qui est rempli à la volée lorsque vous tapez une requête dans la zone de recherche du carnet d’adresses de Thunderbird. Rien n’est téléchargé ni stocké localement : chaque recherche interroge le serveur."
+  },
+  "config.gal.notSupported": {
+    "message": "Votre serveur n’annonce pas la commande Search ; la liste d’adresses globale n’est donc pas disponible pour ce compte."
   },
 
   "config.error.invalidAsVersion": {

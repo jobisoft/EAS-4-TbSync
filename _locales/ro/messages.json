@@ -10,6 +10,10 @@
     "message": "Coș de gunoi"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Listă globală de adrese"
+  },
+
   "setup.title": {
     "message": "Adaugă un cont Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimental - dezactivat implicit. Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
+  },
+
+  "config.section.gal": {
+    "message": "Listă globală de adrese"
+  },
+  "config.gal.enabled": {
+    "message": "Afișează lista globală de adrese a serverului ca agendă numai pentru citire"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Adaugă o agendă per cont care este populată din mers când introduceți o interogare în caseta de căutare a agendei Thunderbird. Nimic nu este descărcat sau stocat local — fiecare căutare interoghează serverul."
+  },
+  "config.gal.notSupported": {
+    "message": "Serverul dvs. nu anunță comanda Search, așa că lista globală de adrese nu este disponibilă pentru acest cont."
   },
 
   "config.error.invalidAsVersion": {

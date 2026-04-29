@@ -44,6 +44,9 @@ import { syncContactFolder } from "./eas/contact-sync.mjs";
 import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
 import { sendDeviceInformation } from "./eas/settings.mjs";
 import { NET_ERR } from "./network.mjs";
+import { enableGal, disableGal, enableGalForAllAccounts } from "./gal.mjs";
+import { easCommandAdvertised } from "./eas/allowed-commands.mjs";
+import { setEventLogSink } from "./eas-event-log.mjs";
 
 /** EAS FolderSync status codes that indicate the server wants us to run
  *  Provision (in-band equivalent of the HTTP-449 path). */
@@ -134,11 +137,22 @@ export class EasProvider extends TbSyncProviderImplementation {
       contributorsUrl: "https://github.com/jobisoft/EAS-4-TbSync",
       logPrefix: "[eas-4-tbsync]",
     });
+    // Point the wire-level event-log sink at the host. Wire code
+    // (`network.mjs`) emits debug entries for every WBXML send/receive;
+    // before this binding the calls silently no-op.
+    setEventLogSink(args => this.reportEventLog(args));
   }
 
   // ── Base-class hooks ───────────────────────────────────────────────────
 
-  async onConnectedToHost() { return null; }
+  async onConnectedToHost() {
+    // Re-establish the per-account read-only GAL directories. The host
+    // does not re-fire `onAccountEnabled` for already-enabled accounts
+    // on extension boot, so the listener registrations would otherwise
+    // be lost across restarts.
+    await enableGalForAllAccounts(this);
+    return null;
+  }
   async onCancelSync(_args) { return null; }
 
   // ── Account lifecycle ──────────────────────────────────────────────────
@@ -149,10 +163,15 @@ export class EasProvider extends TbSyncProviderImplementation {
     // the resource list, and push it to the host so the manager can
     // render contacts/calendars/tasks rows. Idempotent on re-enable.
     await this.#connectAndDiscoverFolders(accountId);
+    // OPTIONS has populated allowedEasCommands by now, so we know
+    // whether the server supports the GAL Search command.
+    const rv = await this.getAccount(accountId);
+    if (rv?.account) await enableGal({ provider: this, account: rv.account });
     return null;
   }
 
   async onAccountDisabled({ accountId }) {
+    await disableGal({ provider: this, accountId });
     const ctx = await this.#loadContext(accountId);
     if (!ctx) return null;
     // Drop local TB books. Leave account-level credentials and deviceId
@@ -160,15 +179,20 @@ export class EasProvider extends TbSyncProviderImplementation {
     // folder rows right after this returns, so per-folder custom.*
     // doesn't need clearing here.
     await this.#deleteAccountTargets(ctx.folders);
-    // Force a fresh FolderSync on re-enable.
+    // Force a fresh FolderSync on re-enable. Also invalidate the OPTIONS
+    // probe cache so the next enable re-runs the probe — this is the
+    // backfill path for users on 5.0.1 whose `allowedEasCommands` was
+    // never persisted (or has otherwise diverged from the server's
+    // current capability list). Existing-enabled accounts are left alone.
     await this.updateAccount({
       accountId,
-      patch: { custom: { foldersynckey: "0" } },
+      patch: { custom: { foldersynckey: "0", lastEasOptionsUpdate: 0 } },
     }).catch(() => { });
     return null;
   }
 
   async onAccountDeleted({ accountId, purgeTargets }) {
+    await disableGal({ provider: this, accountId });
     const ctx = await this.#loadContext(accountId);
     if (!ctx) return null;
     if (purgeTargets !== false) {
@@ -388,8 +412,7 @@ export class EasProvider extends TbSyncProviderImplementation {
 
   async #maybeSendDeviceInformation(account, asVersion) {
     if (asVersion === "2.5") return;
-    const allowed = account.custom?.allowedEasCommands ?? [];
-    if (!allowed.includes("Settings")) return;
+    if (!easCommandAdvertised(account, "Settings")) return;
     await sendDeviceInformation({ account, asVersion });
   }
 
@@ -605,6 +628,12 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Calendar section.
       calendarSyncLimit: c.synclimit || "7",
       syncRecurrence: !!c.syncrecurrence,
+      // GAL section. `galEnabled` defaults to true so accounts that
+      // pre-date the toggle keep their auto-on behavior; only an
+      // explicit false (set via this dialog) disables it. `galSupported`
+      // tells the dialog whether to enable the checkbox at all.
+      galEnabled: c.galenabled !== false,
+      galSupported: easCommandAdvertised(ctx.account, "Search"),
     };
   }
 
@@ -659,12 +688,28 @@ export class EasProvider extends TbSyncProviderImplementation {
     if ("syncRecurrence" in patch) {
       customPatch.syncrecurrence = !!patch.syncRecurrence;
     }
+    if ("galEnabled" in patch) {
+      customPatch.galenabled = !!patch.galEnabled;
+    }
 
     const outgoing = { ...topLevelPatch };
     if (Object.keys(customPatch).length) outgoing.custom = customPatch;
     if (Object.keys(outgoing).length) {
       await this.updateAccount({ accountId, patch: outgoing });
     }
+
+    // Re-evaluate the GAL listener against the post-save state. Both
+    // `enableGal` and `disableGal` are idempotent, so they're safe to
+    // call regardless of whether the toggle actually changed.
+    if ("galEnabled" in patch) {
+      const fresh = await this.getAccount(accountId);
+      if (patch.galEnabled && fresh?.account) {
+        await enableGal({ provider: this, account: fresh.account });
+      } else {
+        await disableGal({ provider: this, accountId });
+      }
+    }
+
     return null;
   }
 

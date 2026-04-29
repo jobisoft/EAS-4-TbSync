@@ -10,6 +10,10 @@
     "message": "ごみ箱"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "グローバル アドレス一覧"
+  },
+
   "setup.title": {
     "message": "Exchange ActiveSync (EAS) アカウントを追加"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "実験的機能 - 既定では無効。有効にすると、繰り返しルールとインスタンスごとの例外がサーバーと双方向で同期されます。"
+  },
+
+  "config.section.gal": {
+    "message": "グローバル アドレス一覧"
+  },
+  "config.gal.enabled": {
+    "message": "サーバーのグローバル アドレス一覧を読み取り専用のアドレス帳として表示する"
+  },
+  "config.gal.enabled.hint": {
+    "message": "アカウントごとのディレクトリを追加し、Thunderbird のアドレス帳の検索ボックスにクエリを入力すると、その場で結果が表示されます。ローカルにはダウンロードも保存もされず、検索のたびにサーバーへ問い合わせます。"
+  },
+  "config.gal.notSupported": {
+    "message": "サーバーが Search コマンドを通知していないため、このアカウントではグローバル アドレス一覧を利用できません。"
   },
 
   "config.error.invalidAsVersion": {

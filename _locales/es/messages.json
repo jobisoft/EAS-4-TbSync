@@ -10,6 +10,10 @@
     "message": "Papelera"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Lista global de direcciones"
+  },
+
   "setup.title": {
     "message": "Añadir una cuenta de Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimental: desactivado por defecto. Cuando está activado, las reglas de recurrencia y las excepciones por instancia se sincronizan en ambos sentidos con el servidor."
+  },
+
+  "config.section.gal": {
+    "message": "Lista global de direcciones"
+  },
+  "config.gal.enabled": {
+    "message": "Mostrar la lista global de direcciones del servidor como una libreta de direcciones de solo lectura"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Añade una libreta de direcciones por cuenta que se rellena al vuelo cuando escribe una consulta en el cuadro de búsqueda de la libreta de direcciones de Thunderbird. No se descarga ni almacena nada localmente: cada búsqueda consulta al servidor."
+  },
+  "config.gal.notSupported": {
+    "message": "Su servidor no admite el comando Search, por lo que la lista global de direcciones no está disponible para esta cuenta."
   },
 
   "config.error.invalidAsVersion": {

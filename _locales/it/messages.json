@@ -10,6 +10,10 @@
     "message": "Cestino"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Elenco indirizzi globale"
+  },
+
   "setup.title": {
     "message": "Aggiungi un account Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Sperimentale - disattivato per impostazione predefinita. Quando è attivo, le regole di ricorrenza e le eccezioni per singola istanza vengono sincronizzate in entrambi i sensi con il server."
+  },
+
+  "config.section.gal": {
+    "message": "Elenco indirizzi globale"
+  },
+  "config.gal.enabled": {
+    "message": "Mostra l’elenco indirizzi globale del server come rubrica di sola lettura"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Aggiunge una rubrica per account che viene popolata al volo quando digiti una query nella casella di ricerca della rubrica di Thunderbird. Nulla viene scaricato o memorizzato localmente: ogni ricerca interroga il server."
+  },
+  "config.gal.notSupported": {
+    "message": "Il tuo server non supporta il comando Search, quindi l’elenco indirizzi globale non è disponibile per questo account."
   },
 
   "config.error.invalidAsVersion": {

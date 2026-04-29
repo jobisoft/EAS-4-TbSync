@@ -10,6 +10,10 @@
     "message": "휴지통"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "전체 주소 목록"
+  },
+
   "setup.title": {
     "message": "Exchange ActiveSync 계정 추가 (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "실험적 기능 - 기본적으로 비활성화되어 있습니다. 활성화하면 반복 규칙과 인스턴스별 예외가 서버와 양방향으로 동기화됩니다."
+  },
+
+  "config.section.gal": {
+    "message": "전체 주소 목록"
+  },
+  "config.gal.enabled": {
+    "message": "서버의 전체 주소 목록을 읽기 전용 주소록으로 표시"
+  },
+  "config.gal.enabled.hint": {
+    "message": "계정별 디렉터리를 추가하여 Thunderbird 주소록 검색창에 쿼리를 입력하면 즉석에서 채워집니다. 아무것도 로컬에 다운로드되거나 저장되지 않으며, 각 검색은 서버에 질의합니다."
+  },
+  "config.gal.notSupported": {
+    "message": "서버가 Search 명령을 알리지 않기 때문에 이 계정에서는 전체 주소 목록을 사용할 수 없습니다."
   },
 
   "config.error.invalidAsVersion": {

@@ -14,15 +14,13 @@
 import { easRequest } from "../network.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { readPath } from "./wbxml-helpers.mjs";
+import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 
 export async function runGetItemEstimate({
   account, asVersion, collectionId, synckey,
   className = "Contacts", filterType = "0",
 }) {
-  const allowed = account?.custom?.allowedEasCommands;
-  if (typeof allowed === "string" && allowed.length && !allowed.split(",").includes("GetItemEstimate")) {
-    return null;
-  }
+  if (!easCommandLikelyAvailable(account, "GetItemEstimate")) return null;
   if (!collectionId || !synckey || synckey === "0") return null;
 
   let resp;

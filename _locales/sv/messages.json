@@ -10,6 +10,10 @@
     "message": "Papperskorg"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Global adresslista"
+  },
+
   "setup.title": {
     "message": "Lägg till ett Exchange ActiveSync-konto (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimentellt - av som standard. När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
+  },
+
+  "config.section.gal": {
+    "message": "Global adresslista"
+  },
+  "config.gal.enabled": {
+    "message": "Visa serverns globala adresslista som en skrivskyddad adressbok"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Lägger till en adressbok per konto som fylls i på begäran när du skriver en sökfråga i Thunderbirds adressbokssökruta. Inget laddas ner eller lagras lokalt — varje sökning frågar servern."
+  },
+  "config.gal.notSupported": {
+    "message": "Din server tillkännager inte Search-kommandot, så den globala adresslistan är inte tillgänglig för det här kontot."
   },
 
   "config.error.invalidAsVersion": {

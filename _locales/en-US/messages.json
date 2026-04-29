@@ -10,6 +10,10 @@
     "message": "Trash"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Global Address List"
+  },
+
   "setup.title": {
     "message": "Add an Exchange ActiveSync account (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimental - off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
+  },
+
+  "config.section.gal": {
+    "message": "Global Address List"
+  },
+  "config.gal.enabled": {
+    "message": "Show the server's Global Address List as a read-only address book"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Adds a per-account directory that is populated on the fly when you type a query into Thunderbird's address book search. Nothing is downloaded or stored locally — each search asks the server."
+  },
+  "config.gal.notSupported": {
+    "message": "Your server does not advertise the Search command, so the Global Address List is not available for this account."
   },
 
   "config.error.invalidAsVersion": {

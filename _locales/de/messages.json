@@ -10,6 +10,10 @@
     "message": "Papierkorb"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Globale Adressliste"
+  },
+
   "setup.title": {
     "message": "Exchange-ActiveSync-Konto (EAS) hinzufügen"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimentell – standardmäßig deaktiviert. Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
+  },
+
+  "config.section.gal": {
+    "message": "Globale Adressliste"
+  },
+  "config.gal.enabled": {
+    "message": "Globale Adressliste des Servers als schreibgeschütztes Adressbuch anzeigen"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Fügt ein kontospezifisches Adressbuch hinzu, das beim Eintippen einer Suchanfrage in das Adressbuch-Suchfeld von Thunderbird dynamisch befüllt wird. Es wird nichts lokal heruntergeladen oder gespeichert – jede Suche fragt direkt den Server ab."
+  },
+  "config.gal.notSupported": {
+    "message": "Ihr Server unterstützt den Search-Befehl nicht, daher ist die Globale Adressliste für dieses Konto nicht verfügbar."
   },
 
   "config.error.invalidAsVersion": {

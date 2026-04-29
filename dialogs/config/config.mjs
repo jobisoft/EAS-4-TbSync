@@ -42,6 +42,7 @@ const FIELD_IDS = [
   "as-version-selected", "provision",
   "contacts-display-override", "contacts-name-separator",
   "calendar-sync-limit", "sync-recurrence",
+  "gal-enabled",
 ];
 
 function $(id) { return document.getElementById(id); }
@@ -130,7 +131,23 @@ async function load() {
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
   $("sync-recurrence").checked = !!account.syncRecurrence;
 
+  // ── GAL section ────────────────────────────────────────────────────────
+  // Checkbox is forced off + disabled when the server's OPTIONS probe
+  // didn't advertise the Search command. The hint flips to a "not
+  // supported by your server" line so the user understands why.
+  $("gal-enabled").checked = account.galSupported && !!account.galEnabled;
+
   applyReadOnly();
+
+  // applyReadOnly clears `disabled` on every field when the account is
+  // editable; the GAL "not supported" disable must outlive that pass.
+  if (!account.galSupported) {
+    $("gal-enabled").disabled = true;
+    $("gal-enabled-hint").textContent = i18n(
+      "config.gal.notSupported",
+      "Your server does not advertise the Search command, so the Global Address List is not available."
+    );
+  }
 }
 
 /** Build the AS-version dropdown: "auto" plus the known fixed list,
@@ -210,6 +227,13 @@ async function onSave() {
     calendarSyncLimit: $("calendar-sync-limit").value,
     syncRecurrence: $("sync-recurrence").checked,
   };
+
+  // Only thread `galEnabled` through when the field is actually
+  // interactive — sending a forced-off value for an unsupported server
+  // would clobber the per-account preference if support is restored.
+  if (!$("gal-enabled").disabled) {
+    patch.galEnabled = $("gal-enabled").checked;
+  }
 
   // Connection fields only flow through when the section is visible. For
   // auto-detect accounts the server/user inputs are readOnly, so only the

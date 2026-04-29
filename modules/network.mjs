@@ -20,6 +20,7 @@
 
 import { decodeWBXML } from "./wbxml.mjs";
 import { getAccessToken, invalidateAccessToken, isOAuthAccount } from "./eas/oauth.mjs";
+import { reportEventLog } from "./eas-event-log.mjs";
 
 const DEFAULT_USER_AGENT = "Thunderbird ActiveSync";
 const CUSTOM_USER_AGENT_STORAGE_KEY = "tbsync.useragent";
@@ -116,6 +117,7 @@ export async function easRequest({ account, command, body, asVersion }) {
       headers.set("X-MS-PolicyKey", custom.policykey ?? "0");
     }
 
+    logSendXML({ account, command, body });
     const resp = await fetchWithTimeout(url, { method: "POST", headers, body });
 
     if (resp.status === 401 || resp.status === 403) {
@@ -139,6 +141,7 @@ export async function easRequest({ account, command, body, asVersion }) {
     if (buf.length === 0) return { xml: "", doc: null };
 
     if (!hasWbxmlMagic(buf)) {
+      logRecvText({ account, command, status: resp.status, buf });
       const head = [...buf.slice(0, 4)].map(b => b.toString(16).padStart(2, "0")).join(" ");
       throw new EasHttpError(NET_ERR.HTTP, resp.status, {
         message: `Response is not WBXML (first bytes: ${head})`,
@@ -146,12 +149,55 @@ export async function easRequest({ account, command, body, asVersion }) {
     }
 
     const xml = decodeWBXML(buf);
+    logRecvXML({ account, command, xml });
     const doc = new DOMParser().parseFromString(xml, "application/xml");
     return { xml, doc };
   };
 
   const authHeader = await buildAuthHeader(account);
   return send(authHeader, /* retryOnAuth */ true);
+}
+
+/* ── Wire-level debug logging ───────────────────────────────────────── */
+
+// Every WBXML send and receive emits a `level: "debug"` event-log entry
+// with the decoded XML in `details`. The host applies its own capture
+// gate (`tbsync.settings.logLevel`) and silently drops these unless the
+// user has enabled debug-level capture, so the calls are unconditional
+// here. Decoding the outbound body is a tiny cost the host's drop path
+// accepts in exchange for keeping the wire layer free of host config.
+
+function logSendXML({ account, command, body }) {
+  let xml;
+  try { xml = decodeWBXML(body); }
+  catch { xml = "<decode-failed>"; }
+  reportEventLog({
+    level: "debug",
+    accountId: account?.accountId,
+    message: `[eas:net] send ${command}`,
+    details: xml,
+  });
+}
+
+function logRecvXML({ account, command, xml }) {
+  reportEventLog({
+    level: "debug",
+    accountId: account?.accountId,
+    message: `[eas:net] receive ${command}`,
+    details: xml,
+  });
+}
+
+function logRecvText({ account, command, status, buf }) {
+  let text;
+  try { text = new TextDecoder("utf-8", { fatal: false }).decode(buf); }
+  catch { text = "<decode-failed>"; }
+  reportEventLog({
+    level: "debug",
+    accountId: account?.accountId,
+    message: `[eas:net] receive ${command} non-WBXML (HTTP ${status})`,
+    details: text,
+  });
 }
 
 async function getDeviceType() {

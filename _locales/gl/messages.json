@@ -10,6 +10,10 @@
     "message": "Papeleira"
   },
 
+  "gal.addressBookSuffix": {
+    "message": "Lista global de enderezos"
+  },
+
   "setup.title": {
     "message": "Engadir unha conta de Exchange ActiveSync (EAS)"
   },
@@ -259,6 +263,19 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimental - desactivado por defecto. Cando se activa, as regras de recorrencia e as excepcións por instancia sincronízanse nos dous sentidos co servidor."
+  },
+
+  "config.section.gal": {
+    "message": "Lista global de enderezos"
+  },
+  "config.gal.enabled": {
+    "message": "Mostrar a lista global de enderezos do servidor como unha axenda só de lectura"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Engade unha axenda por conta que se enche ao voo cando escribe unha consulta no cadro de busca da axenda de Thunderbird. Non se descarga nin almacena nada localmente: cada busca consulta ao servidor."
+  },
+  "config.gal.notSupported": {
+    "message": "O seu servidor non admite o comando Search, polo que a lista global de enderezos non está dispoñible para esta conta."
   },
 
   "config.error.invalidAsVersion": {
