@@ -866,6 +866,7 @@ function buildSyncBody({
     if (asVersion !== "2.5") {
       w.otag("Options");
       w.atag("FilterType", String(filterType));
+      w.atag("Class", className);
       w.switchpage("AirSyncBase");
       w.otag("BodyPreference");
       w.atag("Type", "1");
