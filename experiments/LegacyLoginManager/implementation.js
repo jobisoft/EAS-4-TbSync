@@ -11,7 +11,10 @@ var LegacyLoginManager = class extends ExtensionCommon.ExtensionAPI {
          *  hostname as the login origin and matches on httpRealm + username.
          *  Returns the password string or null when no entry matches. */
         getLoginInfo: async ({ origin, httpRealm, username }) => {
-          const logins = Services.logins.findLogins(origin, null, httpRealm);
+          const logins = await Services.logins.searchLoginsAsync({
+            origin, 
+            httpRealm,
+          });
           for (const login of logins) {
             if (login.username === username) return login.password;
           }
