@@ -196,7 +196,12 @@ export class EasProvider extends TbSyncProviderImplementation {
     await this.updateAccount({
       accountId,
       patch: { custom: { foldersynckey: "0", lastEasOptionsUpdate: 0 } },
-    }).catch(() => {});
+    }).catch((err) =>
+      console.debug(
+        `[eas] updateAccount(disable-reset) for ${accountId} failed:`,
+        err,
+      ),
+    );
     return null;
   }
 
@@ -266,7 +271,12 @@ export class EasProvider extends TbSyncProviderImplementation {
         targetName: null,
         custom: { synckey: "0", contactMap: {}, itemMap: {} },
       },
-    }).catch(() => {});
+    }).catch((err) =>
+      console.debug(
+        `[eas] updateFolder(disable-reset) for ${accountId}/${folderId} failed:`,
+        err,
+      ),
+    );
     return null;
   }
 
@@ -998,7 +1008,8 @@ async function readShowItemsInTrash() {
   try {
     const rv = await browser.storage.local.get({ showItemsInTrash: false });
     return rv.showItemsInTrash === true;
-  } catch {
+  } catch (err) {
+    console.debug("[eas] readShowItemsInTrash storage.get failed:", err);
     return false;
   }
 }

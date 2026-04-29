@@ -191,7 +191,12 @@ export async function runItemSync({
           accountId,
           patch: { noAutosyncUntil: Date.now() + BUSY_BACKOFF_MS },
         })
-        .catch(() => {});
+        .catch((err) =>
+          console.debug(
+            `[eas] updateAccount(noAutosyncUntil) for ${accountId} failed:`,
+            err,
+          ),
+        );
       provider.reportEventLog({
         level: "warning",
         accountId,

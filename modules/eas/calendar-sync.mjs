@@ -9,6 +9,7 @@ import { runItemSync } from "./sync-runner.mjs";
 import * as calendarStore from "../calendar-store.mjs";
 import * as eventCodec from "./calendar-codec.mjs";
 import * as taskCodec from "./task-codec.mjs";
+import { ensureLoaded as ensureTimezoneMappingLoaded } from "./timezone-mapping.mjs";
 
 function makeCodec(modCodec) {
   return {
@@ -103,9 +104,12 @@ const taskItemKind = {
 
 async function getDefaultTimezone() {
   try {
-    const z = await messenger.calendar.timezones.getCurrent();
-    return z?.id ?? "UTC";
-  } catch {
+    return (await messenger.calendar.timezones.currentZone) || "UTC";
+  } catch (err) {
+    console.debug(
+      "[eas] getDefaultTimezone: messenger.calendar.timezones.currentZone failed:",
+      err,
+    );
     return "UTC";
   }
 }
@@ -120,6 +124,7 @@ export async function syncCalendarFolder({
 }) {
   const filterType = String(account.custom?.synclimit ?? "7");
   const defaultTimezone = await getDefaultTimezone();
+  await ensureTimezoneMappingLoaded();
   return runItemSync({
     provider,
     account,
@@ -141,6 +146,7 @@ export async function syncTaskFolder({
   asVersion,
 }) {
   const defaultTimezone = await getDefaultTimezone();
+  await ensureTimezoneMappingLoaded();
   return runItemSync({
     provider,
     account,

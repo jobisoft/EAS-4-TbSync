@@ -23,7 +23,9 @@ export function reportEventLog(args) {
   if (!sink) return;
   try {
     sink(args);
-  } catch {
-    /* never break the wire path */
+  } catch (err) {
+    // Never break the wire path; logging the failure has to use the
+    // browser console rather than recursing back into the sink.
+    console.debug("[eas] event-log sink threw:", err);
   }
 }

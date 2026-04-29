@@ -315,8 +315,12 @@ async function runConsentPopup(authUrl) {
       cleanup();
       try {
         browser.windows.remove(popup.id);
-      } catch {
-        /* already gone */
+      } catch (err) {
+        // Window already gone — common when the user closes it manually.
+        console.debug(
+          `[eas] OAuth popup windows.remove(${popup.id}) failed:`,
+          err,
+        );
       }
       fn(value);
     };

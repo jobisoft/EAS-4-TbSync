@@ -24,6 +24,10 @@
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
 import { TimeZoneBlob, isAllZero } from "./timezone-blob.mjs";
+import {
+  guessTimezoneByStdDstOffset,
+  tzInfoForBlob,
+} from "./timezone-mapping.mjs";
 
 const X_EAS_SERVERID = "X-EAS-SERVERID";
 const X_EAS_RESPONSETYPE = "X-EAS-RESPONSETYPE";
@@ -562,29 +566,74 @@ export function stampEasServerId(ical, serverID) {
 /* ── Helpers: timezone resolution ──────────────────────────────────── */
 
 function resolveTimezone(adNode, asVersion, defaultTimezone) {
+  // AS 16.1 carries times in UTC on the wire; no zone resolution needed.
   if (asVersion === "16.1") return "UTC";
   const blobB64 = readPathFrom(adNode, ["TimeZone"]);
   if (!blobB64 || isAllZero(blobB64)) return defaultTimezone || "UTC";
-  // The blob's standardName is a Windows zone ID. Without a Windows→IANA
-  // map we keep UTC times in the iCal value but skip TZID; callers that
-  // need exact local times can layer a map later.
-  return defaultTimezone || "UTC";
+  const blob = new TimeZoneBlob();
+  blob.easTimeZone64 = blobB64;
+  // utcOffset is "minutes from local to UTC" (e.g. -60 for CET); daylight
+  // shifts by daylightBias (typically -60 again for European DST). Match
+  // legacy calendarsync.js:106-107.
+  const stdOffset = blob.utcOffset;
+  const dstOffset = blob.daylightBias + blob.utcOffset;
+  const stdName = blob.standardName;
+  const tzid = guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName);
+  return tzid || defaultTimezone || "UTC";
 }
 
 function buildTimezoneBlob(vevent, defaultTimezone) {
+  const sourceTzid =
+    pickSourceTzid(vevent) ?? defaultTimezone ?? "UTC";
+  const tzInfo = tzInfoForBlob(sourceTzid);
+
   const blob = new TimeZoneBlob();
-  // Without a working IANA→Windows offset/switchdate computation here,
-  // emit a zero-bias blob and rely on UTC times in StartTime/EndTime.
-  // Servers tolerate this and treat the times as authoritative.
-  blob.utcOffset = 0;
+  blob.utcOffset = tzInfo.std.offset;
   blob.standardBias = 0;
-  blob.daylightBias = 0;
-  blob.standardName = "UTC";
-  blob.daylightName = "UTC";
+  blob.daylightBias = tzInfo.dst.offset - tzInfo.std.offset;
+  blob.standardName = tzInfo.stdWinName;
+  blob.daylightName = tzInfo.dstWinName;
+
+  // SYSTEMTIME-shaped switch dates, only when both std and dst rules exist
+  // (no-DST zones leave both SYSTEMTIMEs zero-filled and daylightBias=0).
+  if (tzInfo.std.switchdate && tzInfo.dst.switchdate) {
+    const std = blob.standardDate;
+    std.wMonth = tzInfo.std.switchdate.month;
+    std.wDay = tzInfo.std.switchdate.weekOfMonth;
+    std.wDayOfWeek = tzInfo.std.switchdate.dayOfWeek;
+    std.wHour = tzInfo.std.switchdate.hour;
+    std.wMinute = tzInfo.std.switchdate.minute;
+    std.wSecond = tzInfo.std.switchdate.second;
+
+    const dst = blob.daylightDate;
+    dst.wMonth = tzInfo.dst.switchdate.month;
+    dst.wDay = tzInfo.dst.switchdate.weekOfMonth;
+    dst.wDayOfWeek = tzInfo.dst.switchdate.dayOfWeek;
+    dst.wHour = tzInfo.dst.switchdate.hour;
+    dst.wMinute = tzInfo.dst.switchdate.minute;
+    dst.wSecond = tzInfo.dst.switchdate.second;
+  }
+
   return blob;
 }
 
 /* ── Helpers: dates ────────────────────────────────────────────────── */
+
+/** Pick the source TZID for the outbound TimeZone blob. Matches the
+ *  legacy precedence: dtstart's TZID, then dtend's TZID, then explicit
+ *  UTC, then null (caller falls back to the host's default zone for
+ *  floating / unknown values). */
+function pickSourceTzid(vevent) {
+  for (const name of ["dtstart", "dtend"]) {
+    const prop = vevent?.getFirstProperty(name);
+    if (!prop) continue;
+    const tzid = prop.getParameter("tzid");
+    if (tzid && tzid !== "floating") return tzid;
+    const value = prop.getFirstValue?.();
+    if (value?.zone?.tzid === "UTC" || value?.isUTC) return "UTC";
+  }
+  return null;
+}
 
 function writeDateProp(vevent, name, easUtc, tzId, allDay) {
   const prop = new ICAL.Property(name, vevent);

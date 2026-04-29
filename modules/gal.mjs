@@ -137,10 +137,14 @@ export async function disableGal({ provider, accountId }) {
 
   try {
     await messenger.addressBooks.delete(entry.addressBookId);
-  } catch {
+  } catch (err) {
     // The directory may persist if the API does not allow deletion of
     // provider-created books; that's acceptable - searches simply stop
     // returning anything once the listener is gone.
+    console.debug(
+      `[eas] addressBooks.delete(${entry.addressBookId}) failed:`,
+      err,
+    );
   }
 }
 
@@ -150,7 +154,8 @@ export async function enableGalForAllAccounts(provider) {
   let accounts;
   try {
     accounts = await provider.listAccounts();
-  } catch {
+  } catch (err) {
+    console.debug("[eas] enableGalForAllAccounts: listAccounts failed:", err);
     return;
   }
   if (!Array.isArray(accounts)) return;
