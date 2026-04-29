@@ -47,7 +47,12 @@ import { syncContactFolder } from "./eas/contact-sync.mjs";
 import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
 import { sendDeviceInformation } from "./eas/settings.mjs";
 import { NET_ERR } from "./network.mjs";
-import { enableGal, disableGal, enableGalForAllAccounts } from "./gal.mjs";
+import {
+  enableGal,
+  disableGal,
+  enableGalForAllAccounts,
+  installRenameWatcher as installGalRenameWatcher,
+} from "./gal.mjs";
 import { easCommandAdvertised } from "./eas/allowed-commands.mjs";
 import { setEventLogSink } from "./eas-event-log.mjs";
 
@@ -148,6 +153,10 @@ export class EasProvider extends TbSyncProviderImplementation {
     // (`network.mjs`) emits debug entries for every WBXML send/receive;
     // before this binding the calls silently no-op.
     setEventLogSink((args) => this.reportEventLog(args));
+    // One-shot global listener that mirrors GAL directory renames back
+    // into `account.custom.galName` so the rename survives across the
+    // teardown/recreate cycle on next TB start.
+    installGalRenameWatcher(this);
   }
 
   // ── Base-class hooks ───────────────────────────────────────────────────

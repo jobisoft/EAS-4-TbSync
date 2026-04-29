@@ -26,11 +26,21 @@ const MIN_QUERY_LENGTH = 3;
 
 const listeners = new Map(); // accountId → { callback, addressBookId }
 
+let renameWatcherInstalled = false;
+
 function galAddressBookId(accountId) {
   return `eas-gal-${accountId}`;
 }
 
-function galAddressBookName(account) {
+/** Inverse of `galAddressBookId`: returns the accountId encoded in a GAL
+ *  directory id, or null for non-GAL ids. */
+function accountIdFromGalAddressBookId(id) {
+  if (typeof id !== "string") return null;
+  const m = id.match(/^eas-gal-(.+)$/);
+  return m ? m[1] : null;
+}
+
+function galAddressBookDefaultName(account) {
   // Suffix the account name so multiple accounts don't collide in the
   // directory tree. Localized via the same i18n that backs the rest of
   // the UI; falls back to English when the key is missing.
@@ -40,12 +50,50 @@ function galAddressBookName(account) {
   return `${base} - ${suffix}`;
 }
 
+/** The display name to use when (re)creating the GAL directory. Prefers
+ *  the user's locally-applied name (cached in `account.custom.galName`)
+ *  so a rename survives the directory being torn down and recreated on
+ *  next provider boot. */
+function galAddressBookName(account) {
+  const cached = account.custom?.galName;
+  if (typeof cached === "string" && cached.trim()) return cached;
+  return galAddressBookDefaultName(account);
+}
+
 function searchSupported(account) {
   // The per-account toggle defaults to "enabled" - undefined / missing
   // counts as on, only an explicit `false` disables. New accounts get
   // GAL automatically; existing-pre-toggle accounts behave unchanged.
   if (account.custom?.galenabled === false) return false;
   return easCommandAdvertised(account, "Search");
+}
+
+/** Install a single global watcher that mirrors local renames of any GAL
+ *  directory back into `account.custom.galName`, so the rename survives
+ *  the next teardown / recreation cycle. Idempotent - safe to call from
+ *  the EAS provider's constructor. The listener filters by directory id
+ *  prefix; non-GAL books are ignored. */
+export function installRenameWatcher(provider) {
+  if (renameWatcherInstalled) return;
+  renameWatcherInstalled = true;
+
+  messenger.addressBooks.onUpdated.addListener(async (node) => {
+    const accountId = accountIdFromGalAddressBookId(node?.id);
+    if (!accountId) return;
+    if (typeof node.name !== "string" || !node.name) return;
+    try {
+      const rv = await provider.getAccount(accountId);
+      const acc = rv?.account;
+      if (!acc) return;
+      if (acc.custom?.galName === node.name) return;
+      await provider.updateAccount({
+        accountId,
+        patch: { custom: { galName: node.name } },
+      });
+    } catch (err) {
+      console.debug("[eas] gal rename watcher update failed:", err);
+    }
+  });
 }
 
 /** Register the per-account onSearchRequest listener. No-op when the
