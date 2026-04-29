@@ -210,6 +210,42 @@ export class EasProvider extends TbSyncProviderImplementation {
     return null;
   }
 
+  async onRegisterSuccessful({ accountId }) {
+    // OPTIONS probe up-front so the manager UI / config popup have the
+    // server-advertised EAS version and command list (notably Search/GAL)
+    // before the user clicks Connect. The host broadcasts accounts-changed
+    // before this hook resolves, so the new (still-disabled) row is already
+    // visible; we hold the provider-wide lock for the duration so the user
+    // can't race us by clicking Connect.
+    await this.setProviderUpgradeLock(true);
+    try {
+      const ctx = await this.#loadContext(accountId);
+      if (!ctx) return null;
+      if (isOAuthAccount(ctx.account.custom)) this.#primeAuth(ctx);
+      const negotiated = await negotiateAsVersion({ account: ctx.account });
+      await this.updateAccount({
+        accountId,
+        patch: {
+          custom: {
+            asversion: negotiated.asVersion,
+            allowedEasVersions: negotiated.allowedAsVersions,
+            allowedEasCommands: negotiated.allowedCommands,
+            lastEasOptionsUpdate: Date.now(),
+          },
+        },
+      });
+    } catch (err) {
+      this.reportEventLog({
+        level: "warning",
+        message: `Initial OPTIONS probe failed for account ${accountId}; will retry on first Connect`,
+        details: err?.message ?? null,
+      });
+    } finally {
+      await this.setProviderUpgradeLock(false);
+    }
+    return null;
+  }
+
   // ── Folder lifecycle ──────────────────────────────────────────────────
 
   async onFolderEnabled() {
