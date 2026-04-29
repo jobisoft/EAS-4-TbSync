@@ -3,19 +3,16 @@
  * stored on `account.custom.allowedEasCommands` after `connect.mjs`
  * runs the OPTIONS probe.
  *
- * The canonical storage shape is an array of command names (e.g.
+ * Storage shape is an array of command names (e.g.
  * `["FolderSync", "Sync", "Search", …]`). The legacy add-on stored a
- * comma-separated string; both shapes are accepted here so any caller
- * surviving from the old data path keeps working.
+ * comma-separated string; the `eas.legacy-migration` upgrade body
+ * normalizes that into the canonical array, so this module never needs
+ * to deal with the string form.
  */
 
 function readCommandList(account) {
   const cmds = account?.custom?.allowedEasCommands;
-  if (Array.isArray(cmds)) return cmds;
-  if (typeof cmds === "string" && cmds.length) {
-    return cmds.split(",").map(s => s.trim());
-  }
-  return null;
+  return Array.isArray(cmds) ? cmds : null;
 }
 
 /** Strict check: did the OPTIONS probe explicitly advertise this

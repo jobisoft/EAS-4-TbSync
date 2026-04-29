@@ -320,5 +320,8 @@ function basicAuthHeader(user, password) {
 
 function parseList(headerValue) {
   if (!headerValue) return [];
-  return headerValue.split(",").map(s => s.trim()).filter(Boolean);
+  // Dedupe: some EAS frontends (notably Office 365) emit
+  // MS-ASProtocolCommands twice in the OPTIONS reply, which the Headers
+  // API joins with ",". The list is a set in spirit.
+  return [...new Set(headerValue.split(",").map(s => s.trim()).filter(Boolean))];
 }

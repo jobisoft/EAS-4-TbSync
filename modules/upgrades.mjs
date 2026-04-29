@@ -75,6 +75,7 @@ export const UPGRADES = [
         try {
           await liftHostAndHttpsToServer(provider, acc);
           await liftCredentials(provider, acc);
+          await normalizeAllowedEasCommands(provider, acc);
           await fixFolders(provider, acc);
         } catch (err) {
           provider.reportEventLog({
@@ -206,6 +207,28 @@ async function liftPref(provider, {
       message: `[upgrade] lifted legacy '${legacyKey}' pref${logValue(newValue)} into storage.local['${storageKey}']`,
     });
   }
+}
+
+/** Normalize legacy `allowedEasCommands` from a comma-separated string
+ *  into the canonical deduped array. After this runs, the rest of the
+ *  provider can assume an array on `account.custom.allowedEasCommands`
+ *  without sniffing for the legacy string form. Some EAS frontends emit
+ *  MS-ASProtocolCommands twice, so the legacy raw header value can carry
+ *  the same command twice — `Set` collapses those at upgrade time. */
+async function normalizeAllowedEasCommands(provider, acc) {
+  const cmds = acc.custom?.allowedEasCommands;
+  if (Array.isArray(cmds)) return;
+  if (typeof cmds !== "string" || !cmds.length) return;
+  const arr = [...new Set(cmds.split(",").map(s => s.trim()).filter(Boolean))];
+  await provider.updateAccount({
+    accountId: acc.accountId,
+    patch: { custom: { allowedEasCommands: arr } },
+  });
+  provider.reportEventLog({
+    level: "debug",
+    accountId: acc.accountId,
+    message: `[upgrade] normalized legacy allowedEasCommands string into a deduped array of ${arr.length} command(s)`,
+  });
 }
 
 /** Re-derive host-shape per-folder fields the legacy migration couldn't:
