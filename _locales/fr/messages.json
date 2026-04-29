@@ -378,6 +378,10 @@
   },
   "eas.sync.error.accessDenied.130": { "message": "accès refusé" },
   "eas.sync.error.accessDenied.131": { "message": "compte désactivé" },
+  "eas.sync.error.missingField": {
+    "message": "Violation du protocole ActiveSync : le champ obligatoire $FIELD$ est absent de la réponse du serveur.",
+    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+  },
   "eas.network.error.transport": {
     "message": "Erreur de transport EAS (HTTP $STATUS$)",
     "placeholders": { "status": { "content": "$1", "example": "500" } }

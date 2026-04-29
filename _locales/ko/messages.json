@@ -378,6 +378,10 @@
   },
   "eas.sync.error.accessDenied.130": { "message": "접근이 거부되었습니다" },
   "eas.sync.error.accessDenied.131": { "message": "계정이 비활성화되었습니다" },
+  "eas.sync.error.missingField": {
+    "message": "ActiveSync 프로토콜 위반: 필수 필드 $FIELD$가 서버 응답에 없습니다.",
+    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+  },
   "eas.network.error.transport": {
     "message": "EAS 전송 오류 (HTTP $STATUS$)",
     "placeholders": { "status": { "content": "$1", "example": "500" } }

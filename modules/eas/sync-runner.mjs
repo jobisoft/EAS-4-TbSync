@@ -87,6 +87,12 @@ const STATUS_ACCESS_DENIED = new Set([
   "131",
 ]);
 
+// Server demands re-Provisioning. 141 = DeviceNotProvisionable,
+// 142 = DeviceNotProvisioned, 143 = PolicyRefresh, 144 = InvalidPolicyKey.
+// In-band variant of HTTP 449 - same recovery: mark the account as needing
+// Provision and let the host re-run the account sync.
+const STATUS_PROVISION_REQUIRED = new Set(["141", "142", "143", "144"]);
+
 const MAX_PULL_BATCHES = 50;
 const POST_PUSH_WAIT_MS = 2000;
 
@@ -187,6 +193,21 @@ export async function runItemSync({
         "Folder hierarchy changed on the server - rerunning account sync",
       );
     }
+    if (result.code === "PROVISION_REQUIRED") {
+      // Server signalled Sync Status 141/142/143/144 in-band - the same
+      // condition HTTP 449 surfaces out-of-band. Mark the account as
+      // needing Provision; the next account rerun will hit the gate at
+      // eas-provider.mjs::#doConnectAndDiscover and refresh the policy
+      // before resuming FolderSync. Matches legacy `resyncAccount` for
+      // `Sync.14X` (network.js:793-800). Host caps rerun count.
+      await provider.updateAccount({
+        accountId,
+        patch: { custom: { provision: true, policykey: "0" } },
+      });
+      return accountRerun(
+        "Server demands re-provisioning - rerunning account sync",
+      );
+    }
     if (result.code === "BUSY") {
       // Server signalled "temporarily unavailable" (Sync Status 110).
       // Suppress autosync for 30 minutes via the host-recognized
@@ -276,6 +297,8 @@ async function runOneSync({
       return await finishWith(ctx, { code: "RESYNC" });
     if (boot.code === "HIERARCHY")
       return await finishWith(ctx, { code: "HIERARCHY" });
+    if (boot.code === "PROVISION_REQUIRED")
+      return await finishWith(ctx, { code: "PROVISION_REQUIRED" });
     if (boot.code === "BUSY") return await finishWith(ctx, { code: "BUSY" });
     if (boot.error)
       return await finishWith(ctx, { status: errorStatus(boot.error) });
@@ -368,6 +391,7 @@ async function pullPhase(ctx) {
     });
     if (r.code === "RESYNC") return { code: "RESYNC" };
     if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
+    if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
     if (r.code === "BUSY") return { code: "BUSY" };
     if (r.error) return { status: errorStatus(r.error) };
 
@@ -460,6 +484,7 @@ async function pushPhase(ctx, userEdits) {
 
     if (r.code === "RESYNC") return { code: "RESYNC" };
     if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
+    if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
     if (r.code === "BUSY") return { code: "BUSY" };
 
     if (r.code === "MALFORMED") {
@@ -971,6 +996,8 @@ function parseSyncResponse(doc) {
     if (top === STATUS_RESYNC) return { code: "RESYNC", topStatus: top };
     if (top === STATUS_FOLDER_HIERARCHY)
       return { code: "HIERARCHY", topStatus: top };
+    if (STATUS_PROVISION_REQUIRED.has(top))
+      return { code: "PROVISION_REQUIRED", topStatus: top };
     if (STATUS_PROTOCOL_FAULT.has(top)) {
       return {
         error: browser.i18n.getMessage("eas.sync.error.protocolFault", [top]),
@@ -1000,6 +1027,8 @@ function parseSyncResponse(doc) {
     if (collStatus === STATUS_RESYNC) return { code: "RESYNC", collStatus };
     if (collStatus === STATUS_FOLDER_HIERARCHY)
       return { code: "HIERARCHY", collStatus };
+    if (STATUS_PROVISION_REQUIRED.has(collStatus))
+      return { code: "PROVISION_REQUIRED", collStatus };
     if (collStatus === STATUS_BUSY) return { code: "BUSY", collStatus };
     if (
       collStatus === STATUS_MALFORMED ||
@@ -1012,7 +1041,14 @@ function parseSyncResponse(doc) {
     return { error: `Sync collection status ${collStatus}`, collStatus };
   }
 
-  const synckey = readPathFrom(collection, ["SyncKey"]) ?? "0";
+  const synckey = readPathFrom(collection, ["SyncKey"]);
+  if (!synckey) {
+    throw new Error(
+      browser.i18n.getMessage("eas.sync.error.missingField", [
+        "Sync.Collections.Collection.SyncKey",
+      ]),
+    );
+  }
   const moreAvailable = !!childByTag(collection, "MoreAvailable");
 
   let commands = null;

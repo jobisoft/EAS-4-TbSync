@@ -378,6 +378,10 @@
   },
   "eas.sync.error.accessDenied.130": { "message": "åtkomst nekad" },
   "eas.sync.error.accessDenied.131": { "message": "kontot är inaktiverat" },
+  "eas.sync.error.missingField": {
+    "message": "ActiveSync-protokollöverträdelse: Det obligatoriska fältet $FIELD$ saknas i serverns svar.",
+    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+  },
   "eas.network.error.transport": {
     "message": "EAS-transportfel (HTTP $STATUS$)",
     "placeholders": { "status": { "content": "$1", "example": "500" } }

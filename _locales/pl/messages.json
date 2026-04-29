@@ -378,6 +378,10 @@
   },
   "eas.sync.error.accessDenied.130": { "message": "odmowa dostępu" },
   "eas.sync.error.accessDenied.131": { "message": "konto wyłączone" },
+  "eas.sync.error.missingField": {
+    "message": "Naruszenie protokołu ActiveSync: W odpowiedzi serwera brakuje obowiązkowego pola $FIELD$.",
+    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+  },
   "eas.network.error.transport": {
     "message": "Błąd transportu EAS (HTTP $STATUS$)",
     "placeholders": { "status": { "content": "$1", "example": "500" } }

@@ -375,6 +375,10 @@
   },
   "eas.sync.error.accessDenied.130": { "message": "Zugriff verweigert" },
   "eas.sync.error.accessDenied.131": { "message": "Konto deaktiviert" },
+  "eas.sync.error.missingField": {
+    "message": "Verletzung des ActiveSync Protokolls: Notwendiges Feld $FIELD$ ist nicht in der Serverantwort enthalten.",
+    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+  },
   "eas.network.error.transport": {
     "message": "EAS-Übertragungsfehler (HTTP $STATUS$)",
     "placeholders": { "status": { "content": "$1", "example": "500" } }
