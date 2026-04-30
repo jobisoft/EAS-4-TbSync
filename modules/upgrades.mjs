@@ -87,6 +87,26 @@ export const UPGRADES = [
           });
         }
       }
+
+      // Legacy EAS4 stored each contact's EAS ServerId as the TB card's
+      // UID (`card.primaryKey === serverId`) and several extra fields in
+      // the property bag via `setProperty()`. The new code expects the
+      // ServerId in an `X-EAS-SERVERID` vCard property and the extras in
+      // matching `X-EAS-*` properties. Without this migration, an
+      // upgraded user would see duplicates after the first delta sync
+      // and silent edit/delete failures on legacy cards. See Phase 3
+      // audit row 3.11 for the full rationale.
+      for (const acc of accounts) {
+        try {
+          await migrateContactsForAccount(provider, acc);
+        } catch (err) {
+          provider.reportEventLog({
+            level: "warning",
+            accountId: acc.accountId,
+            message: `[upgrade] contact vCard migration failed: ${err?.message ?? String(err)}`,
+          });
+        }
+      }      
     },
   },
 ];
@@ -378,4 +398,192 @@ async function liftCredentials(provider, acc) {
     accountId: acc.accountId,
     message: `[upgrade] lifted legacy basic-auth password from nsILoginManager`,
   });
+}
+
+/* ── Contact vCard migration (5.0.3) ─────────────────────────────────── */
+
+/** Walk every selected contacts folder on the account and re-shape each
+ *  legacy card into the new vCard layout. Idempotent: cards that already
+ *  carry an `X-EAS-SERVERID` property are skipped. */
+async function migrateContactsForAccount(provider, acc) {
+  const rv = await provider.getAccount(acc.accountId);
+  const folders = rv?.folders ?? [];
+  for (const folder of folders) {
+    if (folder.targetType !== "contacts") continue;
+    if (!folder.targetID) continue;
+    try {
+      await migrateContactsForFolder(provider, acc.accountId, folder);
+    } catch (err) {
+      provider.reportEventLog({
+        level: "warning",
+        accountId: acc.accountId,
+        folderId: folder.folderId,
+        message: `[upgrade] folder migration failed: ${err?.message ?? String(err)}`,
+      });
+    }
+  }
+}
+
+async function migrateContactsForFolder(provider, accountId, folder) {
+  // Read every non-list card via the LegacyAbProperties experiment, which
+  // also surfaces any property-bag stamps (Spouse, Yomi*, Children, …)
+  // that legacy wrote via setProperty() and that don't appear in the
+  // WebExtension-visible vCard.
+  let stamps;
+  try {
+    stamps = await browser.LegacyAbProperties.readEasStamps(folder.targetID);
+  } catch (err) {
+    provider.reportEventLog({
+      level: "warning",
+      accountId,
+      folderId: folder.folderId,
+      message: `[upgrade] LegacyAbProperties.readEasStamps failed: ${err?.message ?? String(err)}`,
+    });
+    return;
+  }
+  if (!Array.isArray(stamps) || stamps.length === 0) return;
+
+  const contactMap = { ...(folder.custom?.contactMap ?? {}) };
+  let migratedCount = 0;
+  let alreadyMigratedCount = 0;
+
+  for (const { contactId, stamps: legacyStamps } of stamps) {
+    try {
+      const card = await messenger.contacts.get(contactId);
+      const oldVCard =
+        typeof card?.vCard === "string" && card.vCard.trim() ? card.vCard : "";
+      if (!oldVCard) continue;
+
+      // Idempotency guard: if X-EAS-SERVERID is already present we've
+      // already migrated this card on a previous run.
+      if (hasVCardProperty(oldVCard, "X-EAS-SERVERID")) {
+        // Even if the vCard is migrated, the contactMap might be stale -
+        // make sure the entry is present so the deleted_by_user path can
+        // resolve the ServerId.
+        if (!contactMap[contactId]) {
+          contactMap[contactId] = contactId;
+          migratedCount++;
+        } else {
+          alreadyMigratedCount++;
+        }
+        continue;
+      }
+
+      const newVCard = buildMigratedVCard(oldVCard, contactId, legacyStamps);
+      if (newVCard === oldVCard) continue;
+
+      // Pre-tag the changelog so the address-book observer treats the
+      // upcoming `messenger.contacts.update` as self-inflicted and does
+      // NOT produce a `modified_by_user` entry. NB: this also replaces
+      // any existing entry for the card - any unsynced pre-upgrade user
+      // edit's *push intent* is dropped (the data itself is preserved
+      // because the migration read-modify-writes the vCard).
+      await provider.changelogMarkServerWrite({
+        accountId,
+        folderId: folder.folderId,
+        parentId: folder.targetID,
+        itemId: contactId,
+        status: "modified_by_server",
+        kind: "contact",
+      });
+
+      await messenger.contacts.update(contactId, { vCard: newVCard });
+
+      // Legacy convention: card.UID === EAS ServerId. The contactMap
+      // entry is needed by `buildPushBatch`'s `deleted_by_user` path,
+      // which only consults `idMap` (the codec's vCard-blob fallback
+      // doesn't help for deletes - the local card is gone by then).
+      contactMap[contactId] = contactId;
+      migratedCount++;
+    } catch (err) {
+      provider.reportEventLog({
+        level: "warning",
+        accountId,
+        folderId: folder.folderId,
+        message: `[upgrade] contact ${contactId}: ${err?.message ?? String(err)}`,
+      });
+    }
+  }
+
+  if (migratedCount > 0) {
+    await provider.updateFolder({
+      accountId,
+      folderId: folder.folderId,
+      patch: { custom: { contactMap } },
+    });
+    provider.reportEventLog({
+      level: "debug",
+      accountId,
+      folderId: folder.folderId,
+      message: `[upgrade] migrated ${migratedCount} contact card(s) to new vCard shape (${alreadyMigratedCount} already migrated)`,
+    });
+  } else if (alreadyMigratedCount > 0) {
+    provider.reportEventLog({
+      level: "debug",
+      accountId,
+      folderId: folder.folderId,
+      message: `[upgrade] all ${alreadyMigratedCount} contact card(s) already migrated`,
+    });
+  }
+}
+
+/** Map a legacy property-bag key to its `X-EAS-*` vCard counterpart.
+ *  Most keys carry the `EAS-` prefix in legacy storage and just need
+ *  `X-` prepended; `Children` is the odd one - legacy stored it without
+ *  any prefix at all. */
+function legacyKeyToVCardKey(legacyKey) {
+  if (legacyKey === "Children") return "X-EAS-CHILDREN";
+  if (legacyKey.startsWith("EAS-")) {
+    return "X-EAS-" + legacyKey.slice("EAS-".length).toUpperCase();
+  }
+  // Fallback: shouldn't happen for fields in LEGACY_PROPERTY_BAG_FIELDS,
+  // but be defensive.
+  return "X-EAS-" + legacyKey.toUpperCase();
+}
+
+/** Insert `X-EAS-SERVERID` and any `X-EAS-*` properties derived from the
+ *  legacy property bag, just before `END:VCARD`. Line-based (rather than
+ *  parsing through ICAL.js) so the rest of the vCard's existing
+ *  formatting / line-folding is preserved untouched. */
+function buildMigratedVCard(vCardString, serverId, legacyStamps) {
+  const lines = vCardString.split(/\r?\n/);
+  const endIdx = lines.findIndex((l) => /^END:VCARD\s*$/i.test(l));
+  if (endIdx === -1) return vCardString; // malformed; skip
+
+  const inserts = [];
+  if (!hasVCardProperty(vCardString, "X-EAS-SERVERID")) {
+    inserts.push(`X-EAS-SERVERID:${escapeVCardValue(serverId)}`);
+  }
+  for (const [legacyKey, value] of Object.entries(legacyStamps ?? {})) {
+    const vCardKey = legacyKeyToVCardKey(legacyKey);
+    // Skip if the new key is already on the card (partial migration).
+    if (hasVCardProperty(vCardString, vCardKey)) continue;
+    inserts.push(`${vCardKey}:${escapeVCardValue(value)}`);
+  }
+  if (inserts.length === 0) return vCardString;
+
+  // RFC 6350 §3.2 line termination is CRLF; preserve.
+  return [...lines.slice(0, endIdx), ...inserts, ...lines.slice(endIdx)].join(
+    "\r\n",
+  );
+}
+
+function hasVCardProperty(vCardString, key) {
+  // Match `KEY:` or `KEY;params:` at line start, case-insensitive.
+  const re = new RegExp(
+    `^${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[:;]`,
+    "im",
+  );
+  return re.test(vCardString);
+}
+
+function escapeVCardValue(s) {
+  // RFC 6350 §3.4: escape backslash, comma, newline. Single-value text
+  // properties don't need to escape semicolons (those are compound-value
+  // delimiters).
+  return String(s)
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "")
+    .replace(/,/g, "\\,");
 }

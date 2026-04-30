@@ -58,6 +58,14 @@
         "script": "experiments/LegacyLoginManager/implementation.js"
       }
     },
+    "LegacyAbProperties": {
+      "schema": "experiments/LegacyAbProperties/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["LegacyAbProperties"]],
+        "script": "experiments/LegacyAbProperties/implementation.js"
+      }
+    },
     "calendar_provider": {
       "schema": "experiments/calendar/schema/calendar-provider.json",
       "parent": {

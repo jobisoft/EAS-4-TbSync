@@ -1,0 +1,20 @@
+[
+  {
+    "namespace": "LegacyAbProperties",
+    "functions": [
+      {
+        "name": "readEasStamps",
+        "type": "function",
+        "async": true,
+        "description": "Walk every contact card in the given address book and read EAS legacy property-bag stamps off the underlying nsIAbCard. Legacy EAS4 wrote `EAS-Spouse`, `EAS-Yomi*`, `Children` (and friends) via the older `setProperty()` interface; modern Thunderbird does not surface those properties in the WebExtension-visible vCard, so we have to reach for them via XPCOM. The contact migration in `modules/upgrades.mjs` uses the result to lift each legacy stamp into a corresponding `X-EAS-*` vCard property.",
+        "parameters": [
+          {
+            "name": "bookId",
+            "type": "string",
+            "description": "Address book UID (the same id the WebExtension addressBooks API exposes)."
+          }
+        ]
+      }
+    ]
+  }
+]
