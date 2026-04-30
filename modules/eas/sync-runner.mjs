@@ -95,7 +95,6 @@ const STATUS_ACCESS_DENIED = new Set([
 // Provision and let the host re-run the account sync.
 const STATUS_PROVISION_REQUIRED = new Set(["141", "142", "143", "144"]);
 
-const MAX_PULL_BATCHES = 50;
 const POST_PUSH_WAIT_MS = 2000;
 
 /* ── Recurrence diagnostic logging ────────────────────────────────────
@@ -577,7 +576,11 @@ async function pullPhase(ctx) {
   let itemsTotal = estimate ?? 0;
   reportProgress(ctx, itemsDone, itemsTotal);
 
-  for (let batch = 0; batch < MAX_PULL_BATCHES; batch++) {
+  // Unbounded MoreAvailable loop, matching legacy sync.js:445. The server
+  // controls termination via the absent <MoreAvailable/> tag; we trust it
+  // to converge. Initial syncs of large folders (10k+ items) hit dozens
+  // of iterations and any cap risks a spurious abort mid-pull.
+  for (;;) {
     const body = buildSyncBody({
       synckey: ctx.synckey,
       collectionId: ctx.collectionId,
@@ -609,7 +612,6 @@ async function pullPhase(ctx) {
     ctx.syncKeyDirty = true;
     if (!r.moreAvailable) return {};
   }
-  return { status: errorStatus("MoreAvailable loop exceeded safety cap") };
 }
 
 /* ── Push phase ───────────────────────────────────────────────────── */
