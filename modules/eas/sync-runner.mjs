@@ -360,6 +360,18 @@ async function runOneSync({
     if (second.code) return await finishWith(ctx, second);
   }
 
+  // Final status — `warning` if push rejected any items so the user sees
+  // a count in the manager; `ok` otherwise. The warning's text comes
+  // from a localized message with a `$1` substitution for the count.
+  // Mirrors legacy's `ServerRejectedSomeItems::N` warning at sync.js:721-723.
+  const failedCount = pushed.failedCount ?? 0;
+  if (failedCount > 0) {
+    const msg = browser.i18n.getMessage(
+      "eas.sync.warning.serverRejectedSomeItems",
+      [String(failedCount)],
+    );
+    return await finishWith(ctx, { status: warningStatus(msg) });
+  }
   return await finishWith(ctx, { status: ok() });
 }
 
@@ -716,14 +728,50 @@ async function pushPhase(ctx, userEdits) {
     ctx.synckey = r.synckey;
     ctx.syncKeyDirty = true;
     changedAnything = true;
+    // Reset batch size after a successful round-trip so subsequent
+    // batches return to the configured maxItems. Without this the
+    // `batchSize / 5` shrinkage triggered by an earlier MALFORMED
+    // would persist for the rest of the call, sending one item per
+    // request even after the bad item was singleton-dropped.
+    batchSize = ctx.maxItems;
 
-    if (r.responses) await applyResponses(ctx, r.responses, built);
+    if (r.responses) await applyResponses(ctx, r.responses, built, failedItems);
     if (r.commands) await applyServerCommands(ctx, r.commands);
 
     itemsDone += slice.length;
     reportProgress(ctx, itemsDone, itemsTotal);
   }
-  return { changedAnything };
+
+  // Tail re-stage: any per-item failures collected during this push pass
+  // (singleton-MALFORMED at collection level, plus per-item Response
+  // failures from applyResponses) get moved to the changelog tail so the
+  // next sync attempts the un-failed items first. Mirrors legacy's
+  // updateFailedItems calling removeItemFromChangeLog(id, /*re-add*/ true)
+  // (sync.js:1011).
+  if (failedItems.size > 0) {
+    const failedEntries = userEdits.filter((e) => failedItems.has(e.itemId));
+    if (failedEntries.length > 0) {
+      try {
+        await ctx.provider.changelogMoveToTail({
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          items: failedEntries.map((e) => ({
+            parentId: e.parentId,
+            itemId: e.itemId,
+          })),
+        });
+      } catch (err) {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] changelogMoveToTail failed: ${err?.message ?? String(err)}`,
+        });
+      }
+    }
+  }
+
+  return { changedAnything, failedCount: failedItems.size };
 }
 
 async function buildPushBatch(ctx, slice) {
@@ -763,14 +811,21 @@ async function buildPushBatch(ctx, slice) {
 
 /* ── Apply responses to our push ──────────────────────────────────── */
 
-async function applyResponses(ctx, responses, sent) {
+async function applyResponses(ctx, responses, sent, failedItems) {
   for (const node of responses.adds) {
     const clientId = readPathFrom(node, ["ClientId"]);
     const serverId = readPathFrom(node, ["ServerId"]);
     const status = readPathFrom(node, ["Status"]);
     const sentEntry = sent.adds.find((a) => a.clientId === clientId);
     if (!sentEntry) continue;
-    if (status !== STATUS_OK || !serverId) continue;
+    if (status !== STATUS_OK || !serverId) {
+      // Per-item Add failure: mark for the final aggregate warning so
+      // the user knows this edit didn't make it. Tail-re-staging in
+      // pushPhase will move the changelog entry behind the good ones
+      // for the next sync.
+      failedItems.add(sentEntry.entry.itemId);
+      continue;
+    }
     const stamped = ctx.itemKind.codec.stampEasServerId(
       sentEntry.item.blob,
       serverId,
@@ -796,6 +851,9 @@ async function applyResponses(ctx, responses, sent) {
     const status = readPathFrom(node, ["Status"]);
     if (status === STATUS_OK) continue;
     if (status === STATUS_CONFLICT || status === STATUS_OBJECT_NOT_FOUND) {
+      // Status 7 (server-wins conflict) and Status 8 (object-not-found)
+      // are explicit "drop the local edit" signals - both legacy and new
+      // discard the changelog entry without flagging as a failure.
       const serverId = readPathFrom(node, ["ServerId"]);
       const sentEntry = sent.mods.find((m) => m.serverID === serverId);
       if (sentEntry) {
@@ -806,7 +864,14 @@ async function applyResponses(ctx, responses, sent) {
           itemId: sentEntry.entry.itemId,
         });
       }
+      continue;
     }
+    // Any other non-success status (4 / 5 / 6 / …) is a real failure.
+    // Mark for tail-re-stage + final warning. The fallback below will
+    // see the non-OK status and skip the changelog removal.
+    const serverId = readPathFrom(node, ["ServerId"]);
+    const sentEntry = sent.mods.find((m) => m.serverID === serverId);
+    if (sentEntry) failedItems.add(sentEntry.entry.itemId);
   }
   for (const node of responses.deletes) {
     const status = readPathFrom(node, ["Status"]);
@@ -822,6 +887,8 @@ async function applyResponses(ctx, responses, sent) {
       });
       removeIdMap(ctx, sentEntry.entry.itemId);
     }
+    // Other delete failures are not tracked - legacy didn't either
+    // ("What can we do about failed deletes? SyncLog" - sync.js:1073).
   }
   for (const m of sent.mods) {
     const ack = responses.changes.find(
@@ -836,6 +903,9 @@ async function applyResponses(ctx, responses, sent) {
         itemId: m.entry.itemId,
       });
     }
+    // Status 7/8: changelogRemove already happened in the per-response
+    // loop above. Other non-success: leave entry untouched (failedItems
+    // tracking happens above, tail-re-stage runs at end of pushPhase).
   }
   for (const d of sent.dels) {
     const ack = responses.deletes.find(

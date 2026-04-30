@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "Szolgáltatói kiegészítő a TbSync-hez, amely névjegyeket, naptárakat és feladatokat szinkronizál Exchange ActiveSync-kiszolgálóval."
   },
-
   "folder.trashPrefix": {
     "message": "Kuka"
   },
-
   "gal.addressBookSuffix": {
     "message": "Globális címlista"
   },
-
   "setup.title": {
     "message": "Exchange ActiveSync-fiók (EAS) hozzáadása"
   },
   "setup.intro": {
     "message": "Válassza ki a hozzáadni kívánt Exchange ActiveSync-fiók típusát."
   },
-
   "setup.accountType": {
     "message": "Fióktípus"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "Bármilyen EAS-kompatibilis kiszolgáló. Felhasználónévvel és jelszóval történő hitelesítés."
   },
-
   "setup.auto.email": {
     "message": "E-mail-cím"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "Ha a szolgáltatójához kézi beállítás szükséges, válassza az „Egyéni EAS-kiszolgáló” lehetőséget."
   },
-
   "setup.oauth.email": {
     "message": "Microsoft-fiók e-mail-címe"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "Fiók neve"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "A fiók létrehozása nem sikerült"
   },
-
   "config.title": {
     "message": "Exchange-fiók beállításai"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "A mentés sikertelen"
   },
-
   "config.section.account": {
     "message": "Fiók"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "Naptár"
   },
-
   "config.account.accountType": {
     "message": "Fióktípus"
   },
   "config.account.signedInAs": {
     "message": "Bejelentkezve mint"
   },
-
   "config.protocol.asVersion": {
     "message": "ActiveSync-verzió"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "Jelenleg egyeztetett: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "Egyes kiszolgálók (pl. Kerio) megkövetelik, hogy a provisioning más parancs előtt érkezzen meg. A legtöbb kiszolgáló - köztük a Microsoft Exchange és a Microsoft 365 - automatikusan kéri, ha szükséges; ezeknél nem kell kézzel bekapcsolni ezt a beállítást."
   },
-
   "config.contacts.displayOverride": {
     "message": "A megjelenített név felülírása ezzel: „Keresztnév” + „Vezetéknév”"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "Vessző"
   },
-
   "config.calendar.syncLimit": {
     "message": "Szinkronizálási időszak"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Kísérleti - alapértelmezetten kikapcsolva. Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
   },
-
   "config.section.gal": {
     "message": "Globális címlista"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "A kiszolgálója nem hirdeti a Search parancsot, így a globális címlista nem érhető el ehhez a fiókhoz."
   },
-
   "config.error.invalidAsVersion": {
     "message": "Érvénytelen ActiveSync-verzió kiválasztva."
   },
-
   "warning.reauthFailed": {
     "message": "Az újrahitelesítés nem fejeződött be. Kattintson az „Újra bejelentkezés” gombra a próbálkozáshoz."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - Speciális beállítások"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "A Microsoft To Do csak dátumot tartalmazó határidővel (idő nélkül) és kezdési dátum nélkül teszi közzé a feladatokat, így az emlékeztetők a Lightningban éjfélkor jelennek meg. Ha engedélyezi, az emlékeztetőt tartalmazó bejövő feladatot úgy írja át, hogy a kezdési és határidő dátuma egyaránt megegyezzen az emlékeztető idejével, és az emlékeztető pontosan akkor szólaljon meg, amikor a feladat esedékes. Csak Microsoft To Do-val való szinkronizációkor engedélyezze."
   },
-
   "options.showItemsInTrash": {
     "message": "Lomtár-mappákban lévő elemek megjelenítése"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "A Microsoft Entra ID alkalmazásazonosító (kliens), amelyet az Office 365 / személyes Microsoft-fiókokba való bejelentkezéskor használ. Hagyja üresen az alapértelmezett, John Bieling (az EAS-szolgáltató szerzője) által regisztrált alkalmazásazonosító használatához. Csak akkor adja meg a sajátját, ha a bérlő rendszergazdája ezt megköveteli."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "Az EAS-kiszolgáló nem fogadta el a(z) $COUNT$ elemeket.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "A szerver helytelennek nyilvánította a szinkronizálási kérést (kód: $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "A szerver megtagadta a szinkronizálási hozzáférést: $REASON$ (kód: $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "az eszköz típusa hiányzik vagy érvénytelen"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "az eszköz blokkolva van ennél a felhasználónál"
   },
-  "eas.sync.error.accessDenied.130": { "message": "hozzáférés megtagadva" },
-  "eas.sync.error.accessDenied.131": { "message": "fiók letiltva" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "hozzáférés megtagadva"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "fiók letiltva"
+  },
   "eas.sync.error.missingField": {
     "message": "ActiveSync protokollsértés: A(z) $FIELD$ kötelező mező hiányzik a kiszolgáló válaszából.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "EAS átviteli hiba (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "A válasz nem WBXML (első bájtok: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "Hálózati újrapróbálkozások kimerültek - a kiszolgáló nem válaszolt"

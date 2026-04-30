@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "Modul furnizor pentru TbSync care sincronizează contacte, calendare și activități cu un server Exchange ActiveSync."
   },
-
   "folder.trashPrefix": {
     "message": "Coș de gunoi"
   },
-
   "gal.addressBookSuffix": {
     "message": "Listă globală de adrese"
   },
-
   "setup.title": {
     "message": "Adaugă un cont Exchange ActiveSync (EAS)"
   },
   "setup.intro": {
     "message": "Alege tipul de cont Exchange ActiveSync pe care vrei să îl adaugi."
   },
-
   "setup.accountType": {
     "message": "Tip de cont"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "Orice server compatibil EAS. Autentificare cu nume de utilizator și parolă."
   },
-
   "setup.auto.email": {
     "message": "Adresă de e-mail"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "Dacă furnizorul tău cere configurare manuală, alege „Server EAS personalizat”."
   },
-
   "setup.oauth.email": {
     "message": "E-mail-ul contului Microsoft"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "Etichetă cont"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "Nu s-a putut crea contul"
   },
-
   "config.title": {
     "message": "Setări cont Exchange"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "Salvarea a eșuat"
   },
-
   "config.section.account": {
     "message": "Cont"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "Calendar"
   },
-
   "config.account.accountType": {
     "message": "Tip de cont"
   },
   "config.account.signedInAs": {
     "message": "Conectat ca"
   },
-
   "config.protocol.asVersion": {
     "message": "Versiune ActiveSync"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "Negociată în prezent: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "Unele servere (ex. Kerio) cer ca provisioning-ul să fie trimis înaintea oricărei alte comenzi. Majoritatea serverelor - inclusiv Microsoft Exchange și Microsoft 365 - îl solicită automat când e nevoie; nu trebuie să-l activezi manual pentru acestea."
   },
-
   "config.contacts.displayOverride": {
     "message": "Suprascrie numele afișat cu „Prenume” + „Nume”"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "Virgulă"
   },
-
   "config.calendar.syncLimit": {
     "message": "Fereastră de sincronizare"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimental - dezactivat implicit. Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
   },
-
   "config.section.gal": {
     "message": "Listă globală de adrese"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "Serverul dvs. nu anunță comanda Search, așa că lista globală de adrese nu este disponibilă pentru acest cont."
   },
-
   "config.error.invalidAsVersion": {
     "message": "Selecție de versiune ActiveSync nevalidă."
   },
-
   "warning.reauthFailed": {
     "message": "Reautentificarea nu a fost finalizată. Apasă „Conectează-te din nou” pentru a reîncerca."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - Setări avansate"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do publică sarcinile cu o dată scadentă fără oră și fără dată de începere, astfel încât memento-urile apar la miezul nopții în Lightning. Când este activat, o sarcină primită cu memento este rescrisă astfel încât data de începere și data scadentă să fie egale cu ora memento-ului, iar memento-ul se declanșează exact când sarcina este scadentă. Activați această opțiune doar atunci când sincronizați cu Microsoft To Do."
   },
-
   "options.showItemsInTrash": {
     "message": "Afișează elemente din folderele Coș de gunoi"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "ID-ul aplicației (client) Microsoft Entra ID utilizat la conectarea la Office 365 / conturile personale Microsoft. Lăsați gol pentru a utiliza ID-ul implicit al aplicației înregistrat de John Bieling (autorul furnizorului EAS). Setați-l pe al dvs. doar dacă administratorul tenantului dvs. cere acest lucru."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "The EAS server did not accept $COUNT$ elements.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "Serverul a respins cererea de sincronizare ca fiind incorectă (cod $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "Serverul a refuzat accesul de sincronizare: $REASON$ (cod $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "tipul dispozitivului lipsește sau este nevalid"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "dispozitivul este blocat pentru acest utilizator"
   },
-  "eas.sync.error.accessDenied.130": { "message": "acces refuzat" },
-  "eas.sync.error.accessDenied.131": { "message": "cont dezactivat" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "acces refuzat"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "cont dezactivat"
+  },
   "eas.sync.error.missingField": {
     "message": "Încălcare a protocolului ActiveSync: câmpul obligatoriu $FIELD$ lipsește din răspunsul serverului.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "Eroare de transport EAS (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "Răspunsul nu este WBXML (primii octeți: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "Reîncercările de rețea s-au epuizat - serverul nu a răspuns"

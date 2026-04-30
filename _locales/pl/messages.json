@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "Dodatek dostawcy dla TbSync, który synchronizuje kontakty, kalendarze i zadania z serwerem Exchange ActiveSync."
   },
-
   "folder.trashPrefix": {
     "message": "Kosz"
   },
-
   "gal.addressBookSuffix": {
     "message": "Globalna lista adresów"
   },
-
   "setup.title": {
     "message": "Dodaj konto Exchange ActiveSync (EAS)"
   },
   "setup.intro": {
     "message": "Wybierz typ konta Exchange ActiveSync, które chcesz dodać."
   },
-
   "setup.accountType": {
     "message": "Typ konta"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "Dowolny serwer kompatybilny z EAS. Uwierzytelnianie nazwą użytkownika i hasłem."
   },
-
   "setup.auto.email": {
     "message": "Adres e-mail"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "Jeśli Twój dostawca wymaga konfiguracji ręcznej, wybierz „Niestandardowy serwer EAS”."
   },
-
   "setup.oauth.email": {
     "message": "E-mail konta Microsoft"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "Etykieta konta"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "Nie udało się utworzyć konta"
   },
-
   "config.title": {
     "message": "Ustawienia konta Exchange"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "Zapis nie powiódł się"
   },
-
   "config.section.account": {
     "message": "Konto"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "Kalendarz"
   },
-
   "config.account.accountType": {
     "message": "Typ konta"
   },
   "config.account.signedInAs": {
     "message": "Zalogowany jako"
   },
-
   "config.protocol.asVersion": {
     "message": "Wersja ActiveSync"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "Aktualnie wynegocjowana: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "Niektóre serwery (np. Kerio) wymagają wysłania provisioningu przed jakimkolwiek innym poleceniem. Większość serwerów - w tym Microsoft Exchange i Microsoft 365 - żąda go automatycznie, gdy jest potrzebny; dla nich nie trzeba włączać tej opcji ręcznie."
   },
-
   "config.contacts.displayOverride": {
     "message": "Zastąp wyświetlaną nazwę formą „Imię” + „Nazwisko”"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "Przecinek"
   },
-
   "config.calendar.syncLimit": {
     "message": "Okno synchronizacji"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Eksperymentalne - domyślnie wyłączone. Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
   },
-
   "config.section.gal": {
     "message": "Globalna lista adresów"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "Twój serwer nie ogłasza polecenia Search, więc globalna lista adresów nie jest dostępna dla tego konta."
   },
-
   "config.error.invalidAsVersion": {
     "message": "Nieprawidłowy wybór wersji ActiveSync."
   },
-
   "warning.reauthFailed": {
     "message": "Ponowne uwierzytelnienie nie zostało ukończone. Kliknij „Zaloguj się ponownie”, aby spróbować ponownie."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - Ustawienia zaawansowane"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do publikuje zadania z terminem zawierającym tylko datę (bez godziny) i bez daty rozpoczęcia, dlatego przypomnienia w Lightning pojawiają się o północy. Gdy ta opcja jest włączona, przychodzące zadanie z przypomnieniem jest przepisywane tak, aby jego data rozpoczęcia i termin były równe godzinie przypomnienia, a przypomnienie uruchamia się dokładnie wtedy, gdy zadanie ma zostać wykonane. Włącz tę opcję tylko podczas synchronizacji z Microsoft To Do."
   },
-
   "options.showItemsInTrash": {
     "message": "Pokaż elementy w folderach Kosz"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "Identyfikator aplikacji (klienta) Microsoft Entra ID używany podczas logowania do Office 365 / osobistych kont Microsoft. Pozostaw puste, aby użyć domyślnego identyfikatora aplikacji zarejestrowanego przez Johna Bielinga (autora dostawcy EAS). Wprowadź własny tylko wtedy, gdy wymaga tego administrator dzierżawy."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "Serwer EAS nie zaakceptował $COUNT$ elementów.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "Serwer odrzucił żądanie synchronizacji jako nieprawidłowe (kod $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "Serwer odmówił dostępu do synchronizacji: $REASON$ (kod $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "brak typu urządzenia lub nieprawidłowy"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "urządzenie zablokowane dla tego użytkownika"
   },
-  "eas.sync.error.accessDenied.130": { "message": "odmowa dostępu" },
-  "eas.sync.error.accessDenied.131": { "message": "konto wyłączone" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "odmowa dostępu"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "konto wyłączone"
+  },
   "eas.sync.error.missingField": {
     "message": "Naruszenie protokołu ActiveSync: W odpowiedzi serwera brakuje obowiązkowego pola $FIELD$.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "Błąd transportu EAS (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "Odpowiedź nie jest WBXML (pierwsze bajty: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "Wyczerpano ponowne próby sieciowe - serwer nie odpowiedział"

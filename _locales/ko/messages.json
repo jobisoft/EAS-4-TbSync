@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "TbSync용 공급자 부가기능으로, Exchange ActiveSync 서버와 연락처, 일정, 작업을 동기화합니다."
   },
-
   "folder.trashPrefix": {
     "message": "휴지통"
   },
-
   "gal.addressBookSuffix": {
     "message": "전체 주소 목록"
   },
-
   "setup.title": {
     "message": "Exchange ActiveSync 계정 추가 (EAS)"
   },
   "setup.intro": {
     "message": "추가하려는 Exchange ActiveSync 계정 유형을 선택하세요."
   },
-
   "setup.accountType": {
     "message": "계정 유형"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "모든 EAS 호환 서버. 사용자 이름과 비밀번호 인증을 사용합니다."
   },
-
   "setup.auto.email": {
     "message": "이메일 주소"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "공급자가 수동 구성을 요구하는 경우 “사용자 정의 EAS 서버”를 선택하세요."
   },
-
   "setup.oauth.email": {
     "message": "Microsoft 계정 이메일"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "계정 라벨"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "계정을 생성할 수 없습니다"
   },
-
   "config.title": {
     "message": "Exchange 계정 설정"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "저장 실패"
   },
-
   "config.section.account": {
     "message": "계정"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "일정"
   },
-
   "config.account.accountType": {
     "message": "계정 유형"
   },
   "config.account.signedInAs": {
     "message": "로그인 계정"
   },
-
   "config.protocol.asVersion": {
     "message": "ActiveSync 버전"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "현재 협상된 버전: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "일부 서버(예: Kerio)는 다른 명령보다 먼저 프로비저닝을 보내야 합니다. Microsoft Exchange 및 Microsoft 365를 포함한 대부분의 서버는 필요할 때 자동으로 요청하므로 수동으로 활성화할 필요가 없습니다."
   },
-
   "config.contacts.displayOverride": {
     "message": "표시 이름을 \"이름\" + \"성\"으로 재정의"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "쉼표"
   },
-
   "config.calendar.syncLimit": {
     "message": "동기화 기간"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "실험적 기능 - 기본적으로 비활성화되어 있습니다. 활성화하면 반복 규칙과 인스턴스별 예외가 서버와 양방향으로 동기화됩니다."
   },
-
   "config.section.gal": {
     "message": "전체 주소 목록"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "서버가 Search 명령을 알리지 않기 때문에 이 계정에서는 전체 주소 목록을 사용할 수 없습니다."
   },
-
   "config.error.invalidAsVersion": {
     "message": "잘못된 ActiveSync 버전 선택입니다."
   },
-
   "warning.reauthFailed": {
     "message": "재인증이 완료되지 않았습니다. \"다시 로그인\"을 클릭하여 다시 시도하세요."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - 고급 설정"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do는 시간이 없는 기한 날짜와 시작 날짜 없이 작업을 게시하므로 알림이 Lightning에서 자정에 표시됩니다. 이 옵션을 활성화하면 알림이 있는 수신 작업이 시작 날짜와 기한 날짜가 모두 알림 시간과 같아지도록 다시 작성되며, 알림은 작업 기한 정각에 발생합니다. Microsoft To Do와 동기화할 때만 활성화하세요."
   },
-
   "options.showItemsInTrash": {
     "message": "휴지통 폴더의 항목 표시"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "Office 365 / 개인 Microsoft 계정에 로그인할 때 사용되는 Microsoft Entra ID 애플리케이션(클라이언트) ID입니다. EAS 공급자의 작성자인 John Bieling이 등록한 기본 애플리케이션 ID를 사용하려면 비워 두세요. 테넌트 관리자가 요구하는 경우에만 직접 설정하세요."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "The EAS server did not accept $COUNT$ elements.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "서버가 동기화 요청을 잘못된 형식으로 거부했습니다 (코드 $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "서버가 동기화 접근을 거부했습니다: $REASON$ (코드 $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "장치 유형이 없거나 잘못되었습니다"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "이 사용자에 대해 장치가 차단되었습니다"
   },
-  "eas.sync.error.accessDenied.130": { "message": "접근이 거부되었습니다" },
-  "eas.sync.error.accessDenied.131": { "message": "계정이 비활성화되었습니다" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "접근이 거부되었습니다"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "계정이 비활성화되었습니다"
+  },
   "eas.sync.error.missingField": {
     "message": "ActiveSync 프로토콜 위반: 필수 필드 $FIELD$가 서버 응답에 없습니다.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "EAS 전송 오류 (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "응답이 WBXML이 아닙니다 (선행 바이트: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "네트워크 재시도가 소진되었습니다 - 서버가 응답하지 않았습니다"

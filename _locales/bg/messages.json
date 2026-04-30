@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "Добавка-доставчик за TbSync, която синхронизира контакти, календари и задачи със сървър Exchange ActiveSync."
   },
-
   "folder.trashPrefix": {
     "message": "Кошче"
   },
-
   "gal.addressBookSuffix": {
     "message": "Глобален адресен списък"
   },
-
   "setup.title": {
     "message": "Добавяне на акаунт Exchange ActiveSync (EAS)"
   },
   "setup.intro": {
     "message": "Изберете типа акаунт Exchange ActiveSync, който искате да добавите."
   },
-
   "setup.accountType": {
     "message": "Тип акаунт"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "Какъвто и да е EAS-съвместим сървър. Удостоверяване с потребителско име и парола."
   },
-
   "setup.auto.email": {
     "message": "Електронна поща"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "Ако вашият доставчик изисква ръчна конфигурация, изберете „Персонализиран EAS сървър“."
   },
-
   "setup.oauth.email": {
     "message": "Имейл на Microsoft акаунта"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "Етикет на акаунта"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "Акаунтът не може да бъде създаден"
   },
-
   "config.title": {
     "message": "Настройки на Exchange акаунт"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "Неуспешно запазване"
   },
-
   "config.section.account": {
     "message": "Акаунт"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "Календар"
   },
-
   "config.account.accountType": {
     "message": "Тип акаунт"
   },
   "config.account.signedInAs": {
     "message": "Вписан като"
   },
-
   "config.protocol.asVersion": {
     "message": "Версия на ActiveSync"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "Договорена в момента: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "Някои сървъри (напр. Kerio) изискват провизионирането да се изпрати преди всяка друга команда. Повечето сървъри - включително Microsoft Exchange и Microsoft 365 - го изискват автоматично при нужда; за тях не е необходимо ръчно активиране."
   },
-
   "config.contacts.displayOverride": {
     "message": "Замяна на показваното име с „Собствено име“ + „Фамилия“"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "Запетая"
   },
-
   "config.calendar.syncLimit": {
     "message": "Период на синхронизация"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Експериментално - изключено по подразбиране. Когато е включено, правилата за повторение и изключенията за отделни случаи се синхронизират в двете посоки със сървъра."
   },
-
   "config.section.gal": {
     "message": "Глобален адресен списък"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "Вашият сървър не поддържа командата Search, така че Глобалният адресен списък не е наличен за този акаунт."
   },
-
   "config.error.invalidAsVersion": {
     "message": "Невалиден избор на версия на ActiveSync."
   },
-
   "warning.reauthFailed": {
     "message": "Повторното удостоверяване не беше завършено. Натиснете „Вход отново“, за да опитате пак."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - Разширени настройки"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do публикува задачи само с дата на падеж (без време) и без начална дата, така че напомнянията се появяват в Lightning в полунощ. Когато е активирано, входяща задача с напомняне се пренаписва така, че началната ѝ дата и датата на падеж да съвпадат с времето на напомнянето, а напомнянето се задейства точно когато задачата е дължима. Активирайте тази опция само при синхронизация с Microsoft To Do."
   },
-
   "options.showItemsInTrash": {
     "message": "Показване на елементи в папка „Кошче“"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "Идентификатор на приложение (клиент) в Microsoft Entra ID, използван при влизане в Office 365 / лични акаунти в Microsoft. Оставете празно, за да използвате стандартния ID на приложението, регистриран от Джон Билинг (автор на EAS доставчика). Задавайте собствен само ако администраторът на вашия наемател го изисква."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "The EAS server did not accept $COUNT$ elements.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "Сървърът отхвърли заявката за синхронизация като неправилна (код $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "Сървърът отказа достъп за синхронизация: $REASON$ (код $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "видът устройство липсва или е невалиден"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "устройството е блокирано за този потребител"
   },
-  "eas.sync.error.accessDenied.130": { "message": "достъпът е отказан" },
-  "eas.sync.error.accessDenied.131": { "message": "профилът е изключен" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "достъпът е отказан"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "профилът е изключен"
+  },
   "eas.sync.error.missingField": {
     "message": "Нарушение на ActiveSync протокола: Задължителното поле $FIELD$ липсва от отговора на сървъра.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "Грешка при пренос на EAS (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "Отговорът не е WBXML (първи байтове: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "Опитите за повторно свързване са изчерпани - сървърът не отговори"

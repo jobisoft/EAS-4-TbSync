@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "Дополнение-провайдер для TbSync, синхронизирующее контакты, календари и задачи с сервером Exchange ActiveSync."
   },
-
   "folder.trashPrefix": {
     "message": "Корзина"
   },
-
   "gal.addressBookSuffix": {
     "message": "Глобальный список адресов"
   },
-
   "setup.title": {
     "message": "Добавить учётную запись Exchange ActiveSync (EAS)"
   },
   "setup.intro": {
     "message": "Выберите тип учётной записи Exchange ActiveSync, которую хотите добавить."
   },
-
   "setup.accountType": {
     "message": "Тип учётной записи"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "Любой EAS-совместимый сервер. Аутентификация по имени пользователя и паролю."
   },
-
   "setup.auto.email": {
     "message": "Адрес электронной почты"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "Если ваш провайдер требует ручной настройки, выберите «Пользовательский EAS-сервер»."
   },
-
   "setup.oauth.email": {
     "message": "Эл. почта учётной записи Microsoft"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "Метка учётной записи"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "Не удалось создать учётную запись"
   },
-
   "config.title": {
     "message": "Настройки учётной записи Exchange"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "Не удалось сохранить"
   },
-
   "config.section.account": {
     "message": "Учётная запись"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "Календарь"
   },
-
   "config.account.accountType": {
     "message": "Тип учётной записи"
   },
   "config.account.signedInAs": {
     "message": "Вы вошли как"
   },
-
   "config.protocol.asVersion": {
     "message": "Версия ActiveSync"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "Согласована в данный момент: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "Некоторые серверы (например, Kerio) требуют отправки provisioning-команды до любых других. Большинство серверов - включая Microsoft Exchange и Microsoft 365 - запрашивают её автоматически при необходимости; для них вручную включать эту опцию не требуется."
   },
-
   "config.contacts.displayOverride": {
     "message": "Заменить отображаемое имя на «Имя» + «Фамилия»"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "Запятая"
   },
-
   "config.calendar.syncLimit": {
     "message": "Период синхронизации"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Экспериментально - по умолчанию выключено. При включении правила повторения и исключения для отдельных экземпляров синхронизируются с сервером в обе стороны."
   },
-
   "config.section.gal": {
     "message": "Глобальный список адресов"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "Ваш сервер не объявляет команду Search, поэтому глобальный список адресов недоступен для этой учётной записи."
   },
-
   "config.error.invalidAsVersion": {
     "message": "Выбрана недопустимая версия ActiveSync."
   },
-
   "warning.reauthFailed": {
     "message": "Повторная аутентификация не завершена. Нажмите «Войти снова», чтобы повторить попытку."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - Расширенные настройки"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do публикует задачи с датой (без времени) и без даты начала, поэтому напоминания в Lightning отображаются в полночь. Если опция включена, входящая задача с напоминанием перезаписывается так, что её даты начала и завершения равны времени напоминания, а напоминание срабатывает точно в момент истечения срока задачи. Включайте эту опцию только при синхронизации с Microsoft To Do."
   },
-
   "options.showItemsInTrash": {
     "message": "Показывать элементы из корзины"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "Идентификатор приложения (клиента) Microsoft Entra ID, используемый при входе в Office 365 / личные учётные записи Microsoft. Оставьте пустым, чтобы использовать стандартный ID приложения, зарегистрированный Джоном Билингом (автором EAS-провайдера). Задавайте собственный только в том случае, если этого требует администратор вашего тенанта."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "Сервер EAS не принял элементы $COUNT$.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "Сервер отклонил запрос синхронизации как некорректный (код $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "Сервер отказал в доступе к синхронизации: $REASON$ (код $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "тип устройства отсутствует или недопустим"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "устройство заблокировано для этого пользователя"
   },
-  "eas.sync.error.accessDenied.130": { "message": "доступ запрещён" },
-  "eas.sync.error.accessDenied.131": { "message": "учётная запись отключена" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "доступ запрещён"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "учётная запись отключена"
+  },
   "eas.sync.error.missingField": {
     "message": "Нарушение протокола ActiveSync: обязательное поле $FIELD$ отсутствует в ответе сервера.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "Ошибка передачи EAS (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "Ответ не является WBXML (первые байты: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "Сетевые повторы исчерпаны - сервер не ответил"

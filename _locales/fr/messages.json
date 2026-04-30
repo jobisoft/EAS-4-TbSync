@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "Module fournisseur pour TbSync qui synchronise les contacts, les agendas et les tâches avec un serveur Exchange ActiveSync."
   },
-
   "folder.trashPrefix": {
     "message": "Corbeille"
   },
-
   "gal.addressBookSuffix": {
     "message": "Liste d’adresses globale"
   },
-
   "setup.title": {
     "message": "Ajouter un compte Exchange ActiveSync (EAS)"
   },
   "setup.intro": {
     "message": "Choisissez le type de compte Exchange ActiveSync à ajouter."
   },
-
   "setup.accountType": {
     "message": "Type de compte"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "Tout serveur compatible EAS. Authentification par nom d’utilisateur et mot de passe."
   },
-
   "setup.auto.email": {
     "message": "Adresse e-mail"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "Si votre fournisseur exige une configuration manuelle, choisissez « Serveur EAS personnalisé »."
   },
-
   "setup.oauth.email": {
     "message": "Adresse e-mail du compte Microsoft"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "Libellé du compte"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "Impossible de créer le compte"
   },
-
   "config.title": {
     "message": "Paramètres du compte Exchange"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "Échec de l’enregistrement"
   },
-
   "config.section.account": {
     "message": "Compte"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "Agenda"
   },
-
   "config.account.accountType": {
     "message": "Type de compte"
   },
   "config.account.signedInAs": {
     "message": "Connecté en tant que"
   },
-
   "config.protocol.asVersion": {
     "message": "Version ActiveSync"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "Version négociée actuellement : $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "Certains serveurs (par ex. Kerio) exigent l’envoi du provisioning avant toute autre commande. La plupart des serveurs - y compris Microsoft Exchange et Microsoft 365 - le demandent automatiquement quand c’est nécessaire ; vous n’avez pas besoin d’activer cette option manuellement pour eux."
   },
-
   "config.contacts.displayOverride": {
     "message": "Remplacer le nom affiché par « Prénom » + « Nom »"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "Virgule"
   },
-
   "config.calendar.syncLimit": {
     "message": "Fenêtre de synchronisation"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Expérimental - désactivé par défaut. Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
   },
-
   "config.section.gal": {
     "message": "Liste d’adresses globale"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "Votre serveur n’annonce pas la commande Search ; la liste d’adresses globale n’est donc pas disponible pour ce compte."
   },
-
   "config.error.invalidAsVersion": {
     "message": "Version ActiveSync sélectionnée non valide."
   },
-
   "warning.reauthFailed": {
     "message": "La réauthentification ne s’est pas terminée. Cliquez sur « Se reconnecter » pour réessayer."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - Paramètres avancés"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do publie les tâches avec une date d’échéance sans heure et sans date de début ; les rappels apparaissent donc à minuit dans Lightning. Lorsque cette option est activée, une tâche entrante avec un rappel est réécrite pour que ses dates de début et d’échéance soient égales à l’heure du rappel, et le rappel se déclenche exactement lorsque la tâche est due. Activez cette option uniquement lors de la synchronisation avec Microsoft To Do."
   },
-
   "options.showItemsInTrash": {
     "message": "Afficher les éléments des dossiers Corbeille"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "ID d’application (client) Microsoft Entra ID utilisé lors de la connexion à Office 365 / aux comptes Microsoft personnels. Laissez vide pour utiliser l’ID d’application par défaut enregistré par John Bieling (auteur du fournisseur EAS). Ne définissez le vôtre que si votre administrateur de tenant l’exige."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "Le serveur EAS n'a pas accepté les éléments $COUNT$.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "Le serveur a rejeté la requête de synchronisation comme malformée (code $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "Le serveur a refusé l’accès à la synchronisation : $REASON$ (code $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "type d’appareil manquant ou invalide"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "l’appareil est bloqué pour cet utilisateur"
   },
-  "eas.sync.error.accessDenied.130": { "message": "accès refusé" },
-  "eas.sync.error.accessDenied.131": { "message": "compte désactivé" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "accès refusé"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "compte désactivé"
+  },
   "eas.sync.error.missingField": {
     "message": "Violation du protocole ActiveSync : le champ obligatoire $FIELD$ est absent de la réponse du serveur.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "Erreur de transport EAS (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "La réponse n'est pas du WBXML (premiers octets : $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "Tentatives réseau épuisées - le serveur n'a pas répondu"

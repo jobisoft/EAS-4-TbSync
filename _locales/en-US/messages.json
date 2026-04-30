@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "Provider add-on for TbSync that synchronizes contacts, calendars, and tasks with an Exchange ActiveSync server."
   },
-
   "folder.trashPrefix": {
     "message": "Trash"
   },
-
   "gal.addressBookSuffix": {
     "message": "Global Address List"
   },
-
   "setup.title": {
     "message": "Add an Exchange ActiveSync account (EAS)"
   },
   "setup.intro": {
     "message": "Choose the type of Exchange ActiveSync account you want to add."
   },
-
   "setup.accountType": {
     "message": "Account type"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "Any EAS-compatible server. Username and password authentication."
   },
-
   "setup.auto.email": {
     "message": "Email address"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "If your provider requires manual configuration, choose “Custom EAS server”."
   },
-
   "setup.oauth.email": {
     "message": "Microsoft account email"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "Account label"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "Could not create the account"
   },
-
   "config.title": {
     "message": "Exchange account settings"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "Save failed"
   },
-
   "config.section.account": {
     "message": "Account"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "Calendar"
   },
-
   "config.account.accountType": {
     "message": "Account type"
   },
   "config.account.signedInAs": {
     "message": "Signed in as"
   },
-
   "config.protocol.asVersion": {
     "message": "ActiveSync version"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "Currently negotiated: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "Some servers (e.g. Kerio) require provisioning to be sent before any other command. Most servers - including Microsoft Exchange and Microsoft 365 - request it automatically when needed; you do not need to enable this manually for them."
   },
-
   "config.contacts.displayOverride": {
     "message": "Override Display Name with \"First Name\" + \"Second Name\""
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "Comma"
   },
-
   "config.calendar.syncLimit": {
     "message": "Sync window"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Experimental - off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
-
   "config.section.gal": {
     "message": "Global Address List"
   },
@@ -277,22 +266,18 @@
   "config.gal.notSupported": {
     "message": "Your server does not advertise the Search command, so the Global Address List is not available for this account."
   },
-
   "config.error.invalidAsVersion": {
     "message": "Invalid ActiveSync version selection."
   },
-
   "warning.reauthFailed": {
     "message": "Re-authentication did not complete. Click \"Sign in again\" to retry."
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - Advanced settings"
   },
   "options.intro": {
     "message": "These settings affect every EAS account in this profile. The defaults work for almost everyone, only change a value if you have a specific reason to. Leave a field empty to fall back to the bundled default."
   },
-
   "options.section.network": {
     "message": "Network"
   },
@@ -302,58 +287,65 @@
   "options.section.oauth": {
     "message": "Microsoft OAuth"
   },
-
   "options.timeout": {
     "message": "Connection timeout (ms)"
   },
   "options.timeout.hint": {
     "message": "Maximum time to wait for a response from the EAS server before giving up. Increase this if you sync over slow or unreliable links and see frequent timeouts. Default: 90000 ms (90 seconds)."
   },
-
   "options.useragent": {
     "message": "User-Agent header"
   },
   "options.useragent.hint": {
     "message": "HTTP User-Agent string sent with every EAS request. A few servers refuse the default and require a specific value to allow the connection. Default: Thunderbird ActiveSync."
   },
-
   "options.devicetype": {
     "message": "Device type"
   },
   "options.devicetype.hint": {
     "message": "EAS DeviceType value sent in the request URL. A few servers reject unknown device types. Default: TbSync."
   },
-
   "options.maxitems": {
     "message": "Items per sync batch"
   },
   "options.maxitems.hint": {
     "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. Default: 25."
   },
-
   "options.mstodo": {
     "message": "Microsoft To Do compatibility mode"
   },
   "options.mstodo.hint": {
     "message": "Microsoft To Do publishes tasks with a date-only due date and no start date, so reminders render at midnight. When enabled, an incoming task with a reminder is rewritten so its start and due date both equal the reminder time, and the reminder fires exactly when the task is due. Only enable this when encountering issues and trying an alternative to the default behavior."
   },
-
   "options.showItemsInTrash": {
     "message": "Show items in Trash folders"
   },
   "options.showItemsInTrash.hint": {
     "message": "Some servers keep deleted calendars, address books, and task lists inside a Trash folder rather than removing them outright. By default these are hidden from the folder list. Enable this to make them visible - they appear with a localized \"Trash | \" prefix so you can tell them apart and choose whether to sync them. Takes effect on the next folder-list refresh."
   },
-
   "options.clientid": {
     "message": "Custom OAuth client ID"
   },
   "options.clientid.hint": {
     "message": "Microsoft Entra Client ID used when signing in to Microsoft accounts. Leave empty to use the default client ID registered by John Bieling (author of the EAS provider)."
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "The EAS server did not accept $COUNT$ elements.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "Server rejected the sync request as invalid (code $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "Server denied sync access: $REASON$ (code $STATUS$)",
@@ -362,7 +354,10 @@
         "content": "$1",
         "example": "device type missing or invalid"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -383,19 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "device is blocked for this user"
   },
-  "eas.sync.error.accessDenied.130": { "message": "access denied" },
-  "eas.sync.error.accessDenied.131": { "message": "account is disabled" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "access denied"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "account is disabled"
+  },
   "eas.sync.error.missingField": {
     "message": "ActiveSync protocol violation: Mandatory field $FIELD$ is missing from server response.",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "EAS transport error (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "Response is not WBXML (first bytes: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "Network retries exhausted - server did not respond"

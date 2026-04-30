@@ -5,22 +5,18 @@
   "extensionDescription": {
     "message": "TbSync 用のプロバイダーアドオンで、Exchange ActiveSync サーバーと連絡先・カレンダー・タスクを同期します。"
   },
-
   "folder.trashPrefix": {
     "message": "ごみ箱"
   },
-
   "gal.addressBookSuffix": {
     "message": "グローバル アドレス一覧"
   },
-
   "setup.title": {
     "message": "Exchange ActiveSync (EAS) アカウントを追加"
   },
   "setup.intro": {
     "message": "追加する Exchange ActiveSync アカウントの種類を選んでください。"
   },
-
   "setup.accountType": {
     "message": "アカウントの種類"
   },
@@ -48,7 +44,6 @@
   "setup.accountType.custom.hint": {
     "message": "EAS 互換のあらゆるサーバー。ユーザー名とパスワードによる認証。"
   },
-
   "setup.auto.email": {
     "message": "メールアドレス"
   },
@@ -76,7 +71,6 @@
   "setup.auto.error.fallback": {
     "message": "プロバイダーが手動設定を必要とする場合は、「カスタム EAS サーバー」を選んでください。"
   },
-
   "setup.oauth.email": {
     "message": "Microsoft アカウントのメールアドレス"
   },
@@ -101,7 +95,6 @@
       }
     }
   },
-
   "setup.accountName": {
     "message": "アカウントのラベル"
   },
@@ -141,7 +134,6 @@
   "setup.error.createFailed": {
     "message": "アカウントを作成できませんでした"
   },
-
   "config.title": {
     "message": "Exchange アカウントの設定"
   },
@@ -181,7 +173,6 @@
   "config.error.saveFailed": {
     "message": "保存に失敗しました"
   },
-
   "config.section.account": {
     "message": "アカウント"
   },
@@ -197,14 +188,12 @@
   "config.section.calendar": {
     "message": "カレンダー"
   },
-
   "config.account.accountType": {
     "message": "アカウントの種類"
   },
   "config.account.signedInAs": {
     "message": "サインイン中のアカウント"
   },
-
   "config.protocol.asVersion": {
     "message": "ActiveSync バージョン"
   },
@@ -214,7 +203,10 @@
   "config.protocol.asVersion.negotiatedHint": {
     "message": "現在ネゴシエート済み: $VERSION$",
     "placeholders": {
-      "version": { "content": "$1", "example": "14.1" }
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
     }
   },
   "config.protocol.deviceId": {
@@ -226,7 +218,6 @@
   "config.protocol.provision.hint": {
     "message": "一部のサーバー (Kerio など) は、他のコマンドより先にプロビジョニングを送信することを要求します。Microsoft Exchange や Microsoft 365 を含むほとんどのサーバーは必要に応じて自動的に要求するため、このオプションを手動で有効にする必要はありません。"
   },
-
   "config.contacts.displayOverride": {
     "message": "表示名を「名」+「姓」で上書き"
   },
@@ -239,7 +230,6 @@
   "config.contacts.nameSeparator.comma": {
     "message": "カンマ"
   },
-
   "config.calendar.syncLimit": {
     "message": "同期期間"
   },
@@ -264,7 +254,6 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "実験的機能 - 既定では無効。有効にすると、繰り返しルールとインスタンスごとの例外がサーバーと双方向で同期されます。"
   },
-
   "config.section.gal": {
     "message": "グローバル アドレス一覧"
   },
@@ -277,15 +266,12 @@
   "config.gal.notSupported": {
     "message": "サーバーが Search コマンドを通知していないため、このアカウントではグローバル アドレス一覧を利用できません。"
   },
-
   "config.error.invalidAsVersion": {
     "message": "ActiveSync バージョンの選択が無効です。"
   },
-
   "warning.reauthFailed": {
     "message": "再認証が完了しませんでした。再試行するには「再サインイン」をクリックしてください。"
   },
-
   "options.title": {
     "message": "EAS-4-TbSync - 詳細設定"
   },
@@ -331,7 +317,6 @@
   "options.mstodo.hint": {
     "message": "Microsoft To Do は、時刻のない期限日 (日付のみ) と開始日なしでタスクを公開するため、リマインダーは Lightning で午前 0 時に表示されます。有効にすると、リマインダー付きの受信タスクは、開始日と期限日の両方がリマインダーの時刻に等しくなるように書き換えられ、リマインダーはタスクの期限ぴったりに発生します。Microsoft To Do と同期する場合のみ有効にしてください。"
   },
-
   "options.showItemsInTrash": {
     "message": "ごみ箱フォルダー内の項目を表示する"
   },
@@ -344,9 +329,23 @@
   "options.clientid.hint": {
     "message": "Office 365 / 個人の Microsoft アカウントへのサインイン時に使用される Microsoft Entra ID のアプリケーション (クライアント) ID。EAS プロバイダーの作者である John Bieling が登録した既定のアプリケーション ID を使用するには、空のままにしてください。テナント管理者が必要とする場合のみ独自の値を設定してください。"
   },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "The EAS server did not accept $COUNT$ elements.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "eas.sync.error.protocolFault": {
     "message": "サーバーは同期要求を不正な形式として拒否しました (コード $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "101" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
   },
   "eas.sync.error.accessDenied": {
     "message": "サーバーは同期アクセスを拒否しました: $REASON$ (コード $STATUS$)",
@@ -355,7 +354,10 @@
         "content": "$1",
         "example": "デバイスの種類が見つからないか無効です"
       },
-      "status": { "content": "$2", "example": "109" }
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
     }
   },
   "eas.sync.error.accessDenied.109": {
@@ -376,21 +378,38 @@
   "eas.sync.error.accessDenied.129": {
     "message": "デバイスがこのユーザーに対してブロックされています"
   },
-  "eas.sync.error.accessDenied.130": { "message": "アクセスが拒否されました" },
+  "eas.sync.error.accessDenied.130": {
+    "message": "アクセスが拒否されました"
+  },
   "eas.sync.error.accessDenied.131": {
     "message": "アカウントが無効になっています"
   },
   "eas.sync.error.missingField": {
     "message": "ActiveSync プロトコル違反: 必須フィールド $FIELD$ がサーバー応答から見つかりません。",
-    "placeholders": { "field": { "content": "$1", "example": "Sync.Collections.Collection.SyncKey" } }
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
   },
   "eas.network.error.transport": {
     "message": "EAS 転送エラー (HTTP $STATUS$)",
-    "placeholders": { "status": { "content": "$1", "example": "500" } }
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
   },
   "eas.network.error.responseNotWbxml": {
     "message": "応答が WBXML ではありません (先頭バイト: $BYTES$)",
-    "placeholders": { "bytes": { "content": "$1", "example": "48 54 4d 4c" } }
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
   },
   "eas.network.error.retriesExhausted": {
     "message": "ネットワーク再試行が尽きました - サーバーが応答しませんでした"
