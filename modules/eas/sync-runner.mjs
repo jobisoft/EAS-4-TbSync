@@ -43,6 +43,8 @@ import { easRequest } from "../network.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
+import { fetchServerItem } from "./item-operations.mjs";
+import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 import {
   ok,
   warning as warningStatus,
@@ -254,6 +256,12 @@ async function runOneSync({
   let synckey = String(folder.custom?.synckey ?? "0");
   const maxItems = await readMaxItems();
   const msTodoCompat = await readMsTodoCompat();
+  // Effective read-only: server-imposed (`folder.readOnly`) OR user-toggled
+  // (`folder.downloadOnly`). When set, we discard pending user-side edits
+  // before pulling, and skip the push phase entirely. Matches legacy's
+  // `revertLocalChanges` + downloadonly gate (legacy sync.js:349-378).
+  const effectiveDownloadOnly =
+    !!folder.readOnly || !!folder.downloadOnly;
 
   const ctx = {
     provider,
@@ -277,6 +285,22 @@ async function runOneSync({
     byServerId: null,
     maxItems,
   };
+
+  // Read-only revert pre-step. Drops local edits before the pull so the
+  // local store ends up matching the server. ItemOperations.Fetch lets us
+  // re-pull a single item by serverId; falls back to a synckey reset when
+  // the server didn't advertise ItemOperations (legacy behaviour at
+  // sync.js:888-911 `revertLocalChangesViaResync`).
+  if (effectiveDownloadOnly) {
+    const heavyResetNeeded = await revertLocalChanges(ctx);
+    if (heavyResetNeeded) {
+      ctx.synckey = "0";
+      synckey = "0";
+      ctx.syncKeyDirty = true;
+      ctx.idMap = {};
+      ctx.idMapDirty = true;
+    }
+  }
 
   // 1) Bootstrap if needed.
   if (synckey === "0" || !synckey) {
@@ -312,18 +336,22 @@ async function runOneSync({
   const firstPull = await pullPhase(ctx);
   if (firstPull.code) return await finishWith(ctx, firstPull);
 
-  // 3) Push pass.
-  const changelog = Array.isArray(folder.changelog) ? folder.changelog : [];
-  const userEdits = changelog.filter(
-    (e) =>
-      e?.status === "added_by_user" ||
-      e?.status === "modified_by_user" ||
-      e?.status === "deleted_by_user",
-  );
+  // 3) Push pass — skipped entirely on a read-only folder. Any edits the
+  // user made between the revert above and the pull will be re-reverted on
+  // the next sync; the runner is the single authority for upsync gating.
   let pushed = { changedAnything: false };
-  if (userEdits.length) {
-    pushed = await pushPhase(ctx, userEdits);
-    if (pushed.code) return await finishWith(ctx, pushed);
+  if (!effectiveDownloadOnly) {
+    const changelog = Array.isArray(folder.changelog) ? folder.changelog : [];
+    const userEdits = changelog.filter(
+      (e) =>
+        e?.status === "added_by_user" ||
+        e?.status === "modified_by_user" ||
+        e?.status === "deleted_by_user",
+    );
+    if (userEdits.length) {
+      pushed = await pushPhase(ctx, userEdits);
+      if (pushed.code) return await finishWith(ctx, pushed);
+    }
   }
 
   // 4) Follow-up pull, after a brief settle window.
@@ -334,6 +362,182 @@ async function runOneSync({
   }
 
   return await finishWith(ctx, { status: ok() });
+}
+
+/* ── Read-only revert ─────────────────────────────────────────────────
+ *
+ * Walk the folder's user-side changelog and undo each entry so the local
+ * store ends up matching the server. Called from `runOneSync` only when
+ * the folder is effectively read-only (`folder.readOnly` from the server
+ * or `folder.downloadOnly` toggled by the user).
+ *
+ * Per-entry semantics (mirrors legacy sync.js:730-886):
+ *   - added_by_user      → delete the local item; drop changelog entry.
+ *   - modified_by_user   → ItemOperations.Fetch the server's copy and
+ *                          overwrite local; drop changelog entry. If the
+ *                          fetch comes back empty (server says it's gone),
+ *                          delete the local item too.
+ *   - deleted_by_user    → ItemOperations.Fetch and re-create locally;
+ *                          drop changelog entry. If the fetch returns no
+ *                          item, just drop the entry — server agrees the
+ *                          item is gone.
+ *
+ * Fallback when the server didn't advertise ItemOperations: delete every
+ * `added_by_user` item locally, drop the entire changelog, and signal to
+ * the caller that a synckey reset is needed. The next pull (with
+ * SyncKey=0) re-emits every server item as an Add; existing-locally items
+ * route through `applyChangeFromAd` which overwrites with the server
+ * version, locally-deleted items get re-added by `applyAdd`.
+ *
+ * Returns `true` when the caller should reset `ctx.synckey` to "0"
+ * (heavy fallback path), `false` otherwise.
+ */
+async function revertLocalChanges(ctx) {
+  const changelog = Array.isArray(ctx.folder.changelog)
+    ? ctx.folder.changelog
+    : [];
+  const userEdits = changelog.filter(
+    (e) =>
+      e?.status === "added_by_user" ||
+      e?.status === "modified_by_user" ||
+      e?.status === "deleted_by_user",
+  );
+  if (userEdits.length === 0) return false;
+
+  const codec = ctx.itemKind.codec;
+  const canFetch = easCommandLikelyAvailable(ctx.account, "ItemOperations");
+
+  if (!canFetch) {
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message: `[${ctx.itemKind.changelogKind}-sync] read-only revert: server lacks ItemOperations; resetting synckey for ${userEdits.length} pending edit(s)`,
+    });
+    for (const e of userEdits) {
+      if (e.status === "added_by_user") {
+        try {
+          await ctx.store.delete(e.itemId);
+        } catch {
+          /* item already gone — fine */
+        }
+      }
+      await ctx.provider.changelogRemove({
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        parentId: e.parentId,
+        itemId: e.itemId,
+      });
+    }
+    return true;
+  }
+
+  for (const e of userEdits) {
+    if (e.status === "added_by_user") {
+      try {
+        await ctx.store.delete(e.itemId);
+      } catch {
+        /* already gone */
+      }
+      await ctx.provider.changelogRemove({
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        parentId: e.parentId,
+        itemId: e.itemId,
+      });
+      continue;
+    }
+
+    let serverID = ctx.idMap[e.itemId];
+    if (!serverID && e.status === "modified_by_user") {
+      // For modify, the local blob still has the server-stamped ID.
+      try {
+        const it = await ctx.store.get(e.itemId);
+        if (it?.blob) serverID = codec.readEasServerIdFromBlob(it.blob);
+      } catch {
+        /* fall through */
+      }
+    }
+    if (!serverID) {
+      // Nothing to fetch — drop the entry and let the regular sync
+      // settle the local state.
+      await ctx.provider.changelogRemove({
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        parentId: e.parentId,
+        itemId: e.itemId,
+      });
+      continue;
+    }
+
+    const properties = await fetchServerItem({
+      account: ctx.account,
+      asVersion: ctx.asVersion,
+      collectionId: ctx.collectionId,
+      serverID,
+    });
+
+    if (!properties) {
+      // Fetch failed or server says gone. For a modify, this means the
+      // server deleted the item out from under us; delete the local copy
+      // to converge. For a delete, the server already agrees.
+      if (e.status === "modified_by_user") {
+        try {
+          await ctx.store.delete(e.itemId);
+        } catch {
+          /* already gone */
+        }
+      }
+      await ctx.provider.changelogRemove({
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        parentId: e.parentId,
+        itemId: e.itemId,
+      });
+      continue;
+    }
+
+    const blob = await codec.applicationDataToBlob({
+      adNode: properties,
+      serverID,
+      asVersion: ctx.asVersion,
+      separator: ctx.separator,
+      defaultTimezone: ctx.defaultTimezone,
+      syncRecurrence: ctx.syncRecurrence,
+      msTodoCompat: ctx.msTodoCompat,
+      uid: e.itemId,
+    });
+
+    await ctx.provider.changelogMarkServerWrite({
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      parentId: ctx.targetID,
+      itemId: e.itemId,
+      status: "modified_by_server",
+      kind: ctx.itemKind.changelogKind,
+    });
+
+    if (e.status === "modified_by_user") {
+      await ctx.store.update(e.itemId, blob);
+    } else {
+      // deleted_by_user — re-create.
+      const createdId = await ctx.store.create(e.itemId, blob);
+      if (createdId !== e.itemId) {
+        throw new Error(
+          `revert: store.create id mismatch: expected ${e.itemId}, got ${createdId}`,
+        );
+      }
+      mergeIdMap(ctx, { [e.itemId]: serverID });
+    }
+
+    await ctx.provider.changelogRemove({
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      parentId: e.parentId,
+      itemId: e.itemId,
+    });
+  }
+  return false;
 }
 
 async function finishWith(ctx, result) {
@@ -890,13 +1094,25 @@ function buildSyncBody({
     w.atag("WindowSize", String(windowSize ?? 25));
     if (asVersion !== "2.5") {
       w.otag("Options");
-      w.atag("FilterType", String(filterType));
+      // FilterType narrows Calendar pulls to a window (e.g. last 2 weeks).
+      // Only meaningful for Calendar - Contacts/Tasks have no time axis.
+      // Legacy gates this on `type == "Calendar"` (sync.js:401); we mirror
+      // by emitting the tag only for the Calendar class.
+      if (className === "Calendar") w.atag("FilterType", String(filterType));
       w.atag("Class", className);
       w.switchpage("AirSyncBase");
       w.otag("BodyPreference");
       w.atag("Type", "1");
       w.ctag();
       w.switchpage("AirSync");
+      w.ctag();
+    } else if (className === "Calendar") {
+      // AS 2.5 has no Class/BodyPreference inside Options (those tags were
+      // introduced in AS 12). Calendar is the one folder type that still
+      // benefits from a FilterType - without it the server treats the
+      // initial pull as "every event ever". Matches legacy sync.js:409-412.
+      w.otag("Options");
+      w.atag("FilterType", String(filterType));
       w.ctag();
     }
   }

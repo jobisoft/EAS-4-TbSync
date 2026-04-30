@@ -114,6 +114,15 @@ async function getDefaultTimezone() {
   }
 }
 
+/** Mirror the folder's effective read-only state onto the local TB
+ *  calendar so the user's calendar UI matches the sync gate. Called
+ *  before the sync runs so a fresh toggle takes effect on this pass. */
+async function mirrorReadOnly(folder) {
+  if (!folder?.targetID) return;
+  const effectiveRO = !!folder.readOnly || !!folder.downloadOnly;
+  await calendarStore.setCalendarReadOnly(folder.targetID, effectiveRO);
+}
+
 export async function syncCalendarFolder({
   provider,
   account,
@@ -125,6 +134,7 @@ export async function syncCalendarFolder({
   const filterType = String(account.custom?.synclimit ?? "7");
   const defaultTimezone = await getDefaultTimezone();
   await ensureTimezoneMappingLoaded();
+  await mirrorReadOnly(folder);
   return runItemSync({
     provider,
     account,
@@ -147,6 +157,7 @@ export async function syncTaskFolder({
 }) {
   const defaultTimezone = await getDefaultTimezone();
   await ensureTimezoneMappingLoaded();
+  await mirrorReadOnly(folder);
   return runItemSync({
     provider,
     account,

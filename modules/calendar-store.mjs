@@ -69,6 +69,23 @@ export async function renameCalendar(id, name) {
   await messenger.calendar.calendars.update(id, { name });
 }
 
+/**
+ * Mirror a folder's effective read-only state onto the local Thunderbird
+ * calendar. When set, TB greys out event editing in the UI; the experiment's
+ * sync write path bypasses the flag, so the runner can still apply server
+ * changes to the local store. Tolerant of "calendar not found" because the
+ * user may have deleted it manually since the folder row was bound.
+ */
+export async function setCalendarReadOnly(id, readOnly) {
+  if (!id) return;
+  try {
+    await messenger.calendar.calendars.update(id, { readOnly: !!readOnly });
+  } catch (err) {
+    if (isNotFoundError(err)) return;
+    throw err;
+  }
+}
+
 /* ── Item level ───────────────────────────────────────────────────── */
 
 /**
