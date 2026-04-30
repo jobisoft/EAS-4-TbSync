@@ -71,8 +71,17 @@ export function applicationDataToIcal({
     writeUtcDateProp(vtodo, "due", reminderTime);
   } else {
     const startUtc = readPathFrom(adNode, ["UtcStartDate"]);
-    if (startUtc) writeUtcDateProp(vtodo, "dtstart", startUtc);
     const dueUtc = readPathFrom(adNode, ["UtcDueDate"]);
+    // If the server sends Recurrence without StartDate, fall back to
+    // DueDate as the recurrence anchor — Lightning won't render a
+    // recurring VTODO without a DTSTART. Mirrors legacy
+    // tasksync.js:70-79. Only a no-op when both are absent (the
+    // recurrence will then be lost on the local side, same as legacy).
+    let dtstartSource = startUtc;
+    if (!dtstartSource && dueUtc && childByTag(adNode, "Recurrence")) {
+      dtstartSource = dueUtc;
+    }
+    if (dtstartSource) writeUtcDateProp(vtodo, "dtstart", dtstartSource);
     if (dueUtc) writeUtcDateProp(vtodo, "due", dueUtc);
   }
 
