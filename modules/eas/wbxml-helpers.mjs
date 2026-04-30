@@ -30,6 +30,25 @@ export function readPathFrom(node, path) {
   return decodeText(node?.textContent);
 }
 
+/** Return the decoded text of every direct child of `node` whose tag
+ *  matches `tag`. Used for repeating-element containers like
+ *  `<Categories><Category>foo</Category>…</Categories>` and
+ *  `<Children><Child>…</Child>…</Children>`. Goes through `decodeText`
+ *  so the wbxml decoder's `encodeURIComponent` escape and the per-byte
+ *  UTF-8 reinterpretation both unwind correctly. Empty / whitespace-only
+ *  results are skipped. */
+export function readChildTexts(node, tag) {
+  const result = [];
+  if (!node?.children) return result;
+  for (const c of node.children) {
+    if (c.tagName === tag) {
+      const v = decodeText(c.textContent);
+      if (v) result.push(v);
+    }
+  }
+  return result;
+}
+
 /** Inverse of the WBXML decoder's `encodeURIComponent` round-trip in
  *  [modules/wbxml.mjs](../wbxml.mjs). The decoder builds a string with
  *  one JS code unit per raw WBXML byte, then `encodeURIComponent`s it

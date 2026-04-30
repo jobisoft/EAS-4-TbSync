@@ -19,7 +19,7 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
-import { readPathFrom } from "./wbxml-helpers.mjs";
+import { readPathFrom, readChildTexts } from "./wbxml-helpers.mjs";
 
 /** vCard property name we use to track the EAS server-side serverId so
  *  pull-update / pull-delete can find the right local card without a
@@ -40,25 +40,36 @@ const PASS_THROUGH_FIELDS = [
   "ManagerName",
   "AssistantName",
   "Spouse",
-  "OfficeLocation",
-  "CustomerId",
-  "GovernmentId",
-  "AccountName",
 ];
 
-/** EAS phone fields without a standard TYPE: kept as TEL with an
- *  `x-<key>` type so they round-trip cleanly. */
-const X_PHONE_TYPES = {
-  AssistantPhoneNumber: "x-assistant",
-  CarPhoneNumber: "x-car",
-  RadioPhoneNumber: "x-radio",
-  CompanyMainPhone: "x-company-main",
+/** Legacy "misuses" four EAS fields to round-trip through TB's standard
+ *  Custom 1-4 vCard slots ([contactsync.js:118-119, 132-135](legacy/EAS4/content/includes/contactsync.js#L118-L119)).
+ *  TB surfaces `x-custom1`..`x-custom4` as the four user-visible Custom
+ *  fields in its card editor, so the user can read/edit these EAS-only
+ *  values via the standard UI. We mirror that mapping verbatim. */
+const CUSTOM_FIELD_MAP = {
+  OfficeLocation: "x-custom1", // Contacts namespace
+  CustomerId: "x-custom2", // Contacts2 namespace
+  GovernmentId: "x-custom3", // Contacts2 namespace
+  AccountName: "x-custom4", // Contacts2 namespace
 };
 
-const PHONE_KEYS_BY_TYPE = invertMap({
-  cell: "MobilePhoneNumber",
-  pager: "PagerNumber",
-});
+/** EAS phone fields without a TB-supported TEL TYPE. Legacy
+ *  ([contactsync.js:124-127, 141](legacy/EAS4/content/includes/contactsync.js#L124-L127))
+ *  routes them through TEL with a PascalCase TYPE param and prefixes the
+ *  value with the type label so TB's UI (which doesn't surface
+ *  non-standard TYPE values) at least shows the user *what kind* of
+ *  number this is. We mirror that shape verbatim for round-trip parity.
+ *  `BusinessFaxNumber` is included even though `fax` is a standard type,
+ *  because TB has only one fax slot — legacy used the prefixed form to
+ *  distinguish home fax (plain `TYPE=fax`) from business fax. */
+const PREFIXED_PHONES = {
+  BusinessFaxNumber: { type: "WorkFax", prefix: "WorkFax: " },
+  AssistantPhoneNumber: { type: "Assistant", prefix: "Assistant: " },
+  CarPhoneNumber: { type: "Car", prefix: "Car: " },
+  RadioPhoneNumber: { type: "Radio", prefix: "Radio: " },
+  CompanyMainPhone: { type: "Company", prefix: "Company: " },
+};
 
 /* ── Reader: ApplicationData → vCard ───────────────────────────────── */
 
@@ -95,6 +106,7 @@ export async function applicationDataToVCard({
   readIMs(adNode, comp);
   readChildren(adNode, comp);
   readPassThroughs(adNode, comp);
+  readCustomFields(adNode, comp);
   return comp.toString();
 }
 
@@ -125,10 +137,12 @@ export function appendApplicationDataFromVCard({
   writeCategories(builder, comp);
   writeChildren(builder, comp);
   writePassThroughs(builder, comp);
+  writeCustomFieldsContacts(builder, comp);
 
   builder.switchpage("Contacts2");
   writeNickName(builder, comp);
   writeIMs(builder, comp);
+  writeCustomFieldsContacts2(builder, comp);
 
   writeNote(builder, comp, asVersion);
 }
@@ -280,94 +294,100 @@ function writeWeb(b, comp) {
 /* ── Phones ────────────────────────────────────────────────────────── */
 
 function readPhones(adNode, comp) {
-  // Single-occurrence + the second slots (Home2, Business2). Each EAS
-  // tag becomes a separate TEL property with appropriate TYPE params.
-  addPhone(adNode, comp, "MobilePhoneNumber", ["cell"]);
-  addPhone(adNode, comp, "PagerNumber", ["pager"]);
-  addPhone(adNode, comp, "HomeFaxNumber", ["home", "fax"]);
-  addPhone(adNode, comp, "HomePhoneNumber", ["home", "voice"]);
-  addPhone(adNode, comp, "Home2PhoneNumber", ["home", "voice"]);
-  addPhone(adNode, comp, "BusinessPhoneNumber", ["work", "voice"]);
-  addPhone(adNode, comp, "Business2PhoneNumber", ["work", "voice"]);
-  addPhone(adNode, comp, "BusinessFaxNumber", ["work", "fax"]);
-  for (const [tag, xtype] of Object.entries(X_PHONE_TYPES)) {
-    addPhone(adNode, comp, tag, [xtype]);
+  // Standard types: emit single-value lowercase TYPE param matching TB's
+  // native vCard 4 export shape (TEL;TYPE=home, TEL;TYPE=fax, …). Legacy
+  // did the same; we deliberately omit the redundant `voice` qualifier
+  // (vCard 4 default for TEL).
+  addPhone(adNode, comp, "MobilePhoneNumber", "cell");
+  addPhone(adNode, comp, "PagerNumber", "pager");
+  addPhone(adNode, comp, "HomeFaxNumber", "fax");
+  addPhone(adNode, comp, "HomePhoneNumber", "home");
+  addPhone(adNode, comp, "Home2PhoneNumber", "home");
+  addPhone(adNode, comp, "BusinessPhoneNumber", "work");
+  addPhone(adNode, comp, "Business2PhoneNumber", "work");
+  // Prefixed types: BusinessFaxNumber + Assistant/Car/Radio/CompanyMain.
+  // Legacy emits TEL with a PascalCase TYPE and prefixes the value with
+  // "<Type>: " so TB's UI (which doesn't render non-standard TYPE values)
+  // shows the user what kind of number this is. Mirror that shape so the
+  // round-trip is byte-identical to legacy.
+  for (const [tag, { type, prefix }] of Object.entries(PREFIXED_PHONES)) {
+    const v = readPathFrom(adNode, [tag]);
+    if (!v) continue;
+    const prop = new ICAL.Property("tel", comp);
+    prop.setParameter("type", type);
+    prop.setValue(prefix + v);
+    comp.addProperty(prop);
   }
 }
 
-function addPhone(adNode, comp, tag, types) {
+function addPhone(adNode, comp, tag, type) {
   const v = readPathFrom(adNode, [tag]);
   if (!v) return;
   const prop = new ICAL.Property("tel", comp);
-  prop.setParameter("type", types.length === 1 ? types[0] : types);
+  prop.setParameter("type", type);
   prop.setValue(v);
   comp.addProperty(prop);
 }
 
 function writePhones(b, comp) {
-  // Bucket TEL properties by their type set. We emit at most two for
-  // home/work to cover Home2/Business2.
-  const buckets = {
-    cell: [],
-    pager: [],
-    homeFax: [],
-    workFax: [],
-    home: [],
-    work: [],
-  };
-  const xPhones = {}; // x-assistant/x-car/etc. → first value wins
+  // Bucket TEL properties by their TYPE so each EAS field gets the right
+  // value back. Standard types use lowercase single-value TYPE; prefixed
+  // types use PascalCase TYPE with a "<Type>: " value-prefix that we
+  // strip before sending to the server (legacy parity).
+  const buckets = { cell: [], pager: [], fax: [], home: [], work: [] };
+  const prefixed = {}; // EAS tag → value with prefix stripped
+
   for (const p of comp.getAllProperties("tel")) {
     const value = stringOf(p.getFirstValue());
     if (!value) continue;
-    const types = paramTypes(p);
-    const has = (t) => types.includes(t);
+    const types = paramTypes(p); // already lowercased
+
+    // Prefixed types (BusinessFax, Assistant, Car, Radio, Company): match
+    // first; their PascalCase TYPE value lowercases to a unique tag like
+    // "workfax" / "assistant" / etc.
     let placed = false;
-    for (const [xtype, easTag] of Object.entries(X_PHONE_TYPES).map(
-      ([t, x]) => [x, t],
-    )) {
-      if (has(xtype)) {
-        xPhones[easTag] = value;
+    for (const [tag, { type, prefix }] of Object.entries(PREFIXED_PHONES)) {
+      if (types.includes(type.toLowerCase())) {
+        prefixed[tag] = value.startsWith(prefix)
+          ? value.slice(prefix.length)
+          : value;
         placed = true;
         break;
       }
     }
     if (placed) continue;
-    if (has("cell")) {
+
+    if (types.includes("cell")) {
       buckets.cell.push(value);
       continue;
     }
-    if (has("pager")) {
+    if (types.includes("pager")) {
       buckets.pager.push(value);
       continue;
     }
-    if (has("fax") && has("home")) {
-      buckets.homeFax.push(value);
+    if (types.includes("fax")) {
+      buckets.fax.push(value);
       continue;
     }
-    if (has("fax") && has("work")) {
-      buckets.workFax.push(value);
-      continue;
-    }
-    if (has("home")) {
+    if (types.includes("home")) {
       buckets.home.push(value);
       continue;
     }
-    if (has("work")) {
+    if (types.includes("work")) {
       buckets.work.push(value);
       continue;
     }
-    // Untagged or unknown → drop into home as legacy did.
+    // Untagged / unknown TYPE → home (legacy fallback).
     buckets.home.push(value);
   }
   emitIf(b, "MobilePhoneNumber", buckets.cell[0]);
   emitIf(b, "PagerNumber", buckets.pager[0]);
-  emitIf(b, "HomeFaxNumber", buckets.homeFax[0]);
-  emitIf(b, "BusinessFaxNumber", buckets.workFax[0]);
+  emitIf(b, "HomeFaxNumber", buckets.fax[0]);
   emitIf(b, "HomePhoneNumber", buckets.home[0]);
   emitIf(b, "Home2PhoneNumber", buckets.home[1]);
   emitIf(b, "BusinessPhoneNumber", buckets.work[0]);
   emitIf(b, "Business2PhoneNumber", buckets.work[1]);
-  for (const [tag, value] of Object.entries(xPhones)) emitIf(b, tag, value);
+  for (const [tag, value] of Object.entries(prefixed)) emitIf(b, tag, value);
 }
 
 /* ── Addresses (Home / Business / Other) ───────────────────────────── */
@@ -447,7 +467,10 @@ function splitStreet(street, separator) {
 }
 
 function joinStreet(streetArray, separator) {
-  return streetArray.filter(Boolean).join(separatorChar(separator) ?? "\n");
+  // `separator` is always a numeric char-code string by the time we get
+  // here - the runner sets it via `String(account.custom?.seperator ??
+  // "10")` (sync-runner.mjs:254). No defensive fallback needed.
+  return streetArray.filter(Boolean).join(separatorChar(separator));
 }
 
 function separatorChar(separator) {
@@ -541,13 +564,7 @@ function writePicture(b, comp) {
 function readCategories(adNode, comp) {
   const cats = childByTag(adNode, "Categories");
   if (!cats) return;
-  const list = [];
-  for (const c of cats.children) {
-    if (c.tagName === "Category") {
-      const t = decodeIfNeeded(c.textContent);
-      if (t) list.push(t);
-    }
-  }
+  const list = readChildTexts(cats, "Category");
   if (list.length) {
     const prop = new ICAL.Property("categories", comp);
     prop.setValues(list);
@@ -600,13 +617,7 @@ function writeIMs(b, comp) {
 function readChildren(adNode, comp) {
   const node = childByTag(adNode, "Children");
   if (!node) return;
-  const names = [];
-  for (const c of node.children) {
-    if (c.tagName === "Child") {
-      const t = decodeIfNeeded(c.textContent);
-      if (t) names.push(t);
-    }
-  }
+  const names = readChildTexts(node, "Child");
   if (names.length)
     comp.addPropertyWithValue("x-eas-children", JSON.stringify(names));
 }
@@ -644,6 +655,37 @@ function writePassThroughs(b, comp) {
 
 function passThroughVcardKey(tag) {
   return `x-eas-${tag.toLowerCase()}`;
+}
+
+/* ── Custom 1-4 (legacy `x-custom*` slots) ─────────────────────────── */
+
+function readCustomFields(adNode, comp) {
+  // Read side is namespace-agnostic - readPathFrom walks the parsed DOM
+  // regardless of which WBXML codepage the tag came from.
+  for (const [tag, slot] of Object.entries(CUSTOM_FIELD_MAP)) {
+    const v = readPathFrom(adNode, [tag]);
+    if (v) comp.updatePropertyWithValue(slot, v);
+  }
+}
+
+/** Write side splits across the two codepages: OfficeLocation lives in
+ *  the Contacts namespace, the other three in Contacts2. Caller invokes
+ *  each at the appropriate `builder.switchpage` boundary. */
+function writeCustomFieldsContacts(b, comp) {
+  const v = stringOf(comp.getFirstPropertyValue("x-custom1"));
+  if (v) b.atag("OfficeLocation", v);
+}
+
+function writeCustomFieldsContacts2(b, comp) {
+  const slots = [
+    ["CustomerId", "x-custom2"],
+    ["GovernmentId", "x-custom3"],
+    ["AccountName", "x-custom4"],
+  ];
+  for (const [tag, slot] of slots) {
+    const v = stringOf(comp.getFirstPropertyValue(slot));
+    if (v) b.atag(tag, v);
+  }
 }
 
 /* ── Helpers ───────────────────────────────────────────────────────── */
@@ -701,17 +743,3 @@ function childByTag(node, tag) {
   return null;
 }
 
-function decodeIfNeeded(text) {
-  if (text == null) return "";
-  try {
-    return decodeURIComponent(text);
-  } catch {
-    return text;
-  }
-}
-
-function invertMap(obj) {
-  const out = {};
-  for (const [k, v] of Object.entries(obj)) out[v] = k;
-  return out;
-}
