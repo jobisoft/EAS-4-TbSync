@@ -24,6 +24,9 @@ import {
   easTypeToFolderType,
   finalizeFolderListForPush,
 } from "./eas-provider.mjs";
+import * as calendarStore from "./calendar-store.mjs";
+import * as eventCodec from "./eas/calendar-codec.mjs";
+import * as taskCodec from "./eas/task-codec.mjs";
 
 const UPGRADE_QUEUE_KEY = "eas.upgradeQueue";
 
@@ -106,7 +109,29 @@ export const UPGRADES = [
             message: `[upgrade] contact vCard migration failed: ${err?.message ?? String(err)}`,
           });
         }
-      }      
+      }
+
+      // Legacy EAS4 stored each event/task's EAS ServerId as the
+      // calendar item's id (`item.primaryKey === serverId`, see legacy
+      // sync.js:1042). The new code expects the ServerId in an
+      // `X-EAS-SERVERID` iCal property and a matching
+      // `folder.custom.itemMap` entry. Without this migration, an
+      // upgraded user would see duplicates after the first delta sync
+      // and silent edit/delete failures on legacy events/tasks. Same
+      // shape as the contact migration above; simpler because Lightning
+      // already stores X-EAS-* properties in the iCal blob (no XPCOM
+      // experiment needed).
+      for (const acc of accounts) {
+        try {
+          await migrateCalendarItemsForAccount(provider, acc);
+        } catch (err) {
+          provider.reportEventLog({
+            level: "warning",
+            accountId: acc.accountId,
+            message: `[upgrade] calendar item migration failed: ${err?.message ?? String(err)}`,
+          });
+        }
+      }
     },
   },
 ];
@@ -586,4 +611,143 @@ function escapeVCardValue(s) {
     .replace(/\n/g, "\\n")
     .replace(/\r/g, "")
     .replace(/,/g, "\\,");
+}
+
+/* ── Calendar / Task item migration ──────────────────────────────────── */
+
+/** Walk every events/tasks folder on the account and re-shape each
+ *  legacy item by stamping `X-EAS-SERVERID` onto its iCal and adding
+ *  a matching `folder.custom.itemMap` entry. Idempotent: items that
+ *  already carry `X-EAS-SERVERID` are skipped. */
+async function migrateCalendarItemsForAccount(provider, acc) {
+  const rv = await provider.getAccount(acc.accountId);
+  const folders = rv?.folders ?? [];
+  for (const folder of folders) {
+    const itemKind = itemKindForFolder(folder);
+    if (!itemKind || !folder.targetID) continue;
+    try {
+      await migrateCalendarItemsForFolder(
+        provider,
+        acc.accountId,
+        folder,
+        itemKind,
+      );
+    } catch (err) {
+      provider.reportEventLog({
+        level: "warning",
+        accountId: acc.accountId,
+        folderId: folder.folderId,
+        message: `[upgrade] calendar/task folder migration failed: ${err?.message ?? String(err)}`,
+      });
+    }
+  }
+}
+
+/** Map a folder's targetType to the codec / store-type / changelog-kind
+ *  triple used by the per-item migration. Returns null for non-calendar
+ *  folders. */
+function itemKindForFolder(folder) {
+  if (folder.targetType === "calendars") {
+    return { storeType: "event", codec: eventCodec, changelogKind: "event" };
+  }
+  if (folder.targetType === "tasks") {
+    return { storeType: "task", codec: taskCodec, changelogKind: "task" };
+  }
+  return null;
+}
+
+async function migrateCalendarItemsForFolder(
+  provider,
+  accountId,
+  folder,
+  itemKind,
+) {
+  let items;
+  try {
+    items = await calendarStore.listItems(folder.targetID, itemKind.storeType);
+  } catch (err) {
+    provider.reportEventLog({
+      level: "warning",
+      accountId,
+      folderId: folder.folderId,
+      message: `[upgrade] calendar items.list failed: ${err?.message ?? String(err)}`,
+    });
+    return;
+  }
+  if (!Array.isArray(items) || items.length === 0) return;
+
+  const itemMap = { ...(folder.custom?.itemMap ?? {}) };
+  let migratedCount = 0;
+  let alreadyMigratedCount = 0;
+
+  for (const node of items) {
+    const id = node?.id;
+    const ical =
+      typeof node?.item === "string" && node.item.trim() ? node.item : "";
+    if (!id || !ical) continue;
+    try {
+      // Idempotency guard: skip if X-EAS-SERVERID is already on the
+      // master VEVENT/VTODO.
+      if (itemKind.codec.readEasServerIdFromIcal(ical)) {
+        if (!itemMap[id]) {
+          itemMap[id] = id;
+          migratedCount++;
+        } else {
+          alreadyMigratedCount++;
+        }
+        continue;
+      }
+
+      const stamped = itemKind.codec.stampEasServerId(ical, id);
+      if (stamped === ical) continue; // codec couldn't parse the iCal; skip.
+
+      // Pre-tag the changelog so the upcoming `items.update` is treated
+      // as self-inflicted by the host's calendar observer (1500 ms
+      // freeze) and doesn't produce a `modified_by_user` entry.
+      await provider.changelogMarkServerWrite({
+        accountId,
+        folderId: folder.folderId,
+        parentId: folder.targetID,
+        itemId: id,
+        status: "modified_by_server",
+        kind: itemKind.changelogKind,
+      });
+      await calendarStore.updateItem(folder.targetID, id, { ical: stamped });
+
+      // Legacy convention: item.id === EAS ServerId. Populate the
+      // itemMap so `buildPushBatch`'s deleted_by_user path (which only
+      // consults the idMap, not the iCal blob - the local item is gone
+      // by then) can resolve the ServerId.
+      itemMap[id] = id;
+      migratedCount++;
+    } catch (err) {
+      provider.reportEventLog({
+        level: "warning",
+        accountId,
+        folderId: folder.folderId,
+        message: `[upgrade] ${itemKind.changelogKind} item ${id}: ${err?.message ?? String(err)}`,
+      });
+    }
+  }
+
+  if (migratedCount > 0) {
+    await provider.updateFolder({
+      accountId,
+      folderId: folder.folderId,
+      patch: { custom: { itemMap } },
+    });
+    provider.reportEventLog({
+      level: "debug",
+      accountId,
+      folderId: folder.folderId,
+      message: `[upgrade] migrated ${migratedCount} ${itemKind.changelogKind} item(s) to new iCal shape (${alreadyMigratedCount} already migrated)`,
+    });
+  } else if (alreadyMigratedCount > 0) {
+    provider.reportEventLog({
+      level: "debug",
+      accountId,
+      folderId: folder.folderId,
+      message: `[upgrade] all ${alreadyMigratedCount} ${itemKind.changelogKind} item(s) already migrated`,
+    });
+  }
 }
