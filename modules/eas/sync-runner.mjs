@@ -795,6 +795,20 @@ async function buildPushBatch(ctx, slice) {
     } else if (entry.status === "deleted_by_user") {
       const serverID = ctx.idMap[entry.itemId];
       if (!serverID) {
+        // No serverID resolvable from the idMap and the local card is
+        // already gone (so no vCard X-EAS-SERVERID fallback). Drop the
+        // changelog entry; the server keeps its copy. Recovery: the
+        // next pull restores the card locally and rebuilds the idMap
+        // entry, after which the user's re-delete will propagate.
+        // Common causes: card was created and deleted between syncs
+        // (never registered server-side anyway), or the idMap drifted
+        // out of sync with server reality (rare).
+        ctx.provider.reportEventLog({
+          level: "info",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] dropped delete for itemId=${entry.itemId}: no serverID in idMap (card may not have been on the server, or idMap is stale - next pull will rebuild)`,
+        });
         await ctx.provider.changelogRemove({
           accountId: ctx.accountId,
           folderId: ctx.folderId,
