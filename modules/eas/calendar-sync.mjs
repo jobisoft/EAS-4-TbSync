@@ -40,6 +40,9 @@ function makeCodec(modCodec) {
       asVersion,
       defaultTimezone,
       syncRecurrence,
+      userEmail,
+      fallbackOrganizerName,
+      eventLog,
     }) {
       return modCodec.appendApplicationDataFromIcal({
         builder,
@@ -47,6 +50,9 @@ function makeCodec(modCodec) {
         asVersion,
         defaultTimezone,
         syncRecurrence,
+        userEmail,
+        fallbackOrganizerName,
+        eventLog,
       });
     },
     readEasServerIdFromBlob: modCodec.readEasServerIdFromIcal,

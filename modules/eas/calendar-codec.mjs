@@ -311,6 +311,9 @@ export function appendInstanceChanges({
   asVersion,
   defaultTimezone,
   syncRecurrence,
+  userEmail,
+  fallbackOrganizerName,
+  eventLog,
 }) {
   if (asVersion !== "16.1") return;
   const vcal = parseVCalendar(blob);
@@ -361,6 +364,9 @@ export function appendInstanceChanges({
       defaultTimezone,
       syncRecurrence,
       isException: true,
+      userEmail,
+      fallbackOrganizerName,
+      eventLog,
     });
     builder.switchpage("AirSync");
     builder.ctag();
@@ -402,6 +408,9 @@ export function appendApplicationDataFromIcal({
   defaultTimezone,
   syncRecurrence,
   isException = false,
+  userEmail,
+  fallbackOrganizerName,
+  eventLog,
 }) {
   // Exception bodies are emitted from a vevent we've already parsed;
   // accept either a string or a pre-parsed component for nested calls.
@@ -440,12 +449,19 @@ export function appendApplicationDataFromIcal({
     builder.atag("BusyStatus", TRANSP_TO_BUSYSTATUS[transp] ?? "2");
   }
 
-  // Organizer (≤14.x; not inside an exception).
+  // Organizer (≤14.x; not inside an exception). When the iCal ORGANIZER
+  // has no CN= parameter, fall back to the per-folder name captured by
+  // the inbound side from prior server responses (Phase 5 row 5.4.5,
+  // stored on `account.custom.fallbackOrganizerNames[<collectionId>]`).
+  // Mirrors legacy's `calendar.fallbackOrganizerName` consumption (note:
+  // legacy didn't actually wire the fallback into the OrganizerName emit
+  // either - it just stashed it; we lift it on emit here).
   if (asVersion !== "16.1" && !isException) {
     const orgProp = vevent.getFirstProperty("organizer");
     if (orgProp) {
       const cn = orgProp.getParameter("cn");
-      if (cn) builder.atag("OrganizerName", cn);
+      const name = cn || fallbackOrganizerName;
+      if (name) builder.atag("OrganizerName", name);
       const email = stripMailto(orgProp.getFirstValue());
       if (email) builder.atag("OrganizerEmail", email);
     }
@@ -478,10 +494,13 @@ export function appendApplicationDataFromIcal({
     builder.switchpage("Calendar");
   }
 
-  // Reminder.
+  // Reminder. `alarmMinutes` is responsible for surfacing info-level
+  // event-log entries when an absolute VALARM is converted or a
+  // negative-offset alarm is dropped (legacy logged the same; we
+  // mirror via the eventLog callback plumbed in from the runner).
   const alarm = vevent.getFirstSubcomponent("valarm");
   if (alarm) {
-    const minutes = alarmMinutes(alarm, dtstart);
+    const minutes = alarmMinutes(alarm, dtstart, eventLog);
     if (minutes != null && minutes >= 0)
       builder.atag("Reminder", String(minutes));
   }
@@ -508,13 +527,32 @@ export function appendApplicationDataFromIcal({
     const attendees = vevent.getAllProperties("attendee");
     if (attendees.length === 0) {
       builder.atag("MeetingStatus", "0");
+      // Legacy emits an empty <Attendees/> container on ≤14.x to force
+      // the server to clear its copy of the attendee list (otherwise
+      // server-side stale attendees survive the upsync). 16.1 omits the
+      // empty container - the server treats absence as no-change there.
+      // Mirrors legacy calendarsync.js:497-498.
+      if (asVersion !== "16.1") {
+        builder.atag("Attendees");
+      }
     } else {
       const cancelled = status === "CANCELLED";
       const orgProp = vevent.getFirstProperty("organizer");
-      const isReceived = orgProp
-        ? !!stripMailto(orgProp.getFirstValue()) &&
-          !ownerMatchesOrganizer(orgProp)
-        : false;
+      // R bit (received-from-another-organizer): the local user is NOT
+      // the organizer iff the ORGANIZER email differs from
+      // `account.custom.user`. The previous code's
+      // `ownerMatchesOrganizer` was a hardcoded `false`, which made
+      // every attendee'd event look "received" — so events the user
+      // organized were emitted as MeetingStatus=3 (received) instead of
+      // 1 (organizer). Mirrors legacy calendarsync.js:447-450.
+      const orgEmail = orgProp
+        ? stripMailto(orgProp.getFirstValue()).toLowerCase()
+        : "";
+      const userEmailLower = userEmail
+        ? String(userEmail).toLowerCase()
+        : "";
+      const isReceived =
+        !!orgEmail && (!userEmailLower || orgEmail !== userEmailLower);
       if (cancelled) builder.atag("MeetingStatus", isReceived ? "7" : "5");
       else builder.atag("MeetingStatus", isReceived ? "3" : "1");
 
@@ -576,6 +614,9 @@ export function appendApplicationDataFromIcal({
         asVersion,
         defaultTimezone,
         syncRecurrence,
+        userEmail,
+        fallbackOrganizerName,
+        eventLog,
       });
     }
   }
@@ -818,6 +859,9 @@ function appendOutboundExceptions({
   asVersion,
   defaultTimezone,
   syncRecurrence,
+  userEmail,
+  fallbackOrganizerName,
+  eventLog,
 }) {
   if (!vcal) return;
   const masterUid = stringOf(vevent.getFirstPropertyValue("uid"));
@@ -853,6 +897,9 @@ function appendOutboundExceptions({
       defaultTimezone,
       syncRecurrence,
       isException: true,
+      userEmail,
+      fallbackOrganizerName,
+      eventLog,
     });
     builder.ctag();
   }
@@ -929,21 +976,37 @@ function appendDisplayAlarm(vevent, minutesBeforeStart) {
   vevent.addSubcomponent(alarm);
 }
 
-function alarmMinutes(alarm, dtstartProp) {
+function alarmMinutes(alarm, dtstartProp, eventLog) {
   const trig = alarm.getFirstProperty("trigger");
   if (!trig) return null;
   const v = trig.getFirstValue();
+  let minutes;
+  let wasAbsolute = false;
   if (v instanceof ICAL.Duration) {
-    const total = v.toSeconds();
-    return Math.round(-total / 60); // EAS minutes = before start, positive
-  }
-  if (v instanceof ICAL.Time && dtstartProp) {
+    minutes = Math.round(-v.toSeconds() / 60); // EAS minutes = before start, positive
+  } else if (v instanceof ICAL.Time && dtstartProp) {
     const start = dtstartProp.getFirstValue();
     if (!(start instanceof ICAL.Time)) return null;
-    const diffSec = start.subtractDateTz(v).toSeconds();
-    return Math.round(diffSec / 60);
+    minutes = Math.round(start.subtractDateTz(v).toSeconds() / 60);
+    wasAbsolute = true;
+  } else {
+    return null;
   }
-  return null;
+  if (eventLog) {
+    if (wasAbsolute) {
+      eventLog(
+        "info",
+        `[calendar-sync] converted absolute VALARM trigger to relative offset (${minutes} min before start) - EAS supports relative alarms only`,
+      );
+    }
+    if (minutes < 0) {
+      eventLog(
+        "info",
+        "[calendar-sync] dropped VALARM scheduled after event start - EAS supports alarms before start only",
+      );
+    }
+  }
+  return minutes;
 }
 
 /* ── Helpers: attendees ────────────────────────────────────────────── */
@@ -987,13 +1050,6 @@ function collectAttendees(adNode, userEmail, fallbackResponseType) {
     out.push(item);
   }
   return out;
-}
-
-function ownerMatchesOrganizer(/* orgProp */) {
-  // We don't have the account user here; the caller can override
-  // `MeetingStatus` later if needed. Default: assume not-organizer (3/7)
-  // when an organizer is present at all - matches legacy fallback.
-  return false;
 }
 
 function stripMailto(s) {

@@ -695,6 +695,19 @@ async function pushPhase(ctx, userEdits) {
           codec: ctx.itemKind.codec,
           defaultTimezone: ctx.defaultTimezone,
           syncRecurrence: ctx.syncRecurrence,
+          userEmail: ctx.account?.custom?.user,
+          fallbackOrganizerName:
+            ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
+          // Pre-bound info-level event-log emitter the codec calls when
+          // it converts/drops a VALARM that EAS can't represent (mirrors
+          // legacy's per-event logs at calendarsync.js:402, 405).
+          eventLog: (level, message) =>
+            ctx.provider.reportEventLog({
+              level,
+              accountId: ctx.accountId,
+              folderId: ctx.folderId,
+              message,
+            }),
         },
         className: ctx.itemKind.className,
         filterType: ctx.itemKind.filterType,
@@ -1226,6 +1239,9 @@ function appendCommands(
     codec,
     defaultTimezone,
     syncRecurrence,
+    userEmail,
+    fallbackOrganizerName,
+    eventLog,
   },
 ) {
   if (!adds.length && !mods.length && !dels.length) return;
@@ -1241,6 +1257,9 @@ function appendCommands(
       separator,
       defaultTimezone,
       syncRecurrence,
+      userEmail,
+      fallbackOrganizerName,
+      eventLog,
     });
     w.switchpage("AirSync");
     w.ctag();
@@ -1257,6 +1276,9 @@ function appendCommands(
       separator,
       defaultTimezone,
       syncRecurrence,
+      userEmail,
+      fallbackOrganizerName,
+      eventLog,
     });
     w.switchpage("AirSync");
     w.ctag();
@@ -1272,6 +1294,9 @@ function appendCommands(
         asVersion,
         defaultTimezone,
         syncRecurrence,
+        userEmail,
+        fallbackOrganizerName,
+        eventLog,
       });
       // codec leaves the builder on the AirSync codepage when it returns.
     }
