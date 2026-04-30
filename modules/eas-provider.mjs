@@ -959,12 +959,17 @@ function localNameForFolder(folder, ctx) {
   return `${folder.displayName} (${ctx.account.accountName})`;
 }
 
-/** EAS requires a stable device identifier. 32 hex chars is the de-facto
- *  convention (some servers truncate to 32; we generate exactly that). */
+/** EAS requires a stable device identifier. 32 chars is the de-facto
+ *  convention (some servers truncate to 32). The `MZTB` prefix marks the
+ *  generator so the FriendlyName in `Settings/DeviceInformation/Set` can
+ *  strip it for a cleaner label in Exchange's mobile-device list. */
 function generateDeviceId() {
-  const bytes = new Uint8Array(16);
+  const bytes = new Uint8Array(14);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(
+    "",
+  );
+  return "MZTB" + hex;
 }
 
 /** Map a FolderSync `<Add>` entry into the host folder-descriptor shape.
