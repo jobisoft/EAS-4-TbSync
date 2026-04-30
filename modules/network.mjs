@@ -121,7 +121,6 @@ export async function easRequest({ account, command, body, asVersion }) {
   const send = async (authHeader, retryOnAuth) => {
     const headers = new Headers({
       "Content-Type": "application/vnd.ms-sync.wbxml",
-      Accept: "application/vnd.ms-sync.wbxml",
       Authorization: authHeader,
       "MS-ASProtocolVersion": asVersion ?? custom.asversion ?? "14.1",
       "User-Agent": await getUserAgent(),
