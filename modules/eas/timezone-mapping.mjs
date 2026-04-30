@@ -200,7 +200,13 @@ async function loadTzInfo(tzid) {
   // sides will then carry the same offset and a missing switchdate, so
   // the outbound blob writer leaves SYSTEMTIME zero-filled.
   if (!dst) dst = std;
-  const info = { std, dst, timezone: tzid };
+  // Build an `ICAL.Timezone` from the parsed VTIMEZONE so callers can
+  // ask `tz.utcOffset(time)` for a moment-in-time offset and convert
+  // a UTC time into wall-clock parts via `time.convertToZone(tz)`.
+  // This is the ICAL.js-native equivalent of legacy's
+  // `calITimezoneService.getTimezone(tzid)` + `.getInTimezone(...)`.
+  const icalTimezone = new ICAL.Timezone({ component: vtimezone, tzid });
+  const info = { std, dst, timezone: tzid, icalTimezone };
   _tzInfoCache.set(tzid, info);
   return info;
 }
@@ -385,4 +391,53 @@ export function tzInfoForBlob(tzid) {
     ianaToWindows[info.dst.displayname] ?? info.dst.displayname;
 
   return { std: info.std, dst: info.dst, stdWinName, dstWinName };
+}
+
+/** Inbound (Tasks): given the moment-in-time offset between an EAS
+ *  `<UtcStartDate>` / `<StartDate>` pair (or the equivalent due-date
+ *  pair), return the IANA tzid that produces that offset at that
+ *  exact moment. Mirrors legacy `eas.tools.guessTimezoneByCurrentOffset`
+ *  ([tools.js]) which iterated `calITimezoneService.timezoneIds` and
+ *  returned the first match.
+ *
+ *    offsetMinutes  signed minutes east of UTC at the given moment
+ *    utcDate        JS `Date` for the moment (UTC)
+ *
+ *  Returns `_state.defaultTimezone` when no zone matches (legacy
+ *  returned `null` and let upstream fall back; we centralise here so
+ *  callers always get a valid tzid).
+ *
+ *  Synchronous; the caller must `await ensureLoaded()` earlier in the
+ *  sync entry point. Throws if called before initialisation. */
+export function guessTimezoneByCurrentOffset(offsetMinutes, utcDate) {
+  if (!_state) {
+    throw new Error("timezone-mapping: ensureLoaded() must be awaited first");
+  }
+  const time = ICAL.Time.fromJSDate(utcDate, false);
+  const wantSec = offsetMinutes * 60;
+  const ianaMap = _state.cachedTimezoneData.iana;
+  // Sorted iteration matches legacy's deterministic "first match wins"
+  // semantics (Lightning's calITimezoneService also returned tzids in
+  // a stable, alphabetical order).
+  for (const tzid of Object.keys(ianaMap).sort()) {
+    const info = ianaMap[tzid];
+    if (!info?.icalTimezone) continue;
+    if (info.icalTimezone.utcOffset(time) === wantSec) return tzid;
+  }
+  return _state.defaultTimezone;
+}
+
+/** Fetch the cached `ICAL.Timezone` for an IANA tzid, or null if the
+ *  zone isn't in the loaded set (or the input is `null` / `"UTC"` /
+ *  `"floating"`). Callers building iCal properties with a `TZID=`
+ *  parameter use this to convert UTC moments to wall-clock in the
+ *  named zone via `time.convertToZone(tz)`.
+ *
+ *  Synchronous; the caller must `await ensureLoaded()` earlier. */
+export function getIcalTimezone(tzid) {
+  if (!tzid || tzid === "UTC" || tzid === "floating") return null;
+  if (!_state) {
+    throw new Error("timezone-mapping: ensureLoaded() must be awaited first");
+  }
+  return _state.cachedTimezoneData.iana[tzid]?.icalTimezone ?? null;
 }

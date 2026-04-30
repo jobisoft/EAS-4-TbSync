@@ -12,6 +12,10 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
+import {
+  guessTimezoneByCurrentOffset,
+  getIcalTimezone,
+} from "./timezone-mapping.mjs";
 
 const X_EAS_SERVERID = "X-EAS-SERVERID";
 
@@ -63,26 +67,44 @@ export function applicationDataToIcal({
       : null;
   const msTodoOverride = msTodoCompat === true && !!reminderTime;
 
-  // StartDate / DueDate with Utc* pairing for offset extraction.
+  // StartDate / DueDate with Utc* pairing for tz hint extraction.
+  // `dtstartSource` is held over for the Reminder block below so a
+  // relative-to-START alarm can anchor against whichever value
+  // ultimately became DTSTART.
+  let dtstartSource = null;
   if (msTodoOverride) {
     // MS To-Do only ships date-only due dates; pin both ends to the
     // reminder so Lightning renders the task on the correct day.
     writeUtcDateProp(vtodo, "dtstart", reminderTime);
     writeUtcDateProp(vtodo, "due", reminderTime);
+    dtstartSource = reminderTime;
   } else {
     const startUtc = readPathFrom(adNode, ["UtcStartDate"]);
+    const startLocal = readPathFrom(adNode, ["StartDate"]);
     const dueUtc = readPathFrom(adNode, ["UtcDueDate"]);
+    const dueLocal = readPathFrom(adNode, ["DueDate"]);
+
+    // Recover the server-hinted IANA zone for each pair via the
+    // moment-in-time offset between the local-clock and UTC forms.
+    // Mirrors legacy tasksync.js:48-69.
+    const startTz = guessTzFromPair(startUtc, startLocal);
+    const dueTz = guessTzFromPair(dueUtc, dueLocal);
+
     // If the server sends Recurrence without StartDate, fall back to
     // DueDate as the recurrence anchor — Lightning won't render a
     // recurring VTODO without a DTSTART. Mirrors legacy
     // tasksync.js:70-79. Only a no-op when both are absent (the
     // recurrence will then be lost on the local side, same as legacy).
-    let dtstartSource = startUtc;
+    dtstartSource = startUtc;
+    let dtstartTz = startTz;
     if (!dtstartSource && dueUtc && childByTag(adNode, "Recurrence")) {
       dtstartSource = dueUtc;
+      dtstartTz = dueTz;
     }
-    if (dtstartSource) writeUtcDateProp(vtodo, "dtstart", dtstartSource);
-    if (dueUtc) writeUtcDateProp(vtodo, "due", dueUtc);
+    if (dtstartSource) {
+      writeUtcDateProp(vtodo, "dtstart", dtstartSource, dtstartTz);
+    }
+    if (dueUtc) writeUtcDateProp(vtodo, "due", dueUtc, dueTz);
   }
 
   // Importance → PRIORITY.
@@ -108,10 +130,28 @@ export function applicationDataToIcal({
     if (dc) writeUtcDateProp(vtodo, "completed", dc);
   }
 
-  // Reminder.
+  // Reminder. Three branches mirroring legacy tasksync.js:88-115:
+  //   - msTodoOverride: alarm offset = 0 from a synthesised DTSTART.
+  //   - DTSTART known (either real or DueDate-synthesised): store the
+  //     VALARM as a Duration TRIGGER with RELATED=START so the alarm
+  //     slides if the user moves DTSTART. Mirrors legacy lines 103-107.
+  //   - No DTSTART anchor: store as an absolute DATE-TIME TRIGGER.
+  //     Mirrors legacy lines 108-113.
   if (reminderTime) {
-    if (msTodoOverride) appendStartRelativeAlarm(vtodo, 0);
-    else appendAbsoluteAlarm(vtodo, reminderTime);
+    if (msTodoOverride) {
+      appendStartRelativeAlarm(vtodo, 0);
+    } else if (dtstartSource) {
+      const startMs = parseExtendedIso(dtstartSource)?.getTime();
+      const reminderMs = parseExtendedIso(reminderTime)?.getTime();
+      if (startMs != null && reminderMs != null) {
+        const offsetSec = Math.round((reminderMs - startMs) / 1000);
+        appendStartRelativeAlarm(vtodo, offsetSec);
+      } else {
+        appendAbsoluteAlarm(vtodo, reminderTime);
+      }
+    } else {
+      appendAbsoluteAlarm(vtodo, reminderTime);
+    }
   }
 
   // Categories.
@@ -253,7 +293,13 @@ export function stampEasServerId(ical, serverID) {
 
 /* ── Date helpers (extended ISO) ───────────────────────────────────── */
 
-function writeUtcDateProp(vtodo, name, easDateStr) {
+/** Add a date-time property to the VTODO. With no `tzid`, emits as
+ *  UTC (`...Z`). With a known IANA `tzid`, converts the UTC moment to
+ *  wall-clock in that zone via `time.convertToZone(icalTimezone)` and
+ *  serialises the property with `TZID=<tzid>` — same shape legacy
+ *  produced via `utc.getInTimezone(timezone)` (Lightning's
+ *  calITimezoneService is itself ICAL.js-backed). */
+function writeUtcDateProp(vtodo, name, easDateStr, tzid) {
   const d = parseExtendedIso(easDateStr);
   if (!d) return;
   const time = new ICAL.Time({
@@ -267,7 +313,14 @@ function writeUtcDateProp(vtodo, name, easDateStr) {
   });
   time.zone = ICAL.Timezone.utcTimezone;
   const prop = new ICAL.Property(name, vtodo);
-  prop.setValue(time);
+  const tz = tzid ? getIcalTimezone(tzid) : null;
+  if (tz) {
+    time.convertToZone(tz);
+    prop.setValue(time);
+    prop.setParameter("tzid", tzid);
+  } else {
+    prop.setValue(time);
+  }
   vtodo.addProperty(prop);
 }
 
@@ -275,6 +328,22 @@ function parseExtendedIso(s) {
   if (!s) return null;
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
+}
+
+/** Recover the server-hinted IANA tzid from an EAS task date pair
+ *  (`<UtcStartDate>` + `<StartDate>` or `<UtcDueDate>` + `<DueDate>`).
+ *  Legacy `tasksync.js:53` / `:65` computes `offset = (UtcDate -
+ *  LocalDate) / 60000` and passes it to `guessTimezoneByCurrentOffset`
+ *  for an IANA-zone lookup. We mirror that calculation literally —
+ *  including the JS `new Date(string)` parsing convention where a
+ *  trailing `Z` means UTC and its absence means local-clock. */
+function guessTzFromPair(utc, local) {
+  if (!utc || !local) return null;
+  const u = parseExtendedIso(utc);
+  const l = parseExtendedIso(local);
+  if (!u || !l) return null;
+  const offsetMin = Math.round((u.getTime() - l.getTime()) / 60000);
+  return guessTimezoneByCurrentOffset(offsetMin, u);
 }
 
 function toExtendedIsoUtc(value) {
