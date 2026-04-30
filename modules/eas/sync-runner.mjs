@@ -517,6 +517,7 @@ async function revertLocalChanges(ctx) {
       syncRecurrence: ctx.syncRecurrence,
       msTodoCompat: ctx.msTodoCompat,
       uid: e.itemId,
+      userEmail: ctx.account?.custom?.user,
     });
 
     await ctx.provider.changelogMarkServerWrite({
@@ -978,6 +979,7 @@ async function applyAdd(ctx, addNode) {
     syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: newId,
+    userEmail: ctx.account?.custom?.user,
   });
   await ctx.provider.changelogMarkServerWrite({
     accountId: ctx.accountId,
@@ -1044,6 +1046,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
       instanceUtc,
       asVersion: ctx.asVersion,
       defaultTimezone: ctx.defaultTimezone,
+      userEmail: ctx.account?.custom?.user,
     });
   }
   if (!nextBlob || nextBlob === existing.blob) {
@@ -1113,6 +1116,7 @@ async function applyChangeFromAd(ctx, ad, existing) {
     syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: existing.itemId,
+    userEmail: ctx.account?.custom?.user,
   });
   await ctx.provider.changelogMarkServerWrite({
     accountId: ctx.accountId,

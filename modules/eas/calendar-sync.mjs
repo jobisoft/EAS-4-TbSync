@@ -21,6 +21,7 @@ function makeCodec(modCodec) {
       syncRecurrence,
       msTodoCompat,
       uid,
+      userEmail,
     }) {
       return modCodec.applicationDataToIcal({
         adNode,
@@ -30,6 +31,7 @@ function makeCodec(modCodec) {
         syncRecurrence,
         msTodoCompat,
         uid,
+        userEmail,
       });
     },
     appendApplicationDataFromBlob({

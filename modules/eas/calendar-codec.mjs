@@ -71,6 +71,7 @@ export function applicationDataToIcal({
   defaultTimezone,
   syncRecurrence,
   uid,
+  userEmail,
 }) {
   const vcal = newVCalendar();
   const vevent = new ICAL.Component(["vevent", [], []]);
@@ -79,7 +80,13 @@ export function applicationDataToIcal({
   if (uid) vevent.updatePropertyWithValue("uid", uid);
   vevent.updatePropertyWithValue(X_EAS_SERVERID.toLowerCase(), serverID);
 
-  populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone });
+  populateVeventFromAd({
+    adNode,
+    vevent,
+    asVersion,
+    defaultTimezone,
+    userEmail,
+  });
 
   // Recurrence + 2.5/14.x exceptions. Gated on the account-level
   // syncRecurrence flag.
@@ -109,7 +116,13 @@ export function applicationDataToIcal({
  *  or <Exception> node. The set of fields is the same on both - legacy
  *  reuses `setThunderbirdItemFromWbxml` for both paths.
  *  Returns nothing; mutates `vevent`. */
-function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
+function populateVeventFromAd({
+  adNode,
+  vevent,
+  asVersion,
+  defaultTimezone,
+  userEmail,
+}) {
   // Subject / Location.
   const subject = readPathFrom(adNode, ["Subject"]);
   if (subject) vevent.updatePropertyWithValue("summary", subject);
@@ -144,7 +157,8 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
   const dtStamp = readPathFrom(adNode, ["DtStamp"]);
   if (dtStamp) writeDateProp(vevent, "dtstamp", dtStamp, "UTC", false);
 
-  // BusyStatus + STATUS interplay (legacy logic, see calendarsync.js).
+  // BusyStatus → TRANSP. STATUS is computed below from BusyStatus +
+  // MeetingStatus together (legacy calendarsync.js:235-265).
   const busy = readPathFrom(adNode, ["BusyStatus"]);
   const transp = busy ? BUSYSTATUS_TO_TRANSP[busy] : undefined;
   if (transp) vevent.updatePropertyWithValue("transp", transp);
@@ -156,9 +170,16 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
   }
 
   // Reminder → VALARM (DISPLAY, offset relative to start in minutes).
+  // If the event start is already in the past, also stamp X-MOZ-LASTACK
+  // so Lightning suppresses a stale popup at create time. Mirrors legacy
+  // calendarsync.js:148-154.
   const reminderMinutes = readPathFrom(adNode, ["Reminder"]);
   if (reminderMinutes != null && reminderMinutes !== "" && startUtc) {
     appendDisplayAlarm(vevent, parseInt(reminderMinutes, 10));
+    const startDate = parseEasUtc(startUtc);
+    if (startDate && startDate.getTime() < Date.now()) {
+      vevent.updatePropertyWithValue("x-moz-lastack", nowBasicUtc());
+    }
   }
 
   // Categories.
@@ -179,8 +200,12 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
     vevent.addProperty(prop);
   }
 
-  // Attendees.
-  const attendees = collectAttendees(adNode);
+  // Attendees. ResponseType is the event-level fallback for the
+  // self-attendee's PARTSTAT when the per-attendee AttendeeStatus is
+  // missing (legacy calendarsync.js:200-206). Default for everyone
+  // else is NEEDS-ACTION (legacy line 206).
+  const respType = readPathFrom(adNode, ["ResponseType"]);
+  const attendees = collectAttendees(adNode, userEmail, respType);
   for (const a of attendees) {
     const prop = new ICAL.Property("attendee", vevent);
     prop.setValue("mailto:" + a.email);
@@ -191,24 +216,33 @@ function populateVeventFromAd({ adNode, vevent, asVersion, defaultTimezone }) {
     vevent.addProperty(prop);
   }
 
-  // Opaque pass-throughs.
-  const respType = readPathFrom(adNode, ["ResponseType"]);
+  // Pass-through ResponseType so upsync round-trips the original value.
   if (respType)
     vevent.updatePropertyWithValue(X_EAS_RESPONSETYPE.toLowerCase(), respType);
+
+  // STATUS computed from BusyStatus + MeetingStatus together. Mirrors
+  // legacy calendarsync.js:244-265:
+  //   - BusyStatus=1 (tentative) seeds tbStatus = TENTATIVE.
+  //   - MeetingStatus M (0x1) means "is a meeting"; C (0x4) means
+  //     "cancelled". M+C → CANCELLED (overrides TENTATIVE). M alone →
+  //     CONFIRMED, but only when not already TENTATIVE.
+  //   - The R bit (0x2) is "received from another organizer"; legacy
+  //     uses it to populate a calendar-level fallbackOrganizerName,
+  //     which the WebExtension calendar API doesn't expose. Skip.
+  let tbStatus = busy === "1" ? "TENTATIVE" : null;
   const meetingStatus = readPathFrom(adNode, ["MeetingStatus"]);
   if (meetingStatus) {
     vevent.updatePropertyWithValue(
       X_EAS_MEETINGSTATUS.toLowerCase(),
       meetingStatus,
     );
-    // Map MeetingStatus to STATUS (CONFIRMED / CANCELLED).
     const ms = parseInt(meetingStatus, 10) || 0;
-    if (ms & 0x4) vevent.updatePropertyWithValue("status", "CANCELLED");
-    else if (ms & 0x1) vevent.updatePropertyWithValue("status", "CONFIRMED");
-  } else if (busy === "1") {
-    // Tentative-only state: leave TRANSP unset and set STATUS=TENTATIVE.
-    vevent.updatePropertyWithValue("status", "TENTATIVE");
+    if (ms & 0x1) {
+      if (ms & 0x4) tbStatus = "CANCELLED";
+      else if (!tbStatus) tbStatus = "CONFIRMED";
+    }
   }
+  if (tbStatus) vevent.updatePropertyWithValue("status", tbStatus);
 }
 
 /** Public entry point for the 16.1 InstanceId path: called from the
@@ -222,6 +256,7 @@ export function applyInstanceChange({
   instanceUtc,
   asVersion,
   defaultTimezone,
+  userEmail,
 }) {
   const vcal = parseVCalendar(ical);
   if (!vcal) return ical;
@@ -251,6 +286,7 @@ export function applyInstanceChange({
     vevent: override,
     asVersion,
     defaultTimezone,
+    userEmail,
   });
   return vcal.toString();
 }
@@ -912,18 +948,31 @@ function alarmMinutes(alarm, dtstartProp) {
 
 /* ── Helpers: attendees ────────────────────────────────────────────── */
 
-function collectAttendees(adNode) {
+function collectAttendees(adNode, userEmail, fallbackResponseType) {
   const out = [];
   const wrapper = childByTag(adNode, "Attendees");
   if (!wrapper) return out;
+  const userEmailLower = userEmail ? String(userEmail).toLowerCase() : null;
   for (const a of wrapper.children) {
     if (a.tagName !== "Attendee") continue;
     const email = readPathFrom(a, ["Email"]);
     if (!email) continue;
     const item = { email, cn: readPathFrom(a, ["Name"]) };
     const status = readPathFrom(a, ["AttendeeStatus"]);
-    if (status)
+    const isSelf =
+      userEmailLower && email.toLowerCase() === userEmailLower;
+    if (status) {
       item.partstat = ATTENDEESTATUS_TO_PARTSTAT[status] ?? "NEEDS-ACTION";
+    } else if (isSelf && fallbackResponseType) {
+      // Legacy calendarsync.js:203-204: when AttendeeStatus is missing
+      // for the self-attendee, fall back to the event-level
+      // ResponseType.
+      item.partstat =
+        ATTENDEESTATUS_TO_PARTSTAT[fallbackResponseType] ?? "NEEDS-ACTION";
+    } else {
+      // Legacy line 206: explicit default for missing status.
+      item.partstat = "NEEDS-ACTION";
+    }
     const type = readPathFrom(a, ["AttendeeType"]);
     if (type === "1") {
       item.role = "REQ-PARTICIPANT";
