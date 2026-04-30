@@ -28,18 +28,31 @@ const X_EAS_SERVERID = "x-eas-serverid";
 
 /** Bag of EAS fields with no clean vCard equivalent. We round-trip them
  *  through `X-EAS-<TAG>` properties so the server's value comes back
- *  unchanged on push. */
-const PASS_THROUGH_FIELDS = [
+ *  unchanged on push.
+ *
+ *  Split by codepage because the WBXML builder validates each tag
+ *  against the *current* codepage table. Legacy emitted all of these
+ *  on the Contacts page in one loop, which was a latent bug for
+ *  `MMS` / `ManagerName` (both live on Contacts2 per MS-ASCNTC and
+ *  per legacy's own codepage tables — `wbxmltools.atag` would have
+ *  thrown for any populated value). The new code splits the emit so
+ *  each tag goes to its correct codepage. */
+const PASS_THROUGH_FIELDS_CONTACTS = [
   "Alias",
   "WeightedRank",
   "YomiCompanyName",
   "YomiFirstName",
   "YomiLastName",
   "CompressedRTF",
-  "MMS",
-  "ManagerName",
   "AssistantName",
   "Spouse",
+];
+
+const PASS_THROUGH_FIELDS_CONTACTS2 = ["ManagerName", "MMS"];
+
+const PASS_THROUGH_FIELDS = [
+  ...PASS_THROUGH_FIELDS_CONTACTS,
+  ...PASS_THROUGH_FIELDS_CONTACTS2,
 ];
 
 /** Legacy "misuses" four EAS fields to round-trip through TB's standard
@@ -154,17 +167,17 @@ export function appendApplicationDataFromVCard({
   );
   writePicture(builder, comp);
   writePrefixedPhonesContacts(builder, phoneBuckets);
-  writePassThroughs(builder, comp);
+  writePassThroughsContacts(builder, comp);
   writeCategories(builder, comp);
   writeChildren(builder, comp);
 
   // Body emission sits between the Contacts and Contacts2 pages
   // (legacy contactsync.js:530-547). For AS 2.5 the body stays on the
-  // Contacts page; for AS >= 12.0 it switches to AirSyncBase and back.
-  // writeNote always ends on Contacts2 so the block below can emit
-  // directly.
+  // Contacts page; for AS >= 12.0 writeNote switches to AirSyncBase
+  // and leaves the builder there.
   writeNote(builder, comp, asVersion);
-
+  
+  builder.switchpage("Contacts2");
   emitIf(
     builder,
     "NickName",
@@ -196,6 +209,12 @@ export function appendApplicationDataFromVCard({
     "CompanyMainPhone",
     phoneBuckets.prefixed.CompanyMainPhone,
   );
+  // ManagerName / MMS also live on Contacts2 per MS-ASCNTC. Legacy's
+  // `unused_EAS_properties` loop emitted them on the Contacts page
+  // where `wbxmltools.atag` would throw for any populated value, so
+  // both fields were dormantly broken on legacy upsync. Emit them on
+  // their correct codepage here.
+  writePassThroughsContacts2(builder, comp);
 }
 
 /** Read X-EAS-SERVERID off an existing card so pull / push paths can
@@ -588,26 +607,38 @@ function readNote(adNode, comp, asVersion) {
   }
 }
 
+/** Emit the contact note. For AS 2.5 the body emits as a bare `<Body>`
+ *  on the current Contacts page; for AS >= 12.0 the body emits as the
+ *  AirSyncBase `<Body>` block (codec switches to AirSyncBase, builder
+ *  is left on AirSyncBase on return). The caller is responsible for
+ *  the next `switchpage` so page transitions stay visible at the call
+ *  site.
+ *
+ *  Always emits, even when the note is empty. Legacy
+ *  ([contactsync.js:530-544](legacy/EAS4/content/includes/contactsync.js#L530-L544))
+ *  deliberately excluded `Notes` from the truthy-gate loop and wrote
+ *  the body in a separate unconditional block so a user who clears
+ *  the note locally pushes an empty `<Data>` and the server clears
+ *  its copy. Skipping the block (server-wins-on-absence) would silently
+ *  retain the server's old note — surprising and unwanted.
+ *
+ *  AS 16.1 specifically omits `<EstimatedDataSize>` because Microsoft
+ *  servers fail the sync when it's present
+ *  ([contactsync.js:538-541](legacy/EAS4/content/includes/contactsync.js#L538-L541)). */
 function writeNote(b, comp, asVersion) {
   const note = stringOf(comp.getFirstPropertyValue("note"));
-  if (note) {
-    if (useAirSyncBaseBody(asVersion)) {
-      b.switchpage("AirSyncBase");
-      b.otag("Body");
-      b.atag("Type", "1");
+  if (useAirSyncBaseBody(asVersion)) {
+    b.switchpage("AirSyncBase");
+    b.otag("Body");
+    b.atag("Type", "1");
+    if (asVersion !== "16.1") {
       b.atag("EstimatedDataSize", String(note.length));
-      b.atag("Data", note);
-      b.ctag();
-    } else {
-      // AS 2.5 emits <Body> on the current Contacts page.
-      b.atag("Body", note);
     }
+    b.atag("Data", note);
+    b.ctag();
+  } else {
+    b.atag("Body", note);
   }
-  // Always end on Contacts2 so the caller can emit Contacts2 fields
-  // without an extra switchpage. switchpage is a single SWITCH_PAGE
-  // token regardless of the current page, so this is a no-op cost when
-  // we never moved off Contacts (empty note, AS 2.5).
-  b.switchpage("Contacts2");
 }
 
 function useAirSyncBaseBody(asVersion) {
@@ -717,8 +748,15 @@ function readPassThroughs(adNode, comp) {
   }
 }
 
-function writePassThroughs(b, comp) {
-  for (const tag of PASS_THROUGH_FIELDS) {
+function writePassThroughsContacts(b, comp) {
+  for (const tag of PASS_THROUGH_FIELDS_CONTACTS) {
+    const v = stringOf(comp.getFirstPropertyValue(passThroughVcardKey(tag)));
+    if (v) b.atag(tag, v);
+  }
+}
+
+function writePassThroughsContacts2(b, comp) {
+  for (const tag of PASS_THROUGH_FIELDS_CONTACTS2) {
     const v = stringOf(comp.getFirstPropertyValue(passThroughVcardKey(tag)));
     if (v) b.atag(tag, v);
   }
