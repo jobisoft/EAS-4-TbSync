@@ -124,27 +124,78 @@ export function appendApplicationDataFromVCard({
   const comp = parseVCard(vCard);
   if (!comp) return;
 
+  // Phone bucketing happens once: standard types go to the Contacts
+  // page below and CompanyMainPhone goes to the Contacts2 page at the
+  // end. Both halves consume the same bucketed result.
+  const phoneBuckets = bucketPhones(comp);
+
+  // Contacts-page field order mirrors legacy's `Object.keys` iteration
+  // over `map_EAS_properties_to_vCard` (contactsync.js:58-128), then
+  // the post-loop pass-through / Categories / Children blocks
+  // (contactsync.js:495-528). Legacy's generated output was tuned over
+  // years against multiple servers, so byte-identical order is part of
+  // the compatibility contract — keep this list in lockstep with the
+  // legacy property map.
   builder.switchpage("Contacts");
-  writeNames(builder, comp);
+
   writeFileAs(builder, comp);
   writeDates(builder, comp);
+  writeNames(builder, comp);
+  // Notes are emitted later by writeNote between the two pages.
   writeEmails(builder, comp);
   writeWeb(builder, comp);
-  writePhones(builder, comp);
-  writeAddresses(builder, comp, separator);
   writeOrganization(builder, comp);
+  writeStandardPhones(builder, phoneBuckets);
+  writeAddresses(builder, comp, separator);
+  emitIf(
+    builder,
+    "OfficeLocation",
+    stringOf(comp.getFirstPropertyValue("x-custom1")),
+  );
   writePicture(builder, comp);
+  writePrefixedPhonesContacts(builder, phoneBuckets);
+  writePassThroughs(builder, comp);
   writeCategories(builder, comp);
   writeChildren(builder, comp);
-  writePassThroughs(builder, comp);
-  writeCustomFieldsContacts(builder, comp);
 
-  builder.switchpage("Contacts2");
-  writeNickName(builder, comp);
-  writeIMs(builder, comp);
-  writeCustomFieldsContacts2(builder, comp);
-
+  // Body emission sits between the Contacts and Contacts2 pages
+  // (legacy contactsync.js:530-547). For AS 2.5 the body stays on the
+  // Contacts page; for AS >= 12.0 it switches to AirSyncBase and back.
+  // writeNote always ends on Contacts2 so the block below can emit
+  // directly.
   writeNote(builder, comp, asVersion);
+
+  emitIf(
+    builder,
+    "NickName",
+    stringOf(comp.getFirstPropertyValue("nickname")),
+  );
+  emitIf(
+    builder,
+    "CustomerId",
+    stringOf(comp.getFirstPropertyValue("x-custom2")),
+  );
+  emitIf(
+    builder,
+    "GovernmentId",
+    stringOf(comp.getFirstPropertyValue("x-custom3")),
+  );
+  emitIf(
+    builder,
+    "AccountName",
+    stringOf(comp.getFirstPropertyValue("x-custom4")),
+  );
+  writeIMs(builder, comp);
+  // CompanyMainPhone tag lives in the Contacts2 codepage per
+  // MS-ASCNTC; legacy emits it here at the tail of the Contacts2 loop
+  // (contactsync.js:141, 549-554). Trying to atag it on the Contacts
+  // page would throw because the Contacts codepage table doesn't
+  // carry CompanyMainPhone.
+  emitIf(
+    builder,
+    "CompanyMainPhone",
+    phoneBuckets.prefixed.CompanyMainPhone,
+  );
 }
 
 /** Read X-EAS-SERVERID off an existing card so pull / push paths can
@@ -329,11 +380,13 @@ function addPhone(adNode, comp, tag, type) {
   comp.addProperty(prop);
 }
 
-function writePhones(b, comp) {
-  // Bucket TEL properties by their TYPE so each EAS field gets the right
-  // value back. Standard types use lowercase single-value TYPE; prefixed
-  // types use PascalCase TYPE with a "<Type>: " value-prefix that we
-  // strip before sending to the server (legacy parity).
+/** Bucket TEL properties by their TYPE so each EAS field gets the right
+ *  value back. Standard types use lowercase single-value TYPE; prefixed
+ *  types use PascalCase TYPE with a "<Type>: " value-prefix that we
+ *  strip before sending to the server (legacy parity). The buckets are
+ *  consumed in two halves: standard + non-Company prefixed phones go
+ *  to the Contacts page, CompanyMainPhone goes to Contacts2. */
+function bucketPhones(comp) {
   const buckets = { cell: [], pager: [], fax: [], home: [], work: [] };
   const prefixed = {}; // EAS tag → value with prefix stripped
 
@@ -380,14 +433,30 @@ function writePhones(b, comp) {
     // Untagged / unknown TYPE → home (legacy fallback).
     buckets.home.push(value);
   }
+  return { buckets, prefixed };
+}
+
+/** Emit the seven Contacts-codepage standard phone fields in legacy's
+ *  interleaved order: Mobile, Pager, HomeFax, HomePhone, Business,
+ *  Home2, Business2 (legacy `Object.keys` order, contactsync.js:89-98). */
+function writeStandardPhones(b, { buckets }) {
   emitIf(b, "MobilePhoneNumber", buckets.cell[0]);
   emitIf(b, "PagerNumber", buckets.pager[0]);
   emitIf(b, "HomeFaxNumber", buckets.fax[0]);
   emitIf(b, "HomePhoneNumber", buckets.home[0]);
-  emitIf(b, "Home2PhoneNumber", buckets.home[1]);
   emitIf(b, "BusinessPhoneNumber", buckets.work[0]);
+  emitIf(b, "Home2PhoneNumber", buckets.home[1]);
   emitIf(b, "Business2PhoneNumber", buckets.work[1]);
-  for (const [tag, value] of Object.entries(prefixed)) emitIf(b, tag, value);
+}
+
+/** Emit the four Contacts-codepage prefixed phone fields in legacy's
+ *  order (contactsync.js:124-127). CompanyMainPhone is excluded — it
+ *  lives in the Contacts2 codepage and is emitted from there. */
+function writePrefixedPhonesContacts(b, { prefixed }) {
+  emitIf(b, "AssistantPhoneNumber", prefixed.AssistantPhoneNumber);
+  emitIf(b, "CarPhoneNumber", prefixed.CarPhoneNumber);
+  emitIf(b, "RadioPhoneNumber", prefixed.RadioPhoneNumber);
+  emitIf(b, "BusinessFaxNumber", prefixed.BusinessFaxNumber);
 }
 
 /* ── Addresses (Home / Business / Other) ───────────────────────────── */
@@ -521,18 +590,24 @@ function readNote(adNode, comp, asVersion) {
 
 function writeNote(b, comp, asVersion) {
   const note = stringOf(comp.getFirstPropertyValue("note"));
-  if (!note) return;
-  if (useAirSyncBaseBody(asVersion)) {
-    b.switchpage("AirSyncBase");
-    b.otag("Body");
-    b.atag("Type", "1");
-    b.atag("EstimatedDataSize", String(note.length));
-    b.atag("Data", note);
-    b.ctag();
-    b.switchpage("Contacts2");
-  } else {
-    b.atag("Body", note);
+  if (note) {
+    if (useAirSyncBaseBody(asVersion)) {
+      b.switchpage("AirSyncBase");
+      b.otag("Body");
+      b.atag("Type", "1");
+      b.atag("EstimatedDataSize", String(note.length));
+      b.atag("Data", note);
+      b.ctag();
+    } else {
+      // AS 2.5 emits <Body> on the current Contacts page.
+      b.atag("Body", note);
+    }
   }
+  // Always end on Contacts2 so the caller can emit Contacts2 fields
+  // without an extra switchpage. switchpage is a single SWITCH_PAGE
+  // token regardless of the current page, so this is a no-op cost when
+  // we never moved off Contacts (empty note, AS 2.5).
+  b.switchpage("Contacts2");
 }
 
 function useAirSyncBaseBody(asVersion) {
@@ -587,10 +662,6 @@ function writeCategories(b, comp) {
 function readNickName(adNode, comp) {
   const v = readPathFrom(adNode, ["NickName"]);
   if (v) comp.updatePropertyWithValue("nickname", v);
-}
-
-function writeNickName(b, comp) {
-  emitIf(b, "NickName", stringOf(comp.getFirstPropertyValue("nickname")));
 }
 
 function readIMs(adNode, comp) {
@@ -668,25 +739,10 @@ function readCustomFields(adNode, comp) {
   }
 }
 
-/** Write side splits across the two codepages: OfficeLocation lives in
- *  the Contacts namespace, the other three in Contacts2. Caller invokes
- *  each at the appropriate `builder.switchpage` boundary. */
-function writeCustomFieldsContacts(b, comp) {
-  const v = stringOf(comp.getFirstPropertyValue("x-custom1"));
-  if (v) b.atag("OfficeLocation", v);
-}
-
-function writeCustomFieldsContacts2(b, comp) {
-  const slots = [
-    ["CustomerId", "x-custom2"],
-    ["GovernmentId", "x-custom3"],
-    ["AccountName", "x-custom4"],
-  ];
-  for (const [tag, slot] of slots) {
-    const v = stringOf(comp.getFirstPropertyValue(slot));
-    if (v) b.atag(tag, v);
-  }
-}
+// Write side is inlined in `appendApplicationDataFromVCard`: OfficeLocation
+// emits on the Contacts page (between addresses and Picture) and the
+// other three emit on the Contacts2 page (right after NickName, before
+// IMs) — both positions match legacy's iteration order.
 
 /* ── Helpers ───────────────────────────────────────────────────────── */
 
