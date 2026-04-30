@@ -966,6 +966,7 @@ async function applyAdd(ctx, addNode) {
   if (!serverID) return;
   const ad = childByTag(addNode, "ApplicationData");
   if (!ad) return;
+  await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = ctx.byServerId.get(serverID);
   if (existing) return applyChangeFromAd(ctx, ad, existing);
 
@@ -1010,6 +1011,7 @@ async function applyChange(ctx, changeNode) {
   if (!serverID) return;
   const ad = childByTag(changeNode, "ApplicationData");
   if (!ad) return;
+  await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = ctx.byServerId.get(serverID);
   if (!existing) return applyAdd(ctx, changeNode);
   // 16.1 per-instance Change: ApplicationData carries <InstanceId> and
@@ -1412,6 +1414,42 @@ function removeIdMap(ctx, itemId) {
   if (!(itemId in ctx.idMap)) return;
   delete ctx.idMap[itemId];
   ctx.idMapDirty = true;
+}
+
+/** When an inbound calendar event tells us the local user IS the
+ *  organizer (MeetingStatus has the R bit cleared) and carries an
+ *  OrganizerName, capture that name into
+ *  `account.custom.fallbackOrganizerNames[<collectionId>]` for the
+ *  upsync path to fall back on when the local iCal has no ORGANIZER CN.
+ *  Mirrors legacy calendarsync.js:260-261, scoped per-calendar via the
+ *  EAS folder serverId (collectionId). No-op for tasks (no MeetingStatus
+ *  / OrganizerName), no-op when the value is unchanged. */
+async function maybeRecordFallbackOrganizerName(ctx, adNode) {
+  if (!adNode) return;
+  const orgName = readPathFrom(adNode, ["OrganizerName"]);
+  if (!orgName) return;
+  const meetingStatus = readPathFrom(adNode, ["MeetingStatus"]);
+  if (!meetingStatus) return;
+  const ms = parseInt(meetingStatus, 10) || 0;
+  if (ms & 0x2) return; // R bit: received from another organizer.
+
+  const key = ctx.collectionId;
+  if (!key) return;
+  const current = ctx.account.custom?.fallbackOrganizerNames?.[key];
+  if (current === orgName) return;
+
+  const next = {
+    ...(ctx.account.custom?.fallbackOrganizerNames ?? {}),
+    [key]: orgName,
+  };
+  await ctx.provider.updateAccount({
+    accountId: ctx.accountId,
+    patch: { custom: { fallbackOrganizerNames: next } },
+  });
+  // Mirror into the in-memory ctx.account so subsequent calls in this
+  // same sync see the updated value and skip the dedupe-no-op write.
+  if (!ctx.account.custom) ctx.account.custom = {};
+  ctx.account.custom.fallbackOrganizerNames = next;
 }
 
 function reportProgress(ctx, itemsDone, itemsTotal) {
