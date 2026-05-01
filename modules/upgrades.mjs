@@ -23,6 +23,7 @@
 import {
   easTypeToFolderType,
   finalizeFolderListForPush,
+  iconForServerType,
 } from "./eas-provider.mjs";
 import * as calendarStore from "./calendar-store.mjs";
 import * as eventCodec from "./eas/calendar-codec.mjs";
@@ -132,6 +133,18 @@ export const UPGRADES = [
           });
         }
       }
+
+      for (const acc of accounts) {
+        try {
+          await liftAccountIcon(provider, acc);
+        } catch (err) {
+          provider.reportEventLog({
+            level: "warning",
+            accountId: acc.accountId,
+            message: `[upgrade] account-icon lift failed: ${err?.message ?? String(err)}`,
+          });
+        }
+      }      
     },
   },
 ];
@@ -314,6 +327,22 @@ async function fixFolders(provider, acc) {
     level: "debug",
     accountId: acc.accountId,
     message: `[upgrade] re-derived targetType + trash visibility for ${patched.length} folder(s)`,
+  });
+}
+
+async function liftAccountIcon(provider, acc) {
+  if (acc.icon) return;
+  const servertype = acc.custom?.servertype;
+  const icon = iconForServerType(servertype);
+  if (!icon) return;
+  await provider.updateAccount({
+    accountId: acc.accountId,
+    patch: { icon },
+  });
+  provider.reportEventLog({
+    level: "debug",
+    accountId: acc.accountId,
+    message: `[upgrade] set per-account icon for servertype="${servertype}"`,
   });
 }
 

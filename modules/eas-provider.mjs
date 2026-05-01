@@ -104,7 +104,7 @@ const ICON_PATHS_BY_SERVERTYPE = {
 /** Build the size-keyed absolute-URL map TbSync's REGISTER_ACCOUNT.icon
  *  expects, for the given account flavour. Returns null for unknown
  *  servertypes so the host falls back to the provider-wide icon set. */
-function iconForServerType(servertype) {
+export function iconForServerType(servertype) {
   const paths = ICON_PATHS_BY_SERVERTYPE[servertype];
   if (!paths) return null;
   const out = {};
