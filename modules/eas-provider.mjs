@@ -87,6 +87,33 @@ const HOST_BY_SERVERTYPE = {
   "personal-ms": "eas.outlook.com",
 };
 
+/** Setup-type → per-account icon override. Sent to TbSync at register
+ *  time so the manager's accounts list shows a flavour-specific icon
+ *  per row (Microsoft brand for the OAuth flavours, generic EAS for
+ *  Autodiscover and custom-server flavours). The setup and config
+ *  popups inline the same per-type 16px URLs in their dropdown options
+ *  to keep the dropdown trigger and options aligned with the manager
+ *  row. */
+const ICON_PATHS_BY_SERVERTYPE = {
+  office365: { 16: "icons/365_16.png", 32: "icons/365_32.png" },
+  "personal-ms": { 16: "icons/365_16.png", 32: "icons/365_32.png" },
+  auto: { 16: "icons/eas16.png", 32: "icons/eas32.png" },
+  custom: { 16: "icons/eas16.png", 32: "icons/eas32.png" },
+};
+
+/** Build the size-keyed absolute-URL map TbSync's REGISTER_ACCOUNT.icon
+ *  expects, for the given account flavour. Returns null for unknown
+ *  servertypes so the host falls back to the provider-wide icon set. */
+function iconForServerType(servertype) {
+  const paths = ICON_PATHS_BY_SERVERTYPE[servertype];
+  if (!paths) return null;
+  const out = {};
+  for (const [size, path] of Object.entries(paths)) {
+    out[size] = browser.runtime.getURL(path);
+  }
+  return out;
+}
+
 // ── EAS folder Type → TbSync folder type ─────────────────────────────────
 //
 // EAS FolderHierarchy Type values (MS-ASCMD §Type) map to TbSync folder
@@ -698,6 +725,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       const user = authenticatedUserEmail || args.loginHint || "";
       return {
         accountName: trimmedLabel,
+        icon: iconForServerType(servertype),
         initialFolders: [],
         custom: {
           servertype,
@@ -732,6 +760,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       const label = String(args.label ?? "").trim() || email;
       return {
         accountName: label,
+        icon: iconForServerType("auto"),
         initialFolders: [],
         custom: {
           servertype: "auto",
@@ -760,6 +789,7 @@ export class EasProvider extends TbSyncProviderImplementation {
 
     return {
       accountName: trimmedLabel,
+      icon: iconForServerType("custom"),
       initialFolders: [],
       custom: {
         servertype: "custom",

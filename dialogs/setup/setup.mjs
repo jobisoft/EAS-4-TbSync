@@ -31,6 +31,15 @@ const TYPE_PERSONAL_MS = "personal-ms";
 const TYPE_AUTO = "auto";
 const TYPE_CUSTOM = "custom";
 
+// 32px option/trigger icons. Kept in lockstep with the per-account
+// icon set sent to TbSync at register time (the ICON_PATHS_BY_SERVERTYPE
+// map in eas-provider.mjs) so the dropdown choice matches the manager
+// row icon for the resulting account.
+const ICON_OFFICE365 = browser.runtime.getURL("icons/365_32.png");
+const ICON_PERSONAL_MS = browser.runtime.getURL("icons/365_32.png");
+const ICON_AUTO = browser.runtime.getURL("icons/eas32.png");
+const ICON_CUSTOM = browser.runtime.getURL("icons/eas32.png");
+
 function $(id) {
   return document.getElementById(id);
 }
@@ -128,6 +137,7 @@ async function submitOAuth(type) {
       type: "tbsync-setup-completed",
       setupToken,
       accountName: reply.result.accountName,
+      icon: reply.result.icon ?? null,
       initialFolders: reply.result.initialFolders,
       custom: reply.result.custom,
     });
@@ -208,6 +218,7 @@ async function submitAuto() {
       type: "tbsync-setup-completed",
       setupToken,
       accountName: created.result.accountName,
+      icon: created.result.icon ?? null,
       initialFolders: created.result.initialFolders,
       custom: created.result.custom,
     });
@@ -324,6 +335,7 @@ async function submitBasic() {
       type: "tbsync-setup-completed",
       setupToken,
       accountName: reply.result.accountName,
+      icon: reply.result.icon ?? null,
       initialFolders: reply.result.initialFolders,
       custom: reply.result.custom,
     });
@@ -352,21 +364,25 @@ typeDropdown = createDropdown($("account-type"), {
       value: TYPE_OFFICE365,
       label: i18n("setup.accountType.office365", "Office 365 Business"),
       hint: i18n("setup.accountType.office365.hint", ""),
+      icon: ICON_OFFICE365,
     },
     {
       value: TYPE_PERSONAL_MS,
       label: i18n("setup.accountType.personalMs", "Personal Microsoft account"),
       hint: i18n("setup.accountType.personalMs.hint", ""),
+      icon: ICON_PERSONAL_MS,
     },
     {
       value: TYPE_AUTO,
       label: i18n("setup.accountType.auto", "Auto-detect"),
       hint: i18n("setup.accountType.auto.hint", ""),
+      icon: ICON_AUTO,
     },
     {
       value: TYPE_CUSTOM,
       label: i18n("setup.accountType.custom", "Custom EAS server"),
       hint: i18n("setup.accountType.custom.hint", ""),
+      icon: ICON_CUSTOM,
     },
   ],
   value: TYPE_OFFICE365,

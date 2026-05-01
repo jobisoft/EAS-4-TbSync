@@ -39,7 +39,9 @@
   "web_accessible_resources": [
     "icons/eas16.png",
     "icons/eas32.png",
-    "icons/eas64.png"
+    "icons/eas64.png",
+    "icons/365_16.png",
+    "icons/365_32.png"
   ],
   "experiment_apis": {
     "LegacyPrefs": {

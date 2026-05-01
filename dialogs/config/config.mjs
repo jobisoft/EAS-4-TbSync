@@ -29,6 +29,13 @@ const TYPE_PERSONAL_MS = "personal-ms";
 const TYPE_AUTO = "auto";
 const TYPE_CUSTOM = "custom";
 
+// Per-type 32px icons. Same set the setup popup uses; the trigger
+// shows the icon for the selected (locked) type.
+const ICON_OFFICE365 = browser.runtime.getURL("icons/365_32.png");
+const ICON_PERSONAL_MS = browser.runtime.getURL("icons/365_32.png");
+const ICON_AUTO = browser.runtime.getURL("icons/eas32.png");
+const ICON_CUSTOM = browser.runtime.getURL("icons/eas32.png");
+
 function deriveAccountType(account) {
   if (account.servertype === TYPE_OFFICE365) return TYPE_OFFICE365;
   if (account.servertype === TYPE_PERSONAL_MS) return TYPE_PERSONAL_MS;
@@ -93,6 +100,7 @@ async function load() {
         value: TYPE_OFFICE365,
         label: i18n("setup.accountType.office365", "Office 365 Business"),
         hint: i18n("setup.accountType.office365.hint", ""),
+        icon: ICON_OFFICE365,
       },
       {
         value: TYPE_PERSONAL_MS,
@@ -101,16 +109,19 @@ async function load() {
           "Personal Microsoft account",
         ),
         hint: i18n("setup.accountType.personalMs.hint", ""),
+        icon: ICON_PERSONAL_MS,
       },
       {
         value: TYPE_AUTO,
         label: i18n("setup.accountType.auto", "Auto-detect"),
         hint: i18n("setup.accountType.auto.hint", ""),
+        icon: ICON_AUTO,
       },
       {
         value: TYPE_CUSTOM,
         label: i18n("setup.accountType.custom", "Custom EAS server"),
         hint: i18n("setup.accountType.custom.hint", ""),
+        icon: ICON_CUSTOM,
       },
     ],
     value: accountType,

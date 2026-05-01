@@ -46,6 +46,10 @@ export function createDropdown(
   trigger.setAttribute("aria-haspopup", "listbox");
   trigger.setAttribute("aria-expanded", "false");
 
+  const currentIcon = document.createElement("img");
+  currentIcon.className = "dropdown-icon";
+  currentIcon.alt = "";
+  currentIcon.hidden = true;
   const currentBlock = document.createElement("span");
   currentBlock.className = "dropdown-current";
   const currentLabel = document.createElement("span");
@@ -59,7 +63,7 @@ export function createDropdown(
   caret.textContent = "▾";
   caret.setAttribute("aria-hidden", "true");
 
-  trigger.append(currentBlock, caret);
+  trigger.append(currentIcon, currentBlock, caret);
 
   const panel = document.createElement("ul");
   panel.className = "dropdown-panel";
@@ -71,16 +75,26 @@ export function createDropdown(
     li.setAttribute("role", "option");
     li.dataset.value = opt.value;
     li.tabIndex = -1;
+    if (opt.icon) {
+      const img = document.createElement("img");
+      img.className = "dropdown-icon";
+      img.src = opt.icon;
+      img.alt = "";
+      li.appendChild(img);
+    }
+    const text = document.createElement("span");
+    text.className = "dropdown-option-text";
     const lbl = document.createElement("span");
     lbl.className = "label";
     lbl.textContent = opt.label;
-    li.appendChild(lbl);
+    text.appendChild(lbl);
     if (opt.hint) {
       const h = document.createElement("span");
       h.className = "hint";
       h.textContent = opt.hint;
-      li.appendChild(h);
+      text.appendChild(h);
     }
+    li.appendChild(text);
     li.addEventListener("click", () => {
       selectValue(opt.value);
       close();
@@ -95,6 +109,13 @@ export function createDropdown(
 
   function syncTrigger() {
     const opt = options.find((o) => o.value === currentValue) ?? options[0];
+    if (opt.icon) {
+      currentIcon.src = opt.icon;
+      currentIcon.hidden = false;
+    } else {
+      currentIcon.removeAttribute("src");
+      currentIcon.hidden = true;
+    }
     currentLabel.textContent = opt.label;
     currentHint.textContent = opt.hint ?? "";
     for (const li of optionEls) {
