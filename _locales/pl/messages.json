@@ -12,13 +12,13 @@
     "message": "Global Address List"
   },
   "setup.title": {
-    "message": "Add an Exchange ActiveSync account (EAS)"
+    "message": "Dodaj konto Exchange ActiveSync (EAS)"
   },
   "setup.intro": {
     "message": "Choose the type of Exchange ActiveSync account you want to add."
   },
   "setup.accountType": {
-    "message": "Account type"
+    "message": "Typ konta"
   },
   "setup.accountType.office365": {
     "message": "Office 365 Business"
@@ -27,7 +27,7 @@
     "message": "Microsoft 365 corporate / work tenants."
   },
   "setup.accountType.personalMs": {
-    "message": "Personal Microsoft account"
+    "message": "Osobiste konto Microsoft"
   },
   "setup.accountType.personalMs.hint": {
     "message": "outlook.com, hotmail.com, live.com and other consumer Microsoft accounts."
@@ -48,7 +48,7 @@
     "message": "Adres e-mail"
   },
   "setup.auto.discoverButton": {
-    "message": "Discover"
+    "message": "Wykryj"
   },
   "setup.auto.status.searching": {
     "message": "Looking up server settings…"
@@ -78,13 +78,13 @@
     "message": "Sign in with Microsoft"
   },
   "setup.oauth.error.emailRequired": {
-    "message": "Please enter your Microsoft account email."
+    "message": "Wprowadź adres e-mail swojego konta Microsoft."
   },
   "setup.oauth.error.cancelled": {
-    "message": "Sign-in was cancelled."
+    "message": "Logowanie zostało anulowane."
   },
   "setup.oauth.error.signInFailed": {
-    "message": "Sign-in failed"
+    "message": "Logowanie nie powiodło się"
   },
   "setup.oauth.error.signInFailedDetail": {
     "message": "Sign-in failed: $DETAIL$",
@@ -135,7 +135,7 @@
     "message": "Could not create the account"
   },
   "config.title": {
-    "message": "Exchange account settings"
+    "message": "Ustawienia konta Exchange"
   },
   "config.label": {
     "message": "Account label"
@@ -165,7 +165,7 @@
     "message": "Missing account identifier."
   },
   "config.error.loadFailed": {
-    "message": "Failed to load account."
+    "message": "Nie udało się załadować konta."
   },
   "config.error.accountNameRequired": {
     "message": "Nazwa konta jest wymagana."
@@ -189,7 +189,7 @@
     "message": "Kalendarz"
   },
   "config.account.accountType": {
-    "message": "Account type"
+    "message": "Typ konta"
   },
   "config.account.signedInAs": {
     "message": "Zalogowano jako"
@@ -273,13 +273,13 @@
     "message": "Re-authentication did not complete. Click \"Sign in again\" to retry."
   },
   "options.title": {
-    "message": "EAS-4-TbSync - Advanced settings"
+    "message": "EAS-4-TbSync - Ustawienia zaawansowane"
   },
   "options.intro": {
     "message": "These settings affect every EAS account in this profile. The defaults work for almost everyone, only change a value if you have a specific reason to. Leave a field empty to fall back to the bundled default."
   },
   "options.section.network": {
-    "message": "Network"
+    "message": "Sieć"
   },
   "options.section.sync": {
     "message": "Sync"
@@ -288,7 +288,7 @@
     "message": "Microsoft OAuth"
   },
   "options.timeout": {
-    "message": "Connection timeout (ms)"
+    "message": "Limit czasu połączenia (ms)"
   },
   "options.timeout.hint": {
     "message": "Maximum time to wait for a response from the EAS server before giving up. Increase this if you sync over slow or unreliable links and see frequent timeouts. Default: 90000 ms (90 seconds)."
@@ -328,5 +328,93 @@
   },
   "options.clientid.hint": {
     "message": "Microsoft Entra Client ID used when signing in to Microsoft accounts. Leave empty to use the default client ID registered by John Bieling (author of the EAS provider)."
+  },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "The EAS server did not accept $COUNT$ elements.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Server rejected the sync request as invalid (code $STATUS$)",
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Server denied sync access: $REASON$ (code $STATUS$)",
+    "placeholders": {
+      "reason": {
+        "content": "$1",
+        "example": "device type missing or invalid"
+      },
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
+    }
+  },
+  "eas.sync.error.accessDenied.109": {
+    "message": "device type missing or invalid"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "Active Directory access denied"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "user is disabled for sync"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "user is on a new mailbox and cannot sync"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "user is on a legacy mailbox and cannot sync"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "device is blocked for this user"
+  },
+  "eas.sync.error.accessDenied.130": {
+    "message": "access denied"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "account is disabled"
+  },
+  "eas.sync.error.missingField": {
+    "message": "ActiveSync protocol violation: Mandatory field $FIELD$ is missing from server response.",
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
+  },
+  "eas.network.error.transport": {
+    "message": "EAS transport error (HTTP $STATUS$)",
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Response is not WBXML (first bytes: $BYTES$)",
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Network retries exhausted - server did not respond"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Server returned 451 without an X-MS-Location header"
   }
 }
