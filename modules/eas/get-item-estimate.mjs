@@ -7,8 +7,12 @@
  * Wire shape differs by AS version (legacy
  * `EAS-4-TbSync/content/includes/network.js:946-1006`):
  *
- *   2.5: <Class>, <CollectionId>, <FilterType>, <SyncKey>
- *   14.0+: <SyncKey>, <CollectionId>, <Options><Class/></Options>
+ *   2.5:   <Class>, <CollectionId>, <FilterType>, <SyncKey>
+ *          (FilterType is required: `synclimit` for Calendar, "0" otherwise)
+ *   14.0+: <SyncKey>, <CollectionId>, <Options>[<FilterType/>]<Class/></Options>
+ *          (FilterType is optional; legacy emitted it for Calendar only.
+ *           The caller controls the gate via the same `filterType` value
+ *           it passes to Sync — non-"0" filterType triggers emission.)
  */
 
 import { easRequest } from "../network.mjs";
@@ -82,6 +86,15 @@ function buildBody({
     w.atag("CollectionId", collectionId);
     w.switchpage("AirSync");
     w.otag("Options");
+    // FilterType is optional in 14+ and 16+. Legacy emitted it only for
+    // Calendar (network.js:980); we generalise to "any non-zero filter"
+    // so the estimate matches what Sync would deliver under the same
+    // FilterType. Without this the estimate would over-count items that
+    // fall outside the Calendar's `synclimit` window — the symptom that
+    // surfaces as "Estimate=124 but Sync delivers 20".
+    if (filterType && filterType !== "0") {
+      w.atag("FilterType", filterType);
+    }
     w.atag("Class", className);
     w.ctag();
     w.switchpage("GetItemEstimate");
