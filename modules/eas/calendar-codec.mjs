@@ -27,6 +27,7 @@ import { TimeZoneBlob, isAllZero } from "./timezone-blob.mjs";
 import {
   guessTimezoneByStdDstOffset,
   tzInfoForBlob,
+  getIcalTimezone,
 } from "./timezone-mapping.mjs";
 
 const X_EAS_SERVERID = "X-EAS-SERVERID";
@@ -728,6 +729,13 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay) {
   } else {
     const d = parseEasUtc(easUtc);
     if (!d) return;
+    // Build the UTC instant first so the wall-clock numerals match the
+    // EAS-on-the-wire string. For a TZID-tagged property the wall-clock
+    // numerals must be in the named zone (RFC 5545 §3.3.5), so convert
+    // before serialising. Without the conversion, ICAL.js reads
+    // `DTSTART;TZID=America/Los_Angeles:20260430T003000` as "Apr 30 00:30
+    // in LA" — the same numerals tagged with the wrong meaning, shifted
+    // from the intended UTC instant by the user's offset.
     const time = new ICAL.Time({
       year: d.getUTCFullYear(),
       month: d.getUTCMonth() + 1,
@@ -737,9 +745,23 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay) {
       second: d.getUTCSeconds(),
       isDate: false,
     });
-    if (tzId === "UTC") time.zone = ICAL.Timezone.utcTimezone;
-    prop.setValue(time);
-    if (tzId && tzId !== "UTC") prop.setParameter("tzid", tzId);
+    time.zone = ICAL.Timezone.utcTimezone;
+
+    if (!tzId || tzId === "UTC") {
+      prop.setValue(time);
+    } else {
+      const targetZone = getIcalTimezone(tzId);
+      if (targetZone) {
+        const local = time.convertToZone(targetZone);
+        prop.setValue(local);
+        prop.setParameter("tzid", tzId);
+      } else {
+        // Zone wasn't in the loaded set — keep the value as UTC so the
+        // calendar app still renders the correct instant in the user's
+        // local zone, just without the TZID hint.
+        prop.setValue(time);
+      }
+    }
   }
   vevent.addProperty(prop);
 }
