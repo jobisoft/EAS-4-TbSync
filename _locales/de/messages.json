@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "EAS-DeviceType-Wert, der in der Anfrage-URL gesendet wird. Einige Server lehnen unbekannte Gerätetypen ab - versuchen Sie einen Wert wie WindowsOutlook15 oder iPhone, wenn Ihr Anbieter den Standard nicht akzeptiert. Standard: TbSync."
   },
+  "options.deviceos": {
+    "message": "Geräte-OS"
+  },
+  "options.deviceos.hint": {
+    "message": "Betriebssystem-Bezeichner, der in der EAS-DeviceInformation/Set-Anfrage gesendet wird. Einige Server lehnen unbekannte Werte ab. Leer lassen, um den plattformabhängigen Standardwert zu verwenden."
+  },
   "options.maxitems": {
     "message": "Elemente pro Synchronisationsschritt"
   },

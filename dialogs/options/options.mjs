@@ -6,6 +6,7 @@
  */
 
 import { localizeDocument } from "../../vendor/i18n/i18n.mjs";
+import { getDefaultDeviceOs } from "../../modules/network.mjs";
 
 const $ = (id) => document.getElementById(id);
 
@@ -13,6 +14,7 @@ const STRING_FIELDS = [
   { key: "timeout", inputId: "opt-timeout", type: "number" },
   { key: "tbsync.useragent", inputId: "opt-useragent", type: "string" },
   { key: "tbsync.type", inputId: "opt-devicetype", type: "string" },
+  { key: "tbsync.os", inputId: "opt-deviceos", type: "string" },
   { key: "maxItems", inputId: "opt-maxitems", type: "number" },
   { key: "oauth.clientID", inputId: "opt-clientid", type: "string" },
 ];
@@ -29,6 +31,9 @@ async function load() {
     if (v === undefined || v === null || v === "") continue;
     $(f.inputId).value = String(v);
   }
+  // Device OS: dynamic placeholder showing the platform-derived value
+  // the user inherits when the override is empty.
+  $("opt-deviceos").placeholder = await getDefaultDeviceOs();
   $("opt-mstodo").checked = stored.msTodoCompat === true;
   $("opt-show-trash").checked = stored.showItemsInTrash === true;
 }

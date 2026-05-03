@@ -19,7 +19,7 @@
 
 import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 import { createWBXML } from "../wbxml.mjs";
-import { easRequest, getUserAgent } from "../network.mjs";
+import { easRequest, getDeviceOs, getUserAgent } from "../network.mjs";
 import { readPath } from "./wbxml-helpers.mjs";
 
 // Matches legacy network.js:832-833 verbatim. `Model` is the device-class
@@ -29,7 +29,7 @@ import { readPath } from "./wbxml-helpers.mjs";
 // stay distinguishable in the Exchange admin UI.
 const MODEL = "Computer";
 
-function buildBody({ deviceId, userAgent }) {
+function buildBody({ deviceId, deviceOs, userAgent }) {
   if (!deviceId) {
     throw new Error("settings.buildBody: deviceId is required");
   }
@@ -40,12 +40,7 @@ function buildBody({ deviceId, userAgent }) {
   w.otag("Set");
   w.atag("Model", MODEL);
   w.atag("FriendlyName", `TbSync on Device ${deviceId.slice(4)}`);
-  w.atag(
-    "OS",
-    typeof navigator !== "undefined" && navigator.platform
-      ? navigator.platform
-      : "Unknown",
-  );
+  w.atag("OS", deviceOs);
   w.atag("UserAgent", userAgent);
   w.ctag();
   w.ctag();
@@ -58,12 +53,16 @@ function buildBody({ deviceId, userAgent }) {
  *  "Settings" (the OPTIONS-probed command list) and `asVersion != "2.5"`.
  *  Returns null on success. */
 export async function sendDeviceInformation({ account, asVersion }) {
-  const userAgent = await getUserAgent();
+  const [userAgent, deviceOs] = await Promise.all([
+    getUserAgent(),
+    getDeviceOs(),
+  ]);
   const { doc } = await easRequest({
     account,
     command: "Settings",
     body: buildBody({
       deviceId: account?.custom?.deviceId,
+      deviceOs,
       userAgent,
     }),
     asVersion,

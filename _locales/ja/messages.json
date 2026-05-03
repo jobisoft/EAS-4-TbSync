@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "リクエスト URL で送信される EAS DeviceType 値。一部のサーバーは不明なデバイスタイプを拒否します - プロバイダーが既定値を受け入れない場合は、WindowsOutlook15 や iPhone のような値を試してください。既定値: TbSync。"
   },
+  "options.deviceos": {
+    "message": "デバイス OS"
+  },
+  "options.deviceos.hint": {
+    "message": "EAS DeviceInformation/Set ペイロードで送信されるオペレーティングシステム識別子。一部のサーバーは不明な値を拒否します。プラットフォームから導出されたデフォルト値を使用するには空のままにしてください。"
+  },
   "options.maxitems": {
     "message": "同期バッチあたりの項目数"
   },

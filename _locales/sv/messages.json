@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "EAS DeviceType-värde som skickas i förfrågans URL. Vissa servrar avvisar okända enhetstyper - prova ett värde som WindowsOutlook15 eller iPhone om din leverantör inte godtar standardvärdet. Standard: TbSync."
   },
+  "options.deviceos": {
+    "message": "Enhetens operativsystem"
+  },
+  "options.deviceos.hint": {
+    "message": "Operativsystemsidentifierare som skickas i EAS DeviceInformation/Set-nyttolasten. Vissa servrar avvisar okända värden. Lämna tomt för att använda standardvärdet som härleds från plattformen."
+  },
   "options.maxitems": {
     "message": "Objekt per synkroniseringsbatch"
   },

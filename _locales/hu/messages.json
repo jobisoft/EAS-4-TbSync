@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "Az EAS DeviceType értéke, amelyet a kérés URL-jében küld. Néhány kiszolgáló elutasítja az ismeretlen eszköztípusokat - próbáljon WindowsOutlook15 vagy iPhone értéket, ha szolgáltatója nem fogadja el az alapértelmezést. Alapértelmezett: TbSync."
   },
+  "options.deviceos": {
+    "message": "Eszköz operációs rendszere"
+  },
+  "options.deviceos.hint": {
+    "message": "Az EAS DeviceInformation/Set kérésben elküldött operációs rendszer azonosítója. Néhány szerver elutasítja az ismeretlen értékeket. Hagyja üresen a platform szerinti alapértelmezett érték használatához."
+  },
   "options.maxitems": {
     "message": "Elem szinkronizációs kötegenként"
   },

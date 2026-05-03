@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "Wartość EAS DeviceType wysyłana w adresie URL żądania. Niektóre serwery odrzucają nieznane typy urządzeń - wypróbuj wartość taką jak WindowsOutlook15 lub iPhone, jeśli Twój dostawca nie akceptuje wartości domyślnej. Domyślnie: TbSync."
   },
+  "options.deviceos": {
+    "message": "System operacyjny urządzenia"
+  },
+  "options.deviceos.hint": {
+    "message": "Identyfikator systemu operacyjnego wysyłany w ładunku EAS DeviceInformation/Set. Niektóre serwery odrzucają nieznane wartości. Pozostaw puste, aby użyć wartości domyślnej zależnej od platformy."
+  },
   "options.maxitems": {
     "message": "Elementy na partię synchronizacji"
   },

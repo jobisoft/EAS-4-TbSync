@@ -36,6 +36,24 @@ const CUSTOM_USER_AGENT_STORAGE_KEY = "tbsync.useragent";
 const DEFAULT_DEVICE_TYPE = "TbSync";
 const CUSTOM_DEVICE_TYPE_STORAGE_KEY = "tbsync.type";
 
+const DEFAULT_DEVICE_OS = "Unknown";
+const CUSTOM_DEVICE_OS_STORAGE_KEY = "tbsync.os";
+
+// Map browser.runtime.getPlatformInfo()'s `os` enum to the legacy
+// Services.appinfo.OS values. Servers that key on the OS string (e.g.
+// the mobile-device list in Exchange admin) expect these legacy
+// tokens; values from the deprecated `navigator.platform` (Win32 /
+// MacIntel / Linux x86_64) are seen as "unknown" by some of them.
+// Anything outside the map falls through to the raw enum.
+const LEGACY_OS_MAP = {
+  win: "WINNT",
+  linux: "Linux",
+  mac: "Darwin",
+  openbsd: "OpenBSD",
+  android: "Android",
+  cros: "CrOS",
+};
+
 const DEFAULT_CONNECTION_TIMEOUT_MS = 90_000;
 const CUSTOM_CONNECTION_TIMEOUT_STORAGE_KEY = "timeout";
 
@@ -257,6 +275,35 @@ export async function getUserAgent() {
     /* fall through */
   }
   return DEFAULT_USER_AGENT;
+}
+
+/** Platform-derived Device OS string (no storage override). Exported so
+ *  the options dialog can populate the input's placeholder with the
+ *  value the user would inherit if they leave the override empty. */
+export async function getDefaultDeviceOs() {
+  try {
+    const { os } = await browser.runtime.getPlatformInfo();
+    return LEGACY_OS_MAP[os] ?? os ?? DEFAULT_DEVICE_OS;
+  } catch {
+    return DEFAULT_DEVICE_OS;
+  }
+}
+
+/** Effective Device OS sent on the wire. Storage override wins;
+ *  otherwise falls back to the platform-mapped default. */
+export async function getDeviceOs() {
+  try {
+    const rv = await browser.storage.local.get({
+      [CUSTOM_DEVICE_OS_STORAGE_KEY]: "",
+    });
+    const v = rv[CUSTOM_DEVICE_OS_STORAGE_KEY];
+    if (typeof v === "string" && v.trim()) {
+      return v.trim();
+    }
+  } catch {
+    /* fall through */
+  }
+  return getDefaultDeviceOs();
 }
 
 async function getConnectionTimeout() {

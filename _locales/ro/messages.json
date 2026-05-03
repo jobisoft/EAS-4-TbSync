@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "Valoarea EAS DeviceType trimisă în URL-ul cererii. Unele servere resping tipurile de dispozitiv necunoscute - încercați o valoare precum WindowsOutlook15 sau iPhone dacă furnizorul dvs. nu acceptă valoarea implicită. Implicit: TbSync."
   },
+  "options.deviceos": {
+    "message": "Sistemul de operare al dispozitivului"
+  },
+  "options.deviceos.hint": {
+    "message": "Identificatorul sistemului de operare trimis în payload-ul EAS DeviceInformation/Set. Unele servere resping valorile necunoscute. Lăsați gol pentru a utiliza valoarea implicită derivată din platformă."
+  },
   "options.maxitems": {
     "message": "Elemente per lot de sincronizare"
   },

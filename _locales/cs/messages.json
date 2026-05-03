@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "Hodnota EAS DeviceType odesílaná v URL požadavku. Některé servery odmítají neznámé typy zařízení - pokud váš poskytovatel nepřijímá výchozí hodnotu, zkuste hodnotu jako WindowsOutlook15 nebo iPhone. Výchozí: TbSync."
   },
+  "options.deviceos": {
+    "message": "OS zařízení"
+  },
+  "options.deviceos.hint": {
+    "message": "Identifikátor operačního systému odesílaný v EAS DeviceInformation/Set. Některé servery odmítají neznámé hodnoty. Ponechte prázdné pro výchozí hodnotu odvozenou z platformy."
+  },
   "options.maxitems": {
     "message": "Položek na dávku synchronizace"
   },

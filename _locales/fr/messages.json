@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "Valeur EAS DeviceType envoyée dans l’URL de la requête. Quelques serveurs rejettent les types d’appareils inconnus - essayez une valeur telle que WindowsOutlook15 ou iPhone si votre fournisseur n’accepte pas la valeur par défaut. Par défaut : TbSync."
   },
+  "options.deviceos": {
+    "message": "OS de l'appareil"
+  },
+  "options.deviceos.hint": {
+    "message": "Identifiant du système d'exploitation envoyé dans le payload EAS DeviceInformation/Set. Quelques serveurs rejettent les valeurs inconnues. Laisser vide pour utiliser la valeur par défaut dérivée de la plate-forme."
+  },
   "options.maxitems": {
     "message": "Éléments par lot de synchronisation"
   },
