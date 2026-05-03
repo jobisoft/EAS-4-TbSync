@@ -305,6 +305,12 @@
   "options.devicetype.hint": {
     "message": "EAS DeviceType value sent in the request URL. A few servers reject unknown device types. Default: TbSync."
   },
+  "options.deviceos": {
+    "message": "Device OS"
+  },
+  "options.deviceos.hint": {
+    "message": "Operating-system identifier sent in the EAS DeviceInformation/Set payload. A few servers reject unknown values. Leave empty to use the platform-derived default."
+  },
   "options.maxitems": {
     "message": "Items per sync batch"
   },
