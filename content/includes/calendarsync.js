@@ -404,6 +404,10 @@ var Calendar = {
             if (reminder >= 0) wbxml.atag("Reminder", reminder.toString());
             else TbSync.eventlog.add("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
 
+        } else {
+
+            wbxml.atag("Reminder");
+
         }
 
         //Sensitivity (CLASS)
