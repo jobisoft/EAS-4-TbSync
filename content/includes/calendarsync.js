@@ -405,6 +405,13 @@ var Calendar = {
             if (reminder >= 0) wbxml.atag("Reminder", reminder.toString());
             else TbSync.eventlog.add("info", syncdata, "Droping alarm after start date (not supported).", item.icalString);
 
+        } else {
+
+            // EAS >= 16.0: empty tag explicitly clears the reminder
+            if (asversion == "16.1") {
+                wbxml.atag("Reminder");
+            }
+
         }
 
         //Sensitivity (CLASS)
