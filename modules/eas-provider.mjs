@@ -46,6 +46,7 @@ import { runFolderSync } from "./eas/folder-sync.mjs";
 import { syncContactFolder } from "./eas/contact-sync.mjs";
 import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
 import { sendDeviceInformation } from "./eas/settings.mjs";
+import { runGalSearch as runGalSearchRequest } from "./eas/gal-search.mjs";
 import { NET_ERR } from "./network.mjs";
 import {
   enableGal,
@@ -505,8 +506,19 @@ export class EasProvider extends TbSyncProviderImplementation {
 
     // 3) Settings/DeviceInformation. Skip on AS 2.5 (the command
     // doesn't exist there) and on servers that didn't advertise it in
-    // the OPTIONS probe.
-    await this.#maybeSendDeviceInformation(ctx.account, asVersion);
+    // the OPTIONS probe. Wrapped in provision-then-retry so a server
+    // that demands Provision before accepting Settings (Z-Push on
+    // first connect, Kerio, some Exchange configs) self-heals via a
+    // single re-Provision pass.
+    ctx = await this.#withProvisionRecovery(
+      accountId,
+      ctx,
+      asVersion,
+      async (c) => {
+        await this.#maybeSendDeviceInformation(c.account, asVersion);
+        return c;
+      },
+    );
 
     // 4) FolderSync, with provision/sync-key recovery loops.
     const priorFolderSyncKey = ctx.account.custom?.foldersynckey ?? "0";
@@ -545,21 +557,18 @@ export class EasProvider extends TbSyncProviderImplementation {
     });
   }
 
-  /** FolderSync with recovery for HTTP 449 / in-band Sync.Status
-   *  141-144 (server demands Provision) and Status 9 (invalid sync key,
-   *  reset to "0" and treat as initial). One retry per failure mode;
-   *  if the same recovery is needed twice in a row we bail rather than
-   *  loop. */
-  async #runFolderSyncWithRecovery(accountId, ctx, asVersion) {
+  /** Run `op(ctx)` with one provision-then-retry on PROVISION_REQUIRED.
+   *  Recognizes both transport-level `NET_ERR.PROVISION_REQUIRED`
+   *  (HTTP 449 out-of-band, Settings 141-144 in-band, Search 141-144
+   *  in-band) and FolderSync in-band Status 141-144 carried on
+   *  `err.folderSyncStatus`. After one failed retry, the thrown error
+   *  escapes unchanged. The new ctx (post-Provision policy key) is
+   *  threaded into the retry call. */
+  async #withProvisionRecovery(accountId, ctx, asVersion, op) {
     let provisioned = false;
-    let resetSyncKey = false;
     while (true) {
       try {
-        const syncResult = await runFolderSync({
-          account: ctx.account,
-          asVersion,
-        });
-        return { syncResult, ctx };
+        return await op(ctx);
       } catch (err) {
         const provisionRequired =
           err.code === NET_ERR.PROVISION_REQUIRED ||
@@ -569,18 +578,43 @@ export class EasProvider extends TbSyncProviderImplementation {
           ctx = await this.#provisionAndPersist(accountId, ctx, asVersion);
           continue;
         }
-        if (err.folderSyncStatus === "9" && !resetSyncKey) {
-          resetSyncKey = true;
-          await this.updateAccount({
-            accountId,
-            patch: { custom: { foldersynckey: "0" } },
-          });
-          ctx = await this.#loadContext(accountId);
-          continue;
-        }
         throw err;
       }
     }
+  }
+
+  /** FolderSync with recovery for HTTP 449 / in-band Status 141-144
+   *  (provision required, via `#withProvisionRecovery`) and Status 9
+   *  (invalid sync key, reset to "0" and treat as initial). */
+  async #runFolderSyncWithRecovery(accountId, ctx, asVersion) {
+    return this.#withProvisionRecovery(
+      accountId,
+      ctx,
+      asVersion,
+      async (c) => {
+        let resetSyncKey = false;
+        while (true) {
+          try {
+            const syncResult = await runFolderSync({
+              account: c.account,
+              asVersion,
+            });
+            return { syncResult, ctx: c };
+          } catch (err) {
+            if (err.folderSyncStatus === "9" && !resetSyncKey) {
+              resetSyncKey = true;
+              await this.updateAccount({
+                accountId,
+                patch: { custom: { foldersynckey: "0" } },
+              });
+              c = await this.#loadContext(accountId);
+              continue;
+            }
+            throw err;
+          }
+        }
+      },
+    );
   }
 
   async #provisionAndPersist(accountId, ctx, asVersion) {
@@ -610,6 +644,29 @@ export class EasProvider extends TbSyncProviderImplementation {
     if (asVersion === "2.5") return;
     if (!easCommandAdvertised(account, "Settings")) return;
     await sendDeviceInformation({ account, asVersion });
+  }
+
+  /** GAL contact lookup with provision-then-retry recovery. Loaded by
+   *  `gal.mjs` and invoked from the address-book search callback - that
+   *  path runs outside any handshake, so we acquire ctx here and route
+   *  through `#withProvisionRecovery` so a server that has expired the
+   *  policy key gets one Provision attempt before the search returns
+   *  empty. */
+  async runGalSearch({ accountId, query, companyName }) {
+    const ctx = await this.#loadContext(accountId);
+    const asVersion = ctx.account.custom?.asversion;
+    return await this.#withProvisionRecovery(
+      accountId,
+      ctx,
+      asVersion,
+      async (c) =>
+        runGalSearchRequest({
+          account: c.account,
+          asVersion,
+          query,
+          companyName,
+        }),
+    );
   }
 
   #primeAuth(ctx) {

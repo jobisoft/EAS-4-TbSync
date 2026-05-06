@@ -30,10 +30,12 @@
  */
 
 import { createWBXML } from "../wbxml.mjs";
-import { easRequest } from "../network.mjs";
+import { EasHttpError, NET_ERR, easRequest } from "../network.mjs";
 import { readPathFrom } from "./wbxml-helpers.mjs";
 
 const RANGE = "0-99";
+
+const PROVISION_REQUIRED_STATUSES = new Set(["141", "142", "143", "144"]);
 
 function buildSearchBody(query) {
   const w = createWBXML();
@@ -64,6 +66,17 @@ export async function runGalSearch({ account, asVersion, query, companyName }) {
     asVersion,
   });
   if (!doc) return [];
+
+  const topStatus =
+    doc.getElementsByTagName("Status")[0]?.textContent ?? null;
+  if (topStatus && PROVISION_REQUIRED_STATUSES.has(topStatus)) {
+    // Server demands re-Provision before honouring Search. Throw with
+    // the shared transport-level shape so the caller's provision-
+    // recovery wrapper can re-acquire the policy and retry.
+    throw new EasHttpError(NET_ERR.PROVISION_REQUIRED, 0, {
+      message: `Search rejected (Status=${topStatus}); server demands re-Provision`,
+    });
+  }
 
   const results = [];
   for (const result of doc.getElementsByTagName("Result")) {

@@ -18,7 +18,6 @@
  * map, so re-entry from boot + onAccountEnabled is safe.
  */
 
-import { runGalSearch } from "./eas/gal-search.mjs";
 import { easCommandAdvertised } from "./eas/allowed-commands.mjs";
 import { isOAuthAccount, primeAuth } from "./eas/oauth.mjs";
 
@@ -105,7 +104,6 @@ export async function enableGal({ provider, account }) {
 
   const accountId = account.accountId;
   const addressBookId = galAddressBookId(accountId);
-  const asVersion = account.custom?.asversion;
 
   const callback = async (_node, searchString) => {
     const query = String(searchString ?? "").trim();
@@ -131,9 +129,8 @@ export async function enableGal({ provider, account }) {
           servertype: fresh.custom?.servertype,
         });
       }
-      const results = await runGalSearch({
-        account: fresh,
-        asVersion: fresh.custom?.asversion ?? asVersion,
+      const results = await provider.runGalSearch({
+        accountId,
         query,
         companyName: fresh.accountName,
       });

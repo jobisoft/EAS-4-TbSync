@@ -19,8 +19,16 @@
 
 import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 import { createWBXML } from "../wbxml.mjs";
-import { easRequest, getDeviceOs, getUserAgent } from "../network.mjs";
+import {
+  EasHttpError,
+  NET_ERR,
+  easRequest,
+  getDeviceOs,
+  getUserAgent,
+} from "../network.mjs";
 import { readPath } from "./wbxml-helpers.mjs";
+
+const PROVISION_REQUIRED_STATUSES = new Set(["141", "142", "143", "144"]);
 
 // Matches legacy network.js:832-833 verbatim. `Model` is the device-class
 // label Exchange surfaces in its mobile-device list; `FriendlyName` is the
@@ -71,11 +79,17 @@ export async function sendDeviceInformation({ account, asVersion }) {
     throw withCode(new Error("Empty Settings response"), ERR.UNKNOWN_COMMAND);
   }
   const status = readPath(doc, ["Status"]);
-  if (status !== "1") {
-    throw withCode(
-      new Error(`Settings rejected (Status=${status ?? "missing"})`),
-      ERR.UNKNOWN_COMMAND,
-    );
+  if (status === "1") return null;
+  if (PROVISION_REQUIRED_STATUSES.has(status)) {
+    // Server demands re-Provision before accepting DeviceInformation.
+    // Same shape HTTP 449 throws (network.mjs), so the upstream
+    // recovery loop on PROVISION_REQUIRED handles both signals.
+    throw new EasHttpError(NET_ERR.PROVISION_REQUIRED, 0, {
+      message: `Settings rejected (Status=${status}); server demands re-Provision`,
+    });
   }
-  return null;
+  throw withCode(
+    new Error(`Settings rejected (Status=${status ?? "missing"})`),
+    ERR.UNKNOWN_COMMAND,
+  );
 }
