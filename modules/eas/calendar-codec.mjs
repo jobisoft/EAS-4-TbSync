@@ -649,8 +649,6 @@ export function stampEasServerId(ical, serverID) {
 /* ── Helpers: timezone resolution ──────────────────────────────────── */
 
 function resolveTimezone(adNode, asVersion, defaultTimezone) {
-  // AS 16.1 carries times in UTC on the wire; no zone resolution needed.
-  if (asVersion === "16.1") return "UTC";
   const blobB64 = readPathFrom(adNode, ["TimeZone"]);
   if (!blobB64 || isAllZero(blobB64)) return defaultTimezone || "UTC";
   const blob = new TimeZoneBlob();
