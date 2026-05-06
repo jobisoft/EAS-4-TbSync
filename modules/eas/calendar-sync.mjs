@@ -122,13 +122,36 @@ async function getDefaultTimezone() {
   }
 }
 
-/** Mirror the folder's effective read-only state onto the local TB
- *  calendar so the user's calendar UI matches the sync gate. Called
- *  before the sync runs so a fresh toggle takes effect on this pass. */
-async function mirrorReadOnly(folder) {
-  if (!folder?.targetID) return;
-  const effectiveRO = !!folder.readOnly || !!folder.downloadOnly;
-  await calendarStore.setCalendarReadOnly(folder.targetID, effectiveRO);
+/** Run `action` with the local TB calendar temporarily writable, then
+ *  restore the folder's effective read-only state once the action
+ *  resolves. The toggle removes the sync write path's dependence on
+ *  any privileged "bypass readOnly" affordance: writes always go to a
+ *  writable calendar, and the user-facing read-only state only
+ *  re-engages after the sync settles. Any user edit that lands during
+ *  the brief writable window is captured by the calendar observer and
+ *  reverted on the next sync via the runner's `revertLocalChanges`
+ *  pass (sync-runner.mjs).
+ *
+ *  The restore runs in a `finally` so a thrown sync error doesn't
+ *  leave the calendar mis-flagged. The restore itself is best-effort
+ *  (any error is logged and swallowed) so the action's outcome — the
+ *  thing the caller actually cares about — propagates unchanged. */
+async function withWritableCalendar(folder, action) {
+  if (!folder?.targetID) return action();
+  const finalRO = !!folder.readOnly || !!folder.downloadOnly;
+  try {
+    await calendarStore.setCalendarReadOnly(folder.targetID, false);
+    return await action();
+  } finally {
+    try {
+      await calendarStore.setCalendarReadOnly(folder.targetID, finalRO);
+    } catch (err) {
+      console.debug(
+        `[eas] withWritableCalendar: failed to restore readOnly on ${folder.targetID}:`,
+        err,
+      );
+    }
+  }
 }
 
 export async function syncCalendarFolder({
@@ -142,17 +165,18 @@ export async function syncCalendarFolder({
   const filterType = String(account.custom?.synclimit ?? "7");
   const defaultTimezone = await getDefaultTimezone();
   await ensureTimezoneMappingLoaded();
-  await mirrorReadOnly(folder);
-  return runItemSync({
-    provider,
-    account,
-    folder,
-    accountId,
-    folderId,
-    asVersion,
-    itemKind: { ...calendarItemKind, filterType },
-    defaultTimezone,
-  });
+  return withWritableCalendar(folder, () =>
+    runItemSync({
+      provider,
+      account,
+      folder,
+      accountId,
+      folderId,
+      asVersion,
+      itemKind: { ...calendarItemKind, filterType },
+      defaultTimezone,
+    }),
+  );
 }
 
 export async function syncTaskFolder({
@@ -165,15 +189,16 @@ export async function syncTaskFolder({
 }) {
   const defaultTimezone = await getDefaultTimezone();
   await ensureTimezoneMappingLoaded();
-  await mirrorReadOnly(folder);
-  return runItemSync({
-    provider,
-    account,
-    folder,
-    accountId,
-    folderId,
-    asVersion,
-    itemKind: taskItemKind,
-    defaultTimezone,
-  });
+  return withWritableCalendar(folder, () =>
+    runItemSync({
+      provider,
+      account,
+      folder,
+      accountId,
+      folderId,
+      asVersion,
+      itemKind: taskItemKind,
+      defaultTimezone,
+    }),
+  );
 }
