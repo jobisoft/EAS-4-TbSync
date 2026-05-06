@@ -3,7 +3,7 @@
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. 
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 "use strict";
@@ -141,7 +141,7 @@ var Calendar = {
             let offsecs = parseInt(data.Reminder);
             if (!isNaN(offsecs)) {
                 alarm.offset.inSeconds = (0 - offsecs * 60);
-            }    
+            }
 
             item.addAlarm(alarm);
 
@@ -158,7 +158,7 @@ var Calendar = {
         eas.sync.mapEasPropertyToThunderbird("Sensitivity", "CLASS", data, item);
 
         if (data.ResponseType) {
-            //store original EAS value 
+            //store original EAS value
             item.setProperty("X-EAS-ResponseType", eas.xmltools.checkString(data.ResponseType, "0")); //some server send empty ResponseType ???
         }
 
@@ -244,7 +244,7 @@ var Calendar = {
         let tbStatus = (data.BusyStatus && data.BusyStatus == "1" ? "TENTATIVE" : null);
 
         if (data.MeetingStatus) {
-            //store original EAS value 
+            //store original EAS value
             item.setProperty("X-EAS-MeetingStatus", data.MeetingStatus);
             //bitwise representation for Meeting, Received, Cancelled:
             let M = data.MeetingStatus & 0x1;
@@ -286,7 +286,7 @@ var Calendar = {
         let nowDate = new Date();
 
         /*
-         *  We do not use ghosting, that means, if we do not include a value in CHANGE, it is removed from the server. 
+         *  We do not use ghosting, that means, if we do not include a value in CHANGE, it is removed from the server.
          *  However, this does not seem to work on all fields. Furthermore, we need to include any (empty) container to blank its childs.
          */
 
@@ -326,9 +326,9 @@ var Calendar = {
             }
 
 
-            // for EAS 16.1 dont send TimeZone at all since we use UTC timestamps this should work.  
+            // for EAS 16.1 dont send TimeZone at all since we use UTC timestamps this should work.
             if (asversion != "16.1") {
-                // EAS 16 [MS-ASCAL] 2.2.2.1 
+                // EAS 16 [MS-ASCAL] 2.2.2.1
                 // if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
                 // client MUST NOT send TimeZone
                 // } else {
@@ -365,7 +365,7 @@ var Calendar = {
             // not in EAS 16: [MS-ASCAL] 2.2.2.18
             wbxml.atag("DtStamp", item.stampTime ? eas.tools.getIsoUtcString(item.stampTime) : eas.tools.dateToBasicISOString(nowDate));
         }
-        
+
         //EndTime in UTC
         // EAS 16 [MS-ASCAL] 2.2.2.1 -> no time component
         if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
@@ -373,12 +373,12 @@ var Calendar = {
         } else {
             wbxml.atag("EndTime", item.endDate ? eas.tools.getIsoUtcString(item.endDate) : eas.tools.dateToBasicISOString(nowDate));
         }
-        
+
         //Location
         if (asversion != "16.1") {
             // not in EAS 16: [MS-ASCAL] 2.2.2.27
             wbxml.atag("Location", (item.hasProperty("location")) ? item.getProperty("location") : "");
-        } else {    
+        } else {
             // EAS 16 MS-AIRS 2.2.2.28
             if (item.hasProperty("location")) {
                 wbxml.switchpage("AirSyncBase");
@@ -388,7 +388,7 @@ var Calendar = {
                 wbxml.switchpage(syncdata.type);
             }
         }
-        
+
         //EAS Reminder (TB getAlarms) - at least with zpush blanking by omitting works, horde does not work
         let alarms = item.getAlarms({});
         if (alarms.length > 0) {
@@ -406,7 +406,10 @@ var Calendar = {
 
         } else {
 
-            wbxml.atag("Reminder");
+            // EAS >= 16.0: empty tag explicitly clears the reminder
+            if (asversion == "16.1") {
+                wbxml.atag("Reminder");
+            }
 
         }
 
@@ -419,7 +422,7 @@ var Calendar = {
         //StartTime in UTC
         // EAS 16 [MS-ASCAL] 2.2.2.1
         if (asversion == "16.1" && item.startDate && item.startDate.isDate && item.endDate && item.endDate.isDate) {
-            wbxml.atag("StartTime",eas.tools.getIsoUtcString(item.startDate,false,true,true)); 
+            wbxml.atag("StartTime",eas.tools.getIsoUtcString(item.startDate,false,true,true));
         } else {
             wbxml.atag("StartTime", item.startDate ? eas.tools.getIsoUtcString(item.startDate) : eas.tools.dateToBasicISOString(nowDate));
         }
@@ -434,7 +437,7 @@ var Calendar = {
             }
         } else {
             // EAS 16.1 MS-ASCAL 2.2.2.13 optional ClientUid
-            //for some reason when defined Exchange Online rejects many change requests ... oh well .. since it is optional lets skip it ... 
+            //for some reason when defined Exchange Online rejects many change requests ... oh well .. since it is optional lets skip it ...
             //wbxml.atag("ClientUid", item.id);
         }
         //IMPORTANT in EAS v16 it is no longer allowed to send a UID
@@ -484,7 +487,7 @@ var Calendar = {
                     wbxml.atag("Email", cal.email.removeMailTo(attendee.id));
                     wbxml.atag("Name", (attendee.commonName ? attendee.commonName : cal.email.removeMailTo(attendee.id).split("@")[0]));
                     if (asversion != "2.5") {
-                        //it's pointless to send AttendeeStatus, 
+                        //it's pointless to send AttendeeStatus,
                         // - if we are the owner of a meeting, TB does not have an option to actually set the attendee status (on behalf of an attendee) in the UI
                         // - if we are an attendee (of an invite) we cannot and should not set status of other attendees and or own status must be send through a MeetingResponse
                         // -> all changes of attendee status are send from the server to us, either via ResponseType or via AttendeeStatus
@@ -499,7 +502,7 @@ var Calendar = {
                 wbxml.ctag();
             } else {
                 if (asversion != "16.1") {
-                    wbxml.atag("Attendees"); 
+                    wbxml.atag("Attendees");
                 }
             }
         }
