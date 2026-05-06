@@ -497,13 +497,18 @@ export function appendApplicationDataFromIcal({
 
   // Reminder. `alarmMinutes` is responsible for surfacing info-level
   // event-log entries when an absolute VALARM is converted or a
-  // negative-offset alarm is dropped (legacy logged the same; we
-  // mirror via the eventLog callback plumbed in from the runner).
+  // negative-offset alarm is dropped.
+  // For events with no VALARM on AS 16.1, emit empty <Reminder/> to
+  // explicitly clear the server-side default reminder.
+  // Per [MS-ASCAL] §2.2.2.38, the empty-tag form is only documented
+  // as supported on 16.0/16.1.
   const alarm = vevent.getFirstSubcomponent("valarm");
   if (alarm) {
     const minutes = alarmMinutes(alarm, dtstart, eventLog);
     if (minutes != null && minutes >= 0)
       builder.atag("Reminder", String(minutes));
+  } else if (asVersion === "16.1") {
+    builder.atag("Reminder");
   }
 
   // Sensitivity.
