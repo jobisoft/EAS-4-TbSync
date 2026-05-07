@@ -667,8 +667,20 @@ async function pullPhase(ctx) {
       if (itemsDone > itemsTotal) itemsTotal = itemsDone;
       reportProgress(ctx, itemsDone, itemsTotal);
     }
-    ctx.synckey = r.synckey;
-    ctx.syncKeyDirty = true;
+    // Empty-body responses leave the syncKey unchanged (legacy parity).
+    if (r.synckey != null) {
+      ctx.synckey = r.synckey;
+      ctx.syncKeyDirty = true;
+    }
+    if (r.emptyBody) {
+      ctx.provider.reportEventLog({
+        level: "debug",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message:
+          "[eas:sync] empty-body Sync response on pull (no changes, syncKey unchanged)",
+      });
+    }
     if (!r.moreAvailable) return {};
   }
 }
@@ -785,8 +797,20 @@ async function pushPhase(ctx, userEdits) {
 
     if (r.error) return { status: errorStatus(r.error) };
 
-    ctx.synckey = r.synckey;
-    ctx.syncKeyDirty = true;
+    // Empty-body responses leave the syncKey unchanged (legacy parity).
+    if (r.synckey != null) {
+      ctx.synckey = r.synckey;
+      ctx.syncKeyDirty = true;
+    }
+    if (r.emptyBody) {
+      ctx.provider.reportEventLog({
+        level: "debug",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message:
+          "[eas:sync] empty-body Sync response on push (no ACKs, syncKey unchanged)",
+      });
+    }
     changedAnything = true;
     // Reset batch size after a successful round-trip so subsequent
     // batches return to the configured maxItems. Without this the
@@ -795,7 +819,15 @@ async function pushPhase(ctx, userEdits) {
     // request even after the bad item was singleton-dropped.
     batchSize = ctx.maxItems;
 
-    if (r.responses) await applyResponses(ctx, r.responses, built, failedItems);
+    // Always run applyResponses: when the server omits <Responses> (or
+    // returns an empty body), the per-sent fallback loops inside still
+    // clear the changelog as legacy did. Pass `hadResponsesElement` so
+    // applyResponses can emit a debug log when it's running on the
+    // fallback path alone.
+    const responses = r.responses ?? { adds: [], changes: [], deletes: [] };
+    await applyResponses(ctx, responses, built, failedItems, {
+      hadResponsesElement: r.responses != null,
+    });
     if (r.commands) await applyServerCommands(ctx, r.commands);
 
     itemsDone += slice.length;
@@ -885,7 +917,17 @@ async function buildPushBatch(ctx, slice) {
 
 /* ── Apply responses to our push ──────────────────────────────────── */
 
-async function applyResponses(ctx, responses, sent, failedItems) {
+async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
+  const { hadResponsesElement = true } = opts;
+  if (!hadResponsesElement) {
+    const sentCount = sent.adds.length + sent.mods.length + sent.dels.length;
+    ctx.provider.reportEventLog({
+      level: "debug",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message: `[eas:sync] no <Responses> in push reply; clearing ${sentCount} sent items via no-ACK fallback`,
+    });
+  }
   for (const node of responses.adds) {
     const clientId = readPathFrom(node, ["ClientId"]);
     const serverId = readPathFrom(node, ["ServerId"]);
@@ -1364,7 +1406,19 @@ async function sendSync({ account, asVersion, body }) {
     body,
     asVersion,
   });
-  if (!doc) return { error: "Empty Sync response" };
+  // MS-ASCMD §2.2.3.165.2: an empty 200 OK is a valid "no changes,
+  // syncKey unchanged" response. Match legacy EAS4's
+  // allowEmptyResponse behaviour by returning a no-op success result;
+  // callers detect it via `emptyBody` for logging.
+  if (!doc) {
+    return {
+      synckey: null,
+      moreAvailable: false,
+      commands: null,
+      responses: null,
+      emptyBody: true,
+    };
+  }
   return parseSyncResponse(doc);
 }
 
