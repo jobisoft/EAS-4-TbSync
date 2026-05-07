@@ -15,6 +15,7 @@ var { default: ICAL } = ChromeUtils.importESModule(
 var { cal } = ChromeUtils.importESModule(
   "resource:///modules/calendar/calUtils.sys.mjs",
 );
+cal.timezoneService.startup(null);
 
 this.calendar_timezones = class extends ExtensionAPI {
   getAPI(context) {
