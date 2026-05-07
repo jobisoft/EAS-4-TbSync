@@ -14,8 +14,7 @@
  *   - serverID        - EAS folder serverID (stable across syncs)
  *   - synckey         - per-folder Sync key ("0" before first Sync)
  *   - class           - EAS Class (e.g. "Contacts", "Calendar", "Tasks")
- *   - contactMap      - itemId → serverID (contacts only)
- *   - itemMap         - itemId → serverID (calendars + tasks)
+ *   - indexMap        - array of {uid, serverId} (any kind)
  *   - displayNameRaw  - server-supplied folder name; the visible
  *                       `displayName` is recomputed from this on every
  *                       push (with optional "Trash | " prefix)
@@ -302,7 +301,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       patch: {
         targetID: null,
         targetName: null,
-        custom: { synckey: "0", contactMap: {}, itemMap: {} },
+        custom: { synckey: "0", indexMap: [] },
       },
     }).catch((err) =>
       console.debug(
@@ -1074,7 +1073,7 @@ function folderDescriptorFromAdd(add) {
       type: add.type,
       class: folderTypeToEasClass(targetType),
       synckey: "0",
-      contactMap: {},
+      indexMap: [],
       displayNameRaw: add.displayName,
     },
   };
@@ -1223,7 +1222,7 @@ export async function finalizeFolderListForPush(folders) {
         type: f.custom?.type,
         class: f.custom?.class,
         synckey: f.custom?.synckey ?? "0",
-        contactMap: f.custom?.contactMap ?? {},
+        indexMap: f.custom?.indexMap ?? [],
         displayNameRaw: f.custom?.displayNameRaw,
       },
     }));

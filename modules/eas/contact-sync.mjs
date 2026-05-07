@@ -72,7 +72,6 @@ const contactItemKind = {
   className: "Contacts",
   filterType: "0",
   changelogKind: "contact",
-  mapField: "contactMap",
   codec,
   storeFactory: contactStoreFactory,
 };

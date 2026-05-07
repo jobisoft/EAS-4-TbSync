@@ -98,7 +98,6 @@ const calendarItemKind = {
   className: "Calendar",
   filterType: "0",
   changelogKind: "event",
-  mapField: "itemMap",
   codec: makeCodec(eventCodec),
   storeFactory: (targetID) => calendarStoreFactory(targetID, "event"),
 };
@@ -107,7 +106,6 @@ const taskItemKind = {
   className: "Tasks",
   filterType: "0",
   changelogKind: "task",
-  mapField: "itemMap",
   codec: makeCodec(taskCodec),
   storeFactory: (targetID) => calendarStoreFactory(targetID, "task"),
 };

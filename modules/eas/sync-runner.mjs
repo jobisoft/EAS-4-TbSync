@@ -6,7 +6,6 @@
  *     className,        "Contacts" | "Calendar" | "Tasks" - AS 2.5 Class
  *     filterType,       FilterType for the Sync Options
  *     changelogKind,    "contact" | "event" | "task" - kind for markServerWrite
- *     mapField,         folder.custom field name for the local-id → serverId map
  *     codec: {
  *       applicationDataToBlob({ adNode, serverID, asVersion, defaultTimezone, separator, uid }),
  *       appendApplicationDataFromBlob({ builder, blob, asVersion, defaultTimezone, separator }),
@@ -214,7 +213,7 @@ export async function runItemSync({
       defaultTimezone,
     });
     if (result.code === "RESYNC" && attempt === 0) {
-      const reset = { synckey: "0", [itemKind.mapField]: {} };
+      const reset = { synckey: "0", indexMap: [] };
       await provider.updateFolder({
         accountId,
         folderId,
@@ -324,10 +323,15 @@ async function runOneSync({
     itemKind,
     store: itemKind.storeFactory(folder.targetID),
     synckey,
-    idMap: { ...(folder.custom?.[itemKind.mapField] ?? {}) },
-    idMapDirty: false,
+    // Single per-folder index of `{uid, serverId}` pairs. The
+    // upgrades.mjs drain runs before any sync RPC, so by the time we
+    // get here the persisted shape is guaranteed to be an array (or
+    // missing for a never-synced folder).
+    indexMap: Array.isArray(folder.custom?.indexMap)
+      ? folder.custom.indexMap.slice()
+      : [],
+    indexMapDirty: false,
     syncKeyDirty: false,
-    byServerId: null,
     maxItems,
   };
 
@@ -342,8 +346,8 @@ async function runOneSync({
       ctx.synckey = "0";
       synckey = "0";
       ctx.syncKeyDirty = true;
-      ctx.idMap = {};
-      ctx.idMapDirty = true;
+      ctx.indexMap = [];
+      ctx.indexMapDirty = true;
     }
   }
 
@@ -374,8 +378,6 @@ async function runOneSync({
     ctx.synckey = boot.synckey;
     ctx.syncKeyDirty = true;
   }
-
-  ctx.byServerId = await snapshotByServerId(ctx);
 
   // 2) Pull pass.
   const firstPull = await pullPhase(ctx);
@@ -505,7 +507,7 @@ async function revertLocalChanges(ctx) {
       continue;
     }
 
-    let serverID = ctx.idMap[e.itemId];
+    let serverID = findServerIdByUid(ctx, e.itemId);
     if (!serverID && e.status === "modified_by_user") {
       // For modify, the local blob still has the server-stamped ID.
       try {
@@ -585,7 +587,7 @@ async function revertLocalChanges(ctx) {
           `revert: store.create id mismatch: expected ${e.itemId}, got ${createdId}`,
         );
       }
-      mergeIdMap(ctx, { [e.itemId]: serverID });
+      upsertIndexMap(ctx, e.itemId, serverID);
     }
 
     await ctx.provider.changelogRemove({
@@ -599,10 +601,10 @@ async function revertLocalChanges(ctx) {
 }
 
 async function finishWith(ctx, result) {
-  if (!ctx.syncKeyDirty && !ctx.idMapDirty) return result;
+  if (!ctx.syncKeyDirty && !ctx.indexMapDirty) return result;
   const patch = {};
   if (ctx.syncKeyDirty) patch.synckey = ctx.synckey;
-  if (ctx.idMapDirty) patch[ctx.itemKind.mapField] = ctx.idMap;
+  if (ctx.indexMapDirty) patch.indexMap = ctx.indexMap;
   try {
     await ctx.provider.updateFolder({
       accountId: ctx.accountId,
@@ -881,25 +883,28 @@ async function buildPushBatch(ctx, slice) {
       if (!it?.blob) continue;
       const serverID =
         ctx.itemKind.codec.readEasServerIdFromBlob(it.blob) ??
-        ctx.idMap[entry.itemId];
+        findServerIdByUid(ctx, entry.itemId);
       if (!serverID) continue;
       mods.push({ entry, serverID, item: it });
     } else if (entry.status === "deleted_by_user") {
-      const serverID = ctx.idMap[entry.itemId];
+      const serverID = findServerIdByUid(ctx, entry.itemId);
       if (!serverID) {
-        // No serverID resolvable from the idMap and the local card is
-        // already gone (so no vCard X-EAS-SERVERID fallback). Drop the
-        // changelog entry; the server keeps its copy. Recovery: the
-        // next pull restores the card locally and rebuilds the idMap
-        // entry, after which the user's re-delete will propagate.
-        // Common causes: card was created and deleted between syncs
-        // (never registered server-side anyway), or the idMap drifted
-        // out of sync with server reality (rare).
+        // No serverID resolvable from the indexMap and the local item
+        // is already gone (so no blob X-EAS-SERVERID fallback). Drop
+        // the changelog entry; the server keeps its copy. The
+        // indexMap is event-driven only (no snapshot self-heal), so
+        // recovery requires the server to re-push the item as an Add
+        // (e.g. after a syncKey reset / RESYNC), which would re-run
+        // applyAdd → upsertIndexMap. Otherwise the item stays orphaned
+        // server-side. Common causes: item was created and deleted
+        // between syncs (never registered server-side anyway), or an
+        // earlier event hook failed to upsert (a real bug worth
+        // chasing if it recurs).
         ctx.provider.reportEventLog({
           level: "info",
           accountId: ctx.accountId,
           folderId: ctx.folderId,
-          message: `[${ctx.itemKind.changelogKind}-sync] dropped delete for itemId=${entry.itemId}: no serverID in idMap (card may not have been on the server, or idMap is stale - next pull will rebuild)`,
+          message: `[${ctx.itemKind.changelogKind}-sync] dropped delete for itemId=${entry.itemId}: no serverID in indexMap`,
         });
         await ctx.provider.changelogRemove({
           accountId: ctx.accountId,
@@ -955,15 +960,11 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       kind: ctx.itemKind.changelogKind,
     });
     await ctx.store.update(sentEntry.item.id, stamped);
-    mergeIdMap(ctx, { [sentEntry.item.id]: serverId });
-    // Register the just-stamped item in the byServerId map so any
-    // follow-up server-pushed Change for this ServerID matches the
-    // existing local item via applyChangeFromAd instead of falling
-    // through to applyAdd and creating a duplicate.
-    ctx.byServerId.set(serverId, {
-      itemId: sentEntry.item.id,
-      blob: stamped,
-    });
+    // Register the just-stamped item in the indexMap so any follow-up
+    // server-pushed Change for this ServerID matches the existing
+    // local item via applyChangeFromAd instead of falling through to
+    // applyAdd and creating a duplicate.
+    upsertIndexMap(ctx, sentEntry.item.id, serverId);
     await ctx.provider.changelogRemove({
       accountId: ctx.accountId,
       folderId: ctx.folderId,
@@ -1009,7 +1010,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         parentId: sentEntry.entry.parentId,
         itemId: sentEntry.entry.itemId,
       });
-      removeIdMap(ctx, sentEntry.entry.itemId);
+      removeFromIndexMap(ctx, sentEntry.entry.itemId);
     }
     // Other delete failures are not tracked - legacy didn't either
     // ("What can we do about failed deletes? SyncLog" - sync.js:1073).
@@ -1042,7 +1043,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         parentId: d.entry.parentId,
         itemId: d.entry.itemId,
       });
-      removeIdMap(ctx, d.entry.itemId);
+      removeFromIndexMap(ctx, d.entry.itemId);
     }
   }
 }
@@ -1076,7 +1077,7 @@ async function applyAdd(ctx, addNode) {
   const ad = childByTag(addNode, "ApplicationData");
   if (!ad) return;
   await maybeRecordFallbackOrganizerName(ctx, ad);
-  const existing = ctx.byServerId.get(serverID);
+  const existing = await findExistingByServerId(ctx, serverID);
   if (existing) return applyChangeFromAd(ctx, ad, existing);
 
   const newId = crypto.randomUUID();
@@ -1106,8 +1107,7 @@ async function applyAdd(ctx, addNode) {
     );
   }
   await verifyRoundTrip(ctx, newId, blob, "create");
-  ctx.byServerId.set(serverID, { itemId: newId, blob });
-  mergeIdMap(ctx, { [newId]: serverID });
+  upsertIndexMap(ctx, newId, serverID);
   if (blobHasRecurrence(blob)) {
     logRecurrence(ctx, `pull add: itemId=${newId}, serverID=${serverID}`, {
       ical: blob,
@@ -1121,7 +1121,7 @@ async function applyChange(ctx, changeNode) {
   const ad = childByTag(changeNode, "ApplicationData");
   if (!ad) return;
   await maybeRecordFallbackOrganizerName(ctx, ad);
-  const existing = ctx.byServerId.get(serverID);
+  const existing = await findExistingByServerId(ctx, serverID);
   if (!existing) return applyAdd(ctx, changeNode);
   // 16.1 per-instance Change: ApplicationData carries <InstanceId> and
   // is scoped to a single occurrence of the master event referenced by
@@ -1199,10 +1199,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
     codec.readEasServerIdFromBlob(nextBlob) ??
     codec.readEasServerIdFromBlob(existing.blob);
   if (masterServerId) {
-    ctx.byServerId.set(masterServerId, {
-      itemId: existing.itemId,
-      blob: nextBlob,
-    });
+    upsertIndexMap(ctx, existing.itemId, masterServerId);
   }
 }
 
@@ -1244,10 +1241,12 @@ async function applyChangeFromAd(ctx, ad, existing) {
   });
   await ctx.store.update(existing.itemId, blob);
   await verifyRoundTrip(ctx, existing.itemId, blob, "update");
-  ctx.byServerId.set(
-    ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
-    { itemId: existing.itemId, blob },
-  );
+  const masterServerId =
+    ctx.itemKind.codec.readEasServerIdFromBlob(blob) ??
+    ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob);
+  if (masterServerId) {
+    upsertIndexMap(ctx, existing.itemId, masterServerId);
+  }
   if (blobHasRecurrence(blob) || blobHasRecurrence(existing.blob)) {
     logRecurrence(ctx, `pull update: itemId=${existing.itemId}`, {
       before: existing.blob,
@@ -1259,7 +1258,7 @@ async function applyChangeFromAd(ctx, ad, existing) {
 async function applyDelete(ctx, delNode) {
   const serverID = readPathFrom(delNode, ["ServerId"]);
   if (!serverID) return;
-  const existing = ctx.byServerId.get(serverID);
+  const existing = await findExistingByServerId(ctx, serverID);
   if (!existing) return;
   await ctx.provider.changelogMarkServerWrite({
     accountId: ctx.accountId,
@@ -1270,8 +1269,7 @@ async function applyDelete(ctx, delNode) {
     kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.delete(existing.itemId);
-  ctx.byServerId.delete(serverID);
-  removeIdMap(ctx, existing.itemId);
+  removeFromIndexMap(ctx, existing.itemId);
 }
 
 /* ── Sync request building ────────────────────────────────────────── */
@@ -1543,25 +1541,39 @@ function parseSyncResponse(doc) {
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
-async function snapshotByServerId(ctx) {
-  const all = await ctx.store.list();
-  const map = new Map();
-  for (const it of all) {
-    const sid = ctx.itemKind.codec.readEasServerIdFromBlob(it.blob);
-    if (sid) map.set(sid, { itemId: it.id, blob: it.blob });
+/** Look up the local item by its EAS server-side id. Resolves the
+ *  uid via the persistent indexMap, then fetches the current blob from
+ *  the live store. Returns `{ itemId, blob }` or null. */
+async function findExistingByServerId(ctx, serverId) {
+  const entry = ctx.indexMap.find((e) => e.serverId === serverId);
+  if (!entry) return null;
+  const item = await ctx.store.get(entry.uid);
+  if (!item) return null;
+  return { itemId: entry.uid, blob: item.blob };
+}
+
+function findServerIdByUid(ctx, uid) {
+  return ctx.indexMap.find((e) => e.uid === uid)?.serverId ?? null;
+}
+
+function upsertIndexMap(ctx, uid, serverId) {
+  const existing = ctx.indexMap.find((e) => e.uid === uid);
+  if (existing) {
+    if (existing.serverId !== serverId) {
+      existing.serverId = serverId;
+      ctx.indexMapDirty = true;
+    }
+    return;
   }
-  return map;
+  ctx.indexMap.push({ uid, serverId });
+  ctx.indexMapDirty = true;
 }
 
-function mergeIdMap(ctx, additions) {
-  for (const [k, v] of Object.entries(additions)) ctx.idMap[k] = v;
-  ctx.idMapDirty = true;
-}
-
-function removeIdMap(ctx, itemId) {
-  if (!(itemId in ctx.idMap)) return;
-  delete ctx.idMap[itemId];
-  ctx.idMapDirty = true;
+function removeFromIndexMap(ctx, uid) {
+  const idx = ctx.indexMap.findIndex((e) => e.uid === uid);
+  if (idx === -1) return;
+  ctx.indexMap.splice(idx, 1);
+  ctx.indexMapDirty = true;
 }
 
 /** When an inbound calendar event tells us the local user IS the

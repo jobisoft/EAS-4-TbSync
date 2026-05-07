@@ -31,6 +31,15 @@ import * as taskCodec from "./eas/task-codec.mjs";
 
 const UPGRADE_QUEUE_KEY = "eas.upgradeQueue";
 
+/** Coerce the legacy `Map<uid, serverId>` JSON shape into the new array
+ *  of `{uid, serverId}` records. Returns a fresh array — caller is free
+ *  to mutate. */
+function buildIndexMap(value) {
+  if (Array.isArray(value)) return value.slice();
+  if (!value || typeof value !== "object") return [];
+  return Object.entries(value).map(([uid, serverId]) => ({ uid, serverId }));
+}
+
 /** Ordered list of split versions. An upgrade is *applicable* to an
  *  `(previousVersion, currentVersion)` pair iff
  *  `previousVersion < splitVersion <= currentVersion`. Strict on the
@@ -116,7 +125,7 @@ export const UPGRADES = [
       // calendar item's id (`item.primaryKey === serverId`, see legacy
       // sync.js:1042). The new code expects the ServerId in an
       // `X-EAS-SERVERID` iCal property and a matching
-      // `folder.custom.itemMap` entry. Without this migration, an
+      // `folder.custom.indexMap` entry. Without this migration, an
       // upgraded user would see duplicates after the first delta sync
       // and silent edit/delete failures on legacy events/tasks. Same
       // shape as the contact migration above; simpler because Lightning
@@ -497,7 +506,18 @@ async function migrateContactsForFolder(provider, accountId, folder) {
   }
   if (!Array.isArray(stamps) || stamps.length === 0) return;
 
-  const contactMap = { ...(folder.custom?.contactMap ?? {}) };
+  // indexMap is an array of {uid, serverId}. Coerce older installs'
+  // object shape on read, then operate on the array.
+  const indexMap = buildIndexMap(folder.custom?.indexMap);
+  const hasContactMapping = (uid) => indexMap.some((e) => e.uid === uid);
+  const upsertContactMapping = (uid, serverId) => {
+    const ex = indexMap.find((e) => e.uid === uid);
+    if (ex) {
+      ex.serverId = serverId;
+    } else {
+      indexMap.push({ uid, serverId });
+    }
+  };
   let migratedCount = 0;
   let alreadyMigratedCount = 0;
 
@@ -511,11 +531,11 @@ async function migrateContactsForFolder(provider, accountId, folder) {
       // Idempotency guard: if X-EAS-SERVERID is already present we've
       // already migrated this card on a previous run.
       if (hasVCardProperty(oldVCard, "X-EAS-SERVERID")) {
-        // Even if the vCard is migrated, the contactMap might be stale -
+        // Even if the vCard is migrated, the indexMap might be stale -
         // make sure the entry is present so the deleted_by_user path can
         // resolve the ServerId.
-        if (!contactMap[contactId]) {
-          contactMap[contactId] = contactId;
+        if (!hasContactMapping(contactId)) {
+          upsertContactMapping(contactId, contactId);
           migratedCount++;
         } else {
           alreadyMigratedCount++;
@@ -543,11 +563,12 @@ async function migrateContactsForFolder(provider, accountId, folder) {
 
       await messenger.contacts.update(contactId, { vCard: newVCard });
 
-      // Legacy convention: card.UID === EAS ServerId. The contactMap
+      // Legacy convention: card.UID === EAS ServerId. The indexMap
       // entry is needed by `buildPushBatch`'s `deleted_by_user` path,
-      // which only consults `idMap` (the codec's vCard-blob fallback
-      // doesn't help for deletes - the local card is gone by then).
-      contactMap[contactId] = contactId;
+      // which only consults the idIndex (the codec's vCard-blob
+      // fallback doesn't help for deletes - the local card is gone
+      // by then).
+      upsertContactMapping(contactId, contactId);
       migratedCount++;
     } catch (err) {
       provider.reportEventLog({
@@ -563,7 +584,7 @@ async function migrateContactsForFolder(provider, accountId, folder) {
     await provider.updateFolder({
       accountId,
       folderId: folder.folderId,
-      patch: { custom: { contactMap } },
+      patch: { custom: { indexMap } },
     });
     provider.reportEventLog({
       level: "debug",
@@ -646,7 +667,7 @@ function escapeVCardValue(s) {
 
 /** Walk every events/tasks folder on the account and re-shape each
  *  legacy item by stamping `X-EAS-SERVERID` onto its iCal and adding
- *  a matching `folder.custom.itemMap` entry. Idempotent: items that
+ *  a matching `folder.custom.indexMap` entry. Idempotent: items that
  *  already carry `X-EAS-SERVERID` are skipped. */
 async function migrateCalendarItemsForAccount(provider, acc) {
   const rv = await provider.getAccount(acc.accountId);
@@ -705,7 +726,18 @@ async function migrateCalendarItemsForFolder(
   }
   if (!Array.isArray(items) || items.length === 0) return;
 
-  const itemMap = { ...(folder.custom?.itemMap ?? {}) };
+  // indexMap is an array of {uid, serverId}. Coerce older installs'
+  // object shape on read.
+  const indexMap = buildIndexMap(folder.custom?.indexMap);
+  const hasItemMapping = (uid) => indexMap.some((e) => e.uid === uid);
+  const upsertItemMapping = (uid, serverId) => {
+    const ex = indexMap.find((e) => e.uid === uid);
+    if (ex) {
+      ex.serverId = serverId;
+    } else {
+      indexMap.push({ uid, serverId });
+    }
+  };
   let migratedCount = 0;
   let alreadyMigratedCount = 0;
 
@@ -718,8 +750,8 @@ async function migrateCalendarItemsForFolder(
       // Idempotency guard: skip if X-EAS-SERVERID is already on the
       // master VEVENT/VTODO.
       if (itemKind.codec.readEasServerIdFromIcal(ical)) {
-        if (!itemMap[id]) {
-          itemMap[id] = id;
+        if (!hasItemMapping(id)) {
+          upsertItemMapping(id, id);
           migratedCount++;
         } else {
           alreadyMigratedCount++;
@@ -744,10 +776,10 @@ async function migrateCalendarItemsForFolder(
       await calendarStore.updateItem(folder.targetID, id, { ical: stamped });
 
       // Legacy convention: item.id === EAS ServerId. Populate the
-      // itemMap so `buildPushBatch`'s deleted_by_user path (which only
-      // consults the idMap, not the iCal blob - the local item is gone
-      // by then) can resolve the ServerId.
-      itemMap[id] = id;
+      // indexMap so `buildPushBatch`'s deleted_by_user path (which only
+      // consults the idIndex, not the iCal blob - the local item is
+      // gone by then) can resolve the ServerId.
+      upsertItemMapping(id, id);
       migratedCount++;
     } catch (err) {
       provider.reportEventLog({
@@ -763,7 +795,7 @@ async function migrateCalendarItemsForFolder(
     await provider.updateFolder({
       accountId,
       folderId: folder.folderId,
-      patch: { custom: { itemMap } },
+      patch: { custom: { indexMap } },
     });
     provider.reportEventLog({
       level: "debug",
