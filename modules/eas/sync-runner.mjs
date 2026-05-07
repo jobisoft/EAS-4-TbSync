@@ -97,6 +97,52 @@ const STATUS_PROVISION_REQUIRED = new Set(["141", "142", "143", "144"]);
 
 const POST_PUSH_WAIT_MS = 2000;
 
+/* ── DEV: fixture injection ─────────────────────────────────────────────
+ *
+ * Set DEV_FIXTURE_ADD_XML to inject it as part of every inbound Sync.
+ * The runner processes it just like a real server-pushed Add.
+ */
+const DEV_FIXTURE_ADD_XML = null;
+// `<Add xmlns="AirSync">
+//   <ServerId>DEV-FIXTURE-RECURRENCE-BUG</ServerId>
+//   <ApplicationData>
+//     <AllDayEvent xmlns="Calendar">0</AllDayEvent>
+//     <TimeZone xmlns="Calendar">xP///1cALgAgAEUAdQByAG8AcABlACAAUwB0AGEAbgBkAGEAcgBkACAAVABpAG0AZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAAAAFAAMAAAAAAAAAAAAAACgAVQBUAEMAKwAwADEAOgAwADAAKQAgAEEAbQBzAHQAZQByAGQAYQBtACwAIABCAGUAcgBsAGkAbgAsACAAQgAAAAMAAAAFAAIAAAAAAAAAxP///w==</TimeZone>
+//     <DtStamp xmlns="Calendar">20260309T131533Z</DtStamp>
+//     <StartTime xmlns="Calendar">20260304T133000Z</StartTime>
+//     <Subject xmlns="Calendar">Kind (dev fixture)</Subject>
+//     <UID xmlns="Calendar">dev-fixture-recurrence-bug</UID>
+//     <OrganizerName xmlns="Calendar">Organisator</OrganizerName>
+//     <OrganizerEmail xmlns="Calendar">org@acme.com</OrganizerEmail>
+//     <Attendees xmlns="Calendar"/>
+//     <Location xmlns="AirSyncBase"/>
+//     <EndTime xmlns="Calendar">20260304T140000Z</EndTime>
+//     <Recurrence xmlns="Calendar">
+//       <Type>1</Type><Interval>1</Interval><DayOfWeek>62</DayOfWeek><FirstDayOfWeek>0</FirstDayOfWeek>
+//     </Recurrence>
+//     <Body xmlns="AirSyncBase"><Type>1</Type><EstimatedDataSize>2</EstimatedDataSize><Data>%0D%0A</Data></Body>
+//     <Sensitivity xmlns="Calendar">0</Sensitivity>
+//     <BusyStatus xmlns="Calendar">2</BusyStatus>
+//     <Reminder xmlns="Calendar"/>
+//     <MeetingStatus xmlns="Calendar">0</MeetingStatus>
+//     <NativeBodyType xmlns="AirSyncBase">1</NativeBodyType>
+//     <ResponseRequested xmlns="Calendar">1</ResponseRequested>
+//     <ResponseType xmlns="Calendar">1</ResponseType>
+//   </ApplicationData>
+// </Add>`;
+
+function parseDevFixtureAdd() {
+  try {
+    const doc = new DOMParser().parseFromString(
+      DEV_FIXTURE_ADD_XML,
+      "application/xml",
+    );
+    return doc.documentElement;
+  } catch {
+    return null;
+  }
+}
+
 /* ── Recurrence diagnostic logging ────────────────────────────────────
  * Emit a debug-level event-log entry whenever the runner touches a
  * recurring item or processes a 16.1 per-instance exception. The full
@@ -1399,6 +1445,16 @@ function parseSyncResponse(doc) {
         (c) => c.tagName === "SoftDelete",
       ),
     };
+  }
+
+  if (DEV_FIXTURE_ADD_XML) {
+    const fixtureAdd = parseDevFixtureAdd();
+    if (fixtureAdd) {
+      if (!commands) {
+        commands = { adds: [], changes: [], deletes: [], softDeletes: [] };
+      }
+      commands.adds.push(fixtureAdd);
+    }
   }
 
   let responses = null;
