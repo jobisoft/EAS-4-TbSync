@@ -67,6 +67,7 @@ const ATTENDEESTATUS_TO_PARTSTAT = {
 
 export function applicationDataToIcal({
   adNode,
+  existingIcal,
   serverID,
   asVersion,
   defaultTimezone,
@@ -74,9 +75,26 @@ export function applicationDataToIcal({
   uid,
   userEmail,
 }) {
-  const vcal = newVCalendar();
-  const vevent = new ICAL.Component(["vevent", [], []]);
-  vcal.addSubcomponent(vevent);
+  // Merge mode: parse the existing iCal and overlay only fields the AD
+  // mentions. Fall through to a fresh build when there's no existing
+  // blob (server-pushed Add) or the existing blob is unparseable.
+  let vcal = null;
+  let vevent = null;
+  if (existingIcal) {
+    vcal = parseVCalendar(existingIcal);
+    if (vcal) {
+      // Pick the master (no RECURRENCE-ID) so partial Changes don't
+      // clobber recurrence overrides. Fallback to the first vevent.
+      const all = vcal.getAllSubcomponents("vevent");
+      vevent =
+        all.find((v) => !v.getFirstProperty("recurrence-id")) ?? all[0] ?? null;
+    }
+  }
+  if (!vcal || !vevent) {
+    vcal = newVCalendar();
+    vevent = new ICAL.Component(["vevent", [], []]);
+    vcal.addSubcomponent(vevent);
+  }
 
   if (uid) vevent.updatePropertyWithValue("uid", uid);
   vevent.updatePropertyWithValue(X_EAS_SERVERID.toLowerCase(), serverID);
@@ -90,10 +108,12 @@ export function applicationDataToIcal({
   });
 
   // Recurrence + 2.5/14.x exceptions. Gated on the account-level
-  // syncRecurrence flag.
+  // syncRecurrence flag. Only touch RRULE / exceptions when the AD
+  // mentions them; otherwise leave whatever the existing blob carried.
   if (syncRecurrence) {
     const recNode = childByTag(adNode, "Recurrence");
     if (recNode) {
+      vevent.removeAllProperties("rrule");
       const rrule = recurrenceToRrule(recNode);
       if (rrule && /^FREQ=[A-Z]+/.test(rrule)) {
         const prop = new ICAL.Property("rrule", vevent);
@@ -101,13 +121,22 @@ export function applicationDataToIcal({
         vevent.addProperty(prop);
       }
     }
-    appendInboundExceptions({
-      adNode,
-      vcal,
-      vevent,
-      asVersion,
-      defaultTimezone,
-    });
+    if (childByTag(adNode, "Exceptions")) {
+      // Clear existing override vevents (anything with RECURRENCE-ID)
+      // so the AD's exception set replaces them wholesale.
+      for (const sub of vcal.getAllSubcomponents("vevent")) {
+        if (sub.getFirstProperty("recurrence-id")) {
+          vcal.removeSubcomponent(sub);
+        }
+      }
+      appendInboundExceptions({
+        adNode,
+        vcal,
+        vevent,
+        asVersion,
+        defaultTimezone,
+      });
+    }
   }
 
   return vcal.toString();
@@ -171,9 +200,17 @@ function populateVeventFromAd({
   }
 
   // Reminder → VALARM (DISPLAY, offset relative to start in minutes).
-  // If the event start is already in the past, also stamp X-MOZ-LASTACK
-  // so Lightning suppresses a stale popup at create time. Mirrors legacy
-  // calendarsync.js:148-154.
+  // Merge-aware: the presence of <Reminder> in the AD signals the
+  // server's authoritative alarm state - clear any existing VALARMs
+  // first so we never stack alarms on a partial Change. An empty
+  // <Reminder/> means "no alarm".
+  const hasReminderTag = childByTag(adNode, "Reminder") != null;
+  if (hasReminderTag) {
+    for (const a of vevent.getAllSubcomponents("valarm")) {
+      vevent.removeSubcomponent(a);
+    }
+    vevent.removeAllProperties("x-moz-lastack");
+  }
   const reminderMinutes = readPathFrom(adNode, ["Reminder"]);
   if (reminderMinutes != null && reminderMinutes !== "" && startUtc) {
     appendDisplayAlarm(vevent, parseInt(reminderMinutes, 10));
@@ -183,38 +220,54 @@ function populateVeventFromAd({
     }
   }
 
-  // Categories.
-  const cats = collectChildren(adNode, "Categories", "Category");
-  if (cats.length) {
-    const prop = new ICAL.Property("categories", vevent);
-    prop.setValues(cats);
-    vevent.addProperty(prop);
+  // Categories. Merge-aware: clear existing when <Categories> is in
+  // the AD; the AD's children replace the prior set.
+  if (childByTag(adNode, "Categories")) {
+    vevent.removeAllProperties("categories");
+    const cats = collectChildren(adNode, "Categories", "Category");
+    if (cats.length) {
+      const prop = new ICAL.Property("categories", vevent);
+      prop.setValues(cats);
+      vevent.addProperty(prop);
+    }
   }
 
-  // Organizer (omitted by server in 16.1).
+  // Organizer (omitted by server in 16.1). Merge-aware on either
+  // OrganizerEmail or OrganizerName being present in the AD.
   const orgEmail = readPathFrom(adNode, ["OrganizerEmail"]);
   const orgName = readPathFrom(adNode, ["OrganizerName"]);
-  if (orgEmail) {
-    const prop = new ICAL.Property("organizer", vevent);
-    prop.setValue("mailto:" + orgEmail);
-    if (orgName) prop.setParameter("cn", orgName);
-    vevent.addProperty(prop);
+  if (
+    childByTag(adNode, "OrganizerEmail") ||
+    childByTag(adNode, "OrganizerName")
+  ) {
+    vevent.removeAllProperties("organizer");
+    if (orgEmail) {
+      const prop = new ICAL.Property("organizer", vevent);
+      prop.setValue("mailto:" + orgEmail);
+      if (orgName) prop.setParameter("cn", orgName);
+      vevent.addProperty(prop);
+    }
   }
 
   // Attendees. ResponseType is the event-level fallback for the
   // self-attendee's PARTSTAT when the per-attendee AttendeeStatus is
   // missing (legacy calendarsync.js:200-206). Default for everyone
-  // else is NEEDS-ACTION (legacy line 206).
+  // else is NEEDS-ACTION (legacy line 206). Merge-aware: when
+  // <Attendees> is present in the AD, the AD's set replaces the
+  // existing set wholesale (matches EAS partial-Change semantics).
   const respType = readPathFrom(adNode, ["ResponseType"]);
-  const attendees = collectAttendees(adNode, userEmail, respType);
-  for (const a of attendees) {
-    const prop = new ICAL.Property("attendee", vevent);
-    prop.setValue("mailto:" + a.email);
-    if (a.cn) prop.setParameter("cn", a.cn);
-    if (a.role) prop.setParameter("role", a.role);
-    if (a.partstat) prop.setParameter("partstat", a.partstat);
-    if (a.cutype) prop.setParameter("cutype", a.cutype);
-    vevent.addProperty(prop);
+  if (childByTag(adNode, "Attendees")) {
+    vevent.removeAllProperties("attendee");
+    const attendees = collectAttendees(adNode, userEmail, respType);
+    for (const a of attendees) {
+      const prop = new ICAL.Property("attendee", vevent);
+      prop.setValue("mailto:" + a.email);
+      if (a.cn) prop.setParameter("cn", a.cn);
+      if (a.role) prop.setParameter("role", a.role);
+      if (a.partstat) prop.setParameter("partstat", a.partstat);
+      if (a.cutype) prop.setParameter("cutype", a.cutype);
+      vevent.addProperty(prop);
+    }
   }
 
   // Pass-through ResponseType so upsync round-trips the original value.
@@ -717,6 +770,9 @@ function pickSourceTzid(vevent) {
 }
 
 function writeDateProp(vevent, name, easUtc, tzId, allDay) {
+  // Replace any existing property of this name so merge-mode partial
+  // Changes don't duplicate dtstart/dtend/dtstamp on the master.
+  vevent.removeAllProperties(name);
   const prop = new ICAL.Property(name, vevent);
   if (allDay) {
     // EAS UTC → date-only (drop time).

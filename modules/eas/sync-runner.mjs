@@ -956,6 +956,14 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     });
     await ctx.store.update(sentEntry.item.id, stamped);
     mergeIdMap(ctx, { [sentEntry.item.id]: serverId });
+    // Register the just-stamped item in the byServerId map so any
+    // follow-up server-pushed Change for this ServerID matches the
+    // existing local item via applyChangeFromAd instead of falling
+    // through to applyAdd and creating a duplicate.
+    ctx.byServerId.set(serverId, {
+      itemId: sentEntry.item.id,
+      blob: stamped,
+    });
     await ctx.provider.changelogRemove({
       accountId: ctx.accountId,
       folderId: ctx.folderId,
@@ -1210,8 +1218,13 @@ function parseEasInstanceId(s) {
 }
 
 async function applyChangeFromAd(ctx, ad, existing) {
+  // Pass `existingBlob` so the codec merges the partial AD into the
+  // current local blob instead of rebuilding from scratch. Exchange
+  // routinely echoes Changes carrying only the modified fields (e.g.
+  // just <DtStamp>); without merge, untouched fields would be lost.
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
+    existingBlob: existing.blob,
     serverID: ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
     asVersion: ctx.asVersion,
     separator: ctx.separator,

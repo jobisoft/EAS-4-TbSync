@@ -34,6 +34,7 @@ const CLASS_TO_SENSITIVITY = { PUBLIC: "0", PRIVATE: "2", CONFIDENTIAL: "3" };
 
 export function applicationDataToIcal({
   adNode,
+  existingIcal,
   serverID,
   asVersion,
   defaultTimezone,
@@ -41,9 +42,20 @@ export function applicationDataToIcal({
   msTodoCompat,
   uid,
 }) {
-  const vcal = newVCalendar();
-  const vtodo = new ICAL.Component(["vtodo", [], []]);
-  vcal.addSubcomponent(vtodo);
+  // Merge mode: parse the existing iCal and overlay only fields the AD
+  // mentions. Fall through to a fresh build for server-pushed Adds or
+  // when the existing blob is unparseable.
+  let vcal = null;
+  let vtodo = null;
+  if (existingIcal) {
+    vcal = parseVCalendar(existingIcal);
+    if (vcal) vtodo = vcal.getFirstSubcomponent("vtodo");
+  }
+  if (!vcal || !vtodo) {
+    vcal = newVCalendar();
+    vtodo = new ICAL.Component(["vtodo", [], []]);
+    vcal.addSubcomponent(vtodo);
+  }
   if (uid) vtodo.updatePropertyWithValue("uid", uid);
   vtodo.updatePropertyWithValue(X_EAS_SERVERID.toLowerCase(), serverID);
 
@@ -121,13 +133,19 @@ export function applicationDataToIcal({
     vtodo.updatePropertyWithValue("class", SENSITIVITY_TO_CLASS[sens]);
   }
 
-  // Complete + DateCompleted.
-  const complete = readPathFrom(adNode, ["Complete"]);
-  if (complete === "1") {
-    vtodo.updatePropertyWithValue("status", "COMPLETED");
-    vtodo.updatePropertyWithValue("percent-complete", 100);
-    const dc = readPathFrom(adNode, ["DateCompleted"]);
-    if (dc) writeUtcDateProp(vtodo, "completed", dc);
+  // Complete + DateCompleted. Merge-aware: <Complete> in the AD signals
+  // the server's authoritative completion state.
+  if (childByTag(adNode, "Complete")) {
+    vtodo.removeAllProperties("status");
+    vtodo.removeAllProperties("percent-complete");
+    vtodo.removeAllProperties("completed");
+    const complete = readPathFrom(adNode, ["Complete"]);
+    if (complete === "1") {
+      vtodo.updatePropertyWithValue("status", "COMPLETED");
+      vtodo.updatePropertyWithValue("percent-complete", 100);
+      const dc = readPathFrom(adNode, ["DateCompleted"]);
+      if (dc) writeUtcDateProp(vtodo, "completed", dc);
+    }
   }
 
   // Reminder. Three branches mirroring legacy tasksync.js:88-115:
@@ -137,6 +155,16 @@ export function applicationDataToIcal({
   //     slides if the user moves DTSTART. Mirrors legacy lines 103-107.
   //   - No DTSTART anchor: store as an absolute DATE-TIME TRIGGER.
   //     Mirrors legacy lines 108-113.
+  // Merge-aware: <ReminderSet> / <ReminderTime> in the AD signals the
+  // server's authoritative alarm state - clear existing VALARMs first.
+  const hasReminderTag =
+    childByTag(adNode, "ReminderSet") != null ||
+    childByTag(adNode, "ReminderTime") != null;
+  if (hasReminderTag) {
+    for (const a of vtodo.getAllSubcomponents("valarm")) {
+      vtodo.removeSubcomponent(a);
+    }
+  }
   if (reminderTime) {
     if (msTodoOverride) {
       appendStartRelativeAlarm(vtodo, 0);
@@ -154,18 +182,23 @@ export function applicationDataToIcal({
     }
   }
 
-  // Categories.
-  const cats = collectChildren(adNode, "Categories", "Category");
-  if (cats.length) {
-    const prop = new ICAL.Property("categories", vtodo);
-    prop.setValues(cats);
-    vtodo.addProperty(prop);
+  // Categories. Merge-aware: clear existing when <Categories> is in
+  // the AD; the AD's children replace the prior set.
+  if (childByTag(adNode, "Categories")) {
+    vtodo.removeAllProperties("categories");
+    const cats = collectChildren(adNode, "Categories", "Category");
+    if (cats.length) {
+      const prop = new ICAL.Property("categories", vtodo);
+      prop.setValues(cats);
+      vtodo.addProperty(prop);
+    }
   }
 
   // Recurrence (RRULE only; tasks have no exceptions in EAS).
   if (syncRecurrence) {
     const recNode = childByTag(adNode, "Recurrence");
     if (recNode) {
+      vtodo.removeAllProperties("rrule");
       const rrule = recurrenceToRrule(recNode);
       if (rrule && /^FREQ=[A-Z]+/.test(rrule)) {
         const prop = new ICAL.Property("rrule", vtodo);
@@ -302,6 +335,9 @@ export function stampEasServerId(ical, serverID) {
 function writeUtcDateProp(vtodo, name, easDateStr, tzid) {
   const d = parseExtendedIso(easDateStr);
   if (!d) return;
+  // Replace any existing property of this name so merge-mode partial
+  // Changes don't duplicate dtstart/due/completed on the master.
+  vtodo.removeAllProperties(name);
   const time = new ICAL.Time({
     year: d.getUTCFullYear(),
     month: d.getUTCMonth() + 1,

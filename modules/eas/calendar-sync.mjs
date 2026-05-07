@@ -15,6 +15,7 @@ function makeCodec(modCodec) {
   return {
     applicationDataToBlob({
       adNode,
+      existingBlob,
       serverID,
       asVersion,
       defaultTimezone,
@@ -25,6 +26,7 @@ function makeCodec(modCodec) {
     }) {
       return modCodec.applicationDataToIcal({
         adNode,
+        existingIcal: existingBlob,
         serverID,
         asVersion,
         defaultTimezone,

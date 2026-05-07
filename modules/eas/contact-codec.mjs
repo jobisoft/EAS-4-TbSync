@@ -95,13 +95,21 @@ const PREFIXED_PHONES = {
  *    uid         optional vCard UID to embed (TB derives the contact id from it) */
 export async function applicationDataToVCard({
   adNode,
+  existingVcard,
   serverID,
   asVersion,
   separator,
   uid,
 }) {
-  const comp = newVCard();
-  if (uid) comp.addPropertyWithValue("uid", uid);
+  // Merge mode: parse the existing vCard and overlay only fields the
+  // AD mentions. Fall through to a fresh build for server-pushed Adds
+  // or when the existing blob is unparseable. Preserves UID and
+  // X-EAS-SERVERID when present on the existing card.
+  const comp = (existingVcard ? parseVCard(existingVcard) : null) ?? newVCard();
+  if (uid && !comp.getFirstPropertyValue("uid")) {
+    comp.addPropertyWithValue("uid", uid);
+  }
+  comp.removeAllProperties(X_EAS_SERVERID);
   comp.addPropertyWithValue(X_EAS_SERVERID, serverID);
 
   readNames(adNode, comp);
@@ -238,6 +246,11 @@ export function stampEasServerId(vCard, serverID) {
 /* ── Names ──────────────────────────────────────────────────────────── */
 
 function readNames(adNode, comp) {
+  // Merge-aware: act only when the AD contains any of our tags;
+  // otherwise leave any existing N property untouched.
+  const tags = ["LastName", "FirstName", "MiddleName", "Title", "Suffix"];
+  if (!tags.some((t) => childByTag(adNode, t))) return;
+  comp.removeAllProperties("n");
   const last = readPathFrom(adNode, ["LastName"]) ?? "";
   const first = readPathFrom(adNode, ["FirstName"]) ?? "";
   const middle = readPathFrom(adNode, ["MiddleName"]) ?? "";
@@ -265,6 +278,8 @@ function writeNames(b, comp) {
 /* ── FileAs / formatted name ───────────────────────────────────────── */
 
 function readFileAs(adNode, comp) {
+  if (!childByTag(adNode, "FileAs")) return;
+  comp.removeAllProperties("fn");
   const v = readPathFrom(adNode, ["FileAs"]);
   if (v) comp.updatePropertyWithValue("fn", v);
 }
@@ -277,10 +292,17 @@ function writeFileAs(b, comp) {
 /* ── Birthday / Anniversary ────────────────────────────────────────── */
 
 function readDates(adNode, comp) {
-  const bday = readPathFrom(adNode, ["Birthday"]);
-  if (bday) comp.updatePropertyWithValue("bday", isoDateOnly(bday));
-  const ann = readPathFrom(adNode, ["Anniversary"]);
-  if (ann) comp.updatePropertyWithValue("anniversary", isoDateOnly(ann));
+  // Merge-aware: <Birthday/> or <Anniversary/> empty means clear.
+  if (childByTag(adNode, "Birthday")) {
+    comp.removeAllProperties("bday");
+    const bday = readPathFrom(adNode, ["Birthday"]);
+    if (bday) comp.updatePropertyWithValue("bday", isoDateOnly(bday));
+  }
+  if (childByTag(adNode, "Anniversary")) {
+    comp.removeAllProperties("anniversary");
+    const ann = readPathFrom(adNode, ["Anniversary"]);
+    if (ann) comp.updatePropertyWithValue("anniversary", isoDateOnly(ann));
+  }
 }
 
 function writeDates(b, comp) {
@@ -298,6 +320,11 @@ function writeDates(b, comp) {
 // write we rebuild the mailbox using the contact's FN as display name.
 
 async function readEmails(adNode, comp) {
+  // Merge-aware: any of the three Email{N}Address tags being present
+  // means the AD is asserting the full email set; clear existing.
+  const tags = ["Email1Address", "Email2Address", "Email3Address"];
+  if (!tags.some((t) => childByTag(adNode, t))) return;
+  comp.removeAllProperties("email");
   for (let i = 0; i < 3; i++) {
     const v = readPathFrom(adNode, [`Email${i + 1}Address`]);
     if (!v) continue;
@@ -352,6 +379,8 @@ function buildMailbox(name, email) {
 /* ── WebPage ───────────────────────────────────────────────────────── */
 
 function readWeb(adNode, comp) {
+  if (!childByTag(adNode, "WebPage")) return;
+  comp.removeAllProperties("url");
   const v = readPathFrom(adNode, ["WebPage"]);
   if (v) comp.addPropertyWithValue("url", v);
 }
@@ -364,6 +393,21 @@ function writeWeb(b, comp) {
 /* ── Phones ────────────────────────────────────────────────────────── */
 
 function readPhones(adNode, comp) {
+  // Merge-aware: clear all TEL when any phone tag is present in the AD.
+  // Server's partial-Change asserts the full phone set whenever it
+  // touches any phone field.
+  const phoneTags = [
+    "MobilePhoneNumber",
+    "PagerNumber",
+    "HomeFaxNumber",
+    "HomePhoneNumber",
+    "Home2PhoneNumber",
+    "BusinessPhoneNumber",
+    "Business2PhoneNumber",
+    ...Object.keys(PREFIXED_PHONES),
+  ];
+  if (!phoneTags.some((t) => childByTag(adNode, t))) return;
+  comp.removeAllProperties("tel");
   // Standard types: emit single-value lowercase TYPE param matching TB's
   // native vCard 4 export shape (TEL;TYPE=home, TEL;TYPE=fax, …). Legacy
   // did the same; we deliberately omit the redundant `voice` qualifier
@@ -487,6 +531,15 @@ const ADDRESS_KINDS = [
 ];
 
 function readAddresses(adNode, comp, separator) {
+  // Merge-aware: clear all ADR when any address field is present in the
+  // AD. Server's partial-Change asserts the full address set whenever
+  // it touches any of the address sub-tags.
+  const fields = ["Street", "City", "State", "PostalCode", "Country"];
+  const hasAny = ADDRESS_KINDS.some((k) =>
+    fields.some((f) => childByTag(adNode, k.wbxmlPrefix + f)),
+  );
+  if (!hasAny) return;
+  comp.removeAllProperties("adr");
   for (const kind of ADDRESS_KINDS) {
     const street = readPathFrom(adNode, [kind.wbxmlPrefix + "Street"]) ?? "";
     const city = readPathFrom(adNode, [kind.wbxmlPrefix + "City"]) ?? "";
@@ -571,15 +624,23 @@ function separatorChar(separator) {
 /* ── Organization ──────────────────────────────────────────────────── */
 
 function readOrganization(adNode, comp) {
-  const company = readPathFrom(adNode, ["CompanyName"]) ?? "";
-  const dept = readPathFrom(adNode, ["Department"]) ?? "";
-  const title = readPathFrom(adNode, ["JobTitle"]) ?? "";
-  if (company || dept) {
-    const prop = new ICAL.Property("org", comp);
-    prop.setValue(dept ? [company, dept] : company);
-    comp.addProperty(prop);
+  // Merge-aware: ORG (CompanyName + Department) is asserted whenever
+  // either tag is present in the AD; JobTitle is independent.
+  if (childByTag(adNode, "CompanyName") || childByTag(adNode, "Department")) {
+    comp.removeAllProperties("org");
+    const company = readPathFrom(adNode, ["CompanyName"]) ?? "";
+    const dept = readPathFrom(adNode, ["Department"]) ?? "";
+    if (company || dept) {
+      const prop = new ICAL.Property("org", comp);
+      prop.setValue(dept ? [company, dept] : company);
+      comp.addProperty(prop);
+    }
   }
-  if (title) comp.updatePropertyWithValue("title", title);
+  if (childByTag(adNode, "JobTitle")) {
+    comp.removeAllProperties("title");
+    const title = readPathFrom(adNode, ["JobTitle"]);
+    if (title) comp.updatePropertyWithValue("title", title);
+  }
 }
 
 function writeOrganization(b, comp) {
@@ -596,9 +657,12 @@ function writeOrganization(b, comp) {
 /* ── Notes / Body (codepage-aware) ─────────────────────────────────── */
 
 function readNote(adNode, comp, asVersion) {
+  // Merge-aware: <Body> presence asserts the server's authoritative
+  // note state; an empty/missing <Data> clears the local note.
+  const bodyNode = childByTag(adNode, "Body");
+  if (!bodyNode) return;
+  comp.removeAllProperties("note");
   if (useAirSyncBaseBody(asVersion)) {
-    const bodyNode = childByTag(adNode, "Body");
-    if (!bodyNode) return;
     const data = readPathFrom(bodyNode, ["Data"]);
     if (data) comp.updatePropertyWithValue("note", data);
   } else {
@@ -648,6 +712,8 @@ function useAirSyncBaseBody(asVersion) {
 /* ── Picture ───────────────────────────────────────────────────────── */
 
 function readPicture(adNode, comp) {
+  if (!childByTag(adNode, "Picture")) return;
+  comp.removeAllProperties("photo");
   const v = readPathFrom(adNode, ["Picture"]);
   if (!v) return;
   const prop = new ICAL.Property("photo", comp);
@@ -670,6 +736,10 @@ function writePicture(b, comp) {
 function readCategories(adNode, comp) {
   const cats = childByTag(adNode, "Categories");
   if (!cats) return;
+  // Merge-aware: <Categories> presence asserts the full set; clear
+  // first so the AD's children replace the prior list (and an empty
+  // <Categories/> clears it).
+  comp.removeAllProperties("categories");
   const list = readChildTexts(cats, "Category");
   if (list.length) {
     const prop = new ICAL.Property("categories", comp);
@@ -691,11 +761,17 @@ function writeCategories(b, comp) {
 /* ── NickName + IM (Contacts2 codepage) ────────────────────────────── */
 
 function readNickName(adNode, comp) {
+  if (!childByTag(adNode, "NickName")) return;
+  comp.removeAllProperties("nickname");
   const v = readPathFrom(adNode, ["NickName"]);
   if (v) comp.updatePropertyWithValue("nickname", v);
 }
 
 function readIMs(adNode, comp) {
+  // Merge-aware: any IMAddress* tag in the AD asserts the full IM set.
+  const tags = ["IMAddress", "IMAddress2", "IMAddress3"];
+  if (!tags.some((t) => childByTag(adNode, t))) return;
+  comp.removeAllProperties("impp");
   for (let i = 0; i < 3; i++) {
     const tag = i === 0 ? "IMAddress" : `IMAddress${i + 1}`;
     const v = readPathFrom(adNode, [tag]);
@@ -719,6 +795,8 @@ function writeIMs(b, comp) {
 function readChildren(adNode, comp) {
   const node = childByTag(adNode, "Children");
   if (!node) return;
+  // Merge-aware: <Children> presence asserts the full set; clear first.
+  comp.removeAllProperties("x-eas-children");
   const names = readChildTexts(node, "Child");
   if (names.length)
     comp.addPropertyWithValue("x-eas-children", JSON.stringify(names));
@@ -742,9 +820,14 @@ function writeChildren(b, comp) {
 /* ── Pass-through / opaque fields ──────────────────────────────────── */
 
 function readPassThroughs(adNode, comp) {
+  // Merge-aware: each pass-through tag is independent; treat it as
+  // "tag absent → leave existing alone, tag present → replace".
   for (const tag of PASS_THROUGH_FIELDS) {
+    if (!childByTag(adNode, tag)) continue;
+    const key = passThroughVcardKey(tag);
+    comp.removeAllProperties(key);
     const v = readPathFrom(adNode, [tag]);
-    if (v) comp.addPropertyWithValue(passThroughVcardKey(tag), v);
+    if (v) comp.addPropertyWithValue(key, v);
   }
 }
 
@@ -770,8 +853,11 @@ function passThroughVcardKey(tag) {
 
 function readCustomFields(adNode, comp) {
   // Read side is namespace-agnostic - readPathFrom walks the parsed DOM
-  // regardless of which WBXML codepage the tag came from.
+  // regardless of which WBXML codepage the tag came from. Merge-aware:
+  // each custom slot is independent; tag-present-but-empty clears.
   for (const [tag, slot] of Object.entries(CUSTOM_FIELD_MAP)) {
+    if (!childByTag(adNode, tag)) continue;
+    comp.removeAllProperties(slot);
     const v = readPathFrom(adNode, [tag]);
     if (v) comp.updatePropertyWithValue(slot, v);
   }
