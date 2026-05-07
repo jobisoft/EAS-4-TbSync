@@ -102,17 +102,13 @@ const ICON_PATHS_BY_SERVERTYPE = {
   custom: { 16: "icons/eas16.png", 32: "icons/eas32.png" },
 };
 
-/** Build the size-keyed absolute-URL map TbSync's REGISTER_ACCOUNT.icon
+/** Build the size-keyed relative-path map TbSync's REGISTER_ACCOUNT.icon
  *  expects, for the given account flavour. Returns null for unknown
- *  servertypes so the host falls back to the provider-wide icon set. */
+ *  servertypes so the host falls back to the provider-wide icon set.
+ *  TbSync resolves the paths against this extension's URL prefix at
+ *  render time, so absolute URLs never reach persistent storage. */
 export function iconForServerType(servertype) {
-  const paths = ICON_PATHS_BY_SERVERTYPE[servertype];
-  if (!paths) return null;
-  const out = {};
-  for (const [size, path] of Object.entries(paths)) {
-    out[size] = browser.runtime.getURL(path);
-  }
-  return out;
+  return ICON_PATHS_BY_SERVERTYPE[servertype] ?? null;
 }
 
 // ── EAS folder Type → TbSync folder type ─────────────────────────────────
