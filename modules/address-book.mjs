@@ -9,7 +9,14 @@ export async function createBook(name) {
   if (!name || typeof name !== "string" || !name.trim()) {
     throw new Error("createBook requires a non-empty name");
   }
-  return await messenger.addressBooks.create({ name: name.trim() });
+  const id = await messenger.addressBooks.create({ name: name.trim() });
+  // Workaround for TB bug in ext-addressBook.js:707-710 where the
+  // contact-node cache misses property updates until contacts.list()
+  // has been called at least once for the parent book. Without this
+  // seed, the host's content-hash gate sees stale vCards on the
+  // first edit and treats real changes as ghosts.
+  await messenger.contacts.list(id);
+  return id;
 }
 
 /** Delete a book, tolerating "not found". */
