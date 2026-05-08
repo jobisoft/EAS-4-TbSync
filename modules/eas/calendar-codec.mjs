@@ -74,6 +74,7 @@ export function applicationDataToIcal({
   syncRecurrence,
   uid,
   userEmail,
+  eventLog,
 }) {
   // Merge mode: parse the existing iCal and overlay only fields the AD
   // mentions. Fall through to a fresh build when there's no existing
@@ -98,6 +99,18 @@ export function applicationDataToIcal({
 
   if (uid) vevent.updatePropertyWithValue("uid", uid);
   vevent.updatePropertyWithValue(X_EAS_SERVERID.toLowerCase(), serverID);
+
+  if (eventLog) {
+    const orgEmailRaw = readPathFrom(adNode, ["OrganizerEmail"]);
+    const orgNameRaw = readPathFrom(adNode, ["OrganizerName"]);
+    const hasOrgInfo =
+      childByTag(adNode, "OrganizerEmail") ||
+      childByTag(adNode, "OrganizerName");
+    eventLog(
+      "info",
+      `[calendar-codec] receive OrganizerInfo: present=${!!hasOrgInfo} OrganizerEmail=${JSON.stringify(orgEmailRaw ?? null)} OrganizerName=${JSON.stringify(orgNameRaw ?? null)}`,
+    );
+  }
 
   populateVeventFromAd({
     adNode,
@@ -236,10 +249,9 @@ function populateVeventFromAd({
   // OrganizerEmail or OrganizerName being present in the AD.
   const orgEmail = readPathFrom(adNode, ["OrganizerEmail"]);
   const orgName = readPathFrom(adNode, ["OrganizerName"]);
-  if (
-    childByTag(adNode, "OrganizerEmail") ||
-    childByTag(adNode, "OrganizerName")
-  ) {
+  const hasOrgInfo =
+    childByTag(adNode, "OrganizerEmail") || childByTag(adNode, "OrganizerName");
+  if (hasOrgInfo) {
     vevent.removeAllProperties("organizer");
     if (orgEmail) {
       const prop = new ICAL.Property("organizer", vevent);
@@ -512,12 +524,27 @@ export function appendApplicationDataFromIcal({
   // either - it just stashed it; we lift it on emit here).
   if (asVersion !== "16.1" && !isException) {
     const orgProp = vevent.getFirstProperty("organizer");
+    const localEmail = orgProp ? stripMailto(orgProp.getFirstValue()) : null;
+    const localCn = orgProp?.getParameter("cn") ?? null;
+    let emittedEmail = null;
+    let emittedName = null;
     if (orgProp) {
-      const cn = orgProp.getParameter("cn");
+      const cn = localCn;
       const name = cn || fallbackOrganizerName;
-      if (name) builder.atag("OrganizerName", name);
-      const email = stripMailto(orgProp.getFirstValue());
-      if (email) builder.atag("OrganizerEmail", email);
+      if (name) {
+        builder.atag("OrganizerName", name);
+        emittedName = name;
+      }
+      if (localEmail) {
+        builder.atag("OrganizerEmail", localEmail);
+        emittedEmail = localEmail;
+      }
+    }
+    if (eventLog) {
+      eventLog(
+        "info",
+        `[calendar-codec] push OrganizerInfo: local ORGANIZER email=${JSON.stringify(localEmail)} cn=${JSON.stringify(localCn)} → emitted OrganizerEmail=${JSON.stringify(emittedEmail)} OrganizerName=${JSON.stringify(emittedName)}`,
+      );
     }
   }
 

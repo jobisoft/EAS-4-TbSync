@@ -323,6 +323,13 @@ async function runOneSync({
     itemKind,
     store: itemKind.storeFactory(folder.targetID),
     synckey,
+    // Pre-bound info-level event-log emitter the codec calls when it
+    // converts/drops a VALARM that EAS can't represent, or to surface
+    // ORGANIZER round-trip diagnostics. Built once here so every codec
+    // call site can pass `eventLog: ctx.eventLog` instead of inlining
+    // the closure.
+    eventLog: (level, message) =>
+      provider.reportEventLog({ level, accountId, folderId, message }),
     // Single per-folder index of `{uid, serverId}` pairs. The
     // upgrades.mjs drain runs before any sync RPC, so by the time we
     // get here the persisted shape is guaranteed to be an array (or
@@ -566,6 +573,7 @@ async function revertLocalChanges(ctx) {
       msTodoCompat: ctx.msTodoCompat,
       uid: e.itemId,
       userEmail: ctx.account?.custom?.user,
+      eventLog: ctx.eventLog,
     });
 
     await ctx.provider.changelogMarkServerWrite({
@@ -758,16 +766,7 @@ async function pushPhase(ctx, userEdits) {
           userEmail: ctx.account?.custom?.user,
           fallbackOrganizerName:
             ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
-          // Pre-bound info-level event-log emitter the codec calls when
-          // it converts/drops a VALARM that EAS can't represent (mirrors
-          // legacy's per-event logs at calendarsync.js:402, 405).
-          eventLog: (level, message) =>
-            ctx.provider.reportEventLog({
-              level,
-              accountId: ctx.accountId,
-              folderId: ctx.folderId,
-              message,
-            }),
+          eventLog: ctx.eventLog,
         },
         className: ctx.itemKind.className,
         filterType: ctx.itemKind.filterType,
@@ -1091,6 +1090,7 @@ async function applyAdd(ctx, addNode) {
     msTodoCompat: ctx.msTodoCompat,
     uid: newId,
     userEmail: ctx.account?.custom?.user,
+    eventLog: ctx.eventLog,
   });
   await ctx.provider.changelogMarkServerWrite({
     accountId: ctx.accountId,
@@ -1230,6 +1230,7 @@ async function applyChangeFromAd(ctx, ad, existing) {
     msTodoCompat: ctx.msTodoCompat,
     uid: existing.itemId,
     userEmail: ctx.account?.custom?.user,
+    eventLog: ctx.eventLog,
   });
   await ctx.provider.changelogMarkServerWrite({
     accountId: ctx.accountId,

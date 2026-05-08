@@ -23,6 +23,7 @@ function makeCodec(modCodec) {
       msTodoCompat,
       uid,
       userEmail,
+      eventLog,
     }) {
       return modCodec.applicationDataToIcal({
         adNode,
@@ -34,6 +35,7 @@ function makeCodec(modCodec) {
         msTodoCompat,
         uid,
         userEmail,
+        eventLog,
       });
     },
     appendApplicationDataFromBlob({
