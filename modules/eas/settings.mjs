@@ -37,13 +37,21 @@ const PROVISION_REQUIRED_STATUSES = new Set(["141", "142", "143", "144"]);
 // stay distinguishable in the Exchange admin UI.
 const MODEL = "Computer";
 
-function buildBody({ deviceId, deviceOs, userAgent }) {
+/** Append `<DeviceInformation><Set>…</Set></DeviceInformation>` under
+ *  the Settings codepage. Leaves the writer's codepage state at
+ *  "Settings"; caller switches back to its own codepage if needed.
+ *  Used by both `buildBody` (Settings command, AS 12.x/14.0) and
+ *  `provision.buildInitialBody` (initial Provision, AS 14.1/16.x). */
+export async function appendDeviceInformationSet(w, account) {
+  const [userAgent, deviceOs] = await Promise.all([
+    getUserAgent(),
+    getDeviceOs(),
+  ]);
+  const deviceId = account?.custom?.deviceId;
   if (!deviceId) {
-    throw new Error("settings.buildBody: deviceId is required");
+    throw new Error("appendDeviceInformationSet: deviceId is required");
   }
-  const w = createWBXML();
   w.switchpage("Settings");
-  w.otag("Settings");
   w.otag("DeviceInformation");
   w.otag("Set");
   w.atag("Model", MODEL);
@@ -52,6 +60,13 @@ function buildBody({ deviceId, deviceOs, userAgent }) {
   w.atag("UserAgent", userAgent);
   w.ctag();
   w.ctag();
+}
+
+async function buildBody(account) {
+  const w = createWBXML();
+  w.switchpage("Settings");
+  w.otag("Settings");
+  await appendDeviceInformationSet(w, account);
   w.ctag();
   return w.getBytes();
 }
@@ -61,18 +76,10 @@ function buildBody({ deviceId, deviceOs, userAgent }) {
  *  "Settings" (the OPTIONS-probed command list) and `asVersion != "2.5"`.
  *  Returns null on success. */
 export async function sendDeviceInformation({ account, asVersion }) {
-  const [userAgent, deviceOs] = await Promise.all([
-    getUserAgent(),
-    getDeviceOs(),
-  ]);
   const { doc } = await easRequest({
     account,
     command: "Settings",
-    body: buildBody({
-      deviceId: account?.custom?.deviceId,
-      deviceOs,
-      userAgent,
-    }),
+    body: await buildBody(account),
     asVersion,
   });
   if (!doc) {

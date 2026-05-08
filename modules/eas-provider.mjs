@@ -40,7 +40,11 @@ import { DEBUG_STATUS_DELAY_MS } from "./debug.mjs";
 import { primeAuth, isOAuthAccount } from "./eas/oauth.mjs";
 import { negotiateAsVersion } from "./eas/connect.mjs";
 import { discoverEasServer } from "./eas/autodiscover.mjs";
-import { acquirePolicyKey, NO_POLICY_FOR_DEVICE } from "./eas/provision.mjs";
+import {
+  acquirePolicyKey,
+  NO_POLICY_FOR_DEVICE,
+  PROVISION_EMBEDS_DEVICE_INFO,
+} from "./eas/provision.mjs";
 import { runFolderSync } from "./eas/folder-sync.mjs";
 import { syncContactFolder } from "./eas/contact-sync.mjs";
 import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
@@ -637,6 +641,9 @@ export class EasProvider extends TbSyncProviderImplementation {
 
   async #maybeSendDeviceInformation(account, asVersion) {
     if (asVersion === "2.5") return;
+    // 14.1/16.0/16.1 carry DeviceInformation inside the initial
+    // Provision body and forbid the separate Settings command for it.
+    if (PROVISION_EMBEDS_DEVICE_INFO.has(asVersion)) return;
     if (!easCommandAdvertised(account, "Settings")) return;
     await sendDeviceInformation({ account, asVersion });
   }

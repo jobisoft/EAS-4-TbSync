@@ -26,6 +26,16 @@ import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { easRequest } from "../network.mjs";
 import { readPath } from "./wbxml-helpers.mjs";
+import { appendDeviceInformationSet } from "./settings.mjs";
+
+/** AS versions where the *initial* Provision body MUST embed
+ *  `settings:DeviceInformation` and the Settings command MUST NOT be
+ *  used to convey device info. Per [MS-ASPROV] §3.1.4.1.1. The ACK
+ *  ("subsequent") Provision request still goes out without
+ *  DeviceInformation on these versions. */
+export const PROVISION_EMBEDS_DEVICE_INFO = Object.freeze(
+  new Set(["14.1", "16.0", "16.1"]),
+);
 
 function policyTypeFor(asVersion) {
   return asVersion === "2.5"
@@ -33,10 +43,14 @@ function policyTypeFor(asVersion) {
     : "MS-EAS-Provisioning-WBXML";
 }
 
-function buildInitialBody(asVersion) {
+async function buildInitialBody(asVersion, account) {
   const w = createWBXML();
   w.switchpage("Provision");
   w.otag("Provision");
+  if (PROVISION_EMBEDS_DEVICE_INFO.has(asVersion)) {
+    await appendDeviceInformationSet(w, account);
+    w.switchpage("Provision");
+  }
   w.otag("Policies");
   w.otag("Policy");
   w.atag("PolicyType", policyTypeFor(asVersion));
@@ -89,7 +103,7 @@ export async function acquirePolicyKey({ account, asVersion }) {
   const initial = await easRequest({
     account,
     command: "Provision",
-    body: buildInitialBody(asVersion),
+    body: await buildInitialBody(asVersion, account),
     asVersion,
   });
   if (!initial.doc)
