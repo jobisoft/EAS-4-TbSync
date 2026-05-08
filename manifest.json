@@ -3,12 +3,13 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "eas4tbsync@jobisoft.de",
+      "update_url": "https://raw.githubusercontent.com/jobisoft/tbsync/refs/heads/Main/updates.json",
       "strict_min_version": "140.0",
       "strict_max_version": "151.*"
     }
   },
   "name": "__MSG_extensionName__",
-  "version": "5.0.9",
+  "version": "5.0.10",
   "author": "John Bieling",
   "homepage_url": "https://github.com/jobisoft/EAS-4-TbSync",
   "default_locale": "en-US",
