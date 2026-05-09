@@ -4,6 +4,13 @@
  * wrapper pins `format: "ical"` on every write and `returnFormat: "ical"`
  * on every read so callers never need to think about jCal.
  *
+ * Calendars are created as **ext-type** Lightning calendars owned by
+ * this extension. The user-facing calendar id (`calendar.id`) is what
+ * Lightning routes `provider.onItem*` events on; the cache id
+ * (`calendar.cacheId`) is the writable storage substrate the runner
+ * uses for `items.*` reads/writes during sync. The two are surfaced
+ * separately so callers can keep them straight.
+ *
  * Calendar operations tolerate "not found" (the user may have deleted
  * the calendar manually); item-level reads/writes throw on real errors
  * so the sync orchestrator can surface them.
@@ -11,37 +18,40 @@
 
 const ICAL_FORMAT = "ical";
 
-const STORAGE_TYPE = "storage";
-const STORAGE_URL = "moz-storage-calendar://";
+const EXT_TYPE = "ext-" + browser.runtime.id;
 
 /* ── Calendar level ───────────────────────────────────────────────── */
 
 /**
- * Create a local storage calendar. `kind` is "events" or "tasks", but
- * the experiment rejects `capabilities` on foreign calendar types
- * ("storage" is foreign from our extension's perspective) - so we
- * don't pass it. Each EAS folder syncs into its own calendar and the
- * sync codec dispatch already constrains what gets written, so the
- * local calendar accepting both kinds is harmless.
- * Returns the new calendar id.
+ * Create an ext-type Lightning calendar bound to this extension. Per-
+ * calendar `capabilities` narrow the manifest defaults (e.g. `events:
+ * true, tasks: false` for a Calendar folder; `events: false, tasks:
+ * true` for a Tasks folder) and pin `organizer` / `organizerName` to
+ * the EAS account identity so TB's iTIP code knows who owns the
+ * calendar.
+ *
+ * Returns `{ id, cacheId }`. `id` is what `provider.onItem*` events
+ * route on; `cacheId` is the underlying writable cache calendar.
  */
-export async function createCalendar({ name, kind, color }) {
+export async function createCalendar({ name, color, url, capabilities }) {
   if (!name || typeof name !== "string" || !name.trim()) {
     throw new Error("createCalendar requires a non-empty name");
   }
-  if (kind !== "events" && kind !== "tasks") {
-    throw new Error(
-      `createCalendar requires kind: 'events' | 'tasks' (got ${kind})`,
-    );
+  if (!url || typeof url !== "string") {
+    throw new Error("createCalendar requires a unique url");
   }
   const props = {
     name: name.trim(),
-    type: STORAGE_TYPE,
-    url: STORAGE_URL,
+    type: EXT_TYPE,
+    url,
   };
   if (color) props.color = color;
+  if (capabilities) props.capabilities = capabilities;
   const calendar = await messenger.calendar.calendars.create(props);
-  return calendar?.id ?? calendar;
+  if (!calendar?.id) {
+    throw new Error("createCalendar: calendars.create returned no id");
+  }
+  return { id: calendar.id, cacheId: calendar.cacheId ?? calendar.id };
 }
 
 export async function deleteCalendar(id) {

@@ -532,11 +532,12 @@ export class EasProvider extends TbSyncProviderImplementation {
     //      delta into the existing folder list and push the result.
     //      Skipping the push on no-op deltas avoids an unnecessary
     //      storage write + broadcast.
+    let pushResult = null;
     if (priorFolderSyncKey === "0") {
       const initial = syncResult.adds
         .map((a) => folderDescriptorFromAdd(a))
         .filter(Boolean);
-      await this.pushFolderList({
+      pushResult = await this.pushFolderList({
         accountId,
         folders: await finalizeFolderListForPush(initial),
       });
@@ -546,7 +547,23 @@ export class EasProvider extends TbSyncProviderImplementation {
       syncResult.deletes.length
     ) {
       const merged = await mergeFolderDeltas(ctx.folders, syncResult);
-      await this.pushFolderList({ accountId, folders: merged });
+      pushResult = await this.pushFolderList({ accountId, folders: merged });
+    }
+    // Host hands the calendar / tasks targets back to us — host has no
+    // `messenger.calendar.*` API any more, so the provider does the
+    // local cleanup here. Best-effort; if the calendar was already
+    // gone (user removed it manually), the wrapper tolerates that.
+    if (pushResult?.removedTargets?.length) {
+      for (const t of pushResult.removedTargets) {
+        if (t.targetType === "calendars" || t.targetType === "tasks") {
+          calendarStore.deleteCalendar(t.targetID).catch((err) =>
+            console.debug(
+              `[eas] deleteCalendar(${t.targetID}) failed:`,
+              err?.message ?? err,
+            ),
+          );
+        }
+      }
     }
 
     // 6) Persist the new FolderSync continuation key.
@@ -728,16 +745,45 @@ export class EasProvider extends TbSyncProviderImplementation {
         !(await calendarStore.calendarExists(folder.targetID))
       ) {
         const name = localNameForFolder(folder, ctx);
-        const targetID = await calendarStore.createCalendar({
+        const isEvents = tt === "calendars";
+        const userEmail = ctx.account.custom?.user;
+        const capabilities = {
+          events: isEvents,
+          tasks: !isEvents,
+          ...(userEmail ? { organizer: `mailto:${userEmail}` } : {}),
+          ...(ctx.account.accountName
+            ? { organizerName: ctx.account.accountName }
+            : {}),
+        };
+        const url = `ext+eas://${accountId}/${folderId}`;
+        const { id: targetID, cacheId } = await calendarStore.createCalendar({
           name,
-          kind: tt === "calendars" ? "events" : "tasks",
+          url,
+          capabilities,
         });
         await this.updateFolder({
           accountId,
           folderId,
-          patch: { targetID, targetName: name },
+          patch: {
+            targetID,
+            targetName: name,
+            custom: {
+              ...(folder.custom ?? {}),
+              cacheId,
+              providerCalendar: true,
+            },
+          },
         });
-        folder = { ...folder, targetID, targetName: name };
+        folder = {
+          ...folder,
+          targetID,
+          targetName: name,
+          custom: {
+            ...(folder.custom ?? {}),
+            cacheId,
+            providerCalendar: true,
+          },
+        };
       }
     }
 

@@ -12,7 +12,7 @@
  *       readEasServerIdFromBlob(blob),
  *       stampEasServerId(blob, serverID),
  *     },
- *     storeFactory(targetID) → {
+ *     storeFactory(folder) → {
  *       list()                  → [{id, blob}]
  *       get(id)                 → {id, blob} | null
  *       create(id, blob)        → realId   (asserts id match in createItem flow)
@@ -321,7 +321,7 @@ async function runOneSync({
     syncRecurrence: account.custom?.syncrecurrence === true,
     msTodoCompat,
     itemKind,
-    store: itemKind.storeFactory(folder.targetID),
+    store: itemKind.storeFactory(folder),
     synckey,
     // Pre-bound info-level event-log emitter the codec calls when it
     // converts/drops a VALARM that EAS can't represent, or to surface
@@ -330,6 +330,16 @@ async function runOneSync({
     // the closure.
     eventLog: (level, message) =>
       provider.reportEventLog({ level, accountId, folderId, message }),
+    // Pre-tag suppression for the host watcher's echo-detection. For
+    // ext-type calendars (`folder.custom.providerCalendar === true`)
+    // there's no echo to suppress: provider-driven writes via
+    // `messenger.calendar.items.*` on the cache don't fire
+    // `provider.onItem*`, and the host's generic `calendar.items.on*`
+    // listener has been retired for these folders. The pre-tag is
+    // therefore a no-op.
+    markServerWrite: folder.custom?.providerCalendar
+      ? async () => null
+      : (args) => provider.changelogMarkServerWrite(args),
     // Single per-folder index of `{uid, serverId}` pairs. The
     // upgrades.mjs drain runs before any sync RPC, so by the time we
     // get here the persisted shape is guaranteed to be an array (or
@@ -576,7 +586,7 @@ async function revertLocalChanges(ctx) {
       eventLog: ctx.eventLog,
     });
 
-    await ctx.provider.changelogMarkServerWrite({
+    await ctx.markServerWrite({
       accountId: ctx.accountId,
       folderId: ctx.folderId,
       parentId: ctx.targetID,
@@ -950,7 +960,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       sentEntry.item.blob,
       serverId,
     );
-    await ctx.provider.changelogMarkServerWrite({
+    await ctx.markServerWrite({
       accountId: ctx.accountId,
       folderId: ctx.folderId,
       parentId: ctx.targetID,
@@ -1092,7 +1102,7 @@ async function applyAdd(ctx, addNode) {
     userEmail: ctx.account?.custom?.user,
     eventLog: ctx.eventLog,
   });
-  await ctx.provider.changelogMarkServerWrite({
+  await ctx.markServerWrite({
     accountId: ctx.accountId,
     folderId: ctx.folderId,
     parentId: ctx.targetID,
@@ -1171,7 +1181,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
     return;
   }
 
-  await ctx.provider.changelogMarkServerWrite({
+  await ctx.markServerWrite({
     accountId: ctx.accountId,
     folderId: ctx.folderId,
     parentId: ctx.targetID,
@@ -1232,7 +1242,7 @@ async function applyChangeFromAd(ctx, ad, existing) {
     userEmail: ctx.account?.custom?.user,
     eventLog: ctx.eventLog,
   });
-  await ctx.provider.changelogMarkServerWrite({
+  await ctx.markServerWrite({
     accountId: ctx.accountId,
     folderId: ctx.folderId,
     parentId: ctx.targetID,
@@ -1261,7 +1271,7 @@ async function applyDelete(ctx, delNode) {
   if (!serverID) return;
   const existing = await findExistingByServerId(ctx, serverID);
   if (!existing) return;
-  await ctx.provider.changelogMarkServerWrite({
+  await ctx.markServerWrite({
     accountId: ctx.accountId,
     folderId: ctx.folderId,
     parentId: ctx.targetID,

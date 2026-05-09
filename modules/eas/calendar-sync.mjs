@@ -69,18 +69,24 @@ function makeCodec(modCodec) {
   };
 }
 
-function calendarStoreFactory(targetID, type) {
+/** Store factory: items are written to the **cache** of the ext-type
+ *  calendar (`folder.custom.cacheId`). Lightning's `onItem*` provider
+ *  events route on the user-facing calendar id (`folder.targetID`),
+ *  but the actual write substrate is the paired cache calendar — and
+ *  writes there don't echo as `onItem*` callbacks. */
+function calendarStoreFactory(folder, type) {
+  const cacheId = folder?.custom?.cacheId ?? folder?.targetID;
   return {
     async list() {
-      const all = await calendarStore.listItems(targetID, type);
+      const all = await calendarStore.listItems(cacheId, type);
       return all.map((it) => ({ id: it.id, blob: it.item }));
     },
     async get(id) {
-      const it = await calendarStore.getItem(targetID, id);
+      const it = await calendarStore.getItem(cacheId, id);
       return it ? { id: it.id, blob: it.item } : null;
     },
     async create(id, blob) {
-      const created = await calendarStore.createItem(targetID, {
+      const created = await calendarStore.createItem(cacheId, {
         id,
         type,
         ical: blob,
@@ -88,10 +94,10 @@ function calendarStoreFactory(targetID, type) {
       return created.id;
     },
     async update(id, blob) {
-      await calendarStore.updateItem(targetID, id, { ical: blob });
+      await calendarStore.updateItem(cacheId, id, { ical: blob });
     },
     async delete(id) {
-      await calendarStore.deleteItem(targetID, id);
+      await calendarStore.deleteItem(cacheId, id);
     },
   };
 }
@@ -101,7 +107,7 @@ const calendarItemKind = {
   filterType: "0",
   changelogKind: "event",
   codec: makeCodec(eventCodec),
-  storeFactory: (targetID) => calendarStoreFactory(targetID, "event"),
+  storeFactory: (folder) => calendarStoreFactory(folder, "event"),
 };
 
 const taskItemKind = {
@@ -109,7 +115,7 @@ const taskItemKind = {
   filterType: "0",
   changelogKind: "task",
   codec: makeCodec(taskCodec),
-  storeFactory: (targetID) => calendarStoreFactory(targetID, "task"),
+  storeFactory: (folder) => calendarStoreFactory(folder, "task"),
 };
 
 async function getDefaultTimezone() {

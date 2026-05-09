@@ -73,7 +73,7 @@ const contactItemKind = {
   filterType: "0",
   changelogKind: "contact",
   codec,
-  storeFactory: contactStoreFactory,
+  storeFactory: (folder) => contactStoreFactory(folder.targetID),
 };
 
 export async function syncContactFolder({

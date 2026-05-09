@@ -22,6 +22,7 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
+import { createWBXML } from "../wbxml.mjs";
 import { readPathFrom } from "./wbxml-helpers.mjs";
 import { TimeZoneBlob, isAllZero } from "./timezone-blob.mjs";
 import {
@@ -706,6 +707,50 @@ export function appendApplicationDataFromIcal({
       });
     }
   }
+}
+
+/* ── MeetingResponse ───────────────────────────────────────────────── */
+
+/** Build the WBXML body for an EAS `MeetingResponse` command. Use when
+ *  the user has accepted / declined / tentatived an iTIP invitation
+ *  (`provider.onItemUpdated` with `options.invitation: true`) — the
+ *  spec-correct path is to send `MeetingResponse` rather than
+ *  `Sync Change`, so the server records the user's response without
+ *  re-attributing the meeting. The codec primitive is exposed for the
+ *  runner to invoke when wired up; today's runner falls through to
+ *  `Sync Change` and relies on per-calendar `capabilities.organizer`
+ *  to keep the local ORGANIZER intact across the round-trip.
+ *
+ *  `userResponse`: 1 = Accepted, 2 = Tentative, 3 = Declined.
+ *  `requestId`:    EAS ServerId of the invitation event.
+ *  `collectionId`: EAS folder id of the calendar holding it.
+ */
+export function buildMeetingResponseBody({
+  userResponse,
+  requestId,
+  collectionId,
+  instanceId,
+}) {
+  if (![1, 2, 3].includes(userResponse)) {
+    throw new Error(
+      `buildMeetingResponseBody: userResponse must be 1|2|3 (got ${userResponse})`,
+    );
+  }
+  if (!requestId) throw new Error("buildMeetingResponseBody requires requestId");
+  if (!collectionId)
+    throw new Error("buildMeetingResponseBody requires collectionId");
+
+  const w = createWBXML();
+  w.switchpage("MeetingResponse");
+  w.otag("MeetingResponse");
+  w.otag("Request");
+  w.atag("UserResponse", String(userResponse));
+  w.atag("CollectionId", String(collectionId));
+  w.atag("RequestId", String(requestId));
+  if (instanceId) w.atag("InstanceId", String(instanceId));
+  w.ctag();
+  w.ctag();
+  return w.getBytes();
 }
 
 /* ── ID stamping ───────────────────────────────────────────────────── */

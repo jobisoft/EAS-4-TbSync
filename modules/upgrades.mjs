@@ -153,7 +153,7 @@ export const UPGRADES = [
             message: `[upgrade] account-icon lift failed: ${err?.message ?? String(err)}`,
           });
         }
-      }      
+      }
     },
   },
 ];

@@ -1,6 +1,7 @@
 import { EasProvider } from "./modules/eas-provider.mjs";
 import { startAuth } from "./modules/eas/oauth.mjs";
 import { discoverEasServer } from "./modules/eas/autodiscover.mjs";
+import * as calendarProvider from "./modules/eas/calendar-provider.mjs";
 import { runUpgrades, enqueueUpgradesForUpdate } from "./modules/upgrades.mjs";
 import { installAnchorMailboxInjector } from "./modules/anchor-mailbox.mjs";
 
@@ -120,6 +121,7 @@ browser.runtime.onMessage.addListener(async (msg) => {
 });
 
 provider.init();
+calendarProvider.init(provider);
 
 // ── One-shot upgrade runner ──────────────────────────────────────────────
 //

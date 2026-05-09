@@ -233,6 +233,18 @@ export class TbSyncProviderImplementation {
   changelogMoveToTail(args) {
     return this.#sendCmd(PROVIDER_CMD.CHANGELOG_MOVE_TO_TAIL, args);
   }
+  /** Provider-driven `_by_user` row append. Use when the provider owns
+   *  the local resource and observes user edits directly (e.g. EAS
+   *  calendar via `provider.onItem*` events) — the host's built-in
+   *  observer doesn't fire for those, so the provider takes over the
+   *  changelog-write side. The host applies the same state-machine
+   *  transitions the watcher uses (add+del cancels, etc.).
+   *  args: `{accountId, folderId, parentId, itemId, kind, op}` where
+   *    op   = "created" | "updated" | "deleted"
+   *    kind = "event" | "task" | "contact" | "list" */
+  changelogAppendUserEntry(args) {
+    return this.#sendCmd(PROVIDER_CMD.CHANGELOG_APPEND_USER_ENTRY, args);
+  }
 
   /** Provider-scoped upgrade lock. While `locked: true`, the host
    *  refuses every user-initiated RPC against any account belonging to
