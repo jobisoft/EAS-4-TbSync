@@ -4,6 +4,38 @@ This provider add-on adds Exchange ActiveSync (EAS v2.5, v14.0, 14.1 & v16.1) sy
 
 More information can be found in the [wiki](https://github.com/jobisoft/EAS-4-TbSync/wiki/About:-Provider-for-Exchange-ActiveSync) of this repository
 
+## Known limitations
+
+### Recurring events from a foreign time zone (±1 hour DST drift)
+
+A recurring series can drift by one hour around daylight-saving transitions
+**only when all three of the following hold**:
+
+1. the series was authored in a different time zone than your Thunderbird
+   default zone, **and**
+2. the server provides no usable time-zone information on the wire — this is
+   the case for EAS 16.0/16.1 (which carries no per-event `TimeZone` element)
+   and for servers that send an all-zero `TimeZone` blob (e.g. Z-Push, Kopano,
+   Grommunio), **and**
+3. the occurrence falls in a different DST state than the series master.
+
+In that situation the authoring zone is simply not transmitted, so the series
+is anchored to your default zone and individual occurrences across a DST
+boundary can be off by an hour. This is inherent to the protocol payload, not
+something the client can recover.
+
+Not affected:
+
+* Real Exchange ≤14.x — it sends a full `TimeZone` blob, which is matched back
+  to the correct IANA zone (including disambiguation between same-offset zones
+  such as Berlin/Paris via their DST transition dates).
+* Single, non-recurring events — their exact UTC instant is always preserved.
+* All-day events on the inbound/display path — the calendar date is read back
+  correctly for both server families (real-blob and no/empty-blob), in every
+  host time zone. (Pushing an all-day event *back* to a non-Exchange server
+  that ignores the `TimeZone` blob we send can still shift the date by a day
+  for users east of UTC; real Exchange round-trips cleanly.)
+
 ## Want to add or fix a localization?
 To help translating this project, please visit [crowdin.com](https://crowdin.com/profile/jobisoft), where the localizations are managed. If you want to add a new language, just contact me and I will set it up.
 

@@ -148,6 +148,25 @@ async function loadInternal() {
     defaultInfo.std.windowsZoneName = ianaToWindows[currentZone];
   }
 
+  // 5) Pre-index the DST-transition rules by std:dst offset for the
+  //    resolver's Tier-3.5 disambiguation. Only zones that carry a parsed
+  //    nth-weekday rule on BOTH sides can ever match a blob's SYSTEMTIME
+  //    dates, so the rest are skipped here. Building this once at load time
+  //    turns the per-event Tier-3.5 lookup from an O(all-zones) scan into
+  //    an O(same-offset-bucket) one. Sorted tzid order makes the resolver's
+  //    pick deterministic across runs for rule-identical siblings (the
+  //    default zone is still preferred at resolve time, regardless of order).
+  cached.rulesByOffset = Object.create(null);
+  for (const tzid of Object.keys(cached.iana).sort()) {
+    const info = cached.iana[tzid];
+    const stdRule = info.std?.switchdate;
+    const dstRule = info.dst?.switchdate;
+    if (!stdRule || !dstRule) continue;
+    const key = `${info.std.offset}:${info.dst.offset}`;
+    if (!cached.rulesByOffset[key]) cached.rulesByOffset[key] = [];
+    cached.rulesByOffset[key].push({ tzid, stdRule, dstRule });
+  }
+
   _state = {
     windowsToIana,
     ianaToWindows,
@@ -249,31 +268,37 @@ function parseTzSubcomponent(vtimezone, kind, tzid) {
   const dtstart = sub.getFirstPropertyValue("dtstart");
   if (rrule && dtstart) {
     const rules = parseRRule(rrule);
-    if (
-      rules.FREQ === "YEARLY" &&
-      rules.BYDAY &&
-      rules.BYMONTH &&
-      rules.BYDAY.length > 2
-    ) {
-      const month = parseInt(rules.BYMONTH, 10);
-      const dayCode = rules.BYDAY.slice(-2);
-      let weekOfMonth = parseInt(rules.BYDAY.slice(0, -2), 10);
-      // SYSTEMTIME's wDay range is 1..5 where 5 means "last". Legacy
-      // clamps anything out of range (and negative "last-N" rules) to 5.
-      if (Number.isNaN(weekOfMonth) || weekOfMonth < 0 || weekOfMonth > 5) {
-        weekOfMonth = 5;
+    if (rules.FREQ === "YEARLY" && rules.BYDAY && rules.BYMONTH) {
+      // The ordinal week can be carried inline in BYDAY ("-1SU", "2SU") or
+      // split out into BYSETPOS ("BYDAY=SU;BYSETPOS=-1"); accept both so we
+      // don't silently drop the DST rule (and emit a contradictory blob)
+      // for zones the tzdata expresses the second way. Use the last
+      // weekday token if several are listed. SYSTEMTIME's wDay is 1..5
+      // where 5 means "last", so negative / out-of-range ordinals clamp
+      // to 5.
+      const lastDay = String(rules.BYDAY).split(",").pop().trim();
+      const m = /^([+-]?\d*)([A-Z]{2})$/.exec(lastDay);
+      if (m) {
+        const dayCode = m[2];
+        let ordinal = m[1] !== "" ? parseInt(m[1], 10) : NaN;
+        if (Number.isNaN(ordinal) && rules.BYSETPOS != null) {
+          ordinal = parseInt(rules.BYSETPOS, 10);
+        }
+        const weekOfMonth =
+          Number.isNaN(ordinal) || ordinal < 0 || ordinal > 5 ? 5 : ordinal;
+        let dayOfWeek = DAYS.indexOf(dayCode);
+        if (dayOfWeek < 0) dayOfWeek = 0;
+        const month = parseInt(rules.BYMONTH, 10);
+        const time = parseDtstartTime(dtstart);
+        obj.switchdate = {
+          month,
+          dayOfWeek,
+          weekOfMonth,
+          hour: time.hour,
+          minute: time.minute,
+          second: time.second,
+        };
       }
-      let dayOfWeek = DAYS.indexOf(dayCode);
-      if (dayOfWeek < 0) dayOfWeek = 0;
-      const time = parseDtstartTime(dtstart);
-      obj.switchdate = {
-        month,
-        dayOfWeek,
-        weekOfMonth,
-        hour: time.hour,
-        minute: time.minute,
-        second: time.second,
-      };
     }
   }
 
@@ -311,13 +336,39 @@ function parseDtstartTime(dtstart) {
   };
 }
 
-/** Inbound: given the std/dst offsets and the (possibly Windows) zone name
- *  carried in the EAS blob, return the IANA tzid that best matches.
- *  Mirrors legacy `eas.tools.guessTimezoneByStdDstOffset`.
+/** Compare a per-zone parsed switchdate against a blob-derived rule.
+ *  Both carry { month, weekOfMonth (1..5, 5=last), dayOfWeek (0..6) }.
+ *  False when either side is missing (zones without a parsed nth-weekday
+ *  rule never match). Hour/minute are intentionally ignored: the EAS
+ *  SYSTEMTIME local switch time and the IANA rule's wall time can differ
+ *  while still denoting the same zone. */
+function switchdateMatches(sd, rule) {
+  if (!sd || !rule) return false;
+  return (
+    sd.month === rule.month &&
+    sd.weekOfMonth === rule.weekOfMonth &&
+    sd.dayOfWeek === rule.dayOfWeek
+  );
+}
+
+/** Inbound: given the std/dst offsets, the (possibly Windows) zone name,
+ *  and optionally the DST transition rule carried in the EAS blob, return
+ *  the IANA tzid that best matches. Mirrors legacy
+ *  `eas.tools.guessTimezoneByStdDstOffset`, plus a transition-rule tier
+ *  that disambiguates same-offset zones.
+ *
+ *  `dstRule`, when provided, is `{ std:{month,weekOfMonth,dayOfWeek},
+ *  dst:{...} }` derived from the blob's StandardDate/DaylightDate
+ *  SYSTEMTIMEs (see calendar-codec `dstRuleFromBlob`).
  *
  *  Synchronous; the caller must `await ensureLoaded()` earlier in the
  *  sync entry point. Throws if called before initialisation. */
-export function guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName) {
+export function guessTimezoneByStdDstOffset(
+  stdOffset,
+  dstOffset,
+  stdName,
+  dstRule = null,
+) {
   if (!_state) {
     throw new Error("timezone-mapping: ensureLoaded() must be awaited first");
   }
@@ -355,6 +406,33 @@ export function guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName) {
     const fromAbbr = cached.abbreviations[part];
     if (fromAbbr && cached.iana[fromAbbr]?.std.offset === stdOffset) {
       return fromAbbr;
+    }
+  }
+
+  // Tier 3.5: when the name didn't resolve, many zones share these offsets
+  // (all of Western Europe is UTC+1/+2) and the blob carries DST switch
+  // dates, pick the zone whose transition rule matches. Without this the
+  // pure-offset fallback below collapses every same-offset zone onto a
+  // single tzid, so a recurring event whose true zone switches DST on a
+  // different date drifts by an hour around the transition. The candidate
+  // bucket is pre-indexed by offset and pre-sorted at load time, so this is
+  // a small deterministic scan. Prefer the user's default zone when it is
+  // itself a rule match (harmless tie-break among rule-identical siblings,
+  // e.g. Berlin vs. Paris).
+  if (dstRule) {
+    const bucket = cached.rulesByOffset[`${stdOffset}:${dstOffset}`];
+    if (bucket) {
+      let firstMatch = null;
+      for (const cand of bucket) {
+        if (
+          switchdateMatches(cand.stdRule, dstRule.std) &&
+          switchdateMatches(cand.dstRule, dstRule.dst)
+        ) {
+          if (cand.tzid === defaultTimezone) return cand.tzid;
+          if (!firstMatch) firstMatch = cand.tzid;
+        }
+      }
+      if (firstMatch) return firstMatch;
     }
   }
 

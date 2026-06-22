@@ -755,8 +755,28 @@ function resolveTimezone(adNode, defaultTimezone) {
   const stdOffset = blob.utcOffset;
   const dstOffset = blob.daylightBias + blob.utcOffset;
   const stdName = blob.standardName;
-  const tzid = guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName);
+  // The SYSTEMTIME transition dates distinguish zones that share an
+  // offset but switch DST on different dates; pass them so the resolver
+  // can pick the right one instead of collapsing every UTC+1/+2 zone onto
+  // a single fallback (which makes recurring events drift by an hour
+  // around the mismatched transition).
+  const dstRule = dstRuleFromBlob(blob);
+  const tzid = guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName, dstRule);
   return { tzId: tzid || defaultTimezone || "UTC", fromBlob: true };
+}
+
+/** Extract the nth-weekday DST transition rule from a decoded TimeZone
+ *  blob's StandardDate / DaylightDate SYSTEMTIMEs, in the same shape the
+ *  timezone-mapping resolver stores per IANA zone. Returns null when the
+ *  blob carries no DST (wMonth === 0). */
+function dstRuleFromBlob(blob) {
+  const std = blob.standardDate;
+  const dst = blob.daylightDate;
+  if (!std || !dst || std.wMonth === 0 || dst.wMonth === 0) return null;
+  return {
+    std: { month: std.wMonth, weekOfMonth: std.wDay, dayOfWeek: std.wDayOfWeek },
+    dst: { month: dst.wMonth, weekOfMonth: dst.wDay, dayOfWeek: dst.wDayOfWeek },
+  };
 }
 
 function buildTimezoneBlob(vevent, defaultTimezone) {
@@ -767,13 +787,20 @@ function buildTimezoneBlob(vevent, defaultTimezone) {
   const blob = new TimeZoneBlob();
   blob.utcOffset = tzInfo.std.offset;
   blob.standardBias = 0;
-  blob.daylightBias = tzInfo.dst.offset - tzInfo.std.offset;
+  // Only advertise DST when we can also supply the SYSTEMTIME transition
+  // dates. A non-zero daylightBias with all-zero StandardDate/DaylightDate
+  // is contradictory: per the Windows TIME_ZONE_INFORMATION rules a zero
+  // wMonth means "no DST" (DaylightBias then ignored), but some servers
+  // honour the bias and apply DST year-round (or not at all), shifting the
+  // event by an hour for part of the year. Keep the blob consistent.
+  const hasDstRule = !!(tzInfo.std.switchdate && tzInfo.dst.switchdate);
+  blob.daylightBias = hasDstRule ? tzInfo.dst.offset - tzInfo.std.offset : 0;
   blob.standardName = tzInfo.stdWinName;
   blob.daylightName = tzInfo.dstWinName;
 
   // SYSTEMTIME-shaped switch dates, only when both std and dst rules exist
   // (no-DST zones leave both SYSTEMTIMEs zero-filled and daylightBias=0).
-  if (tzInfo.std.switchdate && tzInfo.dst.switchdate) {
+  if (hasDstRule) {
     const std = blob.standardDate;
     std.wMonth = tzInfo.std.switchdate.month;
     std.wDay = tzInfo.std.switchdate.weekOfMonth;
