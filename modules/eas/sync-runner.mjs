@@ -213,7 +213,11 @@ export async function runItemSync({
       defaultTimezone,
     });
     if (result.code === "RESYNC" && attempt === 0) {
-      const reset = { synckey: "0", indexMap: [] };
+      // EAS ServerIds are stable across synckey resets, so the existing
+      // uid↔serverId map stays valid and MUST be kept — clearing it would
+      // make the full re-pull re-create every item as a duplicate. Reset
+      // only the synckey.
+      const reset = { synckey: "0" };
       await provider.updateFolder({
         accountId,
         folderId,
@@ -353,8 +357,9 @@ async function runOneSync({
       ctx.synckey = "0";
       synckey = "0";
       ctx.syncKeyDirty = true;
-      ctx.indexMap = [];
-      ctx.indexMapDirty = true;
+      // Keep indexMap: ServerIds survive the synckey reset, so the re-pull
+      // re-attaches to existing local items via findExistingByServerId
+      // instead of duplicating them.
     }
   }
 
@@ -1222,7 +1227,9 @@ async function applyChangeFromAd(ctx, ad, existing) {
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
     existingBlob: existing.blob,
-    serverID: ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
+    serverID:
+      findServerIdByUid(ctx, existing.itemId) ??
+      ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
     asVersion: ctx.asVersion,
     separator: ctx.separator,
     defaultTimezone: ctx.defaultTimezone,
@@ -1542,15 +1549,67 @@ function parseSyncResponse(doc) {
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
-/** Look up the local item by its EAS server-side id. Resolves the
- *  uid via the persistent indexMap, then fetches the current blob from
- *  the live store. Returns `{ itemId, blob }` or null. */
+/** Look up the local item by its EAS server-side id. Resolves the uid via
+ *  the persistent indexMap, then fetches the current blob from the live
+ *  store. When the indexMap has no (or a stale) entry — after a synckey
+ *  reset, an interrupted sync that never flushed it, or a legacy→v5
+ *  migration that couldn't populate it — fall back to scanning the store
+ *  for the item carrying this ServerId (codecs stamp it as X-EAS-SERVERID,
+ *  and legacy v4 used the calendar item id itself). Re-attaching here
+ *  keeps a re-pulled item matched to its existing local copy instead of
+ *  creating a duplicate, and lets partial Changes merge rather than
+ *  rebuild from scratch (which would drop the title). Returns
+ *  `{ itemId, blob }` or null. */
 async function findExistingByServerId(ctx, serverId) {
   const entry = ctx.indexMap.find((e) => e.serverId === serverId);
-  if (!entry) return null;
-  const item = await ctx.store.get(entry.uid);
-  if (!item) return null;
-  return { itemId: entry.uid, blob: item.blob };
+  if (entry) {
+    const item = await ctx.store.get(entry.uid);
+    if (item) return { itemId: entry.uid, blob: item.blob };
+    // Stale entry (item deleted locally): fall through to the store scan
+    // so we don't misclassify a re-add as a brand-new item.
+  }
+  const found = await findInStoreByServerId(ctx, serverId);
+  if (found) {
+    upsertIndexMap(ctx, found.itemId, serverId);
+    return found;
+  }
+  return null;
+}
+
+/** Build (lazily, once per sync pass) a ServerId→{itemId, blob} index by
+ *  reading every local item's stamped X-EAS-SERVERID, plus a by-id index
+ *  for the legacy v4 convention (item id === ServerId). Cached on `ctx`
+ *  so repeated indexMap misses in the same pass don't re-list the store.
+ *  Only ever runs when the indexMap actually misses (the recovery paths
+ *  above); steady-state syncs never pay for it. */
+async function findInStoreByServerId(ctx, serverId) {
+  if (!ctx._serverIdScan) {
+    ctx._serverIdScan = (async () => {
+      const byStamp = new Map();
+      const byId = new Map();
+      try {
+        const all = await ctx.store.list();
+        for (const it of all) {
+          const record = { itemId: it.id, blob: it.blob };
+          byId.set(it.id, record);
+          const sid = ctx.itemKind.codec.readEasServerIdFromBlob(it.blob);
+          if (sid) byStamp.set(sid, record);
+        }
+      } catch (err) {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] ServerId store scan failed: ${err?.message ?? String(err)}`,
+        });
+      }
+      return { byStamp, byId };
+    })();
+  }
+  const { byStamp, byId } = await ctx._serverIdScan;
+  // Prefer the explicit X-EAS-SERVERID stamp; fall back to the legacy
+  // id===ServerId convention for items a failed migration never stamped.
+  return byStamp.get(serverId) ?? byId.get(serverId) ?? null;
 }
 
 function findServerIdByUid(ctx, uid) {
