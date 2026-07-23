@@ -66,6 +66,12 @@ function makeCodec(modCodec) {
     applyInstanceChange: modCodec.applyInstanceChange,
     applyInstanceDelete: modCodec.applyInstanceDelete,
     appendInstanceChanges: modCodec.appendInstanceChanges,
+    // Optional invitation-response detection (calendar only). Undefined
+    // for the Tasks codec, so the runner's `?.()` call is a no-op there.
+    detectInvitationResponse: modCodec.detectInvitationResponse,
+    stampInvitationResponse: modCodec.stampInvitationResponse,
+    matchInvitationResponse: modCodec.matchInvitationResponse,
+    preserveSelfPartstat: modCodec.preserveSelfPartstat,
   };
 }
 

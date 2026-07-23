@@ -43,6 +43,7 @@ import { createWBXML } from "../wbxml.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
 import { fetchServerItem } from "./item-operations.mjs";
+import { sendMeetingResponse } from "./meeting-response.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 import {
   ok,
@@ -716,6 +717,16 @@ async function pushPhase(ctx, userEdits) {
     if (!slice.length) break;
 
     const built = await buildPushBatch(ctx, slice);
+
+    if (built.invitationResponses.length) {
+      const anySent = await sendInvitationResponses(
+        ctx,
+        built.invitationResponses,
+        failedItems,
+      );
+      if (anySent) changedAnything = true;
+    }
+
     if (!built.adds.length && !built.mods.length && !built.dels.length) {
       itemsDone += slice.length;
       reportProgress(ctx, itemsDone, itemsTotal);
@@ -871,10 +882,79 @@ async function buildPushBatch(ctx, slice) {
   const adds = [];
   const mods = [];
   const dels = [];
+  const invitationResponses = [];
+  // Lazily fetched, calendar-only: the folder's already-synced items, used
+  // to recognise an `added_by_user` entry that is actually Thunderbird's
+  // itip engine creating a duplicate of an existing received invite (see
+  // matchInvitationResponse's doc comment). Fetched at most once per
+  // batch, only if a Calendar entry needs it.
+  let syncedItemsForMatch = null;
+
   for (const entry of slice) {
     if (entry.status === "added_by_user") {
       const it = await ctx.store.get(entry.itemId);
       if (!it?.blob) continue;
+
+      // An item that already carries our own X-EAS-SERVERID is, by
+      // definition, already EAS-tracked - a genuinely new user-created
+      // item can never have one yet. An `added_by_user` entry for such
+      // an item can only be a stale changelog artifact (e.g. a race
+      // between applyAdd adopting a pre-existing Thunderbird-created
+      // item - see the UID-collision handling there - and the host's own
+      // calendar observer, which can still fire after that adopt writes
+      // to the item). Pushing it as a fresh Add would create a
+      // duplicate meeting server-side even though nothing is actually
+      // new; drop the stale entry instead. This check doesn't depend on
+      // timing at all, unlike trying to clear the changelog entry
+      // proactively during the pull.
+      const alreadyTrackedServerId =
+        ctx.itemKind.codec.readEasServerIdFromBlob(it.blob);
+      if (alreadyTrackedServerId) {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] dropped stale added_by_user entry for itemId=${entry.itemId}: already EAS-tracked (serverID=${alreadyTrackedServerId})`,
+        });
+        await ctx.provider.changelogRemove({
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          parentId: entry.parentId,
+          itemId: entry.itemId,
+        });
+        continue;
+      }
+
+      const matcher = ctx.itemKind.codec.matchInvitationResponse;
+      if (matcher) {
+        if (syncedItemsForMatch === null) {
+          const all = await ctx.store.list();
+          syncedItemsForMatch = all.filter((si) => si.id !== entry.itemId);
+        }
+        const match = matcher({
+          candidateIcal: it.blob,
+          existingItems: syncedItemsForMatch,
+          userEmail: ctx.account?.custom?.user,
+        });
+        if (match && easCommandLikelyAvailable(ctx.account, "MeetingResponse")) {
+          const existingIt = await ctx.store.get(match.existingItemId);
+          const serverID = existingIt?.blob
+            ? ctx.itemKind.codec.readEasServerIdFromBlob(existingIt.blob)
+            : null;
+          if (serverID) {
+            invitationResponses.push({
+              entry,
+              serverID,
+              item: it,
+              userResponseCode: match.userResponseCode,
+              newResponseType: match.newResponseType,
+              existingItemId: match.existingItemId,
+            });
+            continue;
+          }
+        }
+      }
+
       const clientId = `c-${Date.now().toString(36)}-${adds.length}`;
       adds.push({ entry, clientId, item: it });
     } else if (entry.status === "modified_by_user") {
@@ -884,6 +964,23 @@ async function buildPushBatch(ctx, slice) {
         ctx.itemKind.codec.readEasServerIdFromBlob(it.blob) ??
         findServerIdByUid(ctx, entry.itemId);
       if (!serverID) continue;
+      // An itip Accept/Decline/Tentative just flips the self-attendee's
+      // PARTSTAT on an otherwise-unrelated received invite - that's not
+      // a generic edit, it's an RSVP, and must go out as a dedicated
+      // MeetingResponse (see calendar-codec.mjs's detectInvitationResponse
+      // doc comment for why this can be detected from data alone, no UI
+      // hook needed). Only reroute when the server actually advertises
+      // the command; otherwise fall through to the old generic-push
+      // behaviour rather than silently dropping the user's response.
+      const invitation =
+        ctx.itemKind.codec.detectInvitationResponse?.({
+          ical: it.blob,
+          userEmail: ctx.account?.custom?.user,
+        }) ?? null;
+      if (invitation && easCommandLikelyAvailable(ctx.account, "MeetingResponse")) {
+        invitationResponses.push({ entry, serverID, item: it, ...invitation });
+        continue;
+      }
       mods.push({ entry, serverID, item: it });
     } else if (entry.status === "deleted_by_user") {
       const serverID = findServerIdByUid(ctx, entry.itemId);
@@ -916,7 +1013,85 @@ async function buildPushBatch(ctx, slice) {
       dels.push({ entry, serverID });
     }
   }
-  return { adds, mods, dels };
+  return { adds, mods, dels, invitationResponses };
+}
+
+/* ── Invitation responses (MeetingResponse) ──────────────────────────
+ *
+ * Each entry is sent as its own MeetingResponse command - a different
+ * EAS command from Sync, so these go out ahead of (and separately
+ * from) the batch's `sendSync` call. Success clears the changelog entry
+ * and re-stamps X-EAS-RESPONSETYPE locally so the next sync pass doesn't
+ * re-detect the same already-sent response; failure adds the item to
+ * `failedItems`, reusing pushPhase's existing tail-restage retry path -
+ * no separate retry plumbing needed. */
+
+async function sendInvitationResponses(ctx, invitationResponses, failedItems) {
+  let anySent = false;
+  for (const inv of invitationResponses) {
+    let result = null;
+    try {
+      result = await sendMeetingResponse({
+        account: ctx.account,
+        asVersion: ctx.asVersion,
+        collectionId: ctx.collectionId,
+        serverID: inv.serverID,
+        userResponse: inv.userResponseCode,
+      });
+    } catch (err) {
+      ctx.provider.reportEventLog({
+        level: "warning",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse threw for itemId=${inv.entry.itemId}: ${err?.message ?? String(err)}`,
+      });
+    }
+    if (!result || result.status !== STATUS_OK) {
+      failedItems.add(inv.entry.itemId);
+      ctx.provider.reportEventLog({
+        level: "warning",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse failed for itemId=${inv.entry.itemId} (status=${result?.status ?? "none"})`,
+      });
+      continue;
+    }
+    // `existingItemId` means this came from the added_by_user duplicate
+    // path (matchInvitationResponse): `inv.item` is a stray duplicate
+    // Thunderbird's itip engine created, not the real synced item, so
+    // the response gets stamped onto the *existing* item instead. The
+    // duplicate is deliberately left alone rather than auto-deleted - a
+    // content-based match isn't a guaranteed-unique key, so this only
+    // clears its changelog entry (stopping the repeated push attempts)
+    // and leaves cleanup to the user, called out in the log below.
+    const targetItemId = inv.existingItemId ?? inv.item.id;
+    const targetItem = inv.existingItemId
+      ? await ctx.store.get(inv.existingItemId)
+      : inv.item;
+    if (targetItem?.blob) {
+      const stamped = ctx.itemKind.codec.stampInvitationResponse(
+        targetItem.blob,
+        inv.newResponseType,
+      );
+      await ctx.store.update(targetItemId, stamped);
+    }
+    await ctx.provider.changelogRemove({
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      parentId: inv.entry.parentId,
+      itemId: inv.entry.itemId,
+    });
+    if (inv.existingItemId) {
+      ctx.provider.reportEventLog({
+        level: "warning",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message: `[${ctx.itemKind.changelogKind}-sync] itemId=${inv.entry.itemId} looked like a duplicate Thunderbird created while responding to an existing invite (itemId=${inv.existingItemId}); sent MeetingResponse using the existing item and dropped the duplicate's push. The duplicate local copy was left in place - delete it manually if it's still showing in your calendar.`,
+      });
+    }
+    anySent = true;
+  }
+  return anySent;
 }
 
 /* ── Apply responses to our push ──────────────────────────────────── */
@@ -1079,7 +1254,18 @@ async function applyAdd(ctx, addNode) {
   const existing = await findExistingByServerId(ctx, serverID);
   if (existing) return applyChangeFromAd(ctx, ad, existing);
 
-  const newId = crypto.randomUUID();
+  // Prefer the server's real UID (present on ≤14.x Add responses - see
+  // calendar-codec.mjs's applicationDataToIcal comment on Organizer/UID
+  // for the matching 16.1 caveat) as the local item's id/UID instead of
+  // a random one. Thunderbird's own itip engine matches invitation
+  // responses to an existing calendar item by UID across ALL calendars
+  // - if our stored copy carries the same UID the server/organizer used,
+  // Accepting an already-synced invite lands as a modifyItem TbSync can
+  // see and reroute (detectInvitationResponse), instead of a same-titled
+  // duplicate `addItem` TbSync can't tell apart from a real new meeting.
+  // Falls back to a random id when the AD has no UID (16.1, or Tasks -
+  // which have no UID field at all) - unchanged from prior behaviour.
+  const newId = readPathFrom(ad, ["UID"]) || crypto.randomUUID();
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
     serverID,
@@ -1100,6 +1286,100 @@ async function applyAdd(ctx, addNode) {
     status: "added_by_server",
     kind: ctx.itemKind.changelogKind,
   });
+
+  // Using the server's real UID above means a local item under that
+  // exact id can already exist here - Thunderbird's own itip engine may
+  // have created it (e.g. Accept clicked on an emailed invite before
+  // this pull ran; the mirror-image race is handled on the push side by
+  // matchInvitationResponse in buildPushBatch). Adopt it in place rather
+  // than risk a second `create` with a colliding id, which the native
+  // calendar may reject outright or clobber unpredictably. Trade-off:
+  // this overwrites whatever PARTSTAT the user already set via itip
+  // locally back to the server's (not-yet-updated) state - re-accepting
+  // after this sync will correctly route through MeetingResponse since
+  // the item is now EAS-tracked.
+  const preExisting = await ctx.store.get(newId);
+  if (preExisting) {
+    const userEmail = ctx.account?.custom?.user;
+    // Carry over any PARTSTAT the user already set via itip before this
+    // pull ran (e.g. clicked Accept on the emailed invite), so adopting
+    // the item doesn't silently revert it to NEEDS-ACTION.
+    const preservedBlob = ctx.itemKind.codec.preserveSelfPartstat
+      ? ctx.itemKind.codec.preserveSelfPartstat({
+          builtIcal: blob,
+          priorIcal: preExisting.blob,
+          userEmail,
+        })
+      : blob;
+    await ctx.store.update(newId, preservedBlob);
+    await verifyRoundTrip(ctx, newId, preservedBlob, "update");
+    upsertIndexMap(ctx, newId, serverID);
+    // The pre-existing item predates any EAS tracking, so it was almost
+    // certainly sitting in the changelog as its own `added_by_user` (or
+    // `modified_by_user`) entry from whatever local write created/touched
+    // it (e.g. the itip Accept itself). That entry now refers to stale
+    // pre-adoption content we just overwrote with the server's data - if
+    // left in place, the next push phase would send it out as a generic
+    // Add/Change (a self-match `matchInvitationResponse` can't catch,
+    // since this item is now the only copy, not a duplicate of another
+    // one). Clear it explicitly rather than let a "changelogMarkServerWrite
+    // + store.update" for a *different* itemId leave this one stale.
+    await ctx.provider.changelogRemove({
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      parentId: ctx.targetID,
+      itemId: newId,
+    });
+    // Since the stale changelog entry above is dropped rather than
+    // pushed, a PARTSTAT the user already set (just preserved onto
+    // preservedBlob) would otherwise never reach the server at all -
+    // send the MeetingResponse right here instead of waiting for a
+    // second Accept click to produce a fresh modified_by_user entry.
+    const invitation = ctx.itemKind.codec.detectInvitationResponse?.({
+      ical: preservedBlob,
+      userEmail,
+    });
+    if (invitation) {
+      const result = await sendMeetingResponse({
+        account: ctx.account,
+        asVersion: ctx.asVersion,
+        collectionId: ctx.collectionId,
+        serverID,
+        userResponse: invitation.userResponseCode,
+      }).catch((err) => {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse threw while adopting itemId=${newId}: ${err?.message ?? String(err)}`,
+        });
+        return null;
+      });
+      if (result?.status === STATUS_OK) {
+        const stamped = ctx.itemKind.codec.stampInvitationResponse(
+          preservedBlob,
+          invitation.newResponseType,
+        );
+        await ctx.store.update(newId, stamped);
+      } else {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse failed while adopting itemId=${newId} (status=${result?.status ?? "none"})`,
+        });
+      }
+    }
+    if (blobHasRecurrence(preservedBlob)) {
+      logRecurrence(
+        ctx,
+        `pull add (adopted pre-existing item): itemId=${newId}, serverID=${serverID}`,
+        { ical: preservedBlob },
+      );
+    }
+    return;
+  }
+
   const createdId = await ctx.store.create(newId, blob);
   if (createdId !== newId) {
     throw new Error(
