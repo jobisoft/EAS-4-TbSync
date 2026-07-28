@@ -363,13 +363,19 @@ export class EasProvider extends TbSyncProviderImplementation {
     }
 
     const knownEmail = c.authenticatedUserEmail || null;
+    // Held so the finally can unregister the exact window it registered -
+    // the base class removes by windowId, so that a second window can never
+    // orphan the first.
+    let consentWindowId = null;
     try {
       const { refreshToken, authenticatedUserEmail, accessToken, expiresIn } =
         await startAuth({
           loginHint: knownEmail || c.user || undefined,
           servertype: c.servertype,
-          onWindowCreated: (windowId) =>
-            this.registerReauthWindow(accountId, windowId),
+          onWindowCreated: (windowId) => {
+            consentWindowId = windowId;
+            this.registerAccountWindow(accountId, windowId);
+          },
         });
 
       // Signing in as somebody else would silently repoint the account at
@@ -408,7 +414,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         err?.code ?? ERR.AUTH,
       );
     } finally {
-      this.unregisterReauthWindow(accountId);
+      this.unregisterAccountWindow(accountId, consentWindowId);
     }
   }
 

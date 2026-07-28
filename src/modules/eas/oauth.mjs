@@ -135,7 +135,7 @@ export function currentRefreshToken(accountId) {
  *   loginHint        pre-selects an account on the consent screen
  *   servertype       "office365" | "personal-ms" - drives scope
  *   onWindowCreated  called with the popup's windowId once it exists, so a
- *                    caller can hand it to `registerReauthWindow` and let
+ *                    caller can hand it to `registerAccountWindow` and let
  *                    the host raise the popup if the user clicks again
  *
  * The OAuth client ID is read from the global `oauth.clientID` slot
