@@ -229,6 +229,10 @@ export class EasProvider extends TbSyncProviderImplementation {
   }
 
   async onAccountDisabled({ accountId }) {
+    // Ahead of the early return below, so the cache is dropped even when
+    // the account row has already gone. Re-enable primes again from
+    // `custom`, so nothing here is needed to come back.
+    forgetAuth(accountId);
     await disableGal({ provider: this, accountId });
     const ctx = await this.#loadContext(accountId);
     if (!ctx) return null;
@@ -255,6 +259,7 @@ export class EasProvider extends TbSyncProviderImplementation {
   }
 
   async onAccountDeleted({ accountId, purgeTargets }) {
+    forgetAuth(accountId);
     await disableGal({ provider: this, accountId });
     const ctx = await this.#loadContext(accountId);
     if (!ctx) return null;
