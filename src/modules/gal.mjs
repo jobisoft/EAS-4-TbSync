@@ -13,11 +13,17 @@
  *     itself is removed via `addressBooks.delete` when possible; if the
  *     API rejects the call, the empty directory is left behind for the
  *     user to remove manually.
+ *   - An account whose credentials the server has rejected keeps its
+ *     listener but answers with no results, so searching resumes on its
+ *     own once the account is authenticated again. Deregistering instead
+ *     would need something to put the listener back, and an authentication
+ *     failure no longer disables the account.
  *
  * Idempotency: registration is keyed by accountId in a module-scoped
  * map, so re-entry from boot + onAccountEnabled is safe.
  */
 
+import { ERR } from "../vendor/tbsync/provider.mjs";
 import { easCommandAdvertised } from "./eas/allowed-commands.mjs";
 import { isOAuthAccount, primeAuth } from "./eas/oauth.mjs";
 
@@ -117,6 +123,16 @@ export async function enableGal({ provider, account }) {
       const rv = await provider.getAccount(accountId);
       const fresh = rv?.account;
       if (!fresh || !searchSupported(fresh)) {
+        return { results: [], isCompleteResult: true };
+      }
+      // The server has rejected this account's credentials. Searching runs
+      // outside the sync path - it fires on every keystroke in a compose
+      // window - so nothing else stops it presenting the same rejected
+      // credentials over and over, which is how a server decides to lock
+      // an account out. Checked here rather than by deregistering the
+      // listener so searches resume by themselves once the account is
+      // authenticated again.
+      if (fresh.error === ERR.AUTH) {
         return { results: [], isCompleteResult: true };
       }
       // Seed the OAuth auth cache for this account if needed. The
