@@ -32,4 +32,4 @@ This file lists files that were not created by this project and are maintained u
 ## tbsync (still subject to review)
 
 - **Files** : `/vendor/tbsync/*`
-- **Source** : https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fjobisoft%2FTbSync%2Ftree%2Fdb16a2bf89960bd88f666e416973bdc1f0f79dbd%2Ftbsync
+- **Source** : https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fjobisoft%2FTbSync%2Ftree%2Fecc100c127fcf5d01c2608bccbc8b337c823b465%2Ftbsync
