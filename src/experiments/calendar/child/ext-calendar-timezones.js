@@ -4,21 +4,36 @@
 
 var { ExtensionCommon: { ExtensionAPI } } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
 
+var { ExtensionUtils: { ExtensionError } } = ChromeUtils.importESModule("resource://gre/modules/ExtensionUtils.sys.mjs");
+
 var { default: ICAL } = ChromeUtils.importESModule("resource:///modules/calendar/Ical.sys.mjs");
 
 var { cal } = ChromeUtils.importESModule("resource:///modules/calendar/calUtils.sys.mjs");
 
+// This runs in the child process, where the timezone service is a fresh
+// instance that Thunderbird's own startup never touched - without this the
+// zone list is empty and there is no default zone.
+//
+// Up to and including Thunderbird 153, priming it means calling startup().
+// Thunderbird 154 moved that work into the service's constructor and removed
+// startup() outright (Bug 2022873, "restructure lazy cal. services"), so the
+// call would throw there and is no longer needed.
+//
+// Probed rather than compared against Services.appinfo.version: the version
+// boundary is only correct until someone backports, and this degrades to
+// "already primed, do nothing" instead of to a startup error.
+cal.timezoneService.startup?.(null);
+
 this.calendar_timezones = class extends ExtensionAPI {
-  getAPI(_context) {
+  getAPI(context) {
     return {
       calendar: {
         timezones: {
           get timezoneIds() {
-            return cal.timezoneService.timezoneIds;
+            return Cu.cloneInto([...cal.timezoneService.timezoneIds], context.cloneScope);
           },
           get currentZone() {
-            cal.timezoneService.wrappedJSObject._updateDefaultTimezone();
-            return cal.timezoneService.defaultTimezone?.tzid;
+            return cal.timezoneService.defaultTimezone?.tzid ?? "";
           },
           getDefinition(tzid, returnFormat) {
             const timezoneDatabase = Cc["@mozilla.org/calendar/timezone-database;1"].getService(
@@ -27,10 +42,12 @@ this.calendar_timezones = class extends ExtensionAPI {
             let zoneInfo = timezoneDatabase.getTimezoneDefinition(tzid);
 
             if (returnFormat == "jcal") {
-              zoneInfo = ICAL.parse(zoneInfo);
+              return Cu.cloneInto(ICAL.parse(zoneInfo), context.cloneScope);
+            } else if (returnFormat == "ical") {
+              return zoneInfo;
             }
 
-            return zoneInfo;
+            throw new ExtensionError(`Invalid return format: ${returnFormat}`);
           },
         }
       }
