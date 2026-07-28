@@ -269,9 +269,6 @@
   "config.error.invalidAsVersion": {
     "message": "ActiveSync バージョンの選択が無効です。"
   },
-  "warning.reauthFailed": {
-    "message": "再認証が完了しませんでした。再試行するには「再サインイン」をクリックしてください。"
-  },
   "options.title": {
     "message": "EAS-4-TbSync - 詳細設定"
   },

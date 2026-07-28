@@ -269,9 +269,6 @@
   "config.error.invalidAsVersion": {
     "message": "Выбрана недопустимая версия ActiveSync."
   },
-  "warning.reauthFailed": {
-    "message": "Повторная аутентификация не завершена. Нажмите «Войти снова», чтобы повторить попытку."
-  },
   "options.title": {
     "message": "EAS-4-TbSync - Расширенные настройки"
   },

@@ -269,9 +269,6 @@
   "config.error.invalidAsVersion": {
     "message": "Neplatný výběr verze ActiveSync."
   },
-  "warning.reauthFailed": {
-    "message": "Opětovné ověření se nedokončilo. Pro nový pokus klikněte na „Přihlásit se znovu“."
-  },
   "options.title": {
     "message": "EAS-4-TbSync - Pokročilá nastavení"
   },

@@ -269,9 +269,6 @@
   "config.error.invalidAsVersion": {
     "message": "잘못된 ActiveSync 버전 선택입니다."
   },
-  "warning.reauthFailed": {
-    "message": "재인증이 완료되지 않았습니다. \"다시 로그인\"을 클릭하여 다시 시도하세요."
-  },
   "options.title": {
     "message": "EAS-4-TbSync - 고급 설정"
   },
