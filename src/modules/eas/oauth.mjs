@@ -132,12 +132,15 @@ export function currentRefreshToken(accountId) {
 /**
  * Open the Microsoft consent popup and return the resulting tokens.
  *
- *   loginHint   pre-selects an account on the consent screen
- *   servertype  "office365" | "personal-ms" - drives scope
+ *   loginHint        pre-selects an account on the consent screen
+ *   servertype       "office365" | "personal-ms" - drives scope
+ *   onWindowCreated  called with the popup's windowId once it exists, so a
+ *                    caller can hand it to `registerReauthWindow` and let
+ *                    the host raise the popup if the user clicks again
  *
  * The OAuth client ID is read from the global `oauth.clientID` slot
  * (storage.local), with the hardcoded community ID as fallback. */
-export async function startAuth({ loginHint, servertype }) {
+export async function startAuth({ loginHint, servertype, onWindowCreated }) {
   const clientID = await getGlobalClientID();
   const scope = scopeForServertype(servertype);
   const state = crypto.randomUUID();
@@ -151,7 +154,7 @@ export async function startAuth({ loginHint, servertype }) {
   authUrl.searchParams.set("state", state);
   if (loginHint) authUrl.searchParams.set("login_hint", loginHint);
 
-  const responseUrl = await runConsentPopup(authUrl.toString());
+  const responseUrl = await runConsentPopup(authUrl.toString(), onWindowCreated);
 
   // Parse the redirect URL - Microsoft echoes the code back as a query
   // string on the nativeclient page.
@@ -302,13 +305,22 @@ function decodeIdTokenEmail(idToken) {
  * ends up on once Microsoft redirects to the nativeclient endpoint.
  * Throws ERR.CANCELLED if the user closes the window first.
  */
-async function runConsentPopup(authUrl) {
+async function runConsentPopup(authUrl, onWindowCreated) {
   const popup = await browser.windows.create({
     url: authUrl,
     type: "popup",
     width: 500,
     height: 750,
   });
+
+  // Reported before the await below, so a caller tracking this window has
+  // it registered for the whole time the popup is up. Never let a failing
+  // callback take down a sign-in that is otherwise fine.
+  try {
+    onWindowCreated?.(popup.id);
+  } catch (err) {
+    console.debug("[eas] onWindowCreated callback failed:", err);
+  }
 
   return new Promise((resolve, reject) => {
     let done = false;

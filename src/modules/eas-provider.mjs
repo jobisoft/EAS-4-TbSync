@@ -32,6 +32,7 @@ import {
   ERR,
   withCode,
   ok,
+  error,
   TbSyncProviderImplementation,
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "./address-book.mjs";
@@ -39,7 +40,10 @@ import * as calendarStore from "./calendar-store.mjs";
 import { DEBUG_STATUS_DELAY_MS } from "./debug.mjs";
 import {
   primeAuth,
+  primeAccessToken,
+  forgetAuth,
   currentRefreshToken,
+  startAuth,
   isOAuthAccount,
 } from "./eas/oauth.mjs";
 import { negotiateAsVersion } from "./eas/connect.mjs";
@@ -307,6 +311,81 @@ export class EasProvider extends TbSyncProviderImplementation {
       await this.setProviderUpgradeLock(false);
     }
     return null;
+  }
+
+  // ── Re-authentication ─────────────────────────────────────────────────
+
+  /** Re-run the consent flow for an account the host has stamped E:AUTH.
+   *
+   *  Returns a StatusData rather than throwing: the host only clears the
+   *  error and re-enables the account when this resolves with a success
+   *  envelope, so a bare return would leave the account frozen even after
+   *  a successful sign-in. By the time this runs the host has already sent
+   *  ACCOUNT_DISABLED and dropped the folder list, so only `custom` is
+   *  ours to touch - ACCOUNT_ENABLED rebuilds the rest. */
+  async onReauthenticate({ accountId }) {
+    const ctx = await this.#loadContext(accountId);
+    if (!ctx) return error("Unknown account", ERR.UNKNOWN_ACCOUNT);
+
+    const c = ctx.account.custom ?? {};
+    if (!isOAuthAccount(c)) {
+      // The manager offers "Sign in again" for any E:AUTH account, but a
+      // username/password account has no consent flow to re-run - point
+      // the user at the field they actually need to change.
+      return error(
+        "This account signs in with a username and password. Open its Settings to update the password.",
+        ERR.AUTH,
+      );
+    }
+
+    const knownEmail = c.authenticatedUserEmail || null;
+    try {
+      const { refreshToken, authenticatedUserEmail, accessToken, expiresIn } =
+        await startAuth({
+          loginHint: knownEmail || c.user || undefined,
+          servertype: c.servertype,
+          onWindowCreated: (windowId) =>
+            this.registerReauthWindow(accountId, windowId),
+        });
+
+      // Signing in as somebody else would silently repoint the account at
+      // a different mailbox while keeping its existing folders and targets.
+      if (
+        knownEmail &&
+        authenticatedUserEmail &&
+        knownEmail !== authenticatedUserEmail
+      ) {
+        return error(
+          `Signed-in user (${authenticatedUserEmail}) does not match this account (${knownEmail}).`,
+          ERR.AUTH,
+        );
+      }
+
+      await this.updateAccount({
+        accountId,
+        patch: {
+          custom: {
+            refreshToken,
+            authenticatedUserEmail: authenticatedUserEmail ?? knownEmail,
+          },
+        },
+      });
+      forgetAuth(accountId);
+      primeAuth(accountId, { refreshToken, servertype: c.servertype });
+      // startAuth already returned a usable access token; keeping it saves
+      // the next sync a refresh round-trip.
+      if (accessToken) primeAccessToken(accountId, accessToken, expiresIn);
+      return ok();
+    } catch (err) {
+      // The code rides through in `details`, which is what the host reads
+      // to stay quiet when the user simply closed the popup (ERR.CANCELLED).
+      return error(
+        err?.message ?? "Re-authentication failed",
+        err?.code ?? ERR.AUTH,
+      );
+    } finally {
+      this.unregisterReauthWindow(accountId);
+    }
   }
 
   // ── Folder lifecycle ──────────────────────────────────────────────────
