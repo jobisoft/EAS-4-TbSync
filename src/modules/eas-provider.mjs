@@ -169,6 +169,14 @@ export function folderTypeToEasClass(folderType) {
 }
 
 export class EasProvider extends TbSyncProviderImplementation {
+  /** Accounts whose config popup has saved since someone last asked.
+   *  `onReauthenticate` clears an entry before opening the popup and reads
+   *  it back afterwards, which turns "did the user save?" into a question
+   *  about what they did rather than about which fields changed - the
+   *  password field opens blank and is only submitted when typed, so a
+   *  field comparison would misread "Save without retyping it". */
+  #configSaves = new Set();
+
   constructor() {
     super({
       name: "Exchange ActiveSync",
@@ -329,13 +337,29 @@ export class EasProvider extends TbSyncProviderImplementation {
 
     const c = ctx.account.custom ?? {};
     if (!isOAuthAccount(c)) {
-      // The manager offers "Sign in again" for any E:AUTH account, but a
-      // username/password account has no consent flow to re-run - point
-      // the user at the field they actually need to change.
-      return error(
-        "This account signs in with a username and password. Open its Settings to update the password.",
-        ERR.AUTH,
-      );
+      // The manager offers this action for any E:AUTH account, but a
+      // username/password account has no consent flow to re-run - a
+      // rejected password is what put it here. Open its Settings instead,
+      // and report success once the user saves so the host clears the
+      // error and re-enables the account.
+      //
+      // Reporting success is the whole point. The manager greys out
+      // Connect while the error stands and nothing else clears it, so
+      // correcting the password would otherwise leave the account stuck
+      // for good. If the new password is wrong too, the next sync stamps
+      // E:AUTH again and the button comes back.
+      this.#configSaves.delete(accountId);
+      await this.onOpenConfigPopup({ accountId });
+      if (!(await this.#loadContext(accountId))) {
+        return error("Unknown account", ERR.UNKNOWN_ACCOUNT);
+      }
+      if (!this.#configSaves.delete(accountId)) {
+        // Closed without saving - treat it exactly like dismissing the
+        // consent window, so the host logs nothing and the account keeps
+        // its error rather than briefly looking healthy.
+        return error("Settings closed without saving", ERR.CANCELLED);
+      }
+      return ok();
     }
 
     const knownEmail = c.authenticatedUserEmail || null;
@@ -1140,6 +1164,9 @@ export class EasProvider extends TbSyncProviderImplementation {
       }
     }
 
+    // Recorded only once the save has actually gone through, so a failed
+    // write is not mistaken for the user having fixed anything.
+    this.#configSaves.add(accountId);
     return null;
   }
 
