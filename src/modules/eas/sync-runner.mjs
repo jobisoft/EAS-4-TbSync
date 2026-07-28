@@ -338,6 +338,11 @@ async function runOneSync({
       ? folder.custom.indexMap.slice()
       : [],
     indexMapDirty: false,
+    // Lazily-built `serverId -> itemId` view of the stored blobs, standing
+    // behind the indexMap when it cannot answer. Null until something
+    // misses; see `serverIdScan`. Per-pass, so the RESYNC retry - which
+    // builds a fresh ctx - never reuses a stale one.
+    serverIdScan: null,
     syncKeyDirty: false,
     maxItems,
   };
@@ -1542,15 +1547,73 @@ function parseSyncResponse(doc) {
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
-/** Look up the local item by its EAS server-side id. Resolves the
- *  uid via the persistent indexMap, then fetches the current blob from
- *  the live store. Returns `{ itemId, blob }` or null. */
+/** Look up the local item by its EAS server-side id. Returns
+ *  `{ itemId, blob }` or null.
+ *
+ *  The indexMap is a cache, not the authority: the server id is also
+ *  stamped into every blob we store, which is what the push side already
+ *  reads back (see `buildPushBatch`). So a miss here falls through to the
+ *  blobs rather than concluding the item is new.
+ *
+ *  That distinction is the whole point. A resync empties the indexMap
+ *  before re-pulling the collection, so without the fallback every item
+ *  arrives as an <Add> that matches nothing and gets re-created beside the
+ *  copy already in the address book or calendar - a full duplicate set. */
 async function findExistingByServerId(ctx, serverId) {
   const entry = ctx.indexMap.find((e) => e.serverId === serverId);
-  if (!entry) return null;
-  const item = await ctx.store.get(entry.uid);
+  if (entry) {
+    const item = await ctx.store.get(entry.uid);
+    if (item) return { itemId: entry.uid, blob: item.blob };
+    // Mapped to an item that is no longer there - fall through and let
+    // the blobs have the final say.
+  }
+
+  const itemId = (await serverIdScan(ctx)).get(serverId);
+  if (!itemId) return null;
+  const item = await ctx.store.get(itemId);
   if (!item) return null;
-  return { itemId: entry.uid, blob: item.blob };
+  // Put the mapping back so the rest of this pass - and, once the pass
+  // flushes indexMapDirty, later ones - take the fast path again.
+  upsertIndexMap(ctx, itemId, serverId);
+  return { itemId, blob: item.blob };
+}
+
+/** `serverId -> itemId` built from the stamps in the stored blobs.
+ *
+ *  Built at most once per pass and only when something actually misses, so
+ *  a healthy incremental sync never reads the store in bulk. Scanning per
+ *  miss instead would be quadratic - a 5000-item resync misses 5000 times.
+ */
+async function serverIdScan(ctx) {
+  if (ctx.serverIdScan) return ctx.serverIdScan;
+
+  const map = new Map();
+  try {
+    for (const it of await ctx.store.list()) {
+      if (!it?.blob) continue;
+      let stamped;
+      try {
+        stamped = ctx.itemKind.codec.readEasServerIdFromBlob(it.blob);
+      } catch {
+        continue; // unparsable blob - it just cannot answer
+      }
+      // Items with no stamp were created locally and never pushed, so they
+      // belong to no server id. First writer wins on a collision, which
+      // keeps the result stable for anyone already carrying duplicates
+      // from before this fallback existed.
+      if (stamped && !map.has(stamped)) map.set(stamped, it.id);
+    }
+  } catch (err) {
+    // A store we cannot read leaves us exactly where we were without the
+    // fallback; failing the sync over it would be worse.
+    console.warn(
+      "[eas-4-tbsync] server-id scan failed; identity falls back to the indexMap alone:",
+      err?.message ?? err,
+    );
+  }
+
+  ctx.serverIdScan = map;
+  return map;
 }
 
 function findServerIdByUid(ctx, uid) {
