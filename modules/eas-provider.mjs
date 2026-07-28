@@ -59,6 +59,12 @@ import {
 } from "./gal.mjs";
 import { easCommandAdvertised } from "./eas/allowed-commands.mjs";
 import { setEventLogSink } from "./eas-event-log.mjs";
+// Cyclic: upgrades.mjs imports `easTypeToFolderType`,
+// `finalizeFolderListForPush` and `iconForServerType` from this module.
+// Safe because neither side touches an imported binding while the modules
+// are evaluating - both only reach across inside function bodies, by which
+// point both namespaces are complete.
+import { runStartupMigrations } from "./upgrades.mjs";
 
 /** EAS FolderSync status codes that indicate the server wants us to run
  *  Provision (in-band equivalent of the HTTP-449 path). */
@@ -189,6 +195,13 @@ export class EasProvider extends TbSyncProviderImplementation {
   // ── Base-class hooks ───────────────────────────────────────────────────
 
   async onConnectedToHost() {
+    // Bring storage and accounts up to date before anything below reads
+    // account state - a legacy-imported account still holds it in the shape
+    // the legacy add-on wrote. Cheap when there is nothing to do, and it
+    // has to run on every port open rather than once per boot: the host
+    // re-imports whenever its own storage has been cleared, and that
+    // reaches us as a reconnect and nothing more.
+    await runStartupMigrations(this);
     // Re-establish the per-account read-only GAL directories. The host
     // does not re-fire `onAccountEnabled` for already-enabled accounts
     // on extension boot, so the listener registrations would otherwise

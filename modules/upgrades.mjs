@@ -1,23 +1,38 @@
 /**
- * Provider-local one-shot upgrades.
+ * Provider-side completion of the host's legacy import.
  *
- * Runs work that has to happen exactly once after the user updates the
- * provider across a "split version" - typically a one-time data-shape
- * migration that the host's legacy migration deliberately couldn't do
- * because it's provider-specific.
+ * TbSync's importer lifts the host-owned fields out of the legacy
+ * `<profile>/TbSync/*.json` files but copies every provider field into
+ * `account.custom` verbatim, so an imported account still carries whatever
+ * shape the legacy add-on wrote: `host` + `https` where the current code
+ * wants `server`, credentials still in `nsILoginManager`,
+ * `allowedEasCommands` as a comma-separated string, EAS ServerIds stored as
+ * Thunderbird item ids. Converting all of that is this module's job.
  *
- * The trigger is `runtime.onInstalled` (with `reason === "update"` and a
- * `previousVersion` set), wired up in [background.mjs](../background.mjs).
- * Fresh installs never fire any upgrade. The list of pending upgrade IDs
- * persists in `browser.storage.local` under UPGRADE_QUEUE_KEY so a
- * partial run (host crash, network outage) is retried on the next
- * host-connect via the boot-time stale drain.
+ * The trigger is the host's `legacyMigrationPending` flag, not anything
+ * about this add-on's own install history. The importer's only guard is
+ * the absence of the host's account storage, and it never consumes the
+ * legacy files, so anything that clears that storage - reinstalling TbSync
+ * is enough - makes the next host boot re-import the legacy snapshot over
+ * accounts that were already converted. No event reaches this side when
+ * that happens, which is why the flag has to be polled rather than
+ * reacted to.
  *
- * While a drain is in flight, the host treats every account belonging
- * to this provider as "upgrading" - refuses every user-initiated RPC
- * and skips autosync ticks. The lock is acquired before the first
- * upgrade body runs and released in a `finally` so a crashing upgrade
- * still releases it.
+ * `runStartupMigrations` therefore runs on every port open (see
+ * `onConnectedToHost` in eas-provider.mjs) and costs one `listAccounts`
+ * when nothing is flagged. The host blocks flagged accounts until we clear
+ * them, and an account whose conversion throws keeps its flag and is tried
+ * again next boot - so every step below has to be idempotent.
+ *
+ * Two triggers, one per kind of data, on the principle that the record of
+ * a conversion belongs with the data it converted:
+ *
+ *   - Account `custom` and the Thunderbird resources bound to it live in
+ *     the host and in the address book / calendar. Their trigger is the
+ *     host's flag, which the host re-sets every time it re-imports.
+ *   - This add-on's own global settings live in `storage.local`. Their
+ *     trigger is `schemaVersion` in that same storage, so marker and data
+ *     are wiped together and can never disagree.
  */
 
 import {
@@ -29,8 +44,6 @@ import * as calendarStore from "./calendar-store.mjs";
 import * as eventCodec from "./eas/calendar-codec.mjs";
 import * as taskCodec from "./eas/task-codec.mjs";
 
-const UPGRADE_QUEUE_KEY = "eas.upgradeQueue";
-
 /** Coerce the legacy `Map<uid, serverId>` JSON shape into the new array
  *  of `{uid, serverId}` records. Returns a fresh array — caller is free
  *  to mutate. */
@@ -40,234 +53,274 @@ function buildIndexMap(value) {
   return Object.entries(value).map(([uid, serverId]) => ({ uid, serverId }));
 }
 
-/** Ordered list of split versions. An upgrade is *applicable* to an
- *  `(previousVersion, currentVersion)` pair iff
- *  `previousVersion < splitVersion <= currentVersion`. Strict on the
- *  prev side so a user already on the split doesn't re-run; inclusive
- *  on the cur side so installing exactly at the split triggers it. */
-export const UPGRADES = [
+/** Legacy prefs to lift into `browser.storage.local`. Global rather than
+ *  per-account, and driven by the schema ladder rather than by any
+ *  account's state - see `MIGRATIONS` rung 2. */
+const PREF_MIGRATIONS = [
   {
-    splitVersion: "4.20",
-    id: "eas.legacy-migration",
-    run: async (provider) => {
-      const PREF_MIGRATIONS = [
-        {
-          keys: {
-            "extensions.eas4tbsync.timeout": "timeout",
-            "extensions.eas4tbsync.maxitems": "maxItems",
-          },
-          validate: (v) => typeof v === "number" && Number.isFinite(v) && v > 0,
-          transform: (v) => v,
-          logValue: (v) => ` (${v})`,
-        },
-        {
-          keys: {
-            "extensions.eas4tbsync.oauth.clientID": "oauth.clientID",
-            "extensions.eas4tbsync.clientID.useragent": "tbsync.useragent",
-            "extensions.eas4tbsync.clientID.type": "tbsync.type",
-          },
-          validate: (v) => typeof v === "string" && !!v.trim(),
-          transform: (v) => v.trim(),
-          logValue: () => "",
-        },
-        {
-          keys: {
-            "extensions.eas4tbsync.msTodoCompat": "msTodoCompat",
-          },
-          defaultValue: null,
-          validate: (v) => typeof v === "boolean",
-          transform: (v) => v,
-          logValue: (v) => ` (${v})`,
-        },
-      ];
-
-      for (const migration of PREF_MIGRATIONS) {
-        await liftPref(provider, migration);
-      }
-
-      const accounts = await provider.listAccounts();
-      for (const acc of accounts) {
-        try {
-          await liftHostAndHttpsToServer(provider, acc);
-          await liftCredentials(provider, acc);
-          await normalizeAllowedEasCommands(provider, acc);
-          await fixFolders(provider, acc);
-        } catch (err) {
-          provider.reportEventLog({
-            level: "warning",
-            accountId: acc.accountId,
-            message: `[upgrade] failed to lift legacy state: ${err?.message ?? String(err)}`,
-          });
-        }
-      }
-
-      // Legacy EAS4 stored each contact's EAS ServerId as the TB card's
-      // UID (`card.primaryKey === serverId`) and several extra fields in
-      // the property bag via `setProperty()`. The new code expects the
-      // ServerId in an `X-EAS-SERVERID` vCard property and the extras in
-      // matching `X-EAS-*` properties. Without this migration, an
-      // upgraded user would see duplicates after the first delta sync
-      // and silent edit/delete failures on legacy cards. See Phase 3
-      // audit row 3.11 for the full rationale.
-      for (const acc of accounts) {
-        try {
-          await migrateContactsForAccount(provider, acc);
-        } catch (err) {
-          provider.reportEventLog({
-            level: "warning",
-            accountId: acc.accountId,
-            message: `[upgrade] contact vCard migration failed: ${err?.message ?? String(err)}`,
-          });
-        }
-      }
-
-      // Legacy EAS4 stored each event/task's EAS ServerId as the
-      // calendar item's id (`item.primaryKey === serverId`, see legacy
-      // sync.js:1042). The new code expects the ServerId in an
-      // `X-EAS-SERVERID` iCal property and a matching
-      // `folder.custom.indexMap` entry. Without this migration, an
-      // upgraded user would see duplicates after the first delta sync
-      // and silent edit/delete failures on legacy events/tasks. Same
-      // shape as the contact migration above; simpler because Lightning
-      // already stores X-EAS-* properties in the iCal blob (no XPCOM
-      // experiment needed).
-      for (const acc of accounts) {
-        try {
-          await migrateCalendarItemsForAccount(provider, acc);
-        } catch (err) {
-          provider.reportEventLog({
-            level: "warning",
-            accountId: acc.accountId,
-            message: `[upgrade] calendar item migration failed: ${err?.message ?? String(err)}`,
-          });
-        }
-      }
-
-      for (const acc of accounts) {
-        try {
-          await liftAccountIcon(provider, acc);
-        } catch (err) {
-          provider.reportEventLog({
-            level: "warning",
-            accountId: acc.accountId,
-            message: `[upgrade] account-icon lift failed: ${err?.message ?? String(err)}`,
-          });
-        }
-      }      
+    keys: {
+      "extensions.eas4tbsync.timeout": "timeout",
+      "extensions.eas4tbsync.maxitems": "maxItems",
     },
+    validate: (v) => typeof v === "number" && Number.isFinite(v) && v > 0,
+    transform: (v) => v,
+    logValue: (v) => ` (${v})`,
+  },
+  {
+    keys: {
+      "extensions.eas4tbsync.oauth.clientID": "oauth.clientID",
+      "extensions.eas4tbsync.clientID.useragent": "tbsync.useragent",
+      "extensions.eas4tbsync.clientID.type": "tbsync.type",
+    },
+    validate: (v) => typeof v === "string" && !!v.trim(),
+    transform: (v) => v.trim(),
+    logValue: () => "",
+  },
+  {
+    keys: {
+      "extensions.eas4tbsync.msTodoCompat": "msTodoCompat",
+    },
+    defaultValue: null,
+    validate: (v) => typeof v === "boolean",
+    transform: (v) => v,
+    logValue: (v) => ` (${v})`,
   },
 ];
 
-/** Dotted-decimal version comparison. Sufficient for the version
- *  strings the legacy add-on shipped (e.g. `"4.17.2.ews.16.1"`) and
- *  the new add-on (`"5.0"`) - any non-numeric segment becomes NaN,
- *  which only matters if the *first differing* segment is non-numeric.
- *  In practice the legacy → new transition diverges at the first
- *  segment (4 → 5), so the comparator short-circuits before reaching
- *  any non-numeric tail. */
-export function compareVersions(a, b) {
-  const pa = String(a).split(".").map(Number);
-  const pb = String(b).split(".").map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const x = pa[i] ?? 0,
-      y = pb[i] ?? 0;
-    if (x !== y) return x - y;
-  }
-  return 0;
-}
+/* ── Provider-local storage schema ──────────────────────────────────── */
+
+const SCHEMA_KEY = "schemaVersion";
+
+/** Shape of this add-on's own `storage.local`. Independent of the add-on
+ *  version - ship releases freely and bump this only when the stored shape
+ *  actually changes. Also independent of any other provider's number: a
+ *  `2` here and a `2` in google-4-tbsync describe different storages and
+ *  must never be compared. */
+const SCHEMA_VERSION = 3;
+
+/** Steps that raise storage from the previous version to the keyed one,
+ *  applied in ascending order. `name` appears in the event log so a
+ *  support log shows the sequence rather than only its side effects. A
+ *  rung with no `run` is legal and just bumps the number. */
+const MIGRATIONS = {
+  2: { name: "lift-legacy-prefs", run: liftLegacyPrefs },
+  3: { name: "repair-unconverted-accounts", run: repairUnconvertedAccounts },
+};
 
 let inFlight = null;
 
-/** Drain `eas.upgradeQueue` against the UPGRADES table. Idempotent
- *  (each upgrade body is itself idempotent) and self-coalescing - a
- *  second caller while the first is mid-flight just awaits the same
- *  Promise.
+/** Bring this installation up to date, in one pass under one upgrade lock:
+ *  the storage schema ladder, then the accounts the host flagged.
  *
- *  The host upgrade lock is acquired before any upgrade body runs and
- *  released in `finally`, so:
- *    - User-initiated RPCs against this provider's accounts are refused
- *      while the drain is running.
- *    - Autosync ticks skip those accounts.
- *    - A throw inside an upgrade still releases the lock; the failed
- *      upgrade ID stays in the queue and is retried next boot. */
-export function runUpgrades(provider) {
+ *  Self-coalescing - a second caller while the first is mid-flight awaits
+ *  the same Promise - and re-runnable, so a host that restarts and
+ *  re-imports is picked up on the next port open. */
+export function runStartupMigrations(provider) {
   if (inFlight) return inFlight;
-  inFlight = (async () => {
-    const rv = await browser.storage.local.get({ [UPGRADE_QUEUE_KEY]: [] });
-    const queue = rv[UPGRADE_QUEUE_KEY];
-    if (!queue.length) return;
-
-    let lockAcquired = false;
-    try {
-      await provider.setProviderUpgradeLock(true);
-      lockAcquired = true;
-      provider.reportEventLog({
-        level: "debug",
-        message: `[upgrade] entering upgrade mode - sync and account/resource modifications are paused (${queue.length} upgrade(s) pending)`,
-      });
-
-      const remaining = [];
-      for (const id of queue) {
-        const upgrade = UPGRADES.find((u) => u.id === id);
-        if (!upgrade) continue; // unknown id - silently drop
-        try {
-          provider.reportEventLog({
-            level: "debug",
-            message: `[upgrade] ${id} starting`,
-          });
-          await upgrade.run(provider);
-          provider.reportEventLog({
-            level: "debug",
-            message: `[upgrade] ${id} done`,
-          });
-        } catch (err) {
-          provider.reportEventLog({
-            level: "error",
-            message: `[upgrade] ${id} failed: ${err?.message ?? String(err)}`,
-          });
-          remaining.push(id);
-        }
-      }
-
-      await browser.storage.local.set({ [UPGRADE_QUEUE_KEY]: remaining });
-    } finally {
-      if (lockAcquired) {
-        await provider
-          .setProviderUpgradeLock(false)
-          .catch((err) =>
-            console.warn(
-              "[eas-4-tbsync] failed to release upgrade lock:",
-              err?.message ?? String(err),
-            ),
-          );
-        provider.reportEventLog({
-          level: "debug",
-          message: `[upgrade] exiting upgrade mode - sync and account/resource modifications re-enabled`,
-        });
-      }
-      inFlight = null;
-    }
-  })();
+  // Clear the latch when the run settles, however it settles - including
+  // the common case where there was nothing to do. "Nothing to convert" is
+  // only ever true of the moment it was asked: the host re-imports long
+  // after we first connect, and a latch left holding a resolved Promise
+  // would turn every later port open into a silent no-op.
+  inFlight = runAll(provider).finally(() => {
+    inFlight = null;
+  });
   return inFlight;
 }
 
-/** Compute the set of upgrades triggered by an update transition and
- *  merge their IDs into the persistent queue. No-op when nothing
- *  applies. Returns the new queue length. */
-export async function enqueueUpgradesForUpdate(
-  previousVersion,
-  currentVersion,
-) {
-  const triggered = UPGRADES.filter(
-    (u) =>
-      compareVersions(previousVersion, u.splitVersion) < 0 &&
-      compareVersions(u.splitVersion, currentVersion) <= 0,
-  ).map((u) => u.id);
-  if (!triggered.length) return 0;
-  const rv = await browser.storage.local.get({ [UPGRADE_QUEUE_KEY]: [] });
-  const next = Array.from(new Set([...rv[UPGRADE_QUEUE_KEY], ...triggered]));
-  await browser.storage.local.set({ [UPGRADE_QUEUE_KEY]: next });
-  return next.length;
+async function runAll(provider) {
+  // The lock goes up before anything is read, so the provider is never
+  // serviceable with either phase outstanding. A run with nothing to do
+  // costs one lock round-trip; port opens are rare.
+  let lockAcquired = false;
+  try {
+    await provider.setProviderUpgradeLock(true);
+    lockAcquired = true;
+
+    await runStorageSchemaMigrations(provider);
+    await convertFlaggedAccounts(provider);
+  } finally {
+    if (lockAcquired) {
+      await provider
+        .setProviderUpgradeLock(false)
+        .catch((err) =>
+          console.warn(
+            "[eas-4-tbsync] failed to release upgrade lock:",
+            err?.message ?? String(err),
+          ),
+        );
+    }
+  }
+}
+
+/** Walk the storage ladder from whatever version is recorded up to
+ *  `SCHEMA_VERSION`.
+ *
+ *  Absent (or non-integer) means 1: storage exists but nothing has been
+ *  migrated. Writing that before running anything gives a crash mid-rung a
+ *  recorded state to resume from, and makes "have we ever run here?"
+ *  answerable from storage rather than inferred from a side effect.
+ *
+ *  Each rung is stamped on success, so a failure at 3 keeps 2 banked; a
+ *  rung that throws leaves the version alone and is retried on the next
+ *  startup, which is why every `run` has to be idempotent. */
+async function runStorageSchemaMigrations(provider) {
+  const rv = await browser.storage.local.get({ [SCHEMA_KEY]: null });
+  let version = rv[SCHEMA_KEY];
+  if (!Number.isInteger(version) || version < 1) {
+    version = 1;
+    await browser.storage.local.set({ [SCHEMA_KEY]: version });
+  }
+
+  for (let next = version + 1; next <= SCHEMA_VERSION; next++) {
+    const step = MIGRATIONS[next];
+    const label = step ? ` (${step.name})` : "";
+    try {
+      if (step?.run) await step.run(provider);
+      await browser.storage.local.set({ [SCHEMA_KEY]: next });
+      provider.reportEventLog({
+        level: "debug",
+        message: `[upgrade] storage schema ${next - 1} -> ${next}${label}`,
+      });
+    } catch (err) {
+      provider.reportEventLog({
+        level: "warning",
+        message: `[upgrade] storage schema ${next - 1} -> ${next}${label} failed, retrying on next start: ${err?.message ?? String(err)}`,
+      });
+      return;
+    }
+  }
+}
+
+/** Rung 2. Carry the settings a v4 user explicitly customised out of the
+ *  legacy pref branch and into this add-on's storage.
+ *
+ *  Guarded by the ladder rather than by per-key checks: the Options page
+ *  removes a key to mean "use the default", so an absent key cannot be
+ *  read as "never set". Marker and settings share `storage.local`, so a
+ *  reinstall wipes both together and re-adopting the v4 values has nothing
+ *  to overwrite. `getUserPref` returns only prefs with a user value, never
+ *  the defaults the legacy add-on registered, so an untouched v4 profile
+ *  lifts nothing at all. */
+async function liftLegacyPrefs(provider) {
+  for (const migration of PREF_MIGRATIONS) {
+    await liftPref(provider, migration);
+  }
+}
+
+/** Rung 3. Convert accounts that the host left in legacy shape before
+ *  `legacyMigrationPending` existed: the importer re-ran under a build that
+ *  had no flag to set, so nothing has ever asked for their conversion and
+ *  nothing ever would.
+ *
+ *  No detection heuristic - every step of the conversion is individually
+ *  guarded, so running it over an already-converted account is a sequence
+ *  of early returns. Accounts that *are* flagged belong to the flag path
+ *  and are skipped here to avoid converting them twice in one run. */
+async function repairUnconvertedAccounts(provider) {
+  const accounts = await provider.listAccounts();
+  const stale = accounts.filter((acc) => !acc.legacyMigrationPending);
+  if (!stale.length) return;
+
+  // Every account is attempted before the rung reports failure. Letting
+  // the first throw escape would leave the accounts behind it untouched,
+  // and a permanently failing one would then block the repair of all the
+  // others for good, since the rung is never stamped and always restarts
+  // from the same place.
+  let failed = 0;
+  for (const acc of stale) {
+    try {
+      await convertAccountData(provider, acc);
+    } catch (err) {
+      failed++;
+      provider.reportEventLog({
+        level: "warning",
+        accountId: acc.accountId,
+        message: `[upgrade] repair failed: ${err?.message ?? String(err)}`,
+      });
+    }
+  }
+  if (failed) {
+    throw new Error(
+      `${failed} of ${stale.length} account(s) could not be repaired`,
+    );
+  }
+}
+
+/* ── Host-flag driven account conversion ────────────────────────────── */
+
+/** Convert every account the host flagged, clearing each flag as it
+ *  succeeds. One account failing must not affect the others, so failures
+ *  are contained per account rather than aborting the phase. */
+async function convertFlaggedAccounts(provider) {
+  const pending = (await provider.listAccounts()).filter(
+    (acc) => acc.legacyMigrationPending,
+  );
+  if (!pending.length) return;
+
+  provider.reportEventLog({
+    level: "debug",
+    message: `[upgrade] converting ${pending.length} legacy-imported account(s)`,
+  });
+  for (const acc of pending) {
+    await convertAccount(provider, acc);
+  }
+}
+
+/** Convert one flagged account and tell the host it is finished. A throw
+ *  anywhere leaves the flag set, so the account stays blocked and is
+ *  retried next boot rather than syncing against half-converted data. */
+async function convertAccount(provider, acc) {
+  try {
+    await convertAccountData(provider, acc);
+    // Last, so the flag only clears once every step above has landed.
+    await provider.legacyMigrationDone({ accountId: acc.accountId });
+  } catch (err) {
+    provider.reportEventLog({
+      level: "warning",
+      accountId: acc.accountId,
+      message: `[upgrade] legacy conversion failed - account stays blocked and is retried on the next boot: ${err?.message ?? String(err)}`,
+    });
+    return;
+  }
+  provider.reportEventLog({
+    level: "info",
+    accountId: acc.accountId,
+    message: `[upgrade] legacy conversion complete`,
+  });
+}
+
+/** The conversion itself, with no flag handling, so it can serve both the
+ *  flag path and the rung-3 repair. Throws on the first step that fails -
+ *  the caller decides what that means. */
+async function convertAccountData(provider, acc) {
+  await liftHostAndHttpsToServer(provider, acc);
+  await liftCredentials(provider, acc);
+  await normalizeAllowedEasCommands(provider, acc);
+  await fixFolders(provider, acc);
+  await liftAccountIcon(provider, acc);
+
+  // Legacy EAS4 stored each contact's EAS ServerId as the TB card's
+  // UID (`card.primaryKey === serverId`) and several extra fields in
+  // the property bag via `setProperty()`. The new code expects the
+  // ServerId in an `X-EAS-SERVERID` vCard property and the extras in
+  // matching `X-EAS-*` properties. Without this migration, an
+  // upgraded user would see duplicates after the first delta sync
+  // and silent edit/delete failures on legacy cards. See Phase 3
+  // audit row 3.11 for the full rationale.
+  await migrateContactsForAccount(provider, acc);
+
+  // Legacy EAS4 stored each event/task's EAS ServerId as the
+  // calendar item's id (`item.primaryKey === serverId`, see legacy
+  // sync.js:1042). The new code expects the ServerId in an
+  // `X-EAS-SERVERID` iCal property and a matching
+  // `folder.custom.indexMap` entry. Without this migration, an
+  // upgraded user would see duplicates after the first delta sync
+  // and silent edit/delete failures on legacy events/tasks. Same
+  // shape as the contact migration above; simpler because Lightning
+  // already stores X-EAS-* properties in the iCal blob (no XPCOM
+  // experiment needed).
+  await migrateCalendarItemsForAccount(provider, acc);
 }
 
 // ── Upgrade helpers for legacy migrations─────────────────────────────────────
@@ -468,15 +521,22 @@ async function liftCredentials(provider, acc) {
 /** Walk every selected contacts folder on the account and re-shape each
  *  legacy card into the new vCard layout. Idempotent: cards that already
  *  carry an `X-EAS-SERVERID` property are skipped. */
+/** Every contacts folder is attempted, but one failing fails the account.
+ *  The caller uses that to decide whether the legacy flag may clear or the
+ *  schema rung may stamp - and neither may happen over a folder whose
+ *  cards still carry their ServerId as the card UID, because the sync path
+ *  has no fallback to the legacy property bag and would duplicate them. */
 async function migrateContactsForAccount(provider, acc) {
   const rv = await provider.getAccount(acc.accountId);
   const folders = rv?.folders ?? [];
+  let failed = 0;
   for (const folder of folders) {
     if (folder.targetType !== "contacts") continue;
     if (!folder.targetID) continue;
     try {
       await migrateContactsForFolder(provider, acc.accountId, folder);
     } catch (err) {
+      failed++;
       provider.reportEventLog({
         level: "warning",
         accountId: acc.accountId,
@@ -484,6 +544,9 @@ async function migrateContactsForAccount(provider, acc) {
         message: `[upgrade] folder migration failed: ${err?.message ?? String(err)}`,
       });
     }
+  }
+  if (failed) {
+    throw new Error(`${failed} contact folder(s) could not be migrated`);
   }
 }
 
@@ -496,13 +559,15 @@ async function migrateContactsForFolder(provider, accountId, folder) {
   try {
     stamps = await browser.LegacyAbProperties.readEasStamps(folder.targetID);
   } catch (err) {
-    provider.reportEventLog({
-      level: "warning",
-      accountId,
-      folderId: folder.folderId,
-      message: `[upgrade] LegacyAbProperties.readEasStamps failed: ${err?.message ?? String(err)}`,
-    });
-    return;
+    // Not knowing whether this folder holds legacy cards is not the same
+    // as knowing it doesn't. Rethrow so the account stays blocked: the
+    // sync path never reads the property bag, so proceeding would sync
+    // cards whose identity we failed to look at and duplicate every one.
+    // This is also how the eventual removal of the Experiment surfaces -
+    // as a blocked account with a reason, not silent duplication.
+    throw new Error(
+      `LegacyAbProperties.readEasStamps failed: ${err?.message ?? String(err)}`,
+    );
   }
   if (!Array.isArray(stamps) || stamps.length === 0) return;
 
@@ -669,9 +734,13 @@ function escapeVCardValue(s) {
  *  legacy item by stamping `X-EAS-SERVERID` onto its iCal and adding
  *  a matching `folder.custom.indexMap` entry. Idempotent: items that
  *  already carry `X-EAS-SERVERID` are skipped. */
+/** Attempts every calendar/task folder, then fails the account if any of
+ *  them failed - see `migrateContactsForAccount` for why partial success
+ *  must not be reported as success. */
 async function migrateCalendarItemsForAccount(provider, acc) {
   const rv = await provider.getAccount(acc.accountId);
   const folders = rv?.folders ?? [];
+  let failed = 0;
   for (const folder of folders) {
     const itemKind = itemKindForFolder(folder);
     if (!itemKind || !folder.targetID) continue;
@@ -683,6 +752,7 @@ async function migrateCalendarItemsForAccount(provider, acc) {
         itemKind,
       );
     } catch (err) {
+      failed++;
       provider.reportEventLog({
         level: "warning",
         accountId: acc.accountId,
@@ -690,6 +760,9 @@ async function migrateCalendarItemsForAccount(provider, acc) {
         message: `[upgrade] calendar/task folder migration failed: ${err?.message ?? String(err)}`,
       });
     }
+  }
+  if (failed) {
+    throw new Error(`${failed} calendar/task folder(s) could not be migrated`);
   }
 }
 
@@ -716,13 +789,12 @@ async function migrateCalendarItemsForFolder(
   try {
     items = await calendarStore.listItems(folder.targetID, itemKind.storeType);
   } catch (err) {
-    provider.reportEventLog({
-      level: "warning",
-      accountId,
-      folderId: folder.folderId,
-      message: `[upgrade] calendar items.list failed: ${err?.message ?? String(err)}`,
-    });
-    return;
+    // Same reasoning as the contact stamps above: an unreadable folder is
+    // not an empty one, and letting it pass would clear the flag over
+    // items whose ServerId is still stored as the item id.
+    throw new Error(
+      `calendar items.list failed: ${err?.message ?? String(err)}`,
+    );
   }
   if (!Array.isArray(items) || items.length === 0) return;
 
