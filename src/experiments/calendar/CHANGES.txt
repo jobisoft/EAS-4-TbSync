@@ -1,0 +1,107 @@
+LOCAL CHANGES TO THE VENDORED CALENDAR EXPERIMENT
+=================================================
+
+This folder is vendored from thunderbird/webext-experiments, path
+calendar/experiments/calendar, at commit
+
+    b7f7cb3e76807903a785a03784d6e7df7b213f21
+
+as recorded in ../../VENDOR.md. It is NOT a pristine copy. One file carries
+local changes; every other file is byte-identical to that commit.
+
+Where to look
+-------------
+
+The history is deliberately split so the deviation is one reviewable diff:
+
+    6967645  Vendor the calendar experiment 1:1 from upstream
+    1479556  Apply our local changes to the vendored calendar experiment
+
+`git show 1479556` is the complete and current set of deviations. If that
+diff is empty, this file is stale and should be deleted.
+
+The changes were made here first and copied to TbSync at the time, but that
+copy has since been reverted to pristine upstream: TbSync calls
+calendar.calendars.* and calendar.items.* and never touches
+calendar.timezones.*, so it had no reason to carry them. This add-on is now
+the only place they exist. They landed in c4283c4 ("be more verbose on
+errors", 2026-04-29), the commit
+that also added modules/eas/timezone-mapping.mjs and the Windows timezone
+tables - so they are the experiment-side half of getting Windows/IANA
+timezone mapping working against a real server. 1761b86 ("init
+timezoneService in the child impl", 2026-05-07) is the follow-up.
+
+This add-on is the only consumer of calendar.timezones:
+modules/eas/timezone-mapping.mjs reads currentZone, timezoneIds and
+getDefinition; modules/eas/calendar-sync.mjs reads currentZone.
+
+What changed, and why
+---------------------
+
+All of it is in child/ext-calendar-timezones.js.
+
+0. Priming the timezone service. This runs in the child process, where the
+   service is a fresh instance Thunderbird's own startup never touched -
+   unprimed, the zone list is empty and there is no default zone. Up to and
+   including Thunderbird 153 that means calling startup(). Thunderbird 154
+   moved the work into the constructor and removed startup() entirely
+   (Bug 2022873, "restructure lazy cal. services", commit 1a8cfe0a7058 on
+   the beta branch of thunderbird/thunderbird-desktop), so the call is
+   probed with startup?.(null) rather than made unconditionally. Probed
+   rather than compared against Services.appinfo.version, because the
+   version boundary only holds until someone backports, and a probe
+   degrades to "already primed, do nothing" instead of to an error.
+
+1. Cu.cloneInto for timezoneIds and the parsed jCal definition.
+   Both cross the privileged/extension boundary. Without cloning into
+   context.cloneScope the extension side receives an object it cannot use.
+   This is also why getAPI(_context) became getAPI(context): upstream does
+   not use the parameter, we need it for the clone scope.
+
+2. currentZone returns "" instead of undefined when there is no default
+   timezone, keeping the return type stable across the boundary. Callers
+   still guard with `|| "UTC"`.
+
+3. The private call cal.timezoneService.wrappedJSObject._updateDefaultTimezone()
+   is removed. On 153 it is redundant once the service is primed, because
+   startup() registers the pref and system-timezone observers that keep the
+   default fresh. On 154+ it would throw outright, since that method is now
+   a genuine #private field. Upstream still carries the call, so upstream's
+   own draft is broken on 154+.
+
+4. An unknown returnFormat throws instead of silently returning the raw
+   ical definition, and ExtensionError is imported so that throw raises the
+   intended error rather than a ReferenceError - upstream imports it in
+   every other file that throws it, but omits it here. Our own
+   getDefinition(tzid) call in timezone-mapping.mjs passes no returnFormat
+   and is unaffected: the schema declares "default": "ical", which the API
+   layer fills in, and that same default is why upstream's fallthrough
+   happened to work.
+
+Verified against Thunderbird 153.0.2 (esr153) and 155.0a1: every other
+member this file touches - defaultTimezone, timezoneIds and
+calITimezoneDatabase.getTimezoneDefinition - is present unchanged in both,
+so startup() is the only version-dependent surface.
+
+Status
+------
+
+None of these are upstream and never have been. Checked across the whole
+repository history: b7f7cb3e is the tip of main and the nearest revision to
+this copy by a wide margin, `master` is a stale branch 54 commits behind,
+there are no tags, and cloneInto/cloneScope appear nowhere in that
+directory's history on any branch, nor in any open pull request.
+
+They are worth submitting upstream. Once accepted, re-vendor at the new
+commit, drop the local changes, and delete this file.
+
+Re-vendoring
+------------
+
+    git clone https://github.com/thunderbird/webext-experiments
+    git -C webext-experiments show <commit>:calendar/experiments/calendar/<file>
+
+Then re-apply the diff above. Note that ../../../.prettierignore excludes
+this folder: it must stay byte-identical to upstream apart from the changes
+listed here, and running a formatter over it would make that impossible to
+verify.
