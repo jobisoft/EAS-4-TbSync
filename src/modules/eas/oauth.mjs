@@ -118,6 +118,15 @@ export function primeAccessToken(accountId, token, expiresIn) {
   });
 }
 
+/** The refresh token currently in play for this account, which is not
+ *  necessarily the one stored on the account: Microsoft rotates refresh
+ *  tokens, and `getAccessToken` keeps the new one in `authCache` only.
+ *  Lets the provider write a rotated token back to `custom` after a sync,
+ *  so a restart re-primes from the token that actually works. */
+export function currentRefreshToken(accountId) {
+  return authCache.get(accountId)?.refreshToken ?? null;
+}
+
 // ── Interactive sign-in ────────────────────────────────────────────────────
 
 /**

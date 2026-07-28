@@ -37,7 +37,11 @@ import {
 import * as addressBook from "./address-book.mjs";
 import * as calendarStore from "./calendar-store.mjs";
 import { DEBUG_STATUS_DELAY_MS } from "./debug.mjs";
-import { primeAuth, isOAuthAccount } from "./eas/oauth.mjs";
+import {
+  primeAuth,
+  currentRefreshToken,
+  isOAuthAccount,
+} from "./eas/oauth.mjs";
 import { negotiateAsVersion } from "./eas/connect.mjs";
 import { discoverEasServer } from "./eas/autodiscover.mjs";
 import {
@@ -340,10 +344,19 @@ export class EasProvider extends TbSyncProviderImplementation {
     const ctx = await this.#loadContext(accountId);
     if (!ctx) throw withCode(new Error("unknown account"), ERR.UNKNOWN_ACCOUNT);
     this.reportSyncState({ accountId, syncState: "prepare" });
-    // Refresh the folder list each sync so server-side additions surface.
-    // Per-folder item sync (Stage 6) will be wired into onSyncFolder.
-    await this.#connectAndDiscoverFolders(accountId);
-    return ok();
+    const oauth = isOAuthAccount(ctx.account.custom);
+    const storedRefreshToken = ctx.account.custom?.refreshToken;
+    try {
+      // Refresh the folder list each sync so server-side additions surface.
+      // Per-folder item sync (Stage 6) will be wired into onSyncFolder.
+      await this.#connectAndDiscoverFolders(accountId);
+      return ok();
+    } finally {
+      // Also on the failure path: a sync can rotate the token and then fail
+      // for an unrelated reason, and the rotated token is still the good one.
+      if (oauth)
+        await this.#persistRotatedRefreshToken(accountId, storedRefreshToken);
+    }
   }
 
   /** OPTIONS probe (once) → pre-emptive Provision (if user-toggled) →
@@ -697,6 +710,34 @@ export class EasProvider extends TbSyncProviderImplementation {
     });
   }
 
+  /** Write back a refresh token Microsoft rotated during this sync.
+   *
+   *  A refresh can hand us a new refresh token, which the OAuth layer keeps
+   *  in memory. The background page is persistent, so that lasts the whole
+   *  session - but the next start primes from `custom`, so without this the
+   *  account comes back on a token the server may already have retired.
+   *
+   *  Done after the sync rather than at the moment of rotation, which keeps
+   *  a storage write off the token-refresh path. Rotation is rare, so this
+   *  is a comparison that almost always does nothing. */
+  async #persistRotatedRefreshToken(accountId, storedRefreshToken) {
+    const live = currentRefreshToken(accountId);
+    if (!live || live === storedRefreshToken) return;
+    try {
+      await this.updateAccount({
+        accountId,
+        patch: { custom: { refreshToken: live } },
+      });
+    } catch (err) {
+      // Losing the write costs a re-auth at worst; failing the sync that
+      // otherwise succeeded would be the bigger harm.
+      console.debug(
+        `[eas] persisting rotated refresh token for ${accountId} failed:`,
+        err,
+      );
+    }
+  }
+
   async onGetSortedFolders({ accountId }) {
     const ctx = await this.#loadContext(accountId);
     if (!ctx) return [];
@@ -722,56 +763,65 @@ export class EasProvider extends TbSyncProviderImplementation {
       return ok();
     }
 
-    if (isOAuthAccount(ctx.account.custom)) this.#primeAuth(ctx);
+    const oauth = isOAuthAccount(ctx.account.custom);
+    const storedRefreshToken = ctx.account.custom?.refreshToken;
+    if (oauth) this.#primeAuth(ctx);
 
-    // Lazy-bind the local TB target on first sync (or after the user
-    // removed it manually).
-    if (tt === "contacts") {
-      if (
-        !folder.targetID ||
-        !(await addressBook.bookExists(folder.targetID))
-      ) {
-        const name = localNameForFolder(folder, ctx);
-        const targetID = await addressBook.createBook(name);
-        await this.updateFolder({
-          accountId,
-          folderId,
-          patch: { targetID, targetName: name },
-        });
-        folder = { ...folder, targetID, targetName: name };
+    try {
+      // Lazy-bind the local TB target on first sync (or after the user
+      // removed it manually).
+      if (tt === "contacts") {
+        if (
+          !folder.targetID ||
+          !(await addressBook.bookExists(folder.targetID))
+        ) {
+          const name = localNameForFolder(folder, ctx);
+          const targetID = await addressBook.createBook(name);
+          await this.updateFolder({
+            accountId,
+            folderId,
+            patch: { targetID, targetName: name },
+          });
+          folder = { ...folder, targetID, targetName: name };
+        }
+      } else {
+        if (
+          !folder.targetID ||
+          !(await calendarStore.calendarExists(folder.targetID))
+        ) {
+          const name = localNameForFolder(folder, ctx);
+          const targetID = await calendarStore.createCalendar({
+            name,
+            kind: tt === "calendars" ? "events" : "tasks",
+          });
+          await this.updateFolder({
+            accountId,
+            folderId,
+            patch: { targetID, targetName: name },
+          });
+          folder = { ...folder, targetID, targetName: name };
+        }
       }
-    } else {
-      if (
-        !folder.targetID ||
-        !(await calendarStore.calendarExists(folder.targetID))
-      ) {
-        const name = localNameForFolder(folder, ctx);
-        const targetID = await calendarStore.createCalendar({
-          name,
-          kind: tt === "calendars" ? "events" : "tasks",
-        });
-        await this.updateFolder({
-          accountId,
-          folderId,
-          patch: { targetID, targetName: name },
-        });
-        folder = { ...folder, targetID, targetName: name };
-      }
+
+      this.reportSyncState({ accountId, folderId, syncState: "sync" });
+
+      const args = {
+        provider: this,
+        account: ctx.account,
+        folder,
+        accountId,
+        folderId,
+        asVersion: ctx.account.custom?.asversion ?? "14.1",
+      };
+      if (tt === "contacts") return await syncContactFolder(args);
+      if (tt === "calendars") return await syncCalendarFolder(args);
+      return await syncTaskFolder(args);
+    } finally {
+      // Item sync is where a long run is most likely to cross a token
+      // refresh, so this is the folder hook's reason for a finally.
+      if (oauth)
+        await this.#persistRotatedRefreshToken(accountId, storedRefreshToken);
     }
-
-    this.reportSyncState({ accountId, folderId, syncState: "sync" });
-
-    const args = {
-      provider: this,
-      account: ctx.account,
-      folder,
-      accountId,
-      folderId,
-      asVersion: ctx.account.custom?.asversion ?? "14.1",
-    };
-    if (tt === "contacts") return await syncContactFolder(args);
-    if (tt === "calendars") return await syncCalendarFolder(args);
-    return await syncTaskFolder(args);
   }
 
   // ── Setup / config popup backings ─────────────────────────────────────
