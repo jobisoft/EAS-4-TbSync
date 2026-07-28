@@ -24,91 +24,69 @@ installAnchorMailboxInjector();
 const provider = new EasProvider();
 
 // Internal messages from our own UI pages (setup.html, config.html).
-// Errors are returned as structured { ok, error, code } rather than thrown,
+//
+// The listener is deliberately NOT async. Returning a promise from an
+// onMessage listener claims the message and supplies its response, so an
+// async listener would answer every message in this add-on - including
+// `tbsync-setup-completed`, which belongs to the base class's own listener.
+// Returning nothing for anything not in this table leaves those alone.
+//
+// Errors come back as structured { ok, error, code } rather than thrown,
 // because runtime.sendMessage serialisation drops Error.code and the dialogs
 // need the code to distinguish user-cancel from real failures.
-browser.runtime.onMessage.addListener(async (msg) => {
-  if (msg?.type === "eas.startOAuth") {
+const MESSAGE_HANDLERS = {
+  "eas.startOAuth": (msg) =>
+    startAuth({ loginHint: msg.loginHint, servertype: msg.servertype }),
+
+  "eas.discoverServer": async (msg) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30_000);
     try {
-      const result = await startAuth({
-        loginHint: msg.loginHint,
-        servertype: msg.servertype,
+      return await discoverEasServer({
+        email: msg.email,
+        password: msg.password,
+        signal: controller.signal,
       });
-      return { ok: true, result };
-    } catch (err) {
-      return {
-        ok: false,
-        error: err.message ?? String(err),
-        code: err.code ?? null,
-      };
+    } finally {
+      clearTimeout(timer);
     }
+  },
+
+  // Forward the whole message minus `type` so the provider can branch on
+  // `method` and read both basic-auth and OAuth-specific fields.
+  "eas.createAccount": ({ type: _t, ...args }) =>
+    provider.createAccountFromSetup(args),
+
+  "eas.getAccount": (msg) => provider.getAccountForConfig(msg.accountId),
+
+  "eas.saveAccount": (msg) =>
+    provider.saveAccountFromConfig({
+      accountId: msg.accountId,
+      patch: msg.patch ?? {},
+    }),
+};
+
+/** Run a handler and shape the reply the dialogs expect. `details` rides
+ *  along because the setup dialog reads `reply.details.tried` from a failed
+ *  Autodiscover; it is null for errors that carry none. */
+async function replyEnvelope(handler, msg) {
+  try {
+    return { ok: true, result: await handler(msg) };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err?.message ?? String(err),
+      code: err?.code ?? null,
+      details: err?.details ?? null,
+    };
   }
-  if (msg?.type === "eas.discoverServer") {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 30_000);
-      try {
-        const result = await discoverEasServer({
-          email: msg.email,
-          password: msg.password,
-          signal: controller.signal,
-        });
-        return { ok: true, result };
-      } finally {
-        clearTimeout(timer);
-      }
-    } catch (err) {
-      return {
-        ok: false,
-        error: err.message ?? String(err),
-        code: err.code ?? null,
-        details: err.details ?? null,
-      };
-    }
-  }
-  if (msg?.type === "eas.createAccount") {
-    try {
-      // Forward the whole message minus `type` so the provider can branch
-      // on `method` and read both basic-auth and OAuth-specific fields.
-      const { type: _t, ...args } = msg;
-      const result = await provider.createAccountFromSetup(args);
-      return { ok: true, result };
-    } catch (err) {
-      return {
-        ok: false,
-        error: err.message ?? String(err),
-        code: err.code ?? null,
-      };
-    }
-  }
-  if (msg?.type === "eas.getAccount") {
-    try {
-      const result = await provider.getAccountForConfig(msg.accountId);
-      return { ok: true, result };
-    } catch (err) {
-      return {
-        ok: false,
-        error: err.message ?? String(err),
-        code: err.code ?? null,
-      };
-    }
-  }
-  if (msg?.type === "eas.saveAccount") {
-    try {
-      const result = await provider.saveAccountFromConfig({
-        accountId: msg.accountId,
-        patch: msg.patch ?? {},
-      });
-      return { ok: true, result };
-    } catch (err) {
-      return {
-        ok: false,
-        error: err.message ?? String(err),
-        code: err.code ?? null,
-      };
-    }
-  }
-  return undefined;
+}
+
+browser.runtime.onMessage.addListener((msg) => {
+  const handler = MESSAGE_HANDLERS[msg?.type];
+  // Not ours - stay out of the way so the listener it belongs to can answer.
+  if (!handler) return;
+  return replyEnvelope(handler, msg);
 });
 
 provider.init();
