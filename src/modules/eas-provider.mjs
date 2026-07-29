@@ -1,20 +1,48 @@
 /**
- * EAS provider. Implements the TbSync provider contract for Exchange
- * ActiveSync servers using basic-auth + WBXML (no OAuth for now).
+ * EAS provider. Implements the TbSync provider contract, speaking WBXML to
+ * Exchange ActiveSync servers.
  *
- * Host owns all persistent state. Account `custom` carries:
- *   - server       - full EAS endpoint URL
- *   - user         - login, often full email
- *   - password     - basic-auth password (plaintext; future: move to secure storage)
- *   - deviceId     - stable per-account EAS device identifier
- *   - asversion    - negotiated AS version ("2.5" | "14.0" | "14.1" | "16.1")
- *   - policykey    - current provision key ("0" before first Provision)
- *   - foldersynckey - FolderSync key ("0" before first FolderSync)
+ * Two authentication flavours, chosen by `custom.servertype`:
+ *   - "office365" / "personal-ms" - OAuth. `refreshToken` and
+ *     `authenticatedUserEmail` carry the identity; `server` is derived from
+ *     the flavour rather than entered.
+ *   - "auto" (Autodiscover) / "custom" - basic auth with `user` + `password`.
+ * `eas/oauth.mjs::isOAuthAccount` is the check used throughout.
+ *
+ * Host owns all persistent state; this add-on has no storage of its own
+ * beyond a schema marker (see upgrades.mjs). Account `custom` is the opaque
+ * blob the host round-trips for us. `createAccountFromSetup` below writes
+ * the authoritative shape - rather than restate it here and let the two
+ * drift, only the fields you need in order to follow the code:
+ *
+ *   - server, user, password / servertype, refreshToken,
+ *     authenticatedUserEmail - see the two flavours above
+ *   - deviceId       - stable per-account EAS device identifier
+ *   - asversion      - negotiated AS version ("2.5" | "14.0" | "14.1" | "16.1")
+ *   - policykey      - current provision key ("0" before first Provision)
+ *   - foldersynckey  - FolderSync key ("0" before first FolderSync)
+ *
+ * The rest fall into three groups: the OPTIONS probe cache
+ * (`allowedEasVersions`, `allowedEasCommands`, `lastEasOptionsUpdate`), the
+ * config-popup options (`asversionselected`, `provision`, `syncrecurrence`,
+ * `synclimit`, `displayoverride`, `seperator` - spelled that way on disk),
+ * and GAL state (`galenabled`, `galName`).
+ *
+ * Credentials sit in that account row in `storage.local`, unencrypted. A
+ * WebExtension has no write path to Thunderbird's password manager - the
+ * `LegacyLoginManager` experiment this add-on ships is read-only
+ * (`getLoginInfo`), and exists only to import what TbSync 4 stored there.
+ * A known limitation, not a pending task.
+ *
  * Folder `custom` carries:
  *   - serverID        - EAS folder serverID (stable across syncs)
+ *   - parentID        - EAS parent folder serverID, for hierarchy
  *   - synckey         - per-folder Sync key ("0" before first Sync)
  *   - class           - EAS Class (e.g. "Contacts", "Calendar", "Tasks")
- *   - indexMap        - array of {uid, serverId} (any kind)
+ *   - indexMap        - array of {uid, serverId} (any kind). A cache in
+ *                       front of the server id stamped into each item's
+ *                       blob, which is the authority - see
+ *                       `sync-runner.mjs::findExistingByServerId`.
  *   - displayNameRaw  - server-supplied folder name; the visible
  *                       `displayName` is recomputed from this on every
  *                       push (with optional "Trash | " prefix)
@@ -457,7 +485,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     const storedRefreshToken = ctx.account.custom?.refreshToken;
     try {
       // Refresh the folder list each sync so server-side additions surface.
-      // Per-folder item sync (Stage 6) will be wired into onSyncFolder.
+      // Items themselves are synced per folder, by onSyncFolder.
       await this.#connectAndDiscoverFolders(accountId);
       return ok();
     } finally {
