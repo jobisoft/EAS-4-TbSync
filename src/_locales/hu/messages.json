@@ -269,9 +269,6 @@
   "config.error.invalidAsVersion": {
     "message": "Érvénytelen ActiveSync verzió kiválasztva."
   },
-  "warning.reauthFailed": {
-    "message": "Az újrahitelesítés nem fejeződött be. Kattintson a „Bejelentkezés újra” lehetőségre."
-  },
   "options.title": {
     "message": "EAS-4-TbSync – Speciális beállítások"
   },
