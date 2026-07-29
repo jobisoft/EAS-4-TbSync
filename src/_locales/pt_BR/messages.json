@@ -269,9 +269,6 @@
   "config.error.invalidAsVersion": {
     "message": "Invalid ActiveSync version selection."
   },
-  "warning.reauthFailed": {
-    "message": "Re-authentication did not complete. Click \"Sign in again\" to retry."
-  },
   "options.title": {
     "message": "EAS-4-TbSync - Advanced settings"
   },
