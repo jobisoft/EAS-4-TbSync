@@ -166,7 +166,9 @@ export async function syncCalendarFolder({
 }) {
   const filterType = String(account.custom?.synclimit ?? "7");
   const defaultTimezone = await getDefaultTimezone();
-  await ensureTimezoneMappingLoaded();
+  await ensureTimezoneMappingLoaded((level, message) =>
+    provider.reportEventLog({ level, accountId, folderId, message }),
+  );
   return withWritableCalendar(folder, () =>
     runItemSync({
       provider,
@@ -190,7 +192,9 @@ export async function syncTaskFolder({
   asVersion,
 }) {
   const defaultTimezone = await getDefaultTimezone();
-  await ensureTimezoneMappingLoaded();
+  await ensureTimezoneMappingLoaded((level, message) =>
+    provider.reportEventLog({ level, accountId, folderId, message }),
+  );
   return withWritableCalendar(folder, () =>
     runItemSync({
       provider,

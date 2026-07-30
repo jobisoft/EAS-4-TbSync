@@ -43,11 +43,16 @@ const _tzInfoCache = new Map();
  *  calendar service knows about, parses each VTIMEZONE definition, and
  *  builds the resolver's lookup tables. Concurrent calls share one
  *  in-flight load. On failure the cache is cleared and the rejection
- *  propagates, so the next call retries from scratch. */
-export function ensureLoaded() {
+ *  propagates, so the next call retries from scratch.
+ *
+ *  `eventLog` is optional, `(level, message)`, and only used for the two
+ *  states that leave every later zone calculation unreliable: no default
+ *  timezone at all, and a default timezone we could find no definition
+ *  for. Being tied to the load, each is reported at most once. */
+export function ensureLoaded(eventLog) {
   if (_state) return Promise.resolve();
   if (!_loaded) {
-    _loaded = loadInternal();
+    _loaded = loadInternal(eventLog);
     // Log + clear the cached promise on failure so the next caller retries.
     // The original rejection still propagates to whoever awaits this call.
     _loaded.catch((err) => {
@@ -58,13 +63,23 @@ export function ensureLoaded() {
   return _loaded;
 }
 
-async function loadInternal() {
+async function loadInternal(eventLog) {
   const [winCsvLines, aliasCsvLines] = await Promise.all([
     fetchCsvLines("modules/eas/timezonedata/WindowsTimezone.csv"),
     fetchCsvLines("modules/eas/timezonedata/Aliases.csv"),
   ]);
-  const currentZone =
-    (await messenger.calendar.timezones.currentZone) || "UTC";
+  const rawCurrentZone = await messenger.calendar.timezones.currentZone;
+  // An empty id means the calendar service has no default timezone, i.e. it
+  // was never primed - in which case every zone lookup below is suspect,
+  // not just this one.
+  if (!rawCurrentZone) {
+    eventLog?.(
+      "warning",
+      "[eas:timezone] the calendar service reports no default timezone; " +
+        "falling back to UTC for this account.",
+    );
+  }
+  const currentZone = rawCurrentZone || "UTC";
   const timezoneIds = (await messenger.calendar.timezones.timezoneIds) || [];
   
   // 1) Aliases.csv → "Africa/Abidjan" → ["Iceland", "Africa/Timbuktu", …]
@@ -133,7 +148,21 @@ async function loadInternal() {
   //    tables so they win ties even when iteration order didn't favour them.
   cached.bothOffsets["0:0"] = "UTC";
   if (!cached.iana["UTC"]) cached.iana["UTC"] = utcTzInfo("UTC");
-  const defaultInfo = cached.iana[currentZone] || utcTzInfo(currentZone);
+  // The walk above only visits zones the calendar service lists, so a
+  // default zone missing from that list never got a definition fetched.
+  // Try one directly before giving up: utcTzInfo carries no icalTimezone
+  // and UTC offsets, so settling for it files a fiction under the zone's
+  // name and every later conversion - all-day dates, outbound blob
+  // offsets - is computed against it.
+  let defaultInfo = cached.iana[currentZone] ?? (await loadTzInfo(currentZone));
+  if (!defaultInfo) {
+    defaultInfo = utcTzInfo(currentZone);
+    eventLog?.(
+      "warning",
+      `[eas:timezone] no definition for the default timezone ${currentZone}; ` +
+        "treating it as UTC. Dates and times may be off by the zone's offset.",
+    );
+  }
   cached.iana[currentZone] = defaultInfo;
   if (defaultInfo.std.abbreviation) {
     cached.abbreviations[defaultInfo.std.abbreviation] = currentZone;
@@ -192,7 +221,11 @@ async function loadTzInfo(tzid) {
     _tzInfoCache.set(tzid, info);
     return info;
   }
-  const def = await messenger.calendar.timezones.getDefinition(tzid);
+  // Ask for "ical" explicitly. Our vendored schema defaults to it, but the
+  // upstream API this Experiment is being replaced by defaults to "jcal"
+  // (D302738) - which would hand us a parsed object where the code below
+  // expects the raw VTIMEZONE text.
+  const def = await messenger.calendar.timezones.getDefinition(tzid, "ical");
   if (!def) {
     _tzInfoCache.set(tzid, null);
     return null;
