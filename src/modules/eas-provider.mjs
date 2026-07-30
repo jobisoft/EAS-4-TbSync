@@ -65,7 +65,6 @@ import {
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "./address-book.mjs";
 import * as calendarStore from "./calendar-store.mjs";
-import { DEBUG_STATUS_DELAY_MS } from "./debug.mjs";
 import {
   primeAuth,
   primeAccessToken,
@@ -896,7 +895,6 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Folder kind we don't sync yet (e.g. notes / journal): record a
       // success transition without touching server state.
       this.reportSyncState({ accountId, folderId, syncState: "sync" });
-      await new Promise((r) => setTimeout(r, DEBUG_STATUS_DELAY_MS));
       return ok();
     }
 
