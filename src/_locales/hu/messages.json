@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Egyes kiszolgálók a törölt naptárakat, címjegyzékeket és feladatlistákat egy Lomtár mappában tartják, ahelyett, hogy ténylegesen eltávolítanák őket. Alapértelmezés szerint ezek el vannak rejtve a mappalistából. Engedélyezze ezt a beállítást, hogy láthatóvá váljanak - egy lokalizált „Lomtár | ” előtaggal jelennek meg, így megkülönböztetheti őket, és eldöntheti, hogy szinkronizálja-e őket. A következő mappalista-frissítéskor lép életbe."
   },
+  "options.postPushSettle": {
+    "message": "Várakozás a feltöltött módosítások szerveroldali visszaküldésére"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Egyes Exchange-kiszolgálók a módosítás elfogadása után röviddel sajátjukként küldik vissza azt. E beállítás nélkül ez a visszhang csak a következő szinkronizáláskor érkezik meg, és felülírhatja az időközben végzett módosításokat. Bekapcsolva minden feltöltéssel járó szinkronizálás körülbelül két másodpercet vár, és újra letölt, hogy a visszhangot azonnal átvegye. Csak akkor kapcsolja be, ha helyi módosítások vesznek el."
+  },
   "options.clientid": {
     "message": "Egyéni OAuth ügyfélazonosító"
   },

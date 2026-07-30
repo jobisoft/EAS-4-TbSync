@@ -2,7 +2,8 @@
  * Advanced settings page. Six storage.local keys, all optional - empty
  * input means "use the bundled default", so an empty value is persisted
  * as `storage.local.remove(key)` rather than as an empty string. The
- * msTodoCompat boolean is similar: only the `true` state is written.
+ * booleans are similar: only the `true` state is written, so an absent key
+ * means off.
  */
 
 import { localizeDocument } from "../../vendor/i18n/i18n.mjs";
@@ -23,6 +24,7 @@ async function load() {
   const keys = STRING_FIELDS.map((f) => f.key).concat(
     "msTodoCompat",
     "showItemsInTrash",
+    "postPushSettle",
   );
   const stored = await browser.storage.local.get(keys);
 
@@ -36,6 +38,7 @@ async function load() {
   $("opt-deviceos").placeholder = await getDefaultDeviceOs();
   $("opt-mstodo").checked = stored.msTodoCompat === true;
   $("opt-show-trash").checked = stored.showItemsInTrash === true;
+  $("opt-postpush-settle").checked = stored.postPushSettle === true;
 }
 
 function bindStringField({ key, inputId, type }) {
@@ -77,4 +80,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   for (const f of STRING_FIELDS) bindStringField(f);
   bindCheckbox("opt-mstodo", "msTodoCompat");
   bindCheckbox("opt-show-trash", "showItemsInTrash");
+  bindCheckbox("opt-postpush-settle", "postPushSettle");
 });

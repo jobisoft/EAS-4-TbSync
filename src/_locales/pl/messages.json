@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Niektóre serwery przechowują usunięte kalendarze, książki adresowe i listy zadań w folderze Kosz, zamiast usuwać je całkowicie. Domyślnie są one ukryte z listy folderów. Włącz tę opcję, aby były widoczne - pojawiają się z lokalizowanym przedrostkiem „Kosz | ”, dzięki czemu można je odróżnić i wybrać, czy mają być synchronizowane. Zacznie obowiązywać przy następnym odświeżeniu listy folderów."
   },
+  "options.postPushSettle": {
+    "message": "Czekaj, aż serwer odeśle wysłane zmiany"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Niektóre serwery Exchange odsyłają zmianę jako własną tuż po jej przyjęciu. Bez tej opcji takie echo dociera dopiero przy następnej synchronizacji i może nadpisać zmiany wprowadzone w międzyczasie. Po włączeniu każda synchronizacja, która coś wysłała, czeka około dwóch sekund i pobiera dane ponownie, aby od razu przyjąć echo. Włącz tylko wtedy, gdy lokalne zmiany giną."
+  },
   "options.clientid": {
     "message": "Niestandardowy identyfikator klienta OAuth"
   },

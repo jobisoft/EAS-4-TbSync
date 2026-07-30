@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Algunos servidores guardan los calendarios, libretas de direcciones y listas de tareas eliminados dentro de una carpeta Papelera en lugar de eliminarlos por completo. De forma predeterminada, estos quedan ocultos de la lista de carpetas. Active esta opción para hacerlos visibles - aparecen con un prefijo localizado «Papelera | » para que pueda distinguirlos y decidir si los sincroniza. Surte efecto en la próxima actualización de la lista de carpetas."
   },
+  "options.postPushSettle": {
+    "message": "Esperar a que el servidor devuelva los cambios enviados"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Algunos servidores Exchange devuelven un cambio como si fuera suyo poco después de aceptarlo. Sin esta opción, ese eco llega en la siguiente sincronización, donde puede sobrescribir las ediciones hechas mientras tanto. Al activarla, cada sincronización que haya enviado algo espera unos dos segundos y vuelve a descargar para recoger el eco de inmediato. Actíve la solo si se pierden cambios locales."
+  },
   "options.clientid": {
     "message": "ID de cliente OAuth personalizado"
   },

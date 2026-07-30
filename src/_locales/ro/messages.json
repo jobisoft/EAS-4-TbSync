@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Unele servere păstrează calendarele, agendele de adrese și listele de activități șterse într-un folder Coș de gunoi în loc să le elimine complet. În mod implicit, acestea sunt ascunse din lista de foldere. Activați această opțiune pentru a le face vizibile - apar cu un prefix localizat „Coș de gunoi | ” pentru a le putea distinge și pentru a alege dacă să le sincronizați. Are efect la următoarea reîmprospătare a listei de foldere."
   },
+  "options.postPushSettle": {
+    "message": "Așteaptă ca serverul să retrimită modificările încărcate"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Unele servere Exchange retrimit o modificare ca și cum ar fi a lor, la scurt timp după ce au acceptat-o. Fără această opțiune, ecoul ajunge la sincronizarea următoare, unde poate suprascrie modificările făcute între timp. Când este activată, fiecare sincronizare care a încărcat ceva așteaptă circa două secunde și descarcă din nou pentru a prelua imediat ecoul. Activați doar dacă se pierd modificări locale."
+  },
   "options.clientid": {
     "message": "ID client OAuth personalizat"
   },

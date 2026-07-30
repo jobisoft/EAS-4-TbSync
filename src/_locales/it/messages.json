@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Alcuni server conservano i calendari, le rubriche e gli elenchi di attività eliminati all’interno di una cartella Cestino invece di rimuoverli del tutto. Per impostazione predefinita questi elementi sono nascosti dall’elenco delle cartelle. Attiva questa opzione per renderli visibili - appariranno con un prefisso localizzato «Cestino | » in modo da poterli distinguere e decidere se sincronizzarli. Ha effetto al prossimo aggiornamento dell’elenco delle cartelle."
   },
+  "options.postPushSettle": {
+    "message": "Attendere che il server rimandi le modifiche inviate"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Alcuni server Exchange rimandano una modifica come se fosse propria poco dopo averla accettata. Senza questa opzione tale eco arriva alla sincronizzazione successiva, dove può sovrascrivere le modifiche fatte nel frattempo. Attivandola, ogni sincronizzazione che ha inviato qualcosa attende circa due secondi ed esegue un ulteriore scaricamento per acquisire subito l'eco. Attivare solo se le modifiche locali vanno perse."
+  },
   "options.clientid": {
     "message": "ID client OAuth personalizzato"
   },

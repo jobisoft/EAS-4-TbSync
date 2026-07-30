@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Certains serveurs conservent les agendas, carnets d’adresses et listes de tâches supprimés dans un dossier Corbeille au lieu de les retirer définitivement. Ils sont masqués par défaut dans la liste des dossiers. Activez cette option pour les rendre visibles - ils apparaissent avec un préfixe localisé « Corbeille | » qui vous permet de les distinguer et de choisir de les synchroniser ou non. Prend effet lors du prochain rafraîchissement de la liste des dossiers."
   },
+  "options.postPushSettle": {
+    "message": "Attendre le renvoi des modifications envoyées par le serveur"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Certains serveurs Exchange renvoient une modification comme si elle venait d'eux, peu après l'avoir acceptée. Sans cette option, cet écho arrive lors de la synchronisation suivante, où il peut écraser les modifications faites entre-temps. Si elle est activée, chaque synchronisation ayant envoyé des données attend environ deux secondes et effectue une relecture pour récupérer l'écho immédiatement. N'activez cette option que si des modifications locales disparaissent."
+  },
   "options.clientid": {
     "message": "ID client OAuth personnalisé"
   },

@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Algúns servidores conservan os calendarios, axendas e listas de tarefas eliminadas dentro dun cartafol do Lixo en lugar de eliminalos por completo. De forma predeterminada, estes quedan ocultos da lista de cartafoles. Active esta opción para facelos visibles - aparecen cun prefixo localizado «Lixo | » para que poida distinguilos e decidir se os sincroniza. Aplícase na seguinte actualización da lista de cartafoles."
   },
+  "options.postPushSettle": {
+    "message": "Agardar a que o servidor devolva os cambios enviados"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Algúns servidores Exchange devolven un cambio coma se fose seu pouco despois de aceptalo. Sen esta opción, ese eco chega na seguinte sincronización, onde pode sobrescribir as edicións feitas mentres tanto. Ao activala, cada sincronización que enviou algo agarda uns dous segundos e descarga de novo para recoller o eco de inmediato. Actíveo só se se perden cambios locais."
+  },
   "options.clientid": {
     "message": "ID de cliente OAuth personalizado"
   },

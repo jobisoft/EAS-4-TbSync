@@ -94,6 +94,17 @@ const STATUS_ACCESS_DENIED = new Set([
 // Provision and let the host re-run the account sync.
 const STATUS_PROVISION_REQUIRED = new Set(["141", "142", "143", "144"]);
 
+// Exchange sometimes re-sends a local change back to us as a server change
+// after it has already acked it. Under our server-wins policy that echo
+// overwrites whatever the user changed in the meantime - so we wait for it
+// here and let it land in this sync, rather than meeting it on the next one
+// with newer local edits to lose. 2000 ms is the value legacy settled on
+// (v4 sync.js::easFolder); it is a hope, not a guarantee, and always was.
+//
+// Opt-in via the `postPushSettle` advanced option, off by default. The
+// behaviour it defends against is old and may not survive on 16.x, and the
+// cost - two seconds plus a second pull on every sync that uploaded
+// anything - is paid by everyone whether their server does it or not.
 const POST_PUSH_WAIT_MS = 2000;
 
 /* ── DEV: fixture injection ─────────────────────────────────────────────
@@ -181,6 +192,16 @@ async function readMsTodoCompat() {
     msTodoCompat: false,
   });
   return msTodoCompat === true;
+}
+
+/** Whether to wait for Exchange's echo of a change it already acked - see
+ *  POST_PUSH_WAIT_MS. Absent means off, matching the options page, which
+ *  removes the key rather than storing `false`. */
+async function readPostPushSettle() {
+  const { postPushSettle } = await browser.storage.local.get({
+    postPushSettle: false,
+  });
+  return postPushSettle === true;
 }
 
 /* ── Entry point ──────────────────────────────────────────────────── */
@@ -300,6 +321,7 @@ async function runOneSync({
   let synckey = String(folder.custom?.synckey ?? "0");
   const maxItems = await readMaxItems();
   const msTodoCompat = await readMsTodoCompat();
+  const postPushSettle = await readPostPushSettle();
   // Effective read-only: server-imposed (`folder.readOnly`) OR user-toggled
   // (`folder.downloadOnly`). When set, we discard pending user-side edits
   // before pulling, and skip the push phase entirely. Matches legacy's
@@ -320,6 +342,7 @@ async function runOneSync({
     defaultTimezone,
     syncRecurrence: account.custom?.syncrecurrence === true,
     msTodoCompat,
+    postPushSettle,
     itemKind,
     store: itemKind.storeFactory(folder.targetID),
     synckey,
@@ -413,8 +436,12 @@ async function runOneSync({
     }
   }
 
-  // 4) Follow-up pull, after a brief settle window.
-  if (pushed.changedAnything) {
+  // 4) Follow-up pull, after the settle window - this is what catches
+  // Exchange's echo of a change it already acked. Only when the push
+  // actually sent something, since there is otherwise no echo to wait for,
+  // and only when the user asked for it: the wait and this pull are one
+  // workaround, and pulling without waiting would just race the echo.
+  if (pushed.changedAnything && ctx.postPushSettle) {
     await sleep(POST_PUSH_WAIT_MS);
     const second = await pullPhase(ctx);
     if (second.code) return await finishWith(ctx, second);

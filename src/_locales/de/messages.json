@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Einige Server bewahren gelöschte Kalender, Adressbücher und Aufgabenlisten in einem Papierkorb-Ordner auf, anstatt sie endgültig zu entfernen. Standardmäßig werden diese in der Ordnerliste ausgeblendet. Aktivieren Sie diese Option, um sie sichtbar zu machen - sie werden mit einem lokalisierten „Papierkorb | “-Präfix angezeigt, damit Sie sie unterscheiden und entscheiden können, ob sie synchronisiert werden sollen. Wird beim nächsten Aktualisieren der Ordnerliste wirksam."
   },
+  "options.postPushSettle": {
+    "message": "Auf das Echo hochgeladener Änderungen warten"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Manche Exchange-Server senden eine Änderung kurz nach dem Bestätigen als eigene zurück. Ohne diese Option trifft dieses Echo erst bei der nächsten Synchronisation ein und kann dort zwischenzeitliche Bearbeitungen überschreiben. Ist sie aktiviert, wird nach jeder Synchronisation mit Uploads etwa zwei Sekunden gewartet und erneut abgerufen, um das Echo sofort zu übernehmen. Aktivieren Sie diese Option nur, wenn lokale Änderungen verloren gehen."
+  },
   "options.clientid": {
     "message": "Eigene OAuth-Client-ID"
   },
