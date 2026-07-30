@@ -16,6 +16,7 @@
  *       <UserResponse>1|2|3</UserResponse>
  *       <airsync:CollectionId>…</airsync:CollectionId>
  *       <airsync:RequestId>…</airsync:RequestId>
+ *       [<InstanceId>…</InstanceId>]
  *     </Request>
  *   </MeetingResponse>
  *
@@ -30,7 +31,7 @@ import { createWBXML } from "../wbxml.mjs";
 import { easRequest } from "../network.mjs";
 import { readPathFrom } from "./wbxml-helpers.mjs";
 
-function buildBody({ collectionId, serverID, userResponse }) {
+function buildBody({ collectionId, serverID, userResponse, instanceId }) {
   const w = createWBXML();
   w.switchpage("MeetingResponse");
   w.otag("MeetingResponse");
@@ -42,6 +43,10 @@ function buildBody({ collectionId, serverID, userResponse }) {
   // define at all. No switchpage needed/wanted here.
   w.atag("CollectionId", collectionId);
   w.atag("RequestId", serverID);
+  // A whole recurring series is one EAS item, so responding to a single
+  // occurrence names that instance rather than addressing a different item.
+  // InstanceId follows RequestId in the schema and is valid from 14.1 on.
+  if (instanceId) w.atag("InstanceId", instanceId);
   w.ctag();
   w.ctag();
   return w.getBytes();
@@ -58,14 +63,21 @@ export async function sendMeetingResponse({
   collectionId,
   serverID,
   userResponse,
+  instanceId = null,
 }) {
   if (!collectionId || !serverID || !userResponse) return null;
+  // MeetingResponseRequest.xsd restricts InstanceId to exactly 24 characters
+  // (the extended form 2026-08-10T07:45:00.000Z) - unlike the AirSyncBase
+  // InstanceId, which is the 16-character basic form. Getting it wrong is
+  // answered with Status 2, so refuse to send a malformed value rather than
+  // have the server reject the response as an invalid meeting.
+  if (instanceId && String(instanceId).length !== 24) return null;
   let resp;
   try {
     resp = await easRequest({
       account,
       command: "MeetingResponse",
-      body: buildBody({ collectionId, serverID, userResponse }),
+      body: buildBody({ collectionId, serverID, userResponse, instanceId }),
       asVersion,
     });
   } catch {

@@ -69,6 +69,7 @@ function makeCodec(modCodec) {
     // Optional invitation-response detection (calendar only). Undefined
     // for the Tasks codec, so the runner's `?.()` call is a no-op there.
     detectInvitationResponse: modCodec.detectInvitationResponse,
+    detectInvitationResponses: modCodec.detectInvitationResponses,
     stampInvitationResponse: modCodec.stampInvitationResponse,
     matchInvitationResponse: modCodec.matchInvitationResponse,
     preserveSelfPartstat: modCodec.preserveSelfPartstat,

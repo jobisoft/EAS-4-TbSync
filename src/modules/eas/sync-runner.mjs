@@ -951,9 +951,15 @@ async function buildPushBatch(ctx, slice) {
               entry,
               serverID,
               item: it,
-              userResponseCode: match.userResponseCode,
-              newResponseType: match.newResponseType,
               existingItemId: match.existingItemId,
+              // a duplicate created by itip always answers the whole series
+              responses: [
+                {
+                  userResponseCode: match.userResponseCode,
+                  newResponseType: match.newResponseType,
+                  instanceId: null,
+                },
+              ],
             });
             continue;
           }
@@ -972,18 +978,29 @@ async function buildPushBatch(ctx, slice) {
       // An itip Accept/Decline/Tentative just flips the self-attendee's
       // PARTSTAT on an otherwise-unrelated received invite - that's not
       // a generic edit, it's an RSVP, and must go out as a dedicated
-      // MeetingResponse (see calendar-codec.mjs's detectInvitationResponse
+      // MeetingResponse (see calendar-codec.mjs's detectInvitationResponses
       // doc comment for why this can be detected from data alone, no UI
-      // hook needed). Only reroute when the server actually advertises
-      // the command; otherwise fall through to the old generic-push
-      // behaviour rather than silently dropping the user's response.
-      const invitation =
-        ctx.itemKind.codec.detectInvitationResponse?.({
+      // hook needed). A recurring series is one EAS item, so this can yield
+      // several responses at once: the series plus any occurrence answered
+      // individually, each addressed by its own InstanceId. Only reroute when
+      // the server actually advertises the command; otherwise fall through to
+      // the old generic-push behaviour rather than silently dropping the
+      // user's response.
+      const detected =
+        ctx.itemKind.codec.detectInvitationResponses?.({
           ical: it.blob,
           userEmail: ctx.account?.custom?.user,
-        }) ?? null;
-      if (invitation && easCommandLikelyAvailable(ctx.account, "MeetingResponse")) {
-        invitationResponses.push({ entry, serverID, item: it, ...invitation });
+        }) ?? [];
+      if (
+        detected.length &&
+        easCommandLikelyAvailable(ctx.account, "MeetingResponse")
+      ) {
+        invitationResponses.push({
+          entry,
+          serverID,
+          item: it,
+          responses: detected,
+        });
         continue;
       }
       mods.push({ entry, serverID, item: it });
@@ -1034,52 +1051,73 @@ async function buildPushBatch(ctx, slice) {
 async function sendInvitationResponses(ctx, invitationResponses, failedItems) {
   let anySent = false;
   for (const inv of invitationResponses) {
-    let result = null;
-    try {
-      result = await sendMeetingResponse({
-        account: ctx.account,
-        asVersion: ctx.asVersion,
-        collectionId: ctx.collectionId,
-        serverID: inv.serverID,
-        userResponse: inv.userResponseCode,
-      });
-    } catch (err) {
-      ctx.provider.reportEventLog({
-        level: "warning",
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
-        message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse threw for itemId=${inv.entry.itemId}: ${err?.message ?? String(err)}`,
-      });
+    // One item can carry several responses: the series plus any occurrence the
+    // user answered individually. Each needs its own MeetingResponse command,
+    // and the changelog entry is only cleared once every one of them landed.
+    let allSent = true;
+    let lastStatus = null;
+
+    for (const response of inv.responses) {
+      let result = null;
+      try {
+        result = await sendMeetingResponse({
+          account: ctx.account,
+          asVersion: ctx.asVersion,
+          collectionId: ctx.collectionId,
+          serverID: inv.serverID,
+          userResponse: response.userResponseCode,
+          instanceId: response.instanceId,
+        });
+      } catch (err) {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse threw for itemId=${inv.entry.itemId}${response.instanceId ? ` instance=${response.instanceId}` : ""}: ${err?.message ?? String(err)}`,
+        });
+      }
+      if (!result || result.status !== STATUS_OK) {
+        allSent = false;
+        lastStatus = result?.status ?? "none";
+        continue;
+      }
+
+      // `existingItemId` means this came from the added_by_user duplicate
+      // path (matchInvitationResponse): `inv.item` is a stray duplicate
+      // Thunderbird's itip engine created, not the real synced item, so
+      // the response gets stamped onto the *existing* item instead. The
+      // duplicate is deliberately left alone rather than auto-deleted - a
+      // content-based match isn't a guaranteed-unique key, so this only
+      // clears its changelog entry (stopping the repeated push attempts)
+      // and leaves cleanup to the user, called out in the log below.
+      //
+      // Re-read the item for every response: stamping rewrites the blob, so a
+      // stale copy would clobber the previous stamp when one series carries
+      // more than one response.
+      const targetItemId = inv.existingItemId ?? inv.item.id;
+      const targetItem = await ctx.store.get(targetItemId);
+      if (targetItem?.blob) {
+        const stamped = ctx.itemKind.codec.stampInvitationResponse(
+          targetItem.blob,
+          response.newResponseType,
+          response.instanceId,
+        );
+        await ctx.store.update(targetItemId, stamped);
+      }
+      anySent = true;
     }
-    if (!result || result.status !== STATUS_OK) {
+
+    if (!allSent) {
       failedItems.add(inv.entry.itemId);
       ctx.provider.reportEventLog({
         level: "warning",
         accountId: ctx.accountId,
         folderId: ctx.folderId,
-        message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse failed for itemId=${inv.entry.itemId} (status=${result?.status ?? "none"})`,
+        message: `[${ctx.itemKind.changelogKind}-sync] MeetingResponse failed for itemId=${inv.entry.itemId} (status=${lastStatus}). Responses that did succeed are already stamped and will not be re-sent.`,
       });
       continue;
     }
-    // `existingItemId` means this came from the added_by_user duplicate
-    // path (matchInvitationResponse): `inv.item` is a stray duplicate
-    // Thunderbird's itip engine created, not the real synced item, so
-    // the response gets stamped onto the *existing* item instead. The
-    // duplicate is deliberately left alone rather than auto-deleted - a
-    // content-based match isn't a guaranteed-unique key, so this only
-    // clears its changelog entry (stopping the repeated push attempts)
-    // and leaves cleanup to the user, called out in the log below.
-    const targetItemId = inv.existingItemId ?? inv.item.id;
-    const targetItem = inv.existingItemId
-      ? await ctx.store.get(inv.existingItemId)
-      : inv.item;
-    if (targetItem?.blob) {
-      const stamped = ctx.itemKind.codec.stampInvitationResponse(
-        targetItem.blob,
-        inv.newResponseType,
-      );
-      await ctx.store.update(targetItemId, stamped);
-    }
+
     await ctx.provider.changelogRemove({
       accountId: ctx.accountId,
       folderId: ctx.folderId,
@@ -1094,7 +1132,6 @@ async function sendInvitationResponses(ctx, invitationResponses, failedItems) {
         message: `[${ctx.itemKind.changelogKind}-sync] itemId=${inv.entry.itemId} looked like a duplicate Thunderbird created while responding to an existing invite (itemId=${inv.existingItemId}); sent MeetingResponse using the existing item and dropped the duplicate's push. The duplicate local copy was left in place - delete it manually if it's still showing in your calendar.`,
       });
     }
-    anySent = true;
   }
   return anySent;
 }
