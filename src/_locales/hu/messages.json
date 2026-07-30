@@ -326,6 +326,12 @@
   "options.showItemsInTrash.hint": {
     "message": "Egyes kiszolgálók törlés helyett Kuka mappákban tárolják a törölt naptárakat, címjegyzékeket és feladatlistákat. Alapértelmezés szerint ezek rejtettek a mappalistában. Kapcsolja ezt be, hogy láthatóvá tegye őket – ezek „Kuka | ” előtaggal jelennek meg, így meg tudja őket különböztetni, és kiválaszthatja, hogy szinkronizálja-e őket. A következő mappalista-frissítéskor lép életbe."
   },
+  "options.postPushSettle": {
+    "message": "Wait for the server to echo back uploaded changes"
+  },
+  "options.postPushSettle.hint": {
+    "message": "Some Exchange servers send a change back as if it were their own moments after accepting it. Without this option that echo arrives during the next synchronization, where it can overwrite edits made in the meantime. Enabling it waits about two seconds after every synchronization that uploaded something, and pulls once more to take the echo immediately. Only enable this if local changes go missing."
+  },
   "options.clientid": {
     "message": "Egyéni OAuth kliensazonosító"
   },
