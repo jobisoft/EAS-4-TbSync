@@ -6,11 +6,13 @@
  * Start/End/AllDay, BusyStatus, Sensitivity, Reminder, Categories,
  * Organizer, Attendees, MeetingStatus, ResponseType, UID, recurrence.
  *
- * Recurrence handling is one-shot RRULE only (no embedded `<Exceptions>`
- * yet - inbound exceptions and outbound RECURRENCE-ID/EXDATE deltas are a
- * follow-up). The 16.1 InstanceId-per-Change exception path is not
- * emitted; on the inbound side we ignore InstanceId-bearing changes for
- * now (the master event is still kept in sync).
+ * Recurrence covers the RRULE plus exceptions, which reach us in two
+ * shapes. Embedded: an `<Exceptions>` block on the master item, read by
+ * `appendInboundExceptions` and written by `appendOutboundExceptions`
+ * (outbound on 2.5/14.x only). Per-instance: one `<Change>` per
+ * occurrence carrying `<InstanceId>`, handled by `applyInstanceChange` /
+ * `applyInstanceDelete` and emitted by `appendInstanceChanges` (16.1
+ * only). All of it is gated on the account's `syncRecurrence` option.
  *
  * The TimeZone blob (≤14.x only; 16.1 uses UTC times) is encoded /
  * decoded via `TimeZoneBlob` in `timezone-blob.mjs`. When the server's
@@ -910,12 +912,12 @@ function isAllDayProp(prop) {
   return v instanceof ICAL.Time && v.isDate;
 }
 
-/* ── Helpers: 2.5/14.x <Exceptions> round-trip ─────────────────────── */
+/* ── Helpers: embedded <Exceptions> round-trip ─────────────────────── */
 
 /** Inbound: parse `<Exceptions><Exception>` children of `adNode`. For
- *  each, read `<ExceptionStartTime>` (the ORIGINAL occurrence date) and
- *  either add an EXDATE to the master (`Deleted=1`) or build an override
- *  VEVENT keyed by RECURRENCE-ID. Mirrors legacy `setItemRecurrence` at
+ *  each, read the ORIGINAL occurrence date and either add an EXDATE to
+ *  the master (`Deleted=1`) or build an override VEVENT keyed by
+ *  RECURRENCE-ID. Mirrors legacy `setItemRecurrence` at
  *  sync.js:1344-1372. */
 function appendInboundExceptions({
   adNode,
@@ -930,7 +932,12 @@ function appendInboundExceptions({
 
   for (const exc of wrapper.children) {
     if (exc.tagName !== "Exception") continue;
-    const startStr = readPathFrom(exc, ["ExceptionStartTime"]);
+    // Which occurrence this exception overrides: 16.x identifies it with
+    // AirSyncBase <InstanceId>, 2.5/14.x with Calendar
+    // <ExceptionStartTime>. Both are UTC.
+    const startStr =
+      readPathFrom(exc, ["InstanceId"]) ||
+      readPathFrom(exc, ["ExceptionStartTime"]);
     if (!startStr) continue;
     const ridDate = parseEasUtc(startStr);
     if (!ridDate) continue;
