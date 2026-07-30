@@ -186,21 +186,22 @@ function populateVeventFromAd({
     if (data) vevent.updatePropertyWithValue("description", data);
   }
 
-  // Resolve effective timezone (sticks to UTC on 16.1; otherwise use the
-  // TimeZone blob to derive an IANA zone via std/dst offset matching, or
-  // fall back to the host's default zone).
-  const tzId = resolveTimezone(adNode, asVersion, defaultTimezone);
+  // Resolve effective timezone: from the TimeZone blob when the server
+  // sent a real one (≤14.x Exchange), otherwise the host's default zone
+  // (AS 16.1, and servers that send an all-zero blob). `fromBlob` selects
+  // how all-day boundaries are interpreted (see writeDateProp).
+  const { tzId, fromBlob } = resolveTimezone(adNode, defaultTimezone);
   const allDay = readPathFrom(adNode, ["AllDayEvent"]) === "1";
 
   // Start / End. EAS sends UTC strings; convert on the way in.
   const startUtc = readPathFrom(adNode, ["StartTime"]);
   const endUtc = readPathFrom(adNode, ["EndTime"]);
-  if (startUtc) writeDateProp(vevent, "dtstart", startUtc, tzId, allDay);
-  if (endUtc) writeDateProp(vevent, "dtend", endUtc, tzId, allDay);
+  if (startUtc) writeDateProp(vevent, "dtstart", startUtc, tzId, allDay, fromBlob);
+  if (endUtc) writeDateProp(vevent, "dtend", endUtc, tzId, allDay, fromBlob);
 
   // DtStamp - preserve when present (AS ≤ 14.x); 16.1 omits.
   const dtStamp = readPathFrom(adNode, ["DtStamp"]);
-  if (dtStamp) writeDateProp(vevent, "dtstamp", dtStamp, "UTC", false);
+  if (dtStamp) writeDateProp(vevent, "dtstamp", dtStamp, "UTC", false, false);
 
   // BusyStatus → TRANSP. STATUS is computed below from BusyStatus +
   // MeetingStatus together (legacy calendarsync.js:235-265).
@@ -503,6 +504,10 @@ export function appendApplicationDataFromIcal({
   const dtstart = vevent.getFirstProperty("dtstart");
   const dtend = vevent.getFirstProperty("dtend");
   const allDay = isAllDayProp(dtstart) && isAllDayProp(dtend);
+  // Source zone for all-day Start/End on ≤14.x — must match the zone we
+  // describe in the TimeZone blob (same precedence as buildTimezoneBlob)
+  // so the server reads the boundary back on the right calendar day.
+  const allDaySourceTzid = pickSourceTzid(vevent) ?? defaultTimezone ?? "UTC";
   builder.atag("AllDayEvent", allDay ? "1" : "0");
 
   // Body.
@@ -559,11 +564,10 @@ export function appendApplicationDataFromIcal({
     );
   }
 
-  // EndTime. AS 16.1 all-day uses a "fake local as UTC" form
-  // (`YYYYMMDDT000000Z` from the local-clock date, no TZ conversion) -
-  // mirrors legacy `getIsoUtcString(date, false, true, true)` so the
-  // user-intended date isn't shifted by ±1 day in non-UTC zones.
-  builder.atag("EndTime", endTimeFor(dtend, asVersion, allDay));
+  // EndTime. All-day: 16.1 uses the "fake local as UTC" form; ≤14.x uses
+  // local midnight in the TimeZone-blob zone expressed as UTC. Both avoid
+  // the ±1-day shift a naive UTC conversion would cause in non-UTC zones.
+  builder.atag("EndTime", endTimeFor(dtend, asVersion, allDay, allDaySourceTzid));
 
   // Location.
   const location = stringOf(vevent.getFirstPropertyValue("location"));
@@ -599,7 +603,7 @@ export function appendApplicationDataFromIcal({
 
   // Subject + StartTime.
   builder.atag("Subject", stringOf(vevent.getFirstPropertyValue("summary")));
-  builder.atag("StartTime", startTimeFor(dtstart, asVersion, allDay));
+  builder.atag("StartTime", startTimeFor(dtstart, asVersion, allDay, allDaySourceTzid));
 
   // UID (forbidden in 16.1; not inside exceptions either - legacy
   // suppresses UID inside <Exception>, even on 2.5/14.x).
@@ -730,9 +734,19 @@ export function stampEasServerId(ical, serverID) {
 
 /* ── Helpers: timezone resolution ──────────────────────────────────── */
 
-function resolveTimezone(adNode, asVersion, defaultTimezone) {
+/** Resolve the effective IANA tzid for an inbound event and report
+ *  whether it came from a real (non-empty) TimeZone blob. `fromBlob`
+ *  drives the all-day boundary reading: a real blob means the server
+ *  encoded all-day Start/End as midnight-in-zone-expressed-as-UTC (real
+ *  Exchange ≤14.x), which must be converted back through the zone; a
+ *  missing/empty blob (AS 16.1, and Z-Push/Kopano/Grommunio, which send
+ *  an all-zero blob) means the date is a literal "fake local as UTC" and
+ *  must be read verbatim — see writeDateProp. */
+function resolveTimezone(adNode, defaultTimezone) {
   const blobB64 = readPathFrom(adNode, ["TimeZone"]);
-  if (!blobB64 || isAllZero(blobB64)) return defaultTimezone || "UTC";
+  if (!blobB64 || isAllZero(blobB64)) {
+    return { tzId: defaultTimezone || "UTC", fromBlob: false };
+  }
   const blob = new TimeZoneBlob();
   blob.easTimeZone64 = blobB64;
   // utcOffset is "minutes from local to UTC" (e.g. -60 for CET); daylight
@@ -741,8 +755,28 @@ function resolveTimezone(adNode, asVersion, defaultTimezone) {
   const stdOffset = blob.utcOffset;
   const dstOffset = blob.daylightBias + blob.utcOffset;
   const stdName = blob.standardName;
-  const tzid = guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName);
-  return tzid || defaultTimezone || "UTC";
+  // The SYSTEMTIME transition dates distinguish zones that share an
+  // offset but switch DST on different dates; pass them so the resolver
+  // can pick the right one instead of collapsing every UTC+1/+2 zone onto
+  // a single fallback (which makes recurring events drift by an hour
+  // around the mismatched transition).
+  const dstRule = dstRuleFromBlob(blob);
+  const tzid = guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName, dstRule);
+  return { tzId: tzid || defaultTimezone || "UTC", fromBlob: true };
+}
+
+/** Extract the nth-weekday DST transition rule from a decoded TimeZone
+ *  blob's StandardDate / DaylightDate SYSTEMTIMEs, in the same shape the
+ *  timezone-mapping resolver stores per IANA zone. Returns null when the
+ *  blob carries no DST (wMonth === 0). */
+function dstRuleFromBlob(blob) {
+  const std = blob.standardDate;
+  const dst = blob.daylightDate;
+  if (!std || !dst || std.wMonth === 0 || dst.wMonth === 0) return null;
+  return {
+    std: { month: std.wMonth, weekOfMonth: std.wDay, dayOfWeek: std.wDayOfWeek },
+    dst: { month: dst.wMonth, weekOfMonth: dst.wDay, dayOfWeek: dst.wDayOfWeek },
+  };
 }
 
 function buildTimezoneBlob(vevent, defaultTimezone) {
@@ -753,13 +787,20 @@ function buildTimezoneBlob(vevent, defaultTimezone) {
   const blob = new TimeZoneBlob();
   blob.utcOffset = tzInfo.std.offset;
   blob.standardBias = 0;
-  blob.daylightBias = tzInfo.dst.offset - tzInfo.std.offset;
+  // Only advertise DST when we can also supply the SYSTEMTIME transition
+  // dates. A non-zero daylightBias with all-zero StandardDate/DaylightDate
+  // is contradictory: per the Windows TIME_ZONE_INFORMATION rules a zero
+  // wMonth means "no DST" (DaylightBias then ignored), but some servers
+  // honour the bias and apply DST year-round (or not at all), shifting the
+  // event by an hour for part of the year. Keep the blob consistent.
+  const hasDstRule = !!(tzInfo.std.switchdate && tzInfo.dst.switchdate);
+  blob.daylightBias = hasDstRule ? tzInfo.dst.offset - tzInfo.std.offset : 0;
   blob.standardName = tzInfo.stdWinName;
   blob.daylightName = tzInfo.dstWinName;
 
   // SYSTEMTIME-shaped switch dates, only when both std and dst rules exist
   // (no-DST zones leave both SYSTEMTIMEs zero-filled and daylightBias=0).
-  if (tzInfo.std.switchdate && tzInfo.dst.switchdate) {
+  if (hasDstRule) {
     const std = blob.standardDate;
     std.wMonth = tzInfo.std.switchdate.month;
     std.wDay = tzInfo.std.switchdate.weekOfMonth;
@@ -798,21 +839,50 @@ function pickSourceTzid(vevent) {
   return null;
 }
 
-function writeDateProp(vevent, name, easUtc, tzId, allDay) {
+function writeDateProp(vevent, name, easUtc, tzId, allDay, fromBlob) {
   // Replace any existing property of this name so merge-mode partial
   // Changes don't duplicate dtstart/dtend/dtstamp on the master.
   vevent.removeAllProperties(name);
   const prop = new ICAL.Property(name, vevent);
   if (allDay) {
-    // EAS UTC → date-only (drop time).
     const d = parseEasUtc(easUtc);
     if (!d) return;
-    const date = new ICAL.Time({
-      year: d.getUTCFullYear(),
-      month: d.getUTCMonth() + 1,
-      day: d.getUTCDate(),
-      isDate: true,
-    });
+    // The calendar date of an all-day boundary depends on how the server
+    // encodes it. Real Exchange ≤14.x sends the midnight that begins the
+    // day in the event's TimeZone, expressed as UTC ([MS-ASCAL] §2.2.2.39);
+    // for a non-UTC zone that instant lands on the previous/next UTC
+    // calendar day, so taking getUTCDate() directly shifts the event by
+    // ±1 day. Convert into the resolved zone first and take the wall-clock
+    // date there. Servers that send NO real TimeZone blob — AS 16.1, and
+    // Z-Push/Kopano/Grommunio (all-zero blob) — instead send a "fake local
+    // as UTC" YYYYMMDDT000000Z whose UTC date already IS the intended date
+    // (it mirrors what we emit outbound), so it must be read verbatim;
+    // converting it would shift the date by a day for users west of UTC.
+    // `fromBlob` is the discriminator: convert only when a real blob gave
+    // us the zone, otherwise read the UTC date verbatim.
+    let year = d.getUTCFullYear();
+    let month = d.getUTCMonth() + 1;
+    let day = d.getUTCDate();
+    if (fromBlob && tzId && tzId !== "UTC") {
+      const zone = getIcalTimezone(tzId);
+      if (zone) {
+        const utc = new ICAL.Time({
+          year,
+          month,
+          day,
+          hour: d.getUTCHours(),
+          minute: d.getUTCMinutes(),
+          second: d.getUTCSeconds(),
+          isDate: false,
+        });
+        utc.zone = ICAL.Timezone.utcTimezone;
+        const local = utc.convertToZone(zone);
+        year = local.year;
+        month = local.month;
+        day = local.day;
+      }
+    }
+    const date = new ICAL.Time({ year, month, day, isDate: true });
     prop.setValue(date);
   } else {
     const d = parseEasUtc(easUtc);
@@ -896,13 +966,46 @@ function fakeLocalAsUtcDate(prop) {
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T000000Z`;
 }
 
-function startTimeFor(dtstart, asVersion, allDay) {
-  if (asVersion === "16.1" && allDay) return fakeLocalAsUtcDate(dtstart);
+/** Midnight (local) of an all-day date in the event's source zone,
+ *  expressed as UTC — the form AS ≤14.x expects for all-day Start/End
+ *  ([MS-ASCAL] §2.2.2.39). Mirrors the inbound all-day reader so the
+ *  round-trip is stable for non-UTC zones. Falls back to treating the
+ *  date as UTC midnight when the zone isn't in the loaded set. */
+function allDayMidnightUtc(prop, sourceTzid) {
+  const v = prop?.getFirstValue();
+  if (!(v instanceof ICAL.Time)) return nowBasicUtc();
+  const zone =
+    sourceTzid && sourceTzid !== "UTC" ? getIcalTimezone(sourceTzid) : null;
+  const localMidnight = new ICAL.Time({
+    year: v.year,
+    month: v.month,
+    day: v.day,
+    hour: 0,
+    minute: 0,
+    second: 0,
+    isDate: false,
+  });
+  localMidnight.zone = zone ?? ICAL.Timezone.utcTimezone;
+  return formatBasicUtc(localMidnight.toJSDate());
+}
+
+function startTimeFor(dtstart, asVersion, allDay, sourceTzid) {
+  if (allDay) {
+    // 16.1 uses the "fake local as UTC" form; ≤14.x expects local
+    // midnight in the blob's zone expressed as UTC. A floating date-only
+    // value would otherwise be turned into UTC via the host's local zone
+    // (toJSDate), shifting the date by ±1 day for non-UTC users.
+    if (asVersion === "16.1") return fakeLocalAsUtcDate(dtstart);
+    return allDayMidnightUtc(dtstart, sourceTzid);
+  }
   return dtstart ? toBasicUtc(dtstart.getFirstValue()) : nowBasicUtc();
 }
 
-function endTimeFor(dtend, asVersion, allDay) {
-  if (asVersion === "16.1" && allDay) return fakeLocalAsUtcDate(dtend);
+function endTimeFor(dtend, asVersion, allDay, sourceTzid) {
+  if (allDay) {
+    if (asVersion === "16.1") return fakeLocalAsUtcDate(dtend);
+    return allDayMidnightUtc(dtend, sourceTzid);
+  }
   return dtend ? toBasicUtc(dtend.getFirstValue()) : nowBasicUtc();
 }
 
