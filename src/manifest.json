@@ -20,7 +20,6 @@
   },
   "permissions": [
     "storage",
-    "management",
     "addressBooks",
     "notifications",
     "tabs",
