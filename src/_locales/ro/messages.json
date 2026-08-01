@@ -261,7 +261,7 @@
     "message": "Sincronizează evenimentele/activitățile recurente și excepțiile"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental - dezactivat implicit. Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
+    "message": "Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
   },
   "config.section.gal": {
     "message": "Listă globală de adrese"

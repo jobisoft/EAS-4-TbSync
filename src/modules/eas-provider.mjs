@@ -1008,7 +1008,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           // is a pre-emptive override for servers that need provisioning
           // but don't return 449 (e.g. Kerio).
           provision: false,
-          syncrecurrence: false,
+          syncrecurrence: true,
         },
       };
     }
@@ -1034,7 +1034,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           policykey: "0",
           foldersynckey: "0",
           provision: false,
-          syncrecurrence: false,
+          syncrecurrence: true,
         },
       };
     }
@@ -1063,7 +1063,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         policykey: "0",
         foldersynckey: "0",
         provision: false,
-        syncrecurrence: false,
+        syncrecurrence: true,
       },
     };
   }

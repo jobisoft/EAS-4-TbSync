@@ -261,7 +261,7 @@
     "message": "반복 이벤트/작업 및 예외 동기화"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "실험적 기능 - 기본적으로 비활성화되어 있습니다. 활성화하면 반복 규칙과 인스턴스별 예외가 서버와 양방향으로 동기화됩니다."
+    "message": "활성화하면 반복 규칙과 인스턴스별 예외가 서버와 양방향으로 동기화됩니다."
   },
   "config.section.gal": {
     "message": "전체 주소 목록"

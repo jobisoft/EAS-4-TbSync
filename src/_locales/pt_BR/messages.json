@@ -261,7 +261,7 @@
     "message": "Sincronizar eventos/tarefas recorrentes e exceções"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental - desativado por padrão. Quando ativado, as regras de recorrência e as exceções por instância são sincronizadas nos dois sentidos com o servidor."
+    "message": "Quando ativado, as regras de recorrência e as exceções por instância são sincronizadas nos dois sentidos com o servidor."
   },
   "config.section.gal": {
     "message": "Lista de Endereços Global"

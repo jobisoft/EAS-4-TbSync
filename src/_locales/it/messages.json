@@ -261,7 +261,7 @@
     "message": "Sincronizza eventi/attività ricorrenti ed eccezioni"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Sperimentale - disattivato per impostazione predefinita. Quando è attivo, le regole di ricorrenza e le eccezioni per singola istanza vengono sincronizzate in entrambi i sensi con il server."
+    "message": "Quando è attivo, le regole di ricorrenza e le eccezioni per singola istanza vengono sincronizzate in entrambi i sensi con il server."
   },
   "config.section.gal": {
     "message": "Elenco indirizzi globale"

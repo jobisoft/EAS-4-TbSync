@@ -261,7 +261,7 @@
     "message": "Synchronizovat opakující se události/úkoly a výjimky"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimentální - ve výchozím stavu vypnuto. Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
+    "message": "Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
   },
   "config.section.gal": {
     "message": "Globální seznam adres"

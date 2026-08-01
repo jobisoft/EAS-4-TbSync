@@ -261,7 +261,7 @@
     "message": "Sincronizar eventos/tareas recurrentes y excepciones"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental: desactivado por defecto. Cuando está activado, las reglas de recurrencia y las excepciones por instancia se sincronizan en ambos sentidos con el servidor."
+    "message": "Cuando está activado, las reglas de recurrencia y las excepciones por instancia se sincronizan en ambos sentidos con el servidor."
   },
   "config.section.gal": {
     "message": "Lista global de direcciones"

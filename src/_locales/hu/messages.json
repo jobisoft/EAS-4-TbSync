@@ -261,7 +261,7 @@
     "message": "Ismétlődő események/feladatok és kivételek szinkronizálása"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Kísérleti - alapértelmezetten kikapcsolva. Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
+    "message": "Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
   },
   "config.section.gal": {
     "message": "Globális címlista"

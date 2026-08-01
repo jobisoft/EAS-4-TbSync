@@ -261,7 +261,7 @@
     "message": "Synchronizuj cykliczne wydarzenia/zadania i wyjątki"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Eksperymentalne - domyślnie wyłączone. Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
+    "message": "Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
   },
   "config.section.gal": {
     "message": "Globalna lista adresów"

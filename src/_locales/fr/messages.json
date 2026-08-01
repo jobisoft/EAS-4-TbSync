@@ -261,7 +261,7 @@
     "message": "Synchroniser les évènements/tâches récurrents et les exceptions"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Expérimental - désactivé par défaut. Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
+    "message": "Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
   },
   "config.section.gal": {
     "message": "Liste d’adresses globale"

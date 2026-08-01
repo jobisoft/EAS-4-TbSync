@@ -261,7 +261,7 @@
     "message": "Synkronisera återkommande händelser/uppgifter och undantag"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimentellt - av som standard. När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
+    "message": "När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
   },
   "config.section.gal": {
     "message": "Global adresslista"

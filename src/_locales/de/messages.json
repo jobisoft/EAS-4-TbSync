@@ -261,7 +261,7 @@
     "message": "Wiederkehrende Termine/Aufgaben und Ausnahmen synchronisieren"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimentell - standardmäßig deaktiviert. Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
+    "message": "Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
   },
   "config.section.gal": {
     "message": "Globale Adressliste"
