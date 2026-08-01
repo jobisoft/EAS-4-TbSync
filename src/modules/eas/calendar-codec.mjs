@@ -768,7 +768,10 @@ export function readEasServerIdFromIcal(ical) {
 export function stampEasServerId(ical, serverID) {
   const vcal = parseVCalendar(ical);
   if (!vcal) return ical;
-  const vevent = vcal.getFirstSubcomponent("vevent");
+  // The master, not merely the first VEVENT - `readEasServerIdFromIcal`
+  // skips overrides when it reads the stamp back, so stamping the first
+  // component would write it somewhere the reader never looks.
+  const vevent = pickMasterVevent(vcal);
   if (!vevent) return ical;
   vevent.updatePropertyWithValue(X_EAS_SERVERID.toLowerCase(), serverID);
   return vcal.toString();
