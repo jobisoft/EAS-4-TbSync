@@ -1002,13 +1002,32 @@ function nowBasicUtc() {
  *  `getIsoUtcString(date, false, true, true)` for AS 16.1 all-day. */
 function fakeLocalAsUtcDate(prop) {
   if (!prop) return nowBasicUtc();
-  const v = prop.getFirstValue();
+  return fakeLocalAsUtcFromValue(prop.getFirstValue());
+}
+
+/** Same, for a value that is already in hand rather than a property. */
+function fakeLocalAsUtcFromValue(v) {
   const pad = (n) => String(n).padStart(2, "0");
   if (v instanceof ICAL.Time) {
     return `${v.year}${pad(v.month)}${pad(v.day)}T000000Z`;
   }
   const d = new Date(v);
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T000000Z`;
+}
+
+/** RRULE UNTIL for the wire. A DATE-valued UNTIL belongs to an all-day
+ *  series and is floating, so converting it through the host zone moves
+ *  it back a day for anyone east of UTC - the final occurrence then
+ *  silently disappears. [MS-ASCAL] §2.2.2.1 also requires Until to carry
+ *  no time component when AllDayEvent is 1, alongside StartTime and
+ *  EndTime. Emit the wall-clock date, exactly as `fakeLocalAsUtcDate`
+ *  already does for all-day Start/End.
+ *
+ *  Keyed on the value, not on `allDay` or the protocol version: a DATE is
+ *  floating whichever version is in play, and the arithmetic is wrong on
+ *  ≤14.x too, where the spec rule does not reach. */
+function untilFor(until) {
+  return until?.isDate ? fakeLocalAsUtcFromValue(until) : toBasicUtc(until);
 }
 
 /** Midnight (local) of an all-day date in the event's source zone,
@@ -1412,7 +1431,7 @@ function appendRecurrence(builder, rruleProp, dtstartProp) {
   builder.atag("Interval", String(r.interval ?? 1));
   if (months.length) builder.atag("MonthOfYear", String(months[0]));
   if (r.count) builder.atag("Occurrences", String(r.count));
-  else if (r.until) builder.atag("Until", toBasicUtc(r.until));
+  else if (r.until) builder.atag("Until", untilFor(r.until));
   if (weeks.length) builder.atag("WeekOfMonth", String(weeks[0]));
   builder.ctag();
 }
