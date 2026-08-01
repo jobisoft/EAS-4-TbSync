@@ -13,10 +13,8 @@ A recurring series can drift by one hour around daylight-saving transitions
 
 1. the series was authored in a different time zone than your Thunderbird
    default zone, **and**
-2. the server provides no usable time-zone information on the wire — this is
-   the case for EAS 16.0/16.1 (which carries no per-event `TimeZone` element)
-   and for servers that send an all-zero `TimeZone` blob (e.g. Z-Push, Kopano,
-   Grommunio), **and**
+2. the server sends no usable `TimeZone` blob with the event — Z-Push, Kopano
+   and Grommunio send an all-zero one, **and**
 3. the occurrence falls in a different DST state than the series master.
 
 In that situation the authoring zone is simply not transmitted, so the series
@@ -26,9 +24,11 @@ something the client can recover.
 
 Not affected:
 
-* Real Exchange ≤14.x — it sends a full `TimeZone` blob, which is matched back
-  to the correct IANA zone (including disambiguation between same-offset zones
-  such as Berlin/Paris via their DST transition dates).
+* Exchange, on every protocol version including 16.0/16.1 — it sends a full
+  `TimeZone` blob, which is matched back to the correct IANA zone (including
+  disambiguation between same-offset zones such as Berlin/Paris via their DST
+  transition dates). [MS-ASCAL] §2.2.2.44 lists the element as supported in
+  every version, and Exchange Online populates it on 16.1; we send it too.
 * Single, non-recurring events — their exact UTC instant is always preserved.
 * All-day events on the inbound/display path — the calendar date is read back
   correctly for both server families (real-blob and no/empty-blob), in every
