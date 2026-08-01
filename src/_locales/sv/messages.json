@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "Ange server-URL."
   },
+  "setup.error.serverInvalid": {
+    "message": "Oanvändbar server-URL: $URL$ — den måste börja med https:// eller http:// (eller vara enbart ett värdnamn) och får inte innehålla användarnamn, lösenord, frågesträng eller fragment. Exempel: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "Ange användarnamn."
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Ansluter till $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },

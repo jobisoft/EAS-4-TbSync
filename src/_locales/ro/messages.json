@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "Introdu URL-ul serverului."
   },
+  "setup.error.serverInvalid": {
+    "message": "URL de server inutilizabil: $URL$ — trebuie să înceapă cu https:// sau http:// (ori să fie doar un nume de gazdă) și nu trebuie să conțină nume de utilizator, parolă, șir de interogare sau fragment. Exemplu: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "Introdu numele de utilizator."
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Se conectează la $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },

@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "Введите URL-адрес сервера."
   },
+  "setup.error.serverInvalid": {
+    "message": "Непригодный URL-адрес сервера: $URL$ — он должен начинаться с https:// или http:// (либо быть просто именем узла) и не должен содержать имя пользователя, пароль, строку запроса или фрагмент. Пример: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "Введите имя пользователя."
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Подключение к $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },

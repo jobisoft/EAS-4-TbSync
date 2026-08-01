@@ -29,6 +29,7 @@ import {
   ANCHOR_MAILBOX_HOSTS,
   ANCHOR_MAILBOX_MARKER,
 } from "./anchor-mailbox.mjs";
+import { normalizeCustomServerUrl } from "./eas/server-url.mjs";
 
 const DEFAULT_USER_AGENT = "Thunderbird ActiveSync";
 const CUSTOM_USER_AGENT_STORAGE_KEY = "tbsync.useragent";
@@ -64,6 +65,11 @@ export const NET_ERR = {
   HOST_REDIRECT: "E:HOST_REDIRECT",
   HTTP: "E:HTTP",
   NETWORK: "E:NETWORK",
+  // Its own code rather than E:NETWORK: the host treats E:NETWORK as
+  // predefined and renders that code instead of our message, which is
+  // the only thing naming the offending address. It also keeps the
+  // account clear of the Autodiscover re-run E:NETWORK triggers.
+  INVALID_SERVER_URL: "E:INVALID_SERVER_URL",
 };
 
 export class EasHttpError extends Error {
@@ -94,19 +100,53 @@ export class EasHttpError extends Error {
  *  it to the decoder. */
 const WBXML_MAGIC = [0x03, 0x01, 0x6a, 0x00];
 
+/** The URL to contact. Only custom-mode accounts hold an address the
+ *  user typed, so only they are normalized - every other mode stores a
+ *  complete URL and is passed through exactly as before.
+ *
+ *  Checked here as well as in the dialogs because storage can hold
+ *  anything: the migration writes `custom.server`, so do the provider's
+ *  `createAccountFromSetup` and `saveAccountFromConfig`, neither of
+ *  which validates, and a profile can arrive from a backup. The dialogs
+ *  are one writer among several, so the value is verified where it is
+ *  used rather than only where it is entered. */
+function easUrlFor(custom, context) {
+  if (!custom?.server)
+    throw new Error(`${context}: account.custom.server is missing`);
+  if (custom.servertype !== "custom") return custom.server;
+
+  const url = normalizeCustomServerUrl(custom.server);
+  if (url) return url;
+  throw new EasHttpError(NET_ERR.INVALID_SERVER_URL, 0, {
+    message: browser.i18n.getMessage("setup.error.serverInvalid", [
+      String(custom.server),
+    ]),
+  });
+}
+
 // ── Public API ────────────────────────────────────────────────────────────
 
 export async function easOptions({ account }) {
   const custom = account?.custom ?? {};
-  if (!custom.server)
-    throw new Error("easOptions: account.custom.server is missing");
+  const serverUrl = easUrlFor(custom, "easOptions");
+  // OPTIONS runs once per connect, so this is the one place that can
+  // name the effective URL without repeating it on every request.
+  if (serverUrl !== custom.server) {
+    reportEventLog({
+      level: "info",
+      accountId: account?.accountId,
+      message: browser.i18n.getMessage("eas.network.info.effectiveServerUrl", [
+        serverUrl,
+      ]),
+    });
+  }
   const authHeader = await buildAuthHeader(account);
   const headers = new Headers({
     Authorization: authHeader,
     "User-Agent": await getUserAgent(),
   });
   stampAnchorMailbox(headers, custom);
-  const resp = await fetchWithTimeout(custom.server, {
+  const resp = await fetchWithTimeout(serverUrl, {
     method: "OPTIONS",
     headers,
   });
@@ -123,14 +163,13 @@ export async function easOptions({ account }) {
 
 export async function easRequest({ account, command, body, asVersion }) {
   const custom = account?.custom ?? {};
-  if (!custom.server)
-    throw new Error("easRequest: account.custom.server is missing");
+  const serverUrl = easUrlFor(custom, "easRequest");
   if (!custom.user)
     throw new Error("easRequest: account.custom.user is missing");
   if (!custom.deviceId)
     throw new Error("easRequest: account.custom.deviceId is missing");
 
-  const url = new URL(custom.server);
+  const url = new URL(serverUrl);
   url.searchParams.set("Cmd", command);
   url.searchParams.set("User", custom.user);
   url.searchParams.set("DeviceId", custom.deviceId);

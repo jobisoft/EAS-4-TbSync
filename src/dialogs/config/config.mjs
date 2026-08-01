@@ -14,6 +14,7 @@
 
 import { localizeDocument } from "../../vendor/i18n/i18n.mjs";
 import { createDropdown } from "../shared/dropdown.mjs";
+import { normalizeCustomServerUrl } from "../../modules/eas/server-url.mjs";
 
 const i18n = (key, fallback, substitutions) =>
   browser.i18n.getMessage(key, substitutions) || fallback;
@@ -284,7 +285,21 @@ async function onSave() {
   // auto-detect accounts the server/user inputs are readOnly, so only the
   // (optional) password actually changes.
   if (!$("connection-section").hidden) {
-    if (!$("server").readOnly) patch.server = $("server").value.trim();
+    // Editable only for custom accounts; auto-detect keeps the address
+    // Autodiscover returned. Same rule as the setup dialog.
+    if (!$("server").readOnly) {
+      const server = $("server").value.trim();
+      if (!normalizeCustomServerUrl(server)) {
+        showError(
+          i18n("setup.error.serverInvalid", "Not a usable server URL.", [
+            server,
+          ]),
+        );
+        $("server").focus();
+        return;
+      }
+      patch.server = server;
+    }
     if (!$("user").readOnly) patch.user = $("user").value.trim();
     const pw = $("password").value;
     if (pw) patch.password = pw;

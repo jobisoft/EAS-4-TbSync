@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "Introduzca la URL del servidor."
   },
+  "setup.error.serverInvalid": {
+    "message": "URL del servidor no utilizable: $URL$ — debe empezar por https:// o http:// (o ser un nombre de host simple) y no debe contener nombre de usuario, contraseña, cadena de consulta ni fragmento. Ejemplo: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "Introduzca el nombre de usuario."
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Conectando a $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },

@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "Adja meg a kiszolgáló URL-címét."
   },
+  "setup.error.serverInvalid": {
+    "message": "Nem használható kiszolgáló URL-cím: $URL$ — https:// vagy http:// előtaggal kell kezdődnie (vagy egyszerű gépnévnek kell lennie), és nem tartalmazhat felhasználónevet, jelszót, lekérdezési karakterláncot vagy fragmentumot. Példa: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "Adja meg a felhasználónevet."
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Kapcsolódás ehhez: $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },

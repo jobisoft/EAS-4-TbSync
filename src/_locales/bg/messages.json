@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "Моля, въведете URL на сървъра."
   },
+  "setup.error.serverInvalid": {
+    "message": "Неизползваем URL на сървъра: $URL$ — трябва да започва с https:// или http:// (или да е само име на хост) и не трябва да съдържа потребителско име, парола, заявка или фрагмент. Пример: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "Моля, въведете потребителското име."
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Свързване към $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },

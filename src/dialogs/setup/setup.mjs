@@ -19,6 +19,7 @@
 
 import { localizeDocument } from "../../vendor/i18n/i18n.mjs";
 import { createDropdown } from "../shared/dropdown.mjs";
+import { normalizeCustomServerUrl } from "../../modules/eas/server-url.mjs";
 
 const i18n = (key, fallback, substitutions) =>
   browser.i18n.getMessage(key, substitutions) || fallback;
@@ -288,6 +289,15 @@ async function submitBasic() {
   if (!server) {
     showError(
       i18n("setup.error.serverRequired", "Please enter the server URL."),
+    );
+    $("server").focus();
+    return;
+  }
+  // A bare `my.server.tld` is still valid input - it was the only valid
+  // input in v4 - so only an address we could never use is refused.
+  if (!normalizeCustomServerUrl(server)) {
+    showError(
+      i18n("setup.error.serverInvalid", "Not a usable server URL.", [server]),
     );
     $("server").focus();
     return;

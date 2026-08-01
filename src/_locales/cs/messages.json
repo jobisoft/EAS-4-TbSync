@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "Zadejte URL serveru."
   },
+  "setup.error.serverInvalid": {
+    "message": "Nepoužitelné URL serveru: $URL$ — musí začínat https:// nebo http:// (nebo být pouhým názvem hostitele) a nesmí obsahovat uživatelské jméno, heslo, dotaz ani fragment. Příklad: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "Zadejte uživatelské jméno."
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Připojování k $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },

@@ -122,6 +122,15 @@
   "setup.error.serverRequired": {
     "message": "サーバー URL を入力してください。"
   },
+  "setup.error.serverInvalid": {
+    "message": "使用できないサーバー URL です: $URL$ — https:// または http:// で始まる (もしくはホスト名のみである) 必要があり、ユーザー名、パスワード、クエリ文字列、フラグメントを含めることはできません。例: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
   "setup.error.userRequired": {
     "message": "ユーザー名を入力してください。"
   },
@@ -408,6 +417,15 @@
       "status": {
         "content": "$1",
         "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "$URL$ に接続しています",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
       }
     }
   },
