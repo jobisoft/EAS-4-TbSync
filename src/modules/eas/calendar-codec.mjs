@@ -426,9 +426,15 @@ export function appendInstanceChanges({
   for (const ex of exdates) {
     builder.otag("Change");
     builder.atag("ServerId", serverID);
-    builder.otag("ApplicationData");
+    // InstanceId belongs to the command, not to its payload: [MS-ASAIRS]
+    // §2.2.2.25 makes it a child of airsync:Change (or airsync:Delete),
+    // and [MS-ASCMD] Change says a 16.x calendar item is identified by
+    // the master's ServerId together with it. Inside ApplicationData it
+    // is only ever valid in a *response*, for an orphan instance.
     builder.switchpage("AirSyncBase");
     builder.atag("InstanceId", icalTimeToBasicUtc(ex));
+    builder.switchpage("AirSync");
+    builder.otag("ApplicationData");
     builder.switchpage("Calendar");
     builder.atag("Deleted", "1");
     builder.switchpage("AirSync");
@@ -439,9 +445,12 @@ export function appendInstanceChanges({
     const rid = override.getFirstPropertyValue("recurrence-id");
     builder.otag("Change");
     builder.atag("ServerId", serverID);
-    builder.otag("ApplicationData");
+    // Sibling of ServerId, not part of the payload - see the EXDATE
+    // branch above for the citations.
     builder.switchpage("AirSyncBase");
     builder.atag("InstanceId", icalTimeToBasicUtc(rid));
+    builder.switchpage("AirSync");
+    builder.otag("ApplicationData");
     // appendApplicationDataFromIcal switches to Calendar at entry
     // and may bounce to AirSyncBase for Body / Location, but always
     // returns to Calendar before the closing tag.
