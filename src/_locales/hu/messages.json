@@ -123,7 +123,7 @@
     "message": "Adja meg a kiszolgáló webcímét."
   },
   "setup.error.serverInvalid": {
-    "message": "Not a usable server URL: $URL$ — it must start with https:// or http:// (or be a plain host name) and must not contain a user name, password, query string or fragment. Example: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Nem használható kiszolgálócím: $URL$ – https:// vagy http:// szöveggel kell kezdődnie (vagy egyszerű gépnévnek kell lennie), és nem tartalmazhat felhasználónevet, jelszót lekérdezési szöveget vagy töredéket. Például: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -421,7 +421,7 @@
     }
   },
   "eas.network.info.effectiveServerUrl": {
-    "message": "Connecting to $URL$",
+    "message": "Kapcsolódás ehhez: $URL$",
     "placeholders": {
       "url": {
         "content": "$1",
