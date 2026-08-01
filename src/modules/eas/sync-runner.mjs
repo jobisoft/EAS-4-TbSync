@@ -817,12 +817,14 @@ async function pushPhase(ctx, userEdits) {
         continue;
       }
       failedItems.add(slice[0].itemId);
-      ctx.provider.reportEventLog({
-        level: "warning",
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
-        message: `[${ctx.itemKind.changelogKind}-sync] dropping item ${slice[0].itemId} after Status ${r.collStatus} on a single-item batch`,
-      });
+      reportRejectedPushItem(
+        ctx,
+        "a single-item batch",
+        r.collStatus,
+        built.adds.find((a) => a.entry === slice[0]) ??
+          built.mods.find((m) => m.entry === slice[0]) ?? { entry: slice[0] },
+        "warning",
+      );
       itemsDone += 1;
       reportProgress(ctx, itemsDone, itemsTotal);
       continue;
@@ -976,6 +978,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       // pushPhase will move the changelog entry behind the good ones
       // for the next sync.
       failedItems.add(sentEntry.entry.itemId);
+      reportRejectedPushItem(ctx, "add", status, sentEntry, "warning");
       continue;
     }
     const stamped = ctx.itemKind.codec.stampEasServerId(
@@ -1027,7 +1030,10 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     // see the non-OK status and skip the changelog removal.
     const serverId = readPathFrom(node, ["ServerId"]);
     const sentEntry = sent.mods.find((m) => m.serverID === serverId);
-    if (sentEntry) failedItems.add(sentEntry.entry.itemId);
+    if (sentEntry) {
+      failedItems.add(sentEntry.entry.itemId);
+      reportRejectedPushItem(ctx, "change", status, sentEntry, "warning");
+    }
   }
   for (const node of responses.deletes) {
     const status = readPathFrom(node, ["Status"]);
@@ -1042,9 +1048,15 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         itemId: sentEntry.entry.itemId,
       });
       removeFromIndexMap(ctx, sentEntry.entry.itemId);
+    } else {
+      // Still not tracked - legacy didn't either ("What can we do about
+      // failed deletes? SyncLog" - sync.js:1073), and its soft-fail path
+      // never reached updateFailedItems, so the item was neither counted
+      // nor re-staged. All that changes here is that the dump legacy
+      // sent to the console is now visible in the log, at the level that
+      // matches how quiet it was.
+      reportRejectedPushItem(ctx, "delete", status, sentEntry, "debug");
     }
-    // Other delete failures are not tracked - legacy didn't either
-    // ("What can we do about failed deletes? SyncLog" - sync.js:1073).
   }
   for (const m of sent.mods) {
     const ack = responses.changes.find(
@@ -1821,16 +1833,91 @@ function diffComponentProperties(expectedStr, actualStr, target) {
   return { dropped, added, changed };
 }
 
-function innerProps(text, target) {
+/* ── Rejected-item reporting ──────────────────────────────────────────
+ *
+ * A push the server refuses is counted (`failedItems`) and re-staged at
+ * the tail of the changelog, but until now nothing said *which* item it
+ * was - the sync only ended with "did not accept N elements", which is
+ * issue #319.
+ *
+ * Legacy wrote one event-log entry per failed item, carrying the whole
+ * item in the details (`sync.js::updateFailedItems`). The request and
+ * response halves it also logged are already here as `[eas:net] send /
+ * receive Sync`, so what these add back is the item: a short summary in
+ * the message so the log stays scannable, and the blob itself in the
+ * details.
+ *
+ * From thomcuddihy's PR #322, which was closed as a whole.
+ */
+
+/** One entry naming an item the server refused. `sentEntry` is an
+ *  element of `built.adds` / `.mods` / `.dels`; deletes carry no `item`,
+ *  so they report without a summary or details. */
+function reportRejectedPushItem(ctx, operation, status, sentEntry, level) {
+  const itemId = sentEntry?.entry?.itemId ?? sentEntry?.item?.id ?? "unknown";
+  const localStatus = sentEntry?.entry?.status;
+  const blob = sentEntry?.item?.blob;
+  const summary = summarizeBlobForLog(blob, ctx.itemKind.changelogKind);
+  ctx.provider.reportEventLog({
+    level,
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    message:
+      `[${ctx.itemKind.changelogKind}-sync] server rejected ${operation} for ` +
+      `local item ${itemId}` +
+      (localStatus ? ` (${localStatus})` : "") +
+      ` (Status ${status ?? "unknown"})` +
+      (summary ? `: ${summary}` : ""),
+    details: typeof blob === "string" && blob ? blob : null,
+  });
+}
+
+/** Enough of an item to recognize it in a log line. Never throws: a blob
+ *  we cannot parse is exactly the kind that gets rejected, and the
+ *  details still carry it verbatim. */
+function summarizeBlobForLog(blob, kind) {
+  if (typeof blob !== "string" || !blob) return "";
+  const target = roundTripTargetFor(kind);
+  if (!target) return "";
+  const inner = innerComponent(blob, target);
+  if (!inner) return "";
+  const fields =
+    kind === "contact"
+      ? ["fn", "n", "email"]
+      : ["summary", "dtstart", "dtend", "due", "uid"];
+  const parts = [];
+  for (const name of fields) {
+    const value = inner.getFirstPropertyValue(name);
+    if (value != null && String(value) !== "") {
+      parts.push(`${name.toUpperCase()}=${truncateForLog(String(value))}`);
+    }
+  }
+  return parts.join(" ");
+}
+
+function truncateForLog(value, max = 80) {
+  const singleLine = value.replace(/\s+/g, " ").trim();
+  return singleLine.length > max
+    ? `${singleLine.slice(0, Math.max(0, max - 3))}...`
+    : singleLine;
+}
+
+/** Parse a stored blob and descend to the component that carries the
+ *  properties: VEVENT/VTODO for iCal, the vCard itself for contacts.
+ *  Returns null if the text does not parse or the inner component is
+ *  absent. */
+function innerComponent(text, target) {
   let comp;
   try {
     comp = new ICAL.Component(ICAL.parse(text));
   } catch {
     return null;
   }
-  // For iCal we descend into VEVENT/VTODO; for vCard the top-level
-  // component itself holds the properties (no inner wrapper).
-  const inner = target.inner ? comp.getFirstSubcomponent(target.inner) : comp;
+  return target.inner ? comp.getFirstSubcomponent(target.inner) : comp;
+}
+
+function innerProps(text, target) {
+  const inner = innerComponent(text, target);
   if (!inner) return null;
   const map = new Map();
   for (const p of inner.getAllProperties()) {
