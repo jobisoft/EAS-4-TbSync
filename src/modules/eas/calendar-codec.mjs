@@ -138,13 +138,22 @@ export function applicationDataToIcal({
       }
     }
     if (childByTag(adNode, "Exceptions")) {
-      // Clear existing override vevents (anything with RECURRENCE-ID)
-      // so the AD's exception set replaces them wholesale.
+      // Clear the whole existing exception set so the AD's replaces it: the
+      // override vevents (anything with RECURRENCE-ID) *and* the master's
+      // EXDATEs, which are how a cancelled occurrence is stored. Clearing
+      // only the overrides made every re-delivery of the series add another
+      // copy of each EXDATE, and `listInstanceCommands` then emitted a
+      // duplicate <Delete> for each copy.
+      //
+      // It also drops an EXDATE the server no longer has - an occurrence
+      // un-cancelled elsewhere - which nothing else on the inbound path
+      // would ever remove.
       for (const sub of vcal.getAllSubcomponents("vevent")) {
         if (sub.getFirstProperty("recurrence-id")) {
           vcal.removeSubcomponent(sub);
         }
       }
+      vevent.removeAllProperties("exdate");
       appendInboundExceptions({
         adNode,
         vcal,
@@ -348,7 +357,11 @@ export function applyInstanceChange({
 }) {
   const vcal = parseVCalendar(ical);
   if (!vcal) return ical;
-  const master = vcal.getFirstSubcomponent("vevent");
+  // The master is the vevent without a RECURRENCE-ID, not simply the first
+  // one - same rule, and same reason, as ad219dc: for a blob whose overrides
+  // happen to come first this would otherwise strip an EXDATE from an
+  // override.
+  const master = pickMasterVevent(vcal);
   if (!master) return ical;
 
   removeExdate(master, instanceUtc);
@@ -506,7 +519,8 @@ function pickMasterVevent(vcal) {
 export function applyInstanceDelete({ ical, instanceUtc }) {
   const vcal = parseVCalendar(ical);
   if (!vcal) return ical;
-  const master = vcal.getFirstSubcomponent("vevent");
+  // The vevent without a RECURRENCE-ID - see applyInstanceChange above.
+  const master = pickMasterVevent(vcal);
   if (!master) return ical;
 
   // Drop any existing override at this RECURRENCE-ID - server says it's
@@ -1225,7 +1239,17 @@ function appendOutboundExceptions({
   builder.ctag();
 }
 
+/** Add an EXDATE, unless the same instant is already excluded. The guard is
+ *  here rather than at the call sites because both of them can be reached
+ *  for an occurrence we have already cancelled - the embedded `<Exceptions>`
+ *  block on a re-delivered master, and a 16.1 per-instance `<Delete>` for an
+ *  instance we EXDATE'd on an earlier sync. A duplicate is not inert: each
+ *  copy becomes its own outbound `<Delete>` command. */
 function addExdate(vevent, jsDate) {
+  const target = formatBasicUtc(jsDate);
+  for (const existing of collectExdates(vevent)) {
+    if (icalTimeToBasicUtc(existing) === target) return;
+  }
   const prop = new ICAL.Property("exdate", vevent);
   prop.setValue(jsDateToIcalUtcTime(jsDate));
   vevent.addProperty(prop);
