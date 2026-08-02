@@ -112,6 +112,32 @@ const STATUS_PROVISION_REQUIRED = new Set(["141", "142", "143", "144"]);
 // anything - is paid by everyone whether their server does it or not.
 const POST_PUSH_WAIT_MS = 2000;
 
+// How often one instance command may be re-sent before it is reported. Per
+// command, not per pass: each occurrence is an independent request, and one
+// exception exhausting its attempts says nothing about the next.
+const MAX_INSTANCE_RETRIES = 6;
+
+// Statuses worth re-sending an instance command for, and how long to wait
+// first. Membership decides whether, the value decides how long, so there is
+// no second list to keep in step with this one.
+//
+// Everything absent is reported on the first reply. Status 6 in particular is
+// documented as "the client has sent a malformed or invalid item ... this is
+// not a transient condition" - asking again cannot make it true, and six
+// pointless round trips would only delay the report.
+//
+// The delays split on whether the reply told us anything. A 5 or a 16 carries
+// no usable body, so nothing on our side has changed and an instant resend is
+// the same request a moment later. A 7 arrives with the server's newer copy of
+// the master, which `applyServerCommands` has already applied by the time the
+// status is judged, so the next attempt is against different data and waiting
+// would add nothing.
+const INSTANCE_RETRY_DELAY_MS = Object.freeze({
+  [STATUS_TEMP_SERVER]: 1000,
+  [STATUS_CONFLICT]: 0,
+  [STATUS_RETRY]: 1000,
+});
+
 /* ── DEV: fixture injection ─────────────────────────────────────────────
  *
  * Set DEV_FIXTURE_ADD_XML to inject it as part of every inbound Sync.
@@ -1023,12 +1049,17 @@ async function instancePhase(ctx, masters) {
  *  before judging it, so a retry sees current state.
  *
  *  Returns `{ code }` or `{ status }` for the conditions the caller must
- *  handle, else `{ failed }`. Retries once - and only once - for the two
- *  statuses that say so: a global 16, and an item-level 7 from Exchange
- *  still enriching the master we pushed a moment ago. */
-async function sendInstanceCommand(ctx, command, blob, isRetry = false) {
+ *  handle, else `{ failed }`.
+ *
+ *  One budget, spent by any retry whatever its cause. Counting per cause is
+ *  what this replaces: a global 16 and an item-level 7 are independent, they
+ *  arrive in sequence when Exchange is still settling a master, and a
+ *  per-cause allowance let the first spend the second's - which reported a
+ *  recoverable conflict as a failure. Nothing has to classify a retry in
+ *  order to count it now. Which statuses are worth retrying at all, and how
+ *  long to wait first, is `INSTANCE_RETRY_DELAY_MS`. */
+async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
   const label = `instance ${command.kind} ${command.instanceId}`;
-  const again = () => sendInstanceCommand(ctx, command, blob, true);
   const reject = (status) => {
     // A rejection leaves the master synced but this exception absent.
     // Counted so the folder reports it, but kept out of `failedItems` -
@@ -1042,6 +1073,24 @@ async function sendInstanceCommand(ctx, command, blob, isRetry = false) {
       "warning",
     );
     return { failed: true };
+  };
+
+  /** Re-send for a status the server called transient, if there is budget
+   *  left. Returns null when there is not, or when the status is one that
+   *  asking again cannot change - the caller then reports it. */
+  const retry = async (status) => {
+    const delay = INSTANCE_RETRY_DELAY_MS[status];
+    if (delay === undefined || attempt >= MAX_INSTANCE_RETRIES) return null;
+    ctx.provider.reportEventLog({
+      level: "info",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[${ctx.itemKind.changelogKind}-sync] ${label}: Status ${status}, ` +
+        `re-sending (${attempt + 1}/${MAX_INSTANCE_RETRIES})`,
+    });
+    if (delay) await sleep(delay);
+    return await sendInstanceCommand(ctx, command, blob, attempt + 1);
   };
 
   const r = await sendSync({
@@ -1061,17 +1110,13 @@ async function sendInstanceCommand(ctx, command, blob, isRetry = false) {
   if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
   if (r.code === "BUSY") return { code: "BUSY" };
   if (r.error) {
-    if (r.topStatus === STATUS_RETRY && !isRetry) {
-      logInstanceRetry(ctx, label, "server asked us to resend (Status 16)");
-      return await again();
-    }
-    // A global status against this one command is not the sync's
-    // failure: the master itself is already on the server, and the other
-    // commands are unaffected. The errors carrying no status of their own
-    // - protocol fault, access denied, a reply we cannot parse - are
-    // account-level and do still sink it.
+    // Errors carrying no status of their own - protocol fault, access
+    // denied, a reply we cannot parse - are account-level and sink the sync.
     if (!r.topStatus) return { status: errorStatus(r.error) };
-    return reject(r.topStatus);
+    // A global status against this one command is not the sync's failure:
+    // the master itself is already on the server, and the other commands
+    // are unaffected.
+    return (await retry(r.topStatus)) ?? reject(r.topStatus);
   }
 
   if (r.synckey) {
@@ -1094,28 +1139,12 @@ async function sendInstanceCommand(ctx, command, blob, isRetry = false) {
   const status = node ? readPathFrom(node, ["Status"]) : null;
   if (!status || status === STATUS_OK) return { failed: false };
 
-  // Status 7 here is our own doing, not another client's: the master was
+  // A Status 7 here is our own doing, not another client's: the master was
   // pushed moments ago, and Exchange enriches an item after accepting it.
-  // The reply that rejects the command carries those very changes, which
-  // we have just applied, so a second attempt is judged against the state
-  // the server handed us. Once only - a conflict that survives the
-  // server's own update is not this race.
-  if (status === STATUS_CONFLICT && !isRetry) {
-    logInstanceRetry(ctx, label, "server had a newer copy of the master");
-    return await again();
-  }
-  return reject(status);
-}
-
-function logInstanceRetry(ctx, label, reason) {
-  ctx.provider.reportEventLog({
-    level: "info",
-    accountId: ctx.accountId,
-    folderId: ctx.folderId,
-    message:
-      `[${ctx.itemKind.changelogKind}-sync] ${reason}; ` +
-      `re-sending ${label}`,
-  });
+  // The reply that rejects the command carries those very changes, and they
+  // were applied above, so the next attempt is judged against the state the
+  // server just handed us - which is why this one needs no delay.
+  return (await retry(status)) ?? reject(status);
 }
 
 async function buildPushBatch(ctx, slice) {
