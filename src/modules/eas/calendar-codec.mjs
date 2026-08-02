@@ -379,9 +379,11 @@ export function applyInstanceChange({
   return vcal.toString();
 }
 
-/** Outbound 16.1: emit one `<Change ServerId=master>` per current
- *  EXDATE / RECURRENCE-ID override on the master. Idempotent - re-asserts
- *  the full exception set on every push of a recurring master.
+/** Outbound 16.1: emit one command per current EXDATE / RECURRENCE-ID
+ *  override on the master, each naming the master's ServerId and the
+ *  occurrence's InstanceId - `<Delete>` for a cancelled occurrence,
+ *  `<Change>` for a moved one. Idempotent - re-asserts the full exception
+ *  set on every push of a recurring master.
  *
  *  Limitation: a user un-deleting an EXDATE or removing an override
  *  cannot be expressed in EAS without comparing against the server's
@@ -390,7 +392,7 @@ export function applyInstanceChange({
  *
  *  Caller (sync runner) hands us the builder on the AirSync codepage
  *  after closing the master `<Change>`. We emit zero or more sibling
- *  `<Change>` commands and leave the builder on AirSync.
+ *  commands and leave the builder on AirSync.
  */
 export function appendInstanceChanges({
   builder,
@@ -423,22 +425,21 @@ export function appendInstanceChanges({
   }
   if (!exdates.length && !overrides.length) return;
 
+  // A cancelled occurrence is a <Delete>, not a <Change> carrying
+  // <Deleted>. [MS-ASCAL] §2.2.2.16 allows `Deleted` only as a child of
+  // `Exception`, which lives in the embedded <Exceptions> block that 16.x
+  // replaced - there is no legal place for it here, and Exchange rejects
+  // the command with Status 6. [MS-ASCMD] Delete gives the 16.x form:
+  // ServerId plus airsyncbase:InstanceId, no ApplicationData at all,
+  // because "the object is identified by both the ServerId element of the
+  // master item as well as the airsyncbase:InstanceId element of the
+  // specific occurrence".
   for (const ex of exdates) {
-    builder.otag("Change");
+    builder.otag("Delete");
     builder.atag("ServerId", serverID);
-    // InstanceId belongs to the command, not to its payload: [MS-ASAIRS]
-    // §2.2.2.25 makes it a child of airsync:Change (or airsync:Delete),
-    // and [MS-ASCMD] Change says a 16.x calendar item is identified by
-    // the master's ServerId together with it. Inside ApplicationData it
-    // is only ever valid in a *response*, for an orphan instance.
     builder.switchpage("AirSyncBase");
     builder.atag("InstanceId", icalTimeToBasicUtc(ex));
     builder.switchpage("AirSync");
-    builder.otag("ApplicationData");
-    builder.switchpage("Calendar");
-    builder.atag("Deleted", "1");
-    builder.switchpage("AirSync");
-    builder.ctag();
     builder.ctag();
   }
   for (const override of overrides) {

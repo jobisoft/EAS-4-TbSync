@@ -1042,15 +1042,20 @@ async function sendInstanceChanges(ctx, masters, { reportConflicts } = {}) {
   // server we have them, and a retry needs them in hand.
   if (r.commands) await applyServerCommands(ctx, r.commands);
 
+  // A moved occurrence goes out as <Change>, a cancelled one as
+  // <Delete>, so failures come back under either list.
   const conflicted = [];
   let failedCount = 0;
-  for (const node of r.responses?.changes ?? []) {
+  const judge = (node, operation) => {
     const status = readPathFrom(node, ["Status"]);
-    if (!status || status === STATUS_OK) continue;
+    if (!status || status === STATUS_OK) return;
     const serverId = readPathFrom(node, ["ServerId"]);
     if (status === STATUS_CONFLICT && !reportConflicts) {
-      conflicted.push(serverId);
-      continue;
+      // By ServerId, not per command: `appendInstanceChanges` re-asserts
+      // a master's whole exception set, so re-sending the master covers
+      // every command it produced.
+      if (!conflicted.includes(serverId)) conflicted.push(serverId);
+      return;
     }
     // A rejection leaves the master synced but its exceptions absent.
     // Counted so the folder reports it, but kept out of `failedItems` -
@@ -1059,12 +1064,14 @@ async function sendInstanceChanges(ctx, masters, { reportConflicts } = {}) {
     failedCount += 1;
     reportRejectedPushItem(
       ctx,
-      "instance change",
+      operation,
       status,
       { entry: { itemId: serverId ?? "unknown" } },
       "warning",
     );
-  }
+  };
+  for (const node of r.responses?.changes ?? []) judge(node, "instance change");
+  for (const node of r.responses?.deletes ?? []) judge(node, "instance delete");
   return { failedCount, conflicted };
 }
 
