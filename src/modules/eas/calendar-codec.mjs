@@ -9,9 +9,9 @@
  * Recurrence covers the RRULE plus exceptions, which reach us in two
  * shapes. Embedded: an `<Exceptions>` block on the master item, read by
  * `appendInboundExceptions` and written by `appendOutboundExceptions`
- * (outbound on 2.5/14.x only). Per-instance: one `<Change>` per
- * occurrence carrying `<InstanceId>`, handled by `applyInstanceChange` /
- * `applyInstanceDelete` and emitted by `appendInstanceChanges` (16.1
+ * (outbound on 2.5/14.x only). Per-instance: one `<Change>` or `<Delete>`
+ * per occurrence carrying `<InstanceId>`, handled by `applyInstanceChange`
+ * / `applyInstanceDelete` and built by `listInstanceCommands` (16.1
  * only). All of it is gated on the account's `syncRecurrence` option.
  *
  * The TimeZone blob (every version, but not for all-day events on 16.1,
@@ -379,23 +379,30 @@ export function applyInstanceChange({
   return vcal.toString();
 }
 
-/** Outbound 16.1: emit one command per current EXDATE / RECURRENCE-ID
- *  override on the master, each naming the master's ServerId and the
- *  occurrence's InstanceId - `<Delete>` for a cancelled occurrence,
- *  `<Change>` for a moved one. Idempotent - re-asserts the full exception
- *  set on every push of a recurring master.
+/** Outbound 16.1: one command per current EXDATE / RECURRENCE-ID override
+ *  on the master, each naming the master's ServerId and the occurrence's
+ *  InstanceId - `<Delete>` for a cancelled occurrence, `<Change>` for a
+ *  moved one. Idempotent - re-asserts the full exception set on every push
+ *  of a recurring master.
+ *
+ *  Returns descriptors rather than writing them, because Exchange will not
+ *  take two commands against one ServerId in a single request: it applies
+ *  the first, faults on the second and discards the whole response with a
+ *  global Status 16. Batching is therefore the caller's decision, and the
+ *  caller needs the InstanceId to name the occurrence in a log line.
+ *
+ *  Each descriptor's `emit(builder)` writes one complete command. The
+ *  builder must be on the AirSync codepage on entry; it is left there.
  *
  *  Limitation: a user un-deleting an EXDATE or removing an override
  *  cannot be expressed in EAS without comparing against the server's
  *  last-known state (which we don't currently snapshot). The unwanted
  *  EXDATE / override stays server-side until manually re-edited there.
  *
- *  Caller (sync runner) hands us the builder on the AirSync codepage
- *  after closing the master `<Change>`. We emit zero or more sibling
- *  commands and leave the builder on AirSync.
+ *  @returns {Array<{kind: string, serverID: string, instanceId: string,
+ *                   emit: (builder: object) => void}>}
  */
-export function appendInstanceChanges({
-  builder,
+export function listInstanceCommands({
   blob,
   serverID,
   asVersion,
@@ -405,14 +412,14 @@ export function appendInstanceChanges({
   fallbackOrganizerName,
   eventLog,
 }) {
-  if (asVersion !== "16.1") return;
+  if (asVersion !== "16.1") return [];
   const vcal = parseVCalendar(blob);
-  if (!vcal) return;
+  if (!vcal) return [];
   const master = vcal.getFirstSubcomponent("vevent") ?? null;
   // parseVCalendar's first vevent may be an override if iCal order is
   // unusual; reuse the master picker instead.
   const masterVevent = pickMasterVevent(vcal) ?? master;
-  if (!masterVevent) return;
+  if (!masterVevent) return [];
 
   const masterUid = stringOf(masterVevent.getFirstPropertyValue("uid"));
   const exdates = collectExdates(masterVevent);
@@ -423,8 +430,8 @@ export function appendInstanceChanges({
     const rid = sub.getFirstProperty("recurrence-id");
     if (subUid === masterUid && rid) overrides.push(sub);
   }
-  if (!exdates.length && !overrides.length) return;
 
+  const commands = [];
   // A cancelled occurrence is a <Delete>, not a <Change> carrying
   // <Deleted>. [MS-ASCAL] §2.2.2.16 allows `Deleted` only as a child of
   // `Exception`, which lives in the embedded <Exceptions> block that 16.x
@@ -435,41 +442,58 @@ export function appendInstanceChanges({
   // master item as well as the airsyncbase:InstanceId element of the
   // specific occurrence".
   for (const ex of exdates) {
-    builder.otag("Delete");
-    builder.atag("ServerId", serverID);
-    builder.switchpage("AirSyncBase");
-    builder.atag("InstanceId", icalTimeToBasicUtc(ex));
-    builder.switchpage("AirSync");
-    builder.ctag();
+    const instanceId = icalTimeToBasicUtc(ex);
+    commands.push({
+      kind: "delete",
+      serverID,
+      instanceId,
+      emit(builder) {
+        builder.otag("Delete");
+        builder.atag("ServerId", serverID);
+        builder.switchpage("AirSyncBase");
+        builder.atag("InstanceId", instanceId);
+        builder.switchpage("AirSync");
+        builder.ctag();
+      },
+    });
   }
   for (const override of overrides) {
     const rid = override.getFirstPropertyValue("recurrence-id");
-    builder.otag("Change");
-    builder.atag("ServerId", serverID);
-    // Sibling of ServerId, not part of the payload - see the EXDATE
-    // branch above for the citations.
-    builder.switchpage("AirSyncBase");
-    builder.atag("InstanceId", icalTimeToBasicUtc(rid));
-    builder.switchpage("AirSync");
-    builder.otag("ApplicationData");
-    // appendApplicationDataFromIcal switches to Calendar at entry
-    // and may bounce to AirSyncBase for Body / Location, but always
-    // returns to Calendar before the closing tag.
-    appendApplicationDataFromIcal({
-      builder,
-      ical: override,
-      asVersion,
-      defaultTimezone,
-      syncRecurrence,
-      isException: true,
-      userEmail,
-      fallbackOrganizerName,
-      eventLog,
+    const instanceId = icalTimeToBasicUtc(rid);
+    commands.push({
+      kind: "change",
+      serverID,
+      instanceId,
+      emit(builder) {
+        builder.otag("Change");
+        builder.atag("ServerId", serverID);
+        // Sibling of ServerId, not part of the payload - see the EXDATE
+        // branch above for the citations.
+        builder.switchpage("AirSyncBase");
+        builder.atag("InstanceId", instanceId);
+        builder.switchpage("AirSync");
+        builder.otag("ApplicationData");
+        // appendApplicationDataFromIcal switches to Calendar at entry
+        // and may bounce to AirSyncBase for Body / Location, but always
+        // returns to Calendar before the closing tag.
+        appendApplicationDataFromIcal({
+          builder,
+          ical: override,
+          asVersion,
+          defaultTimezone,
+          syncRecurrence,
+          isException: true,
+          userEmail,
+          fallbackOrganizerName,
+          eventLog,
+        });
+        builder.switchpage("AirSync");
+        builder.ctag();
+        builder.ctag();
+      },
     });
-    builder.switchpage("AirSync");
-    builder.ctag();
-    builder.ctag();
   }
+  return commands;
 }
 
 function pickMasterVevent(vcal) {
@@ -540,7 +564,7 @@ export function appendApplicationDataFromIcal({
   // Two cases get none:
   //  - an embedded ≤14.x <Exception>, whose parent payload already
   //    carries the master's blob. A 16.1 per-instance <Change> is its own
-  //    top-level command (see `appendInstanceChanges`) and needs its own.
+  //    top-level command (see `listInstanceCommands`) and needs its own.
   //  - an all-day event on 16.1. [MS-ASCAL] §2.2.2.1 is explicit: with
   //    AllDayEvent set to 1 the client "MUST NOT include the TimeZone
   //    element", and the server will not send one either - "a client

@@ -61,6 +61,9 @@ const STATUS_INVALID = "6";
 const STATUS_CONFLICT = "7";
 const STATUS_OBJECT_NOT_FOUND = "8";
 const STATUS_FOLDER_HIERARCHY = "12";
+// Top-level only: "something on the server caused a retriable error", whose
+// documented resolution is "resend the request" ([MS-ASCMD] §2.2.3.177.17).
+const STATUS_RETRY = "16";
 // Server temporarily unavailable / busy. Legacy paused autosync for 30
 // minutes on this; we mirror that by writing `noAutosyncUntil` on the
 // account so the host's autosync ticker skips it for the duration.
@@ -438,10 +441,10 @@ async function runOneSync({
     }
   }
 
-  // 3b) Exceptions of masters this push created. They key on a ServerId
-  // the server only assigned a moment ago, so they need their own pass -
-  // see instancePhase. Ahead of the settle pull below, so that pull sees
-  // the server's finished state.
+  // 3b) Exceptions of the recurring masters this push sent. Each keys on
+  // the master's ServerId and cannot share a request with it, so they
+  // need their own pass - see instancePhase. Ahead of the settle pull
+  // below, so that pull sees the server's finished state.
   let instanceFailed = 0;
   if (pushed.instanceMasters?.length) {
     const inst = await instancePhase(ctx, pushed.instanceMasters);
@@ -749,12 +752,12 @@ async function pullPhase(ctx) {
 
 async function pushPhase(ctx, userEdits) {
   const failedItems = new Set();
-  // Recurring masters added in this pass whose blob carries overrides.
+  // Recurring masters pushed in this pass whose blob carries overrides.
   // Only 16.1 needs them, and only the calendar codec can express them.
   const instanceMasters =
     ctx.asVersion === "16.1" &&
     ctx.syncRecurrence &&
-    ctx.itemKind.codec.appendInstanceChanges
+    ctx.itemKind.codec.listInstanceCommands
       ? []
       : null;
   let batchSize = ctx.maxItems;
@@ -782,9 +785,8 @@ async function pushPhase(ctx, userEdits) {
 
     // Trace any recurring items going out so the user can correlate
     // server responses with the iCal we just sent. 16.1 sends each
-    // exception as its own <Change> with the same ServerId; that
-    // expansion happens inside appendInstanceChanges and isn't visible
-    // here - the master mod log entry is the anchor.
+    // exception as its own request afterwards, from the instance phase -
+    // the master's log entry here is the anchor for those.
     if (ctx.syncRecurrence) {
       for (const a of built.adds) {
         if (blobHasRecurrence(a.item.blob)) {
@@ -892,6 +894,28 @@ async function pushPhase(ctx, userEdits) {
     });
     if (r.commands) await applyServerCommands(ctx, r.commands);
 
+    // Modified masters are noted here rather than in applyResponses,
+    // which sees only the changes the server *refused* - a successful one
+    // is never visited there. So the test is the other way round: a
+    // ServerId named in <Responses> is one whose master did not land,
+    // whether it was rejected outright or conceded to the server's copy
+    // (Status 7 / 8), and its exceptions have nothing to attach to.
+    if (instanceMasters) {
+      const rejected = new Set(
+        responses.changes
+          .map((node) => readPathFrom(node, ["ServerId"]))
+          .filter(Boolean),
+      );
+      for (const m of built.mods) {
+        if (rejected.has(m.serverID) || failedItems.has(m.entry.itemId)) {
+          continue;
+        }
+        if (blobHasInstanceOverrides(m.item.blob)) {
+          instanceMasters.push({ serverID: m.serverID, blob: m.item.blob });
+        }
+      }
+    }
+
     itemsDone += slice.length;
     reportProgress(ctx, itemsDone, itemsTotal);
   }
@@ -933,7 +957,7 @@ async function pushPhase(ctx, userEdits) {
 }
 
 /** Cheap pre-filter for the instance phase: does this blob carry anything
- *  `appendInstanceChanges` could emit? A false positive costs one no-op
+ *  `listInstanceCommands` could emit? A false positive costs one no-op
  *  call, a false negative is impossible - both shapes it walks leave one
  *  of these two markers in the iCal text. */
 function blobHasInstanceOverrides(blob) {
@@ -946,62 +970,80 @@ function blobHasInstanceOverrides(blob) {
 /* ── Instance phase ───────────────────────────────────────────────────
  *
  * On 16.1 a recurrence exception is not embedded in its master. It is a
- * sibling `<Change>` carrying the master's ServerId and an `<InstanceId>`
- * naming the occurrence it overrides, so it cannot be sent until the
+ * sibling `<Change>` or `<Delete>` carrying the master's ServerId and an
+ * `<InstanceId>` naming the occurrence, so it cannot be sent until the
  * server has assigned that ServerId. For a master the user just created
  * that happens in the push we have only now finished, which is why this
  * runs as its own pass rather than inside `pushPhase`.
  *
- * One request is enough and always will be: every command here is a
- * <Change> against an item that already has a ServerId, so this pass
- * cannot produce more work of its own kind.
+ * One command per request, always. Exchange will not take two commands
+ * against the same ServerId in one <Commands> block: it applies the
+ * first, faults on the second, and answers a global Status 16 that
+ * discards the response while keeping what the first one did. Every
+ * exception of a master shares that master's ServerId, so they have to
+ * travel one at a time. This is also why a master being *modified* sends
+ * its exceptions here rather than alongside its own <Change>.
  *
  * Deliberately independent of the changelog - `added_by_user` and
  * friends are on their way out with the move to a custom calendar type,
  * and everything needed is in hand from the push response.
  */
 async function instancePhase(ctx, masters) {
-  const first = await sendInstanceChanges(ctx, masters);
-  if (first.code || first.status) return first;
+  const commands = [];
+  for (const m of masters) {
+    const built = ctx.itemKind.codec.listInstanceCommands({
+      blob: m.blob,
+      serverID: m.serverID,
+      asVersion: ctx.asVersion,
+      defaultTimezone: ctx.defaultTimezone,
+      syncRecurrence: ctx.syncRecurrence,
+      userEmail: ctx.account?.custom?.user,
+      fallbackOrganizerName:
+        ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
+      eventLog: ctx.eventLog,
+    });
+    // The master's blob rides along so a rejection can be logged with the
+    // series it belongs to, not just its ServerId.
+    for (const command of built) commands.push({ command, blob: m.blob });
+  }
 
-  // Status 7 here is our own doing, not another client's: the master was
-  // created moments ago by the push that produced this list, and the
-  // reply that rejects the change carries the very <Change> commands it
-  // was rejected against. `sendInstanceChanges` has already applied them
-  // and taken the new synckey, so a second attempt is judged against the
-  // state the server just handed us.
-  if (!first.conflicted.length) return { failedCount: first.failedCount };
-
-  const retryMasters = masters.filter((m) =>
-    first.conflicted.includes(m.serverID),
-  );
-  ctx.provider.reportEventLog({
-    level: "info",
-    accountId: ctx.accountId,
-    folderId: ctx.folderId,
-    message:
-      `[${ctx.itemKind.changelogKind}-sync] server had newer copies of ` +
-      `${retryMasters.length} recurring master(s); re-sending their ` +
-      `instance changes`,
-  });
-
-  // Once only. A conflict that survives the server's own update is not
-  // the race this handles, and hiding it behind another retry would just
-  // defer the report.
-  const second = await sendInstanceChanges(ctx, retryMasters, {
-    reportConflicts: true,
-  });
-  if (second.code || second.status) return second;
-  return { failedCount: first.failedCount + second.failedCount };
+  let failedCount = 0;
+  for (const { command, blob } of commands) {
+    const r = await sendInstanceCommand(ctx, command, blob);
+    // Only what the caller has to act on stops the pass. Anything else
+    // has already been reported against its own occurrence, and the
+    // remaining commands are independent of it.
+    if (r.code || r.status) return r;
+    if (r.failed) failedCount += 1;
+  }
+  return { failedCount };
 }
 
-/** One instance-change request. Applies whatever the reply carries before
- *  judging it, so the caller's retry sees current state.
+/** One instance command, one request. Applies whatever the reply carries
+ *  before judging it, so a retry sees current state.
  *
- *  Returns `{ failedCount, conflicted }` - `conflicted` holding the
- *  ServerIds that came back Status 7 and are worth another attempt,
- *  unless `reportConflicts` says to treat them as plain failures. */
-async function sendInstanceChanges(ctx, masters, { reportConflicts } = {}) {
+ *  Returns `{ code }` or `{ status }` for the conditions the caller must
+ *  handle, else `{ failed }`. Retries once - and only once - for the two
+ *  statuses that say so: a global 16, and an item-level 7 from Exchange
+ *  still enriching the master we pushed a moment ago. */
+async function sendInstanceCommand(ctx, command, blob, isRetry = false) {
+  const label = `instance ${command.kind} ${command.instanceId}`;
+  const again = () => sendInstanceCommand(ctx, command, blob, true);
+  const reject = (status) => {
+    // A rejection leaves the master synced but this exception absent.
+    // Counted so the folder reports it, but kept out of `failedItems` -
+    // that re-stages the changelog entry, and the master's own push
+    // succeeded.
+    reportRejectedPushItem(
+      ctx,
+      label,
+      status,
+      { entry: { itemId: command.serverID }, item: { blob } },
+      "warning",
+    );
+    return { failed: true };
+  };
+
   const r = await sendSync({
     account: ctx.account,
     asVersion: ctx.asVersion,
@@ -1010,17 +1052,7 @@ async function sendInstanceChanges(ctx, masters, { reportConflicts } = {}) {
       collectionId: ctx.collectionId,
       asVersion: ctx.asVersion,
       withChanges: false,
-      withInstanceChanges: {
-        masters,
-        asVersion: ctx.asVersion,
-        codec: ctx.itemKind.codec,
-        defaultTimezone: ctx.defaultTimezone,
-        syncRecurrence: ctx.syncRecurrence,
-        userEmail: ctx.account?.custom?.user,
-        fallbackOrganizerName:
-          ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
-        eventLog: ctx.eventLog,
-      },
+      withInstanceCommand: command,
     }),
   });
 
@@ -1028,7 +1060,19 @@ async function sendInstanceChanges(ctx, masters, { reportConflicts } = {}) {
   if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
   if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
   if (r.code === "BUSY") return { code: "BUSY" };
-  if (r.error) return { status: errorStatus(r.error) };
+  if (r.error) {
+    if (r.topStatus === STATUS_RETRY && !isRetry) {
+      logInstanceRetry(ctx, label, "server asked us to resend (Status 16)");
+      return await again();
+    }
+    // A global status against this one command is not the sync's
+    // failure: the master itself is already on the server, and the other
+    // commands are unaffected. The errors carrying no status of their own
+    // - protocol fault, access denied, a reply we cannot parse - are
+    // account-level and do still sink it.
+    if (!r.topStatus) return { status: errorStatus(r.error) };
+    return reject(r.topStatus);
+  }
 
   if (r.synckey) {
     ctx.synckey = r.synckey;
@@ -1038,41 +1082,40 @@ async function sendInstanceChanges(ctx, masters, { reportConflicts } = {}) {
   // Exchange returns items it has modified as <Change> commands in this
   // same reply - a non-zero synckey with no <GetChanges> is treated as
   // GetChanges=1, so every request implicitly asks for them. Applied
-  // before the statuses are judged: taking the synckey above tells the
+  // before the status is judged: taking the synckey above tells the
   // server we have them, and a retry needs them in hand.
   if (r.commands) await applyServerCommands(ctx, r.commands);
 
-  // A moved occurrence goes out as <Change>, a cancelled one as
-  // <Delete>, so failures come back under either list.
-  const conflicted = [];
-  let failedCount = 0;
-  const judge = (node, operation) => {
-    const status = readPathFrom(node, ["Status"]);
-    if (!status || status === STATUS_OK) return;
-    const serverId = readPathFrom(node, ["ServerId"]);
-    if (status === STATUS_CONFLICT && !reportConflicts) {
-      // By ServerId, not per command: `appendInstanceChanges` re-asserts
-      // a master's whole exception set, so re-sending the master covers
-      // every command it produced.
-      if (!conflicted.includes(serverId)) conflicted.push(serverId);
-      return;
-    }
-    // A rejection leaves the master synced but its exceptions absent.
-    // Counted so the folder reports it, but kept out of `failedItems` -
-    // that re-stages the changelog entry, and the master's own Add
-    // succeeded.
-    failedCount += 1;
-    reportRejectedPushItem(
-      ctx,
-      operation,
-      status,
-      { entry: { itemId: serverId ?? "unknown" } },
-      "warning",
-    );
-  };
-  for (const node of r.responses?.changes ?? []) judge(node, "instance change");
-  for (const node of r.responses?.deletes ?? []) judge(node, "instance delete");
-  return { failedCount, conflicted };
+  // We sent exactly one command, so at most one response node concerns
+  // us - and only failures are reported at all. A moved occurrence goes
+  // out as <Change>, a cancelled one as <Delete>.
+  const node =
+    (r.responses?.changes ?? [])[0] ?? (r.responses?.deletes ?? [])[0] ?? null;
+  const status = node ? readPathFrom(node, ["Status"]) : null;
+  if (!status || status === STATUS_OK) return { failed: false };
+
+  // Status 7 here is our own doing, not another client's: the master was
+  // pushed moments ago, and Exchange enriches an item after accepting it.
+  // The reply that rejects the command carries those very changes, which
+  // we have just applied, so a second attempt is judged against the state
+  // the server handed us. Once only - a conflict that survives the
+  // server's own update is not this race.
+  if (status === STATUS_CONFLICT && !isRetry) {
+    logInstanceRetry(ctx, label, "server had a newer copy of the master");
+    return await again();
+  }
+  return reject(status);
+}
+
+function logInstanceRetry(ctx, label, reason) {
+  ctx.provider.reportEventLog({
+    level: "info",
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    message:
+      `[${ctx.itemKind.changelogKind}-sync] ${reason}; ` +
+      `re-sending ${label}`,
+  });
 }
 
 async function buildPushBatch(ctx, slice) {
@@ -1506,7 +1549,7 @@ function buildSyncBody({
   asVersion,
   withChanges,
   withCommands,
-  withInstanceChanges,
+  withInstanceCommand,
   className,
   filterType,
   windowSize,
@@ -1548,28 +1591,20 @@ function buildSyncBody({
     }
   }
   if (withCommands) appendCommands(w, withCommands);
-  if (withInstanceChanges) appendInstanceCommands(w, withInstanceChanges);
+  if (withInstanceCommand) appendInstanceCommand(w, withInstanceCommand);
   w.ctag();
   w.ctag();
   w.ctag();
   return w.getBytes();
 }
 
-/** `<Commands>` holding nothing but per-instance `<Change>` commands, one
- *  group per master. The codec emits the `<Change>` elements themselves
- *  and leaves the builder on AirSync, same contract as the `mods` call
- *  site in `appendCommands`. */
-function appendInstanceCommands(w, { masters, ...opts }) {
-  if (!masters.length) return;
+/** `<Commands>` holding a single per-instance command - see the instance
+ *  phase for why it is never more than one. The descriptor writes the
+ *  element itself and leaves the builder on AirSync, same contract as the
+ *  codec calls in `appendCommands`. */
+function appendInstanceCommand(w, command) {
   w.otag("Commands");
-  for (const m of masters) {
-    opts.codec.appendInstanceChanges({
-      builder: w,
-      blob: m.blob,
-      serverID: m.serverID,
-      ...opts,
-    });
-  }
+  command.emit(w);
   w.ctag();
 }
 
@@ -1628,23 +1663,10 @@ function appendCommands(
     w.switchpage("AirSync");
     w.ctag();
     w.ctag();
-    // 16.1 sends each modified/deleted exception as its own <Change>
-    // with the master's ServerId. Codec opts in via `appendInstanceChanges`;
-    // contacts and tasks don't expose it.
-    if (syncRecurrence && asVersion === "16.1" && codec.appendInstanceChanges) {
-      codec.appendInstanceChanges({
-        builder: w,
-        blob: m.item.blob,
-        serverID: m.serverID,
-        asVersion,
-        defaultTimezone,
-        syncRecurrence,
-        userEmail,
-        fallbackOrganizerName,
-        eventLog,
-      });
-      // codec leaves the builder on the AirSync codepage when it returns.
-    }
+    // A 16.1 master's exceptions are *not* emitted here. They share this
+    // master's ServerId, and Exchange rejects a second command against a
+    // ServerId in the same block - the instance phase sends them one
+    // request at a time once this push has landed.
   }
   for (const d of dels) {
     w.otag("Delete");
@@ -1704,7 +1726,10 @@ function parseSyncResponse(doc) {
         ]),
       };
     }
-    return { error: `Sync top status ${top}` };
+    // `topStatus` rides along so a caller that knows what to do with a
+    // particular code can act on it; everyone else sees only `error` and
+    // behaves as before.
+    return { error: `Sync top status ${top}`, topStatus: top };
   }
   const collection = doc.getElementsByTagName("Collection")[0];
   if (!collection) return { error: "Sync response missing Collection" };
