@@ -110,7 +110,7 @@ export function applicationDataToIcal({
       childByTag(adNode, "OrganizerEmail") ||
       childByTag(adNode, "OrganizerName");
     eventLog(
-      "info",
+      "debug",
       `[calendar-codec] receive OrganizerInfo: present=${!!hasOrgInfo} OrganizerEmail=${JSON.stringify(orgEmailRaw ?? null)} OrganizerName=${JSON.stringify(orgNameRaw ?? null)}`,
     );
   }
@@ -621,7 +621,7 @@ export function appendApplicationDataFromIcal({
     }
     if (eventLog) {
       eventLog(
-        "info",
+        "debug",
         `[calendar-codec] push OrganizerInfo: local ORGANIZER email=${JSON.stringify(localEmail)} cn=${JSON.stringify(localCn)} → emitted OrganizerEmail=${JSON.stringify(emittedEmail)} OrganizerName=${JSON.stringify(emittedName)}`,
       );
     }
