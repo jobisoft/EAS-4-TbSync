@@ -56,13 +56,41 @@ const SENSITIVITY_TO_CLASS = {
 };
 const CLASS_TO_SENSITIVITY = { PUBLIC: "0", PRIVATE: "2", CONFIDENTIAL: "3" };
 
-// EAS AttendeeStatus → iCal PARTSTAT.
+// EAS AttendeeStatus/ResponseType → iCal PARTSTAT. Per MS-ASCAL both
+// enumerations share 0/2/3/4/5 = Unknown/Tentative/Accepted/Declined/
+// NotResponded (ResponseType additionally has 1=Organizer, not relevant
+// here). 5 is NOT "accepted" - confirmed empirically: a freshly-sent,
+// completely unanswered invite arrives with ResponseType=5. Mapping it
+// to ACCEPTED made every brand-new invite look pre-accepted, which in
+// turn made detectInvitationResponse (calendar-codec.mjs) see no change
+// when the user actually clicked Accept, since "already ACCEPTED" ===
+// "now ACCEPTED" - silently skipping the MeetingResponse entirely.
 const ATTENDEESTATUS_TO_PARTSTAT = {
   0: "NEEDS-ACTION",
   2: "TENTATIVE",
   3: "ACCEPTED",
   4: "DECLINED",
-  5: "ACCEPTED",
+  5: "NEEDS-ACTION",
+};
+
+// iCal PARTSTAT → EAS ResponseType, for re-stamping X-EAS-RESPONSETYPE
+// after a MeetingResponse round-trip. Same numeric scale ResponseType
+// already shares with AttendeeStatus above (both 2/3/4 = Tentative/
+// Accepted/Declined) - kept as its own map since it's a write-direction
+// concern, not the read-direction ATTENDEESTATUS_TO_PARTSTAT.
+const PARTSTAT_TO_RESPONSETYPE = {
+  TENTATIVE: "2",
+  ACCEPTED: "3",
+  DECLINED: "4",
+};
+
+// iCal PARTSTAT → EAS MeetingResponse UserResponse. A *different* scale
+// from ResponseType/AttendeeStatus above - MS-ASCMD §2.2.3.166.3 defines
+// UserResponse as 1=Accept, 2=Tentative, 3=Decline.
+const PARTSTAT_TO_USERRESPONSE = {
+  ACCEPTED: 1,
+  TENTATIVE: 2,
+  DECLINED: 3,
 };
 
 /* ── Reader: ApplicationData → iCal VEVENT ─────────────────────────── */
@@ -730,6 +758,270 @@ export function stampEasServerId(ical, serverID) {
   if (!vevent) return ical;
   vevent.updatePropertyWithValue(X_EAS_SERVERID.toLowerCase(), serverID);
   return vcal.toString();
+}
+
+/* ── Invitation response (MeetingResponse) detection ────────────────── */
+
+/** Does this stored item represent a self-attendee status change that
+ *  should go out as a `MeetingResponse`, rather than a generic Sync
+ *  push? Compares the *live* self-attendee PARTSTAT against
+ *  `X-EAS-RESPONSETYPE` (the last value the server told us), on items
+ *  flagged `X-EAS-MEETINGSTATUS` bit 0x2 ("received from another
+ *  organizer" - i.e. the user is an attendee, not the organizer).
+ *
+ *  Returns `{ userResponseCode, newResponseType }` when the delta is a
+ *  real Accept/Tentative/Decline change, `null` otherwise (organizer's
+ *  own items, no status change, or a PARTSTAT MeetingResponse has no
+ *  code for, e.g. NEEDS-ACTION). Calendar-only; not called for Tasks. */
+export function detectInvitationResponse({ ical, userEmail }) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return null;
+  const master = pickMasterVevent(vcal);
+  if (!master) return null;
+  return compareSelfPartstat(master, userEmail);
+}
+
+/** Every pending response on this item: the series-level one plus one per
+ *  overridden occurrence.
+ *
+ *  A whole recurring series is a single EAS item, so a changelog entry always
+ *  names the master. Thunderbird, however, records an Accept clicked on one
+ *  occurrence by creating an *exception* for it - which is what answering a
+ *  recurring invitation from the calendar view always does, not an edge case.
+ *  Looking only at the master therefore misses the response entirely and the
+ *  RSVP is silently lost, so every VEVENT carrying a RECURRENCE-ID is checked
+ *  too and answered with MeetingResponse's `InstanceId`.
+ *
+ *  Returns an array of `{ userResponseCode, newResponseType, instanceId }`,
+ *  where `instanceId` is `null` for the series-level response and otherwise
+ *  the occurrence's original start as a 24-character UTC timestamp (see
+ *  `instanceIdFromRecurrenceId`). Empty when nothing is a real
+ *  Accept/Tentative/Decline transition - the caller then treats the change as
+ *  an ordinary edit. */
+export function detectInvitationResponses({ ical, userEmail }) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return [];
+
+  const out = [];
+  for (const vevent of vcal.getAllSubcomponents("vevent")) {
+    const response = compareSelfPartstat(vevent, userEmail);
+    if (!response) continue;
+    const recurrenceId = vevent.getFirstPropertyValue("recurrence-id");
+    response.instanceId = recurrenceId
+      ? instanceIdFromRecurrenceId(recurrenceId)
+      : null;
+    // An override we cannot address by InstanceId must not be answered as if
+    // it were the whole series, so drop it rather than guess.
+    if (recurrenceId && !response.instanceId) continue;
+    out.push(response);
+  }
+  return out;
+}
+
+/** The marker comparison for one VEVENT - master or override. Compares the
+ *  live self-attendee PARTSTAT against `X-EAS-RESPONSETYPE`, the status the
+ *  server last reported, on items flagged `X-EAS-MEETINGSTATUS` bit 0x2
+ *  ("received from another organizer"). Returns
+ *  `{ userResponseCode, newResponseType }` for a real transition, else null. */
+function compareSelfPartstat(vevent, userEmail) {
+  if (!userEmail || !vevent) return null;
+
+  // Overrides do not always carry their own MeetingStatus, so fall back to the
+  // master's - the "received" flag belongs to the meeting, not the occurrence.
+  const meetingStatus = meetingStatusFor(vevent);
+  if (!(meetingStatus & 0x2)) return null;
+
+  const userEmailLower = String(userEmail).toLowerCase();
+  const selfAttendee = vevent
+    .getAllProperties("attendee")
+    .find((a) => stripMailto(a.getFirstValue()).toLowerCase() === userEmailLower);
+  if (!selfAttendee) return null;
+  const currentPartstat = selfAttendee.getParameter("partstat") ?? "NEEDS-ACTION";
+
+  const lastResponseType = vevent.getFirstPropertyValue(
+    X_EAS_RESPONSETYPE.toLowerCase(),
+  );
+  const lastPartstat = lastResponseType
+    ? ATTENDEESTATUS_TO_PARTSTAT[lastResponseType] ?? "NEEDS-ACTION"
+    : "NEEDS-ACTION";
+  if (currentPartstat === lastPartstat) return null;
+
+  const userResponseCode = PARTSTAT_TO_USERRESPONSE[currentPartstat];
+  const newResponseType = PARTSTAT_TO_RESPONSETYPE[currentPartstat];
+  if (!userResponseCode || !newResponseType) return null;
+
+  return { userResponseCode, newResponseType };
+}
+
+/** `X-EAS-MEETINGSTATUS` for this VEVENT, falling back to the master of the
+ *  same VCALENDAR when an override does not carry its own copy. */
+function meetingStatusFor(vevent) {
+  const own = parseInt(
+    vevent.getFirstPropertyValue(X_EAS_MEETINGSTATUS.toLowerCase()),
+    10,
+  );
+  if (!Number.isNaN(own)) return own;
+  const parent = vevent.parent;
+  if (!parent) return 0;
+  const master = pickMasterVevent(parent);
+  if (!master || master === vevent) return 0;
+  return (
+    parseInt(
+      master.getFirstPropertyValue(X_EAS_MEETINGSTATUS.toLowerCase()),
+      10,
+    ) || 0
+  );
+}
+
+/** RECURRENCE-ID → MeetingResponse `InstanceId`.
+ *
+ *  Beware: this is NOT the same format as the AirSyncBase `InstanceId` used
+ *  when pushing a 16.1 exception change, even though both are "a UTC timestamp
+ *  identifying an occurrence". MeetingResponseRequest.xsd restricts InstanceId
+ *  to exactly 24 characters, i.e. the extended form 2026-08-10T07:45:00.000Z,
+ *  while AirSyncBase uses the 16-character basic form 20260810T074500Z.
+ *  Sending the basic form makes Exchange reject the whole request with
+ *  MeetingResponse Status 2 ("invalid meeting request"), which is
+ *  indistinguishable from a genuinely stale meeting - so keep the two apart.
+ *
+ *  Returns null if the value cannot be turned into that exact shape. */
+function instanceIdFromRecurrenceId(recurrenceId) {
+  try {
+    const jsDate = recurrenceId.toJSDate?.();
+    if (!jsDate || Number.isNaN(jsDate.getTime())) return null;
+    const iso = jsDate.toISOString();
+    return iso.length === 24 ? iso : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Carry the self-attendee's PARTSTAT from `priorIcal` (a pre-existing
+ *  local item about to be overwritten) onto `builtIcal` (freshly built
+ *  from a server AD). Used when `applyAdd` (sync-runner.mjs) adopts an
+ *  item Thunderbird's itip engine already created: the AD reflects the
+ *  server's state as of the Add, which doesn't yet know about a
+ *  response the user already set locally, so without this the adopt
+ *  would silently revert an already-clicked Accept/Decline/Tentative
+ *  back to NEEDS-ACTION. Returns `builtIcal` unchanged if there's
+ *  nothing meaningful to carry over. */
+export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
+  if (!userEmail) return builtIcal;
+  const prior = parseFirstVevent(priorIcal);
+  if (!prior) return builtIcal;
+  const userEmailLower = String(userEmail).toLowerCase();
+  const priorSelf = prior
+    .getAllProperties("attendee")
+    .find((a) => stripMailto(a.getFirstValue()).toLowerCase() === userEmailLower);
+  const priorPartstat = priorSelf?.getParameter("partstat");
+  if (!priorPartstat || priorPartstat === "NEEDS-ACTION") return builtIcal;
+
+  const vcal = parseVCalendar(builtIcal);
+  if (!vcal) return builtIcal;
+  const vevent = vcal.getFirstSubcomponent("vevent");
+  if (!vevent) return builtIcal;
+  const builtSelf = vevent
+    .getAllProperties("attendee")
+    .find((a) => stripMailto(a.getFirstValue()).toLowerCase() === userEmailLower);
+  if (!builtSelf) return builtIcal;
+  builtSelf.setParameter("partstat", priorPartstat);
+  return vcal.toString();
+}
+
+/** Re-stamp X-EAS-RESPONSETYPE after a successful MeetingResponse so the
+ *  next sync pass doesn't re-detect the same already-sent response. */
+export function stampInvitationResponse(ical, newResponseType, instanceId = null) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return ical;
+  const vevent = instanceId
+    ? findVeventByInstanceId(vcal, instanceId)
+    : pickMasterVevent(vcal);
+  if (!vevent) return ical;
+  vevent.updatePropertyWithValue(
+    X_EAS_RESPONSETYPE.toLowerCase(),
+    newResponseType,
+  );
+  return vcal.toString();
+}
+
+/** Locate the override VEVENT whose RECURRENCE-ID matches an InstanceId
+ *  produced by `instanceIdFromRecurrenceId`. */
+function findVeventByInstanceId(vcal, instanceId) {
+  for (const vevent of vcal.getAllSubcomponents("vevent")) {
+    const rid = vevent.getFirstPropertyValue("recurrence-id");
+    if (rid && instanceIdFromRecurrenceId(rid) === instanceId) return vevent;
+  }
+  return null;
+}
+
+/** Does `candidateIcal` (a brand-new, not-yet-EAS-known local item, i.e.
+ *  an `added_by_user` changelog entry) look like Thunderbird's itip
+ *  engine creating a *duplicate* of an already-synced received invite,
+ *  rather than a genuine new meeting the user is organizing?
+ *
+ *  Thunderbird's own itip Accept/Decline/Tentative can create a
+ *  brand-new local item - with none of our stamped X-EAS-* fields at
+ *  all - instead of editing the existing synced copy, whenever it
+ *  doesn't find a matching item to modify (e.g. Accept racing the EAS
+ *  pull that would have supplied a matching id/UID - see `applyAdd` in
+ *  sync-runner.mjs). Since a fresh itip-created item has nothing of
+ *  ours to key off, this matches on subject + start + end against
+ *  `existingItems`' "received" items (`X-EAS-MEETINGSTATUS` bit 0x2).
+ *
+ *  Returns `{ existingItemId, userResponseCode, newResponseType }` on a
+ *  match with a real Accept/Tentative/Decline in `candidateIcal`, or
+ *  `null` (no match, or no self-attendee/real response in the
+ *  candidate - i.e. it really is just a new meeting being created). */
+export function matchInvitationResponse({
+  candidateIcal,
+  existingItems,
+  userEmail,
+}) {
+  if (!userEmail) return null;
+  const candidate = parseFirstVevent(candidateIcal);
+  if (!candidate) return null;
+
+  const userEmailLower = String(userEmail).toLowerCase();
+  const selfAttendee = candidate
+    .getAllProperties("attendee")
+    .find((a) => stripMailto(a.getFirstValue()).toLowerCase() === userEmailLower);
+  if (!selfAttendee) return null;
+  const partstat = selfAttendee.getParameter("partstat") ?? "NEEDS-ACTION";
+  const userResponseCode = PARTSTAT_TO_USERRESPONSE[partstat];
+  const newResponseType = PARTSTAT_TO_RESPONSETYPE[partstat];
+  if (!userResponseCode || !newResponseType) return null;
+
+  const summary = stringOf(candidate.getFirstPropertyValue("summary"));
+  const startKey = unixTimeKey(candidate.getFirstPropertyValue("dtstart"));
+  const endKey = unixTimeKey(candidate.getFirstPropertyValue("dtend"));
+  if (!summary || startKey == null || endKey == null) return null;
+
+  for (const existing of existingItems) {
+    const vevent = parseFirstVevent(existing.blob);
+    if (!vevent) continue;
+    const meetingStatus =
+      parseInt(
+        vevent.getFirstPropertyValue(X_EAS_MEETINGSTATUS.toLowerCase()),
+        10,
+      ) || 0;
+    if (!(meetingStatus & 0x2)) continue;
+    if (stringOf(vevent.getFirstPropertyValue("summary")) !== summary) continue;
+    if (unixTimeKey(vevent.getFirstPropertyValue("dtstart")) !== startKey)
+      continue;
+    if (unixTimeKey(vevent.getFirstPropertyValue("dtend")) !== endKey)
+      continue;
+    return { existingItemId: existing.id, userResponseCode, newResponseType };
+  }
+  return null;
+}
+
+function unixTimeKey(icalTime) {
+  if (!icalTime) return null;
+  try {
+    return icalTime.toUnixTime();
+  } catch {
+    return null;
+  }
 }
 
 /* ── Helpers: timezone resolution ──────────────────────────────────── */
