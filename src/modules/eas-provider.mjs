@@ -703,17 +703,21 @@ export class EasProvider extends TbSyncProviderImplementation {
       const initial = syncResult.adds
         .map((a) => folderDescriptorFromAdd(a))
         .filter(Boolean);
-      await this.pushFolderList({
-        accountId,
-        folders: await finalizeFolderListForPush(initial),
-      });
+      await deleteDroppedTargets(
+        await this.pushFolderList({
+          accountId,
+          folders: await finalizeFolderListForPush(initial),
+        }),
+      );
     } else if (
       syncResult.adds.length ||
       syncResult.updates.length ||
       syncResult.deletes.length
     ) {
       const merged = await mergeFolderDeltas(ctx.folders, syncResult);
-      await this.pushFolderList({ accountId, folders: merged });
+      await deleteDroppedTargets(
+        await this.pushFolderList({ accountId, folders: merged }),
+      );
     }
 
     // 6) Persist the new FolderSync continuation key.
@@ -1228,6 +1232,20 @@ export class EasProvider extends TbSyncProviderImplementation {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
+
+/** Remove the local resources behind folders the server no longer lists.
+ *
+ *  `pushFolderList` replaces the folder table wholesale and hands back the
+ *  targets that fell out of it. Deleting them is ours to do: the host has no
+ *  calendar API, and these are our calendars. Same work `onFolderDisabled`
+ *  and `onAccountDeleted` already do for the two other ways a folder stops
+ *  being synced. */
+async function deleteDroppedTargets(result) {
+  for (const target of result?.removedTargets ?? []) {
+    if (!target?.targetID) continue;
+    await safeDeleteTarget(target);
+  }
+}
 
 async function safeDeleteTarget(folder) {
   try {

@@ -47,6 +47,28 @@
 
 import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
 
+/** Every folder of ours that is bound to a calendar, as
+ *  `targetID -> {accountId, folderId, targetName}`. The host owns the folder
+ *  table; this is a read of it, refreshed on demand rather than cached, since
+ *  a target id changes whenever a folder is rebound. */
+async function ourTargets() {
+  const out = new Map();
+  if (!host) return out;
+  for (const { accountId } of await host.listAccounts()) {
+    const { folders = [] } = (await host.getAccount(accountId)) ?? {};
+    for (const f of folders) {
+      if (!f?.targetID) continue;
+      if (f.targetType !== "calendars" && f.targetType !== "tasks") continue;
+      out.set(f.targetID, {
+        accountId,
+        folderId: f.folderId,
+        targetName: f.targetName ?? null,
+      });
+    }
+  }
+  return out;
+}
+
 /** Report an edit to the host, which folds it into the folder's changelog.
  *
  *  Awaited by the hooks: the platform is holding the user's save until we
@@ -140,7 +162,62 @@ export function registerCalendarProvider() {
     onResetRequested?.(calendar?.id);
   });
 
+  registerTargetLifecycle();
   registered = true;
+}
+
+/**
+ * The calendars we supply are ours to keep an eye on: a rename has to reach
+ * the folder row the manager displays, and a deletion has to clear the
+ * binding. The host cannot do either - it has no calendar API, and it could
+ * not tell a deletion from our own extension restarting even if it had one.
+ */
+function registerTargetLifecycle() {
+  messenger.calendar.calendars.onUpdated.addListener(
+    async (calendar, changes) => {
+      if (!changes || !("name" in changes)) return;
+      const mine = (await ourTargets()).get(calendar?.id);
+      if (!mine || mine.targetName === changes.name) return;
+      await host
+        ?.updateFolder({
+          accountId: mine.accountId,
+          folderId: mine.folderId,
+          patch: { targetName: changes.name },
+        })
+        .catch((err) =>
+          report?.({
+            level: "warning",
+            message: `[target] could not mirror the rename of ${calendar?.id}: ${err?.message ?? String(err)}`,
+          }),
+        );
+    },
+  );
+
+  messenger.calendar.calendars.onRemoved.addListener(async (id) => {
+    // This fires for a calendar the user deleted - and also for every one of
+    // ours when our own calendar type unregisters, which happens on each
+    // reload, update or disable. The two are indistinguishable in the event,
+    // so ask afterwards: a real deletion leaves nothing behind, while an
+    // unregistering type leaves a force-disabled placeholder with the same
+    // id. If the question cannot be answered at all we are being torn down,
+    // and doing nothing is the right answer.
+    let calendar;
+    try {
+      calendar = await messenger.calendar.calendars.get(id);
+    } catch {
+      return;
+    }
+    if (calendar) return;
+
+    const mine = (await ourTargets()).get(id);
+    if (!mine) return;
+    await host?.folderTargetRemoved({ targetID: id }).catch((err) =>
+      report?.({
+        level: "warning",
+        message: `[target] could not report the removal of ${id}: ${err?.message ?? String(err)}`,
+      }),
+    );
+  });
 }
 
 /* Wired by background.mjs, which is the only thing that knows how to reach
