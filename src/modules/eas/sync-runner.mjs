@@ -1429,7 +1429,7 @@ async function applyChange(ctx, changeNode) {
   if (!ad) return;
   await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = await findExistingByServerId(ctx, serverID);
-  if (!existing) return applyAdd(ctx, changeNode);
+  if (!existing) return declineChangeForUnknownItem(ctx, serverID);
   // 16.1 per-instance Change: ApplicationData carries <InstanceId> and
   // is scoped to a single occurrence of the master event referenced by
   // ServerId. Route to the codec's exception path; bail back to the
@@ -1850,6 +1850,48 @@ function parseSyncResponse(doc) {
 }
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
+
+/** Has the user deleted the item this ServerId refers to, with the delete
+ *  still waiting in the changelog?
+ *
+ *  The local item is gone, so `findExistingByServerId` cannot answer - but
+ *  the indexMap still maps that ServerId, because it is only cleaned once
+ *  the delete has been acknowledged, which happens in the push pass after
+ *  this one. That leftover mapping is what makes the question answerable.
+ *
+ *  It does not survive a heavy reset, which empties the indexMap before
+ *  re-pulling: in that window a queued delete is invisible here. */
+function hasPendingUserDelete(ctx, serverId) {
+  const entry = ctx.indexMap.find((e) => e.serverId === serverId);
+  if (!entry) return false;
+  const changelog = Array.isArray(ctx.folder?.changelog)
+    ? ctx.folder.changelog
+    : [];
+  return changelog.some(
+    (e) => e?.itemId === entry.uid && e?.status === "deleted_by_user",
+  );
+}
+
+/** A `<Change>` names an item the server believes we already hold, and EAS
+ *  is stateful enough for that to mean something: our SyncKey acknowledged
+ *  the item. Not finding it locally therefore has exactly two readings.
+ *
+ *  Either we are about to tell the server it is gone - the delete is queued
+ *  and this is the echo of a change we pushed just before it - which is
+ *  ordinary and silent. Or the two states have drifted, which is a defect
+ *  in the sync engine, ours or the server's, and the only evidence of it is
+ *  this moment; hence the warning.
+ *
+ *  Neither reading justifies re-creating the item from the change. Doing so
+ *  used to hide the first case behind an orphaned copy and the second case
+ *  behind no message at all. */
+function declineChangeForUnknownItem(ctx, serverID) {
+  if (hasPendingUserDelete(ctx, serverID)) return;
+  ctx.eventLog(
+    "warning",
+    `ignored <Change> for ${serverID}: no local item, and no delete queued for it - local state has drifted from the server`,
+  );
+}
 
 /** Look up the local item by its EAS server-side id. Returns
  *  `{ itemId, blob }` or null.
