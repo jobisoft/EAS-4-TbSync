@@ -27,6 +27,14 @@
     "webRequestBlocking",
     "<all_urls>"
   ],
+  "calendar_provider": {
+    "capabilities": {
+      "events": true,
+      "tasks": true,
+      "mutable": true,
+      "requiresNetwork": true
+    }
+  },
   "background": {
     "type": "module",
     "scripts": [

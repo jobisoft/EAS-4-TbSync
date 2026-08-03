@@ -11,18 +11,31 @@
 
 const ICAL_FORMAT = "ical";
 
-const STORAGE_TYPE = "storage";
-const STORAGE_URL = "moz-storage-calendar://";
+/** Our own calendar type, registered by the `calendar_provider` manifest
+ *  key. The platform derives it from the extension id, so this must match
+ *  what `browser_specific_settings.gecko.id` says. */
+export const PROVIDER_TYPE = "ext-eas4tbsync@jobisoft.de";
+const PROVIDER_URL = "moz-eas-calendar://";
+
+/** The storage calendar behind a provider calendar. Writing here is how the
+ *  sync puts server data into the calendar *without* it coming back as a
+ *  user edit - the provider hooks do not fire for it. The suffix is the
+ *  Experiment's addressing convention; the underlying calendar carries the
+ *  same id, so anything reading the calendar sees these writes at once. */
+export function cacheId(calendarId) {
+  return calendarId ? `${calendarId}#cache` : calendarId;
+}
 
 /* ── Calendar level ───────────────────────────────────────────────── */
 
 /**
- * Create a local storage calendar. `kind` is "events" or "tasks", but
- * the experiment rejects `capabilities` on foreign calendar types
- * ("storage" is foreign from our extension's perspective) - so we
- * don't pass it. Each EAS folder syncs into its own calendar and the
- * sync codec dispatch already constrains what gets written, so the
- * local calendar accepting both kinds is harmless.
+ * Create a calendar of our own provider type. `kind` is "events" or
+ * "tasks"; both live in one type, and the sync codec dispatch already
+ * constrains what gets written, so a calendar accepting both is harmless.
+ *
+ * Capabilities are declared once in the manifest rather than per calendar -
+ * the Experiment only accepts them for a type the extension owns, and one
+ * declaration for every EAS calendar is what we want anyway.
  * Returns the new calendar id.
  */
 export async function createCalendar({ name, kind, color }) {
@@ -36,8 +49,8 @@ export async function createCalendar({ name, kind, color }) {
   }
   const props = {
     name: name.trim(),
-    type: STORAGE_TYPE,
-    url: STORAGE_URL,
+    type: PROVIDER_TYPE,
+    url: PROVIDER_URL,
   };
   if (color) props.color = color;
   const calendar = await messenger.calendar.calendars.create(props);

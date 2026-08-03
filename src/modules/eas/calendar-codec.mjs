@@ -219,7 +219,8 @@ function populateVeventFromAd({
   // Start / End. EAS sends UTC strings; convert on the way in.
   const startUtc = readPathFrom(adNode, ["StartTime"]);
   const endUtc = readPathFrom(adNode, ["EndTime"]);
-  if (startUtc) writeDateProp(vevent, "dtstart", startUtc, tzId, allDay, fromBlob);
+  if (startUtc)
+    writeDateProp(vevent, "dtstart", startUtc, tzId, allDay, fromBlob);
   if (endUtc) writeDateProp(vevent, "dtend", endUtc, tzId, allDay, fromBlob);
 
   // DtStamp - preserve when present. A 16.x *client* MUST NOT send it
@@ -653,7 +654,10 @@ export function appendApplicationDataFromIcal({
   // EndTime. All-day: 16.1 uses the "fake local as UTC" form; ≤14.x uses
   // local midnight in the TimeZone-blob zone expressed as UTC. Both avoid
   // the ±1-day shift a naive UTC conversion would cause in non-UTC zones.
-  builder.atag("EndTime", endTimeFor(dtend, asVersion, allDay, allDaySourceTzid));
+  builder.atag(
+    "EndTime",
+    endTimeFor(dtend, asVersion, allDay, allDaySourceTzid),
+  );
 
   // Location.
   const location = stringOf(vevent.getFirstPropertyValue("location"));
@@ -689,7 +693,10 @@ export function appendApplicationDataFromIcal({
 
   // Subject + StartTime.
   builder.atag("Subject", stringOf(vevent.getFirstPropertyValue("summary")));
-  builder.atag("StartTime", startTimeFor(dtstart, asVersion, allDay, allDaySourceTzid));
+  builder.atag(
+    "StartTime",
+    startTimeFor(dtstart, asVersion, allDay, allDaySourceTzid),
+  );
 
   // UID (forbidden in 16.1; not inside exceptions either - legacy
   // suppresses UID inside <Exception>, even on 2.5/14.x).
@@ -730,9 +737,7 @@ export function appendApplicationDataFromIcal({
       const orgEmail = orgProp
         ? stripMailto(orgProp.getFirstValue()).toLowerCase()
         : "";
-      const userEmailLower = userEmail
-        ? String(userEmail).toLowerCase()
-        : "";
+      const userEmailLower = userEmail ? String(userEmail).toLowerCase() : "";
       const isReceived =
         !!orgEmail && (!userEmailLower || orgEmail !== userEmailLower);
       if (cancelled) builder.atag("MeetingStatus", isReceived ? "7" : "5");
@@ -856,7 +861,12 @@ function resolveTimezone(adNode, defaultTimezone) {
   // a single fallback (which makes recurring events drift by an hour
   // around the mismatched transition).
   const dstRule = dstRuleFromBlob(blob);
-  const tzid = guessTimezoneByStdDstOffset(stdOffset, dstOffset, stdName, dstRule);
+  const tzid = guessTimezoneByStdDstOffset(
+    stdOffset,
+    dstOffset,
+    stdName,
+    dstRule,
+  );
   return { tzId: tzid || defaultTimezone || "UTC", fromBlob: true };
 }
 
@@ -869,14 +879,21 @@ function dstRuleFromBlob(blob) {
   const dst = blob.daylightDate;
   if (!std || !dst || std.wMonth === 0 || dst.wMonth === 0) return null;
   return {
-    std: { month: std.wMonth, weekOfMonth: std.wDay, dayOfWeek: std.wDayOfWeek },
-    dst: { month: dst.wMonth, weekOfMonth: dst.wDay, dayOfWeek: dst.wDayOfWeek },
+    std: {
+      month: std.wMonth,
+      weekOfMonth: std.wDay,
+      dayOfWeek: std.wDayOfWeek,
+    },
+    dst: {
+      month: dst.wMonth,
+      weekOfMonth: dst.wDay,
+      dayOfWeek: dst.wDayOfWeek,
+    },
   };
 }
 
 function buildTimezoneBlob(vevent, defaultTimezone) {
-  const sourceTzid =
-    pickSourceTzid(vevent) ?? defaultTimezone ?? "UTC";
+  const sourceTzid = pickSourceTzid(vevent) ?? defaultTimezone ?? "UTC";
   const tzInfo = tzInfoForBlob(sourceTzid);
 
   const blob = new TimeZoneBlob();
@@ -1265,6 +1282,64 @@ function removeExdate(vevent, jsDate) {
   }
 }
 
+/**
+ * Reduce a series to the smallest thing that identifies its exception set:
+ * every cancelled instance, and every override keyed by RECURRENCE-ID with a
+ * short digest of its content.
+ *
+ * This is what a changelog entry carries as the "before" side of a user
+ * edit. Keeping the whole previous iCal would work too, but it puts several
+ * kilobytes per pending item into the folder row for the sake of a
+ * comparison that only ever asks *which* exceptions differ - and a bulk edit
+ * would multiply that by the number of items touched. A digest answers the
+ * same question at a fixed size.
+ *
+ * The digest deliberately covers the override's whole serialised form, so
+ * any change to it registers; we never need to know *what* changed within an
+ * override, only that it did, because an override is pushed whole.
+ *
+ * Returns null when the blob is unparseable or carries no recurrence - a
+ * caller with no baseline falls back to sending the full set, which is what
+ * happens today anyway.
+ */
+export function exceptionFingerprint(ical) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return null;
+  const master = pickMasterVevent(vcal);
+  if (!master) return null;
+
+  const exdates = collectExdates(master)
+    .map((t) => icalTimeToBasicUtc(t))
+    .sort();
+
+  const overrides = [];
+  for (const sub of vcal.getAllSubcomponents("vevent")) {
+    const rid = sub.getFirstProperty("recurrence-id");
+    if (!rid) continue;
+    overrides.push({
+      rid: icalTimeToBasicUtc(sub.getFirstPropertyValue("recurrence-id")),
+      digest: digestOf(sub.toString()),
+    });
+  }
+  overrides.sort((a, b) => (a.rid < b.rid ? -1 : a.rid > b.rid ? 1 : 0));
+
+  if (!exdates.length && !overrides.length && !master.getFirstProperty("rrule"))
+    return null;
+  return { exdates, overrides };
+}
+
+/** FNV-1a, as an unsigned 32-bit hex string. Not a security hash - it only
+ *  has to make "this override changed" cheap and stable across restarts,
+ *  which rules out anything seeded or address-derived. */
+function digestOf(text) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
 function collectExdates(vevent) {
   const out = [];
   for (const p of vevent.getAllProperties("exdate")) {
@@ -1365,8 +1440,7 @@ function collectAttendees(adNode, userEmail, fallbackResponseType) {
     if (!email) continue;
     const item = { email, cn: readPathFrom(a, ["Name"]) };
     const status = readPathFrom(a, ["AttendeeStatus"]);
-    const isSelf =
-      userEmailLower && email.toLowerCase() === userEmailLower;
+    const isSelf = userEmailLower && email.toLowerCase() === userEmailLower;
     if (status) {
       item.partstat = ATTENDEESTATUS_TO_PARTSTAT[status] ?? "NEEDS-ACTION";
     } else if (isSelf && fallbackResponseType) {

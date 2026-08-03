@@ -2,6 +2,10 @@ import { EasProvider } from "./modules/eas-provider.mjs";
 import { startAuth } from "./modules/eas/oauth.mjs";
 import { discoverEasServer } from "./modules/eas/autodiscover.mjs";
 import { installAnchorMailboxInjector } from "./modules/anchor-mailbox.mjs";
+import {
+  registerCalendarProvider,
+  setSyncHandlers,
+} from "./modules/calendar-provider.mjs";
 
 /**
  * Provider entry point. All port / handshake plumbing lives inside the
@@ -21,7 +25,21 @@ import { installAnchorMailboxInjector } from "./modules/anchor-mailbox.mjs";
 // FolderSync of the boot is already cookie-injected.
 installAnchorMailboxInjector();
 
+// Claim our calendar type before anything can ask for one. Calendars of a
+// type nobody has registered come up as force-disabled placeholders, so the
+// listeners have to exist by the time the calendar manager reads the
+// profile - not once the first sync runs.
+registerCalendarProvider();
+
 const provider = new EasProvider();
+
+// The hooks are handed user edits but own no storage, so give them the way
+// back to the host: the changelog they record into, and the event log that
+// makes a recorded edit visible next to every other sync decision.
+setSyncHandlers({
+  provider,
+  reportEventLog: (payload) => provider.reportEventLog(payload),
+});
 
 // Internal messages from our own UI pages (setup.html, config.html).
 //

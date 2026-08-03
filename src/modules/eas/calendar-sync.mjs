@@ -69,18 +69,27 @@ function makeCodec(modCodec) {
   };
 }
 
+/** Every write the sync makes goes to the storage behind the calendar, not
+ *  the calendar itself. That is what keeps server data out of the user-edit
+ *  hooks: `<id>#cache` fires no `calendar.provider.onItem*`, while the
+ *  calendar shows the result immediately because both share one id.
+ *
+ *  Reads use the same handle for symmetry - it is the same items either
+ *  way, and one id in this factory is one thing to get wrong instead of
+ *  two. */
 function calendarStoreFactory(targetID, type) {
+  const writeID = calendarStore.cacheId(targetID);
   return {
     async list() {
-      const all = await calendarStore.listItems(targetID, type);
+      const all = await calendarStore.listItems(writeID, type);
       return all.map((it) => ({ id: it.id, blob: it.item }));
     },
     async get(id) {
-      const it = await calendarStore.getItem(targetID, id);
+      const it = await calendarStore.getItem(writeID, id);
       return it ? { id: it.id, blob: it.item } : null;
     },
     async create(id, blob) {
-      const created = await calendarStore.createItem(targetID, {
+      const created = await calendarStore.createItem(writeID, {
         id,
         type,
         ical: blob,
@@ -88,10 +97,10 @@ function calendarStoreFactory(targetID, type) {
       return created.id;
     },
     async update(id, blob) {
-      await calendarStore.updateItem(targetID, id, { ical: blob });
+      await calendarStore.updateItem(writeID, id, { ical: blob });
     },
     async delete(id) {
-      await calendarStore.deleteItem(targetID, id);
+      await calendarStore.deleteItem(writeID, id);
     },
   };
 }
