@@ -204,13 +204,51 @@ function registerTargetLifecycle() {
     let calendar;
     try {
       calendar = await messenger.calendar.calendars.get(id);
-    } catch {
+    } catch (err) {
+      report?.({
+        level: "debug",
+        message: `[target] ${id} unreadable after onRemoved (${err?.message ?? err}); assuming our own shutdown`,
+      });
       return;
     }
-    if (calendar) return;
+    if (calendar) {
+      report?.({
+        level: "debug",
+        message: `[target] ${id} still registered after onRemoved; our calendar type is unregistering`,
+      });
+      return;
+    }
 
     const mine = (await ourTargets()).get(id);
-    if (!mine) return;
+    if (!mine) {
+      report?.({
+        level: "debug",
+        message: `[target] ${id} is gone but is not one of our targets`,
+      });
+      return;
+    }
+    report?.({
+      level: "info",
+      message: `[target] ${id} was deleted; clearing the binding of ${mine.accountId}/${mine.folderId}`,
+    });
+
+    // Our sync state described a calendar that no longer exists. Clear it
+    // before handing the folder back, or the next bind starts from a sync key
+    // the server will answer with "nothing has changed" - leaving the user a
+    // calendar that stays empty. The host cannot do this: the sync key and
+    // the index are ours.
+    await host
+      ?.updateFolder({
+        accountId: mine.accountId,
+        folderId: mine.folderId,
+        patch: { custom: { synckey: "0", indexMap: [] } },
+      })
+      .catch((err) =>
+        report?.({
+          level: "warning",
+          message: `[target] could not reset the sync state of ${mine.accountId}/${mine.folderId}: ${err?.message ?? String(err)}`,
+        }),
+      );
     await host?.folderTargetRemoved({ targetID: id }).catch((err) =>
       report?.({
         level: "warning",
