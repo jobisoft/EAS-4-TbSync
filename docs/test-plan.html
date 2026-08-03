@@ -1,0 +1,246 @@
+<link rel="stylesheet" href="docs.css">
+
+<div class="shell">
+<nav class="sidebar">
+  <h2>Notes</h2>
+  <ul>
+    <li><a href="descriptions.html">How things work</a></li>
+    <li><a href="todos.html">Todos</a></li>
+    <li><a href="test-plan.html" class="here">Test plan</a></li>
+  </ul>
+  <h2>Host</h2>
+  <ul>
+    <li><a href="https://jobisoft.github.io/TbSync/">TbSync notes</a></li>
+    <li><a href="https://jobisoft.github.io/TbSync/bridge.html">The bridge</a></li>
+  </ul>
+  <h2>From the bridge</h2>
+  <ul class="toc">
+    <li><a href="#handshake">1. Handshake and baseline</a></li>
+    <li><a href="#round-trip">2. Item round trip</a></li>
+    <li><a href="#recurrence">3. Recurrence and exceptions</a></li>
+    <li><a href="#provider-calendar">4. Provider-backed calendar</a></li>
+  </ul>
+  <h2>At the UI</h2>
+  <ul class="toc">
+    <li><a href="#install">6. Install and lockstep</a></li>
+    <li><a href="#auth-failure">7. Authentication failure</a></li>
+    <li><a href="#gal">8. GAL autocomplete</a></li>
+    <li><a href="#reauth">9. Re-authentication</a></li>
+    <li><a href="#focus">10. Popup focus</a></li>
+    <li><a href="#setup">11. Setup flow</a></li>
+    <li><a href="#corrupted-sync-key">12. Corrupted sync key</a></li>
+    <li><a href="#versions">13. Thunderbird versions</a></li>
+    <li><a href="#rotation">15. Cannot be forced</a></li>
+  </ul>
+</nav>
+
+<main class="content">
+
+<h1>Test plan</h1>
+<p class="lede">Split by who can run it: the bridge drives Thunderbird from a
+shell, so those checks are scriptable; the rest need a human at the UI.
+Everything has been run against a live Exchange mailbox unless it says
+otherwise.</p>
+
+<h2>Before you start</h2>
+<p><strong>Install all three together.</strong> The host refuses any provider
+whose <code>PROTOCOL_VERSION</code> is not exactly its own.</p>
+<p><strong>Which Thunderbird is this?</strong> Ask, do not guess — several
+installs usually coexist:</p>
+<pre><code>{"cmd": "getBrowserInfo"}   →  {"name":"Thunderbird","version":"153.0.1", …}</code></pre>
+<p><strong>The Event Log lives in <code>storage.session</code></strong>, so a
+restart wipes it. Read it first. <code>debug</code> entries need
+<code>setLogLevel</code> raised to 3.</p>
+<div class="note"><strong>End every bridge session by deselecting the
+authorized calendar, then reloading — in that order.</strong> Deselecting
+resets the folder's sync key so the next run starts fresh, and reloading
+mid-sync drops the native port: <code>SYNC_FOLDER</code> has no timeout, so
+nothing rejects the pending RPC and only a manual reload in
+<code>about:debugging</code> recovers it.</div>
+
+<h1 id="bridge-part">Part 1 — runnable from the bridge</h1>
+<p>Beta builds only. <a href="https://jobisoft.github.io/TbSync/bridge.html">The bridge</a> exposes exactly the
+verbs in <code>COMMANDS</code>; account lifecycle is deliberately absent, which
+is why several sections below sit in Part 2.</p>
+
+<h2 id="handshake">1. Handshake and baseline</h2>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>1.1</td><td><code>getState</code></td><td>the provider reports <code>active</code></td></tr>
+  <tr><td>1.2</td><td><code>syncAccount</code></td><td>folder status <code>success</code></td></tr>
+  <tr><td>1.3</td><td><code>items.query</code></td><td>item count and distinct UID count agree — no duplicates</td></tr>
+</table>
+
+<h2 id="round-trip">2. Item round trip — create, modify, delete</h2>
+<p>Run each step as <em>edit → <code>syncAccount</code> → assert</em>, and
+settle with a second <code>syncAccount</code> before the next edit.</p>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>2.1</td><td><code>items.create</code>, sync</td><td>one <code>&lt;Add&gt;</code>; item present</td></tr>
+  <tr><td>2.2</td><td><code>items.update</code>, sync</td><td>one <code>&lt;Change&gt;</code>; the local item shows the change</td></tr>
+  <tr><td>2.3</td><td><code>items.remove</code>, sync</td><td>one <code>&lt;Delete&gt;</code>; item gone locally</td></tr>
+  <tr><td>2.4</td><td>sync again</td><td>item count back to the baseline — the delete sync receives the server's echo of 2.2 and must not re-create the item from it</td></tr>
+</table>
+<h2 id="recurrence">3. Recurrence and exceptions — 16.1</h2>
+<p>Fixtures in <a href="fixtures/">fixtures/</a>. Import with
+<code>items.create</code>, passing the file's whole text as <code>ical</code>.</p>
+
+<h3><code>tz-test-exdate.ics</code> — one series, one cancellation, one override</h3>
+<p>A weekly series of four in <code>America/New_York</code>, with 16 Sep
+cancelled by an <code>EXDATE</code> and 9 Sep moved by an override. The only
+fixture exercising the cancellation and override branches together.</p>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>3.1</td><td>import, sync</td><td>instance pass sends <code>Delete 20260916T130000Z</code> and <code>Change 20260909T130000Z</code>, one command per request</td></tr>
+  <tr><td>3.2</td><td>sync again with no edit</td><td><strong>no</strong> instance commands</td></tr>
+  <tr><td>3.3</td><td>edit only the master's title, sync</td><td><strong>no</strong> instance commands</td></tr>
+  <tr><td>3.4</td><td>move the override, sync</td><td>exactly <strong>one</strong> <code>&lt;Change&gt;</code>, for that occurrence, no <code>&lt;Delete&gt;</code></td></tr>
+  <tr><td>3.5</td><td>clean resync (deselect / reselect / sync)</td><td>one <code>EXDATE</code>, not two; 2 and 23 Sep present, 16 Sep absent, 9 Sep moved</td></tr>
+</table>
+<p>3.3 is the regression test for the re-assertion bug: before the exception
+fingerprint landed, touching the master re-sent every occurrence and Exchange
+rejected each one it already had.</p>
+
+<h3><code>tz-test.ics</code> — six timezone and all-day cases</h3>
+<p>All-day single, all-day span, all-day series with <code>UNTIL</code>, a
+weekly series crossing a DST boundary, and a series with a moved occurrence.
+Every SUMMARY states its expected local result, so the assertion is readable in
+the calendar.</p>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>3.6</td><td>import, sync, clean resync</td><td>each event matches what its own SUMMARY predicts, in Berlin local time</td></tr>
+  <tr><td>3.7</td><td>TZ4 across the DST change</td><td>21:00 Berlin, except 27 Oct at 20:00</td></tr>
+</table>
+<p>3.6 is <strong>not</strong> fully verified for the all-day cases — see the
+all-day <code>RECURRENCE-ID</code> defect in <a href="todos.html">Todos</a>.</p>
+
+<h2 id="provider-calendar">4. Provider-backed calendar</h2>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>4.1</td><td>deselect and reselect the folder, sync</td><td>a new calendar of type <code>ext-eas4tbsync@jobisoft.de</code>, all items pulled</td></tr>
+  <tr><td>4.2</td><td><code>reloadProvider</code></td><td>folder stays selected; <code>targetID</code>, sync key and item count unchanged</td></tr>
+  <tr><td>4.3</td><td>edit an item, read <code>getFolders</code></td><td>exactly <strong>one</strong> changelog entry, <code>modified_by_user</code>, carrying <code>detail.exceptions</code> for a recurring item</td></tr>
+  <tr><td>4.4</td><td>full resync, then read the changelog</td><td><strong>no</strong> <code>*_by_server</code> entries left behind</td></tr>
+  <tr><td>4.5</td><td><code>calendars.rename</code>, then read <code>getFolders</code></td><td><code>targetName</code> follows the new name</td></tr>
+  <tr><td>4.6</td><td><code>calendars.remove</code></td><td>folder goes unselected, <code>targetID</code> null, <code>synckey</code> 0, <code>indexMap</code> empty</td></tr>
+  <tr><td>4.7</td><td>re-select and sync</td><td>all items return — the reset sync key is what makes the refill happen</td></tr>
+</table>
+<p>4.2 guards the bug that deselected the folder on every add-on reload: the
+platform announces a removal for each of our calendars when our own type
+unregisters, and something has to not mistake that for a deletion. 4.4 guards
+the pre-tag leak: 46 stale <code>added_by_server</code> entries after a single
+resync. 4.6 is the counterpart to 4.2 — the case that must <em>not</em> be
+ignored.</p>
+
+<h1 id="ui-part">Part 2 — needs a human at the UI</h1>
+
+<h2 id="install">6. Install and version lockstep</h2>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>6.1</td><td>install all three, restart</td><td>both providers <em>Ready</em>; accounts sync</td></tr>
+  <tr><td>6.2</td><td>downgrade <strong>one</strong> provider, restart</td><td>that provider does <strong>not</strong> connect; the other still works</td></tr>
+  <tr><td>6.3</td><td>re-install it at the matching version</td><td>it reconnects</td></tr>
+</table>
+<p>Failing 6.2 in the other direction — an old provider that <em>does</em>
+connect — is the serious outcome.</p>
+
+<h2 id="auth-failure">7. Authentication failure</h2>
+<p>An auth failure stamps the error and nothing else. Break the credentials
+(change the password in Settings, or corrupt <code>custom.refreshToken</code>
+from the TbSync console), then <strong>restart</strong> — the provider caches a
+good token in memory — and sync.</p>
+<table>
+  <tr><th>#</th><th>Expect</th><th>Why</th></tr>
+  <tr><td>7.1</td><td>pill reads <em>Authentication failed</em>; button reads <strong>Authenticate</strong></td><td></td></tr>
+  <tr><td>7.2</td><td>folder list still listed</td><td></td></tr>
+  <tr><td>7.3</td><td>local calendars and address books still present, colours intact</td><td></td></tr>
+  <tr><td>7.4</td><td><code>custom.synckey</code> unchanged, not reset to <code>"0"</code></td><td></td></tr>
+  <tr><td>7.5</td><td>account still shows connected/enabled</td><td></td></tr>
+  <tr><td>7.6</td><td>red toolbar badge appears</td><td>the badge filters to enabled accounts before checking errors</td></tr>
+  <tr><td>7.7</td><td>Sync greyed; <strong>Disconnect</strong> still available</td><td>deliberate</td></tr>
+  <tr><td>7.8</td><td>wait out an autosync interval: no further sync attempts</td><td>if this fails the account can get locked out at the server</td></tr>
+</table>
+
+<h2 id="gal">8. GAL autocomplete must go quiet</h2>
+<p>With the account still in <em>Authentication failed</em>, on an EAS server
+that advertises <code>Search</code>:</p>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>8.1</td><td>compose window, type 3+ characters in <strong>To:</strong></td><td>no GAL results and <strong>no network attempts</strong> in the Event Log</td></tr>
+  <tr><td>8.2</td><td>authenticate, type again</td><td>GAL results return without a restart</td></tr>
+</table>
+<p>8.1 is the one that matters — this path fires on every keystroke. 8.2 proves
+the guard is in the callback, not in listener registration.</p>
+
+<h2 id="reauth">9. Re-authentication</h2>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>9.1</td><td><strong>Authenticate</strong> → sign in (OAuth)</td><td>popup closes; account recovers; a sync follows</td></tr>
+  <tr><td>9.2</td><td>confirm that sync is incremental</td><td>same counts, no duplicates, sync key continues</td></tr>
+  <tr><td>9.3</td><td>Event Log has no "Re-authentication failed" line</td><td></td></tr>
+  <tr><td>9.4</td><td>break it, click Authenticate, close without signing in</td><td>stays failed; <strong>no Event Log entry</strong></td></tr>
+  <tr><td>9.5</td><td>sign in as a <em>different</em> Microsoft account</td><td>refused; stored token unchanged</td></tr>
+  <tr><td>9.6</td><td>password account: <strong>Authenticate</strong></td><td>the Settings dialog opens, fully editable</td></tr>
+  <tr><td>9.7</td><td>close it without saving</td><td>stays failed; no Event Log entry</td></tr>
+  <tr><td>9.8</td><td>enter the correct password, Save</td><td>recovers and syncs</td></tr>
+  <tr><td>9.9</td><td>enter a <em>wrong</em> password</td><td>error dialog; account left disabled with its error cleared — click <strong>Connect</strong>. Known host behaviour</td></tr>
+</table>
+
+<h2 id="focus">10. Popup focus</h2>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>10.1</td><td>Authenticate (OAuth), bury the consent popup, Authenticate again</td><td>the consent window raises; nothing new opens</td></tr>
+  <tr><td>10.2</td><td>same with a password account's Settings dialog</td><td>it raises</td></tr>
+  <tr><td>10.3</td><td>Settings on a healthy account, bury, Settings again</td><td>it raises</td></tr>
+</table>
+<p>10.2 is the one to watch: if the raise fails the button just looks dead.</p>
+
+<h2 id="setup">11. Setup flow</h2>
+<p>The providers' internal message listeners must not claim every message — the
+setup dialog's completion message goes to a different listener.</p>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>11.1</td><td>add an EAS account end to end</td><td>dialog completes and closes; account appears</td></tr>
+  <tr><td>11.2</td><td>add a Google account</td><td>same</td></tr>
+  <tr><td>11.3</td><td>cancel a setup halfway</td><td>clean cancellation, no stuck account</td></tr>
+</table>
+
+<h2 id="corrupted-sync-key">12. Corrupted sync key — resync must not duplicate</h2>
+<p>The identity fallback. The bridge has no storage verb, so this needs the
+console:</p>
+<pre><code>const K = "tbsync.folders", ID = "1", FID = "&lt;folderId&gt;";
+const f = (await browser.storage.local.get(K))[K];
+f[ID][FID].custom.synckey = "999999999";
+await browser.storage.local.set({ [K]: f });</code></pre>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>12.1</td><td>sync a populated folder (20+ items), note the count</td><td></td></tr>
+  <tr><td>12.2</td><td>corrupt the sync key, sync</td><td>server answers Status 3; the runner resets and re-pulls</td></tr>
+  <tr><td>12.3</td><td>item count unchanged — <strong>no duplicates</strong></td><td>the whole point</td></tr>
+  <tr><td>12.4</td><td><code>custom.indexMap</code> rebuilt</td><td>the fallback repopulates it</td></tr>
+  <tr><td>12.5</td><td>the following sync is a normal incremental one</td><td></td></tr>
+  <tr><td>12.6</td><td>repeat on a <strong>contacts</strong> folder</td><td>different codec</td></tr>
+</table>
+<p><strong>Still unrun.</strong> The bridge covers the <em>clean</em> resync
+path — no duplicates, indexMap rebuilt, next sync incremental — but that is not
+a Status 3 resync, so the fallback itself remains unproven.</p>
+
+<h2 id="versions">13. Thunderbird versions</h2>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>13.1</td><td>calendar sync on the release version</td><td>works — <strong>run on 153.0.1</strong></td></tr>
+  <tr><td>13.2</td><td>same on the beta version</td><td>works, and no <code>TypeError</code> from the timezone experiment</td></tr>
+  <tr><td>13.3</td><td>create / modify / delete plus a full folder sync on beta</td><td>exercises the <code>wrappedJSObject</code>-on-objects paths</td></tr>
+</table>
+<p>13.1 and 13.3 have been run on 153.0.1. Nothing has been run on 154.</p>
+
+<h2 id="rotation">15. Cannot be forced — watch for it instead</h2>
+<p><strong>Rotated refresh tokens.</strong> Microsoft decides when to hand back
+a new one. Note the stored <code>refreshToken</code>, use the account across
+several restarts, and re-check. What you are watching for is the
+<em>absence</em> of a spurious <em>Authenticate</em> prompt after a restart. A
+debug-level Event Log line on rotation would make this visible; not written
+yet.</p>
+
+</main>
+</div>

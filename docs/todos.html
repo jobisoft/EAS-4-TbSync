@@ -1,0 +1,621 @@
+<link rel="stylesheet" href="docs.css">
+
+<style>
+  :root {
+    --bg:#fff; --fg:#1b1b1d; --muted:#6b6b70; --rule:#d7d7db;
+    --host:#2b6cb0; --prov:#7a4fb5; --ok:#1f7a4d; --bad:#c0392b;
+    --spanbg:#ecedf1; --lockbg:#fdeaea; --bandbg:#e6eef8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1b1b1d; --fg:#ececed; --muted:#9b9ba1; --rule:#3a3a3f;
+      --host:#74a9dc; --prov:#b795e0; --ok:#63c295; --bad:#e8796b;
+      --spanbg:#2a2a2f; --lockbg:#3a2626; --bandbg:#24313f; }
+  }
+  :root[data-theme="dark"] { --bg:#1b1b1d; --fg:#ececed; --muted:#9b9ba1; --rule:#3a3a3f;
+    --host:#74a9dc; --prov:#b795e0; --ok:#63c295; --bad:#e8796b;
+    --spanbg:#2a2a2f; --lockbg:#3a2626; --bandbg:#24313f; }
+  :root[data-theme="light"] { --bg:#fff; --fg:#1b1b1d; --muted:#6b6b70; --rule:#d7d7db;
+    --host:#2b6cb0; --prov:#7a4fb5; --ok:#1f7a4d; --bad:#c0392b;
+    --spanbg:#ecedf1; --lockbg:#fdeaea; --bandbg:#e6eef8; }
+  h1 { font-size:1.6rem; margin:0 0 .5rem; }
+  h2 { font-size:1.15rem; margin:2.2rem 0 .6rem; padding-top:.9rem; border-top:1px solid var(--rule); }
+  .lede { color:var(--muted); margin:0 0 1.5rem; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em; }
+  pre { background:var(--spanbg); padding:.9rem 1rem; border-radius:5px; overflow-x:auto; }
+  pre code { font-size:.85em; }
+  a { color:var(--host); }
+  ul { padding-left:1.2rem; }
+  li { margin-bottom:.5rem; }
+  figure { margin:0 0 1.6rem; }
+  figcaption { color:var(--muted); font-size:.9rem; margin-top:.35rem; }
+  .panel-title { font-weight:600; margin:1.8rem 0 .4rem; display:flex; align-items:baseline;
+    gap:.6rem; flex-wrap:wrap; }
+  .verdict { font-size:.8rem; font-weight:600; padding:.1rem .5rem; border-radius:999px; }
+  .verdict.bad { background:var(--lockbg); color:var(--bad); }
+  .verdict.ok  { background:var(--spanbg); color:var(--ok); }
+  .scroller { overflow-x:auto; }
+  svg { display:block; min-width:860px; }
+  .legend { display:flex; gap:1.2rem; flex-wrap:wrap; color:var(--muted); font-size:.85rem; margin:.4rem 0 0; }
+  .legend span { display:flex; align-items:center; gap:.4rem; }
+  .sw { width:1.6rem; height:0; border-top:2px solid; }
+</style>
+
+<div class="shell">
+<nav class="sidebar">
+  <h2>Notes</h2>
+  <ul>
+    <li><a href="descriptions.html">How things work</a></li>
+    <li><a href="todos.html" class="here">Todos</a></li>
+    <li><a href="test-plan.html">Test plan</a></li>
+  </ul>
+  <h2>Host</h2>
+  <ul>
+    <li><a href="https://jobisoft.github.io/TbSync/">TbSync notes</a></li>
+    <li><a href="https://jobisoft.github.io/TbSync/bridge.html">The bridge</a></li>
+  </ul>
+  <h2>On this page</h2>
+  <ul class="toc">
+    <li><a href="#defects">Defects</a></li>
+    <li><a href="#provider-followups">Provider-calendar follow-ups</a></li>
+    <li><a href="#unproven">Unproven</a></li>
+    <li><a href="#gaps">Features and gaps</a></li>
+    <li><a href="#meeting-response">MeetingResponse</a></li>
+    <li><a href="#pr322">Open from PR #322</a></li>
+  </ul>
+</nav>
+
+<main class="content">
+
+<h1>Todos</h1>
+<p class="lede">What is outstanding in EAS-4-TbSync. Host-side work is in the <a href="https://jobisoft.github.io/TbSync/todos.html">TbSync notes</a>.</p>
+
+<h2 id="defects">Defects</h2>
+
+<h3>The pull overwrites a pending local edit, then pushes the result back</h3>
+<p><strong>Repo: EAS-4-TbSync.</strong> Reproduced twice.</p>
+<p>The push reads the item <em>after</em> the pull pass, so the server's echo of
+our own earlier push overwrites an edit made before the sync, and the push then
+sends that echo back. The user's edit is lost silently.</p>
+<p>The delete half of this is fixed — <code>applyAdd</code> ignores server data
+for an item whose <code>deleted_by_user</code> entry is still queued. The edit
+half needs the same treatment: do not apply a server change to an item carrying
+a pending <code>modified_by_user</code> entry. Probably pre-existing — the
+code path is unchanged by the provider-calendar work, only the calendar id
+differs — but that is unproven.</p>
+
+<h3>All-day exceptions cannot bind</h3>
+<p><strong>Repo: EAS-4-TbSync</strong>, <code>calendar-codec.mjs</code>.
+Unverified — derived by reading the code, no reporter, no server trace.</p>
+<p><code>RECURRENCE-ID</code> and <code>EXDATE</code> are always written as
+DATE-TIME (<code>jsDateToIcalUtcTime</code> hardcodes <code>isDate: false</code>),
+while an all-day master's <code>DTSTART</code> is written as a DATE. RFC 5545
+§3.8.4.4 requires <code>RECURRENCE-ID</code> to carry the same value type as
+the master's <code>DTSTART</code>, so for an all-day recurring series an
+override can never match the occurrence it replaces and an <code>EXDATE</code>
+can never suppress it.</p>
+<p>Same user-visible symptom as #317 — an occurrence that will not move or
+disappear — for a whole class of events. Affects both inbound paths, since the
+16.1 wrapper <code>instanceUtcToIcalTime</code> calls the same writer. v4 sets
+<code>isDate = true</code> when <code>AllDayEvent == "1"</code>.</p>
+<p>The fix is presumably to thread the master's all-day flag (already read in
+<code>applicationDataToIcal</code>) into both writers and build a date-only
+<code>ICAL.Time</code>. Care needed on the comparison side:
+<code>removeExdate</code> matches via <code>icalTimeToBasicUtc</code>, which
+must agree on the representation.</p>
+<p><strong>Reconcile with PR #324 first</strong> — an open v5 PR against the
+same file (+104/−28) reworking all-day handling. A different defect, but it
+moves the ground under this one.</p>
+
+<h3>The "Canceled:" title prefix is never stripped</h3>
+<p><strong>Repo: EAS-4-TbSync.</strong> Cosmetic.</p>
+<p>Exchange prepends a localized <code>Canceled: </code> to the Subject of a
+cancelled meeting. v5 computes <code>STATUS=CANCELLED</code> but never strips
+the word, so the item shows both the strike-through and the redundant prefix —
+and because it is baked into the stored title it lingers after the occurrence
+is reactivated.</p>
+<p>Niel's v4 fix (<code>NielBuys/EAS-4-TbSync@36c2b916</code>) is a three-line
+regex strip. Not ported, for two reasons to decide on first: it is
+<strong>lossy</strong> (a subject genuinely starting with "Cancelled:" would be
+rewritten) and <strong>English-only</strong> (Exchange localizes to the
+<em>organizer's</em> mailbox language, not the UI language).</p>
+
+<h2 id="provider-followups">Provider-calendar follow-ups</h2>
+<p>From the review of the provider-calendar switch. Lettering is kept stable as
+items are fixed and dropped, so gaps are expected.</p>
+
+<p><strong>A. A failed record is accepted anyway.</strong> <code>record()</code>
+in <code>calendar-provider.mjs</code> catches an RPC failure, logs a warning,
+and still tells the platform the edit succeeded. Port down → the edit is
+accepted in the UI and never queued. The pre-provider design could not fail
+this way, since the host recorded it itself. <span class="bad">The one
+correctness risk in this group.</span> Decide between rejecting the edit,
+retrying, or re-deriving at sync time.</p>
+
+<p><strong>C. The calendar's refresh button does nothing.</strong>
+<code>onSync</code> / <code>onResetSync</code> call handlers that background
+never sets, so Refresh and "reset sync" in the calendar's properties are silent
+no-ops.</p>
+
+<p><strong>E. The New Calendar dialog offers our type.</strong> The experiment's
+<code>displayName</code> reads <code>manifest.calendar_provider.name</code>,
+which the manifest schema does not declare, so the type appears oddly named —
+and a user can hand-create an unmanaged EAS calendar there.</p>
+
+<p><strong>F. Digest stability on the UI path.</strong> A no-op save through
+<code>items.update</code> demonstrably emits no instance command, so the
+fingerprint is stable there. A Thunderbird <em>UI</em> edit could still rewrite
+<code>DTSTAMP</code>/<code>LAST-MODIFIED</code> on overrides; if it does, every
+override reads as changed and the fingerprint stops earning its keep.
+Untested.</p>
+
+<p><strong>G. Disabling EAS force-disables its calendars.</strong> Data
+survives, but during any update or disable the user sees disabled calendars. A
+behaviour change from storage calendars — worth a conscious decision rather
+than a discovery.</p>
+
+<p><strong>I. Coverage.</strong> Verified by driving one live account through
+the bridge. No automated tests, and multi-account, multi-folder and
+<strong>task</strong> folders are untouched.</p>
+
+<h2 id="unproven">Unproven</h2>
+
+<h3>The identity fallback has never run against a live Status 3</h3>
+<p><strong>Repo: EAS-4-TbSync.</strong> See
+<a href="test-plan.html#corrupted-sync-key">test plan §12</a>.</p>
+<p>The <em>clean</em> resync path is verified — deselect/reselect leaves no
+duplicates, rebuilds <code>custom.indexMap</code>, and the following sync is
+incremental. That is not the same thing: a clean resync is not a
+server-initiated Status 3, and it is the Status 3 path that exercises the
+fallback. Needs a deliberately corrupted sync key, which the bridge cannot
+write.</p>
+
+<h3>Existing duplicates are not cleaned up</h3>
+<p><strong>Repo: EAS-4-TbSync.</strong> Accounts that resynced before the
+blob-stamp rule was in place still carry a duplicate of every item in the
+affected folder. Nothing removes them. A cleanup needs a matching heuristic and
+a destructive pass over the user's calendar and address book, deliberately left
+out rather than guessed at.</p>
+
+<h3>Outbound occurrence edits — #334</h3>
+<p><strong>Repo: EAS-4-TbSync.</strong> Was "local occurrence edits never reach
+the server". The 16.1 per-instance push now exists and has been verified on the
+wire: moving one override sends exactly one <code>&lt;Change&gt;</code> keyed by
+<code>InstanceId</code>, and it is accepted. <strong>Check whether that closes
+the issue</strong> before assuming it does.</p>
+
+<h2 id="gaps">Features and gaps</h2>
+
+<h3 id="uid">Keep the server's UID on 16.x</h3>
+<p><strong>Repo: EAS-4-TbSync.</strong> Only wanted if MeetingResponse
+(<a href="https://github.com/jobisoft/EAS-4-TbSync/issues/339">#339</a>) needs
+it — the UID correlates an iTIP reply with the meeting it answers. Establish
+what that work needs before choosing where to keep one.</p>
+<p>The shape would mirror <code>X-EAS-SERVERID</code>: read
+<code>&lt;UID&gt;</code> inbound in <code>applicationDataToIcal</code>, read it
+from the <code>&lt;Add&gt;</code> acknowledgement in
+<code>applyResponses</code>, and let <code>stampEasServerId</code> carry it. One
+thing to decide: on ≤14.x the iCal UID <em>is</em> the server's UID, so
+<code>X-EAS-UID</code> would either duplicate it or be absent — pick
+deliberately, so a reader can tell "not applicable" from "not fetched yet".</p>
+<p><strong>Not investigated:</strong> <code>ClientUid</code>
+(<code>[MS-ASCAL]</code> §2.2.2.13) is the mechanism the spec offers a 16.x
+client for supplying its own identifier. We never send it and it is not in our
+codepage tables. Whether it makes the server preserve or echo a client-chosen
+value is unknown.</p>
+
+<h3>Log refresh-token rotation</h3>
+<p><strong>Repo: EAS-4-TbSync.</strong> A debug-level Event Log line when a
+rotated refresh token is stored would turn
+<a href="test-plan.html#rotation">test plan §15</a> from watch-and-wait into
+something visible.</p>
+
+<h2 id="meeting-response">MeetingResponse</h2>
+<p class="lede">
+  <strong>Repo: EAS-4-TbSync.</strong> Contributed feature, deferred. State as of
+  30 Jul 2026.
+</p>
+
+<h3>The concept</h3>
+
+<p>
+  EAS carries an attendee's answer to an invitation in its own command,
+  <code>MeetingResponse</code>, with <code>UserResponse</code> 1 = Accept,
+  2 = Tentative, 3 = Decline, optionally scoped to one occurrence of a series by
+  <code>InstanceId</code>. The server replies <code>Status 1</code> and applies
+  the answer to the organizer's tracking and the attendee's copy.
+</p>
+
+<p>
+  Today an answer travels a different route. Thunderbird's itip engine sets the
+  local <code>PARTSTAT</code>, and the sync pushes that as an ordinary
+  <code>&lt;Add&gt;</code> or <code>&lt;Change&gt;</code>. Exchange reads it as a
+  client creating a self-organized meeting: it makes a second event owned by the
+  person who answered and invites every attendee again
+  (<a href="https://github.com/jobisoft/EAS-4-TbSync/issues/320">#320</a>;
+  <a href="https://github.com/jobisoft/EAS-4-TbSync/issues/8">#8</a>,
+  <a href="https://github.com/jobisoft/EAS-4-TbSync/issues/10">#10</a>,
+  <a href="https://github.com/jobisoft/EAS-4-TbSync/issues/66">#66</a> describe the
+  same thing).
+</p>
+
+<p>
+  In v4, attendee status is inbound only — read from <code>ResponseType</code> and
+  <code>AttendeeStatus</code>, never sent.
+</p>
+
+<h3>State of the work</h3>
+
+<ul>
+  <li><a href="https://github.com/jobisoft/EAS-4-TbSync/pull/339">#339</a> —
+    Niel Buys. Two commits: Tomas Kovacik's original from the closed
+    <a href="https://github.com/jobisoft/EAS-4-TbSync/pull/329">#329</a>, carried
+    with authorship intact, plus per-occurrence responses. Ported from his v4 work
+    (<a href="https://github.com/NielBuys/EAS-4-TbSync/pull/13">NielBuys#13</a>).</li>
+  <li><a href="https://github.com/tomaskovacik/EAS-4-TbSync/tree/master">tomaskovacik/master</a>
+    — Tomas Kovacik. #339 plus his fixes, rebased onto <code>ff179a3</code>.
+    Validated end-to-end against Exchange Online on EAS 16.1
+    (<a href="https://github.com/jobisoft/EAS-4-TbSync/pull/339#issuecomment-5132669479">writeup</a>).
+    His branch is the working unit; it moved three times on 30 Jul.</li>
+  <li><code>a93abf8</code> on that branch — "Re-stamp the server id from the wire
+    when applying a Change", +22/-8 across <code>calendar-codec.mjs</code> and
+    <code>sync-runner.mjs</code>. Pushed after the validation writeup, unreviewed,
+    touches item identity.</li>
+</ul>
+
+<p>
+  His rebase dropped <code>e81d6d7</code>, his inbound <code>InstanceId</code>
+  fix, because <code>ff179a3</code> already carries it.
+</p>
+
+<h3>Waiting for the server to apply the answer</h3>
+
+<p>
+  <code>Status 1</code> acknowledges receipt; Exchange updates the calendar item
+  afterwards. The panels show that gap and the proposed handling.
+</p>
+
+<div id="panels"></div>
+
+<p>
+  Tomas measured the post-response fan-out at <strong>~30&nbsp;s under load</strong>.
+  The 34&nbsp;s is what the re-poll schedule budgets for itself —
+  <code>2+4+8+10+10</code> from
+  <code>settleWaitMs(n) = min(POST_PUSH_WAIT_MS · 2<sup>n-1</sup>, 10000)</code>
+  over five pulls — with each iteration adding a full <code>pullPhase</code> on
+  top. The measurement is bracketed by the polls that produced it: absent at
+  24&nbsp;s, present at 34&nbsp;s.
+</p>
+
+<h3>A Ping-based listener</h3>
+
+<p>
+  EAS has a change-notification channel. The client issues <code>Ping</code>
+  (codepage 13) with a <code>HeartbeatInterval</code> and the <code>Folder</code>
+  ids to watch; the server holds the request open until one of those collections
+  changes or the heartbeat expires, then answers. Supported in every protocol
+  version from 2.5 to 16.1, and the vocabulary is already in
+  <code>wbxml-codepages.mjs</code>.
+</p>
+
+<p>
+  It behaves as a listener but is built as a loop: the client reissues the
+  request after every response. <code>HeartbeatInterval</code> is cached
+  server-side after the first request, so later ones need only the folder list.
+  Per
+  <a href="https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-ascmd/cec19b0e-b7f9-4967-9569-39c73746efc4">MS-ASCMD
+  Status (Ping)</a>:
+</p>
+
+<ul>
+  <li><strong>2</strong> — something changed; the response names the folders.
+    <code>Sync</code> each, then reissue.</li>
+  <li><strong>1</strong> — heartbeat expired, nothing changed. Reissue.</li>
+  <li><strong>5</strong> — heartbeat outside the allowed range; the response
+    carries the nearest allowed value to use.</li>
+  <li><strong>6</strong> — too many folders; the response carries
+    <code>MaxFolders</code>.</li>
+  <li><strong>7</strong> — folder hierarchy is stale; <code>FolderSync</code>,
+    then reissue.</li>
+  <li><strong>3</strong>, <strong>4</strong>, <strong>8</strong> — missing
+    parameters, malformed WBXML, transient server error.</li>
+</ul>
+
+<p>
+  Applied here, the server's post-response update announces itself: no delay
+  constant, no repeated polling, no sync held open. The same channel covers every
+  incoming change rather than this one case.
+</p>
+
+<p>
+  A listener fits this better than waiting on a fixed schedule, whatever the
+  constants are set to. A schedule has to guess how long a server will take, and
+  holds the sync open for the length of the guess - which is what locks the
+  account, since a running sync greys out Sync, Remove and Disconnect with no way
+  to cancel (<code>todos.md</code>). Changing the numbers moves the cost
+  between a missed update and a longer lock rather than removing either. The
+  server already knows when it is done, and Ping is how it says so.
+</p>
+
+<p>
+  What it needs: one held request per account, kept alive across sleep/wake and
+  connection drops; a timeout policy of its own, since the default request
+  timeout is 90&nbsp;s and a useful heartbeat is longer; and the folder list kept
+  in step with what the user has selected.
+</p>
+
+<h3>Open items</h3>
+
+<ul>
+  <li><strong>Stale-marker guard.</strong> The first commit maps
+    <code>ATTENDEESTATUS_TO_PARTSTAT[5]</code> to <code>NEEDS-ACTION</code>. On
+    calendars written by an earlier build, <code>compareSelfPartstat</code> reads a
+    stored <code>ACCEPTED</code> against <code>X-EAS-RESPONSETYPE=5</code>, treats
+    it as a transition, and sends an Accept for an invitation the user never
+    answered — on any local write, including a dismissed reminder. Niel flagged it;
+    Tomas confirmed it and that his test items were all freshly synced. Merge
+    condition.</li>
+  <li><strong>The waiting mechanism needs replacing, not tuning.</strong> The
+    re-poll commit on Tomas Kovacik's branch polls on a fixed schedule with the
+    sync held open. Ping is the direction we would rather take. The diagnosis
+    behind it stands - the server really does apply the answer later, and that is
+    worth acting on - but through a listener. If any of that branch is taken as-is in the meantime,
+    its step 4 condition also has to be reconciled with the
+    <code>postPushSettle</code> gate:
+    <code>if ((pushed.changedAnything &amp;&amp; ctx.postPushSettle) ||
+    ctx.pendingResponseServerIds.size)</code>.</li>
+</ul>
+
+<h3>Status</h3>
+
+<p>
+  Deferred until v5 reaches feature parity with v4.
+</p>
+
+<h2 id="pr322">Open from EAS PR #322</h2>
+<p>Background and what master already covered:
+<a href="descriptions.html#pr322">How things work</a>.</p>
+
+<h3>With an issue</h3>
+<p><strong>Status 138 protocol fallback →
+<a href="https://github.com/jobisoft/EAS-4-TbSync/issues/315">#315</a>.</strong>
+Master handles neither 138 nor 165. The issue title says 165, but the body
+opens with a <code>Settings</code> response carrying
+<code>&lt;Status&gt;138&lt;/Status&gt;</code> — that is the right target. All
+one patch, since the pieces depend on each other:</p>
+<ul>
+  <li><code>PROTOCOL_VERSION_REJECTED_STATUS = "138"</code>,
+    <code>AS_VERSION_FALLBACK_ORDER</code>,
+    <code>#switchRejectedAsVersion</code>,
+    <code>versionFallbacksRemaining</code> threaded through
+    <code>#connectAndDiscoverFolders</code>, and a
+    <code>rejectedAsVersions</code> account field cleared on a successful
+    FolderSync.</li>
+  <li><code>SETTINGS_ERR.REJECTED</code> — today a rejected
+    <code>Settings</code> throws <code>ERR.UNKNOWN_COMMAND</code>,
+    indistinguishable to the caller.</li>
+  <li><code>easCommand</code> / <code>easAsVersion</code> on the errors thrown
+    by <code>settings.mjs</code> and <code>folder-sync.mjs</code>, so the
+    fallback knows which version was refused.</li>
+  <li><code>deviceInformationUnsupported</code> — on a rejected
+    <code>Settings</code>, mark the account and continue rather than failing the
+    connect. The direct answer to #315.</li>
+</ul>
+<p><strong>Push-rejection diagnostics →
+<a href="https://github.com/jobisoft/EAS-4-TbSync/issues/319">#319</a>.</strong>
+<code>reportRejectedPushItem</code>, <code>summarizeBlobForLog</code>,
+<code>truncateForLog</code> in <code>sync-runner.mjs</code>. #319 is "does not
+print enough info about <em>The EAS server did not accept 1 elements</em>" — an
+exact match.</p>
+
+<h3>Needs an issue first</h3>
+<ul>
+  <li><strong><code>DURATION</code> with no <code>DTEND</code>.</strong> His
+    <code>eventTimingFor</code> derives the end from <code>DURATION</code>,
+    falls back to 1 day / 1 hour, and re-derives when <code>DTEND</code> is not
+    after <code>DTSTART</code>. Master's codec has no <code>duration</code>
+    handling at all.</li>
+  <li><strong>Enabling recurrence sync for Microsoft accounts.</strong> Default
+    <code>syncrecurrence</code> <code>false</code> → <code>true</code> for new
+    accounts, <code>runMicrosoftRecurrenceRepair</code> turning it on for
+    existing ones with a forced refetch, and a reworded hint. Changing a setting
+    the user may have chosen is a design decision, not a bug fix.</li>
+  <li><strong>Resetting pinned ActiveSync versions.</strong>
+    <code>normalizeMicrosoftProtocolSelection</code> resets
+    <code>asversionselected</code> to <code>auto</code> for known Microsoft
+    hosts carrying a 2.5 / 14.0 / 14.1 pin. Such a pin is a v4 leftover that
+    stops the account ever reaching 16.1.</li>
+  <li><strong>Preferring 16.1 in <code>connect.mjs</code>.</strong> The current
+    order is deliberate — 14.1 leads because the codecs are most reliably tested
+    against it. Preferring 16.1 makes hitting 138 <em>more</em> likely, so the
+    fallback has to land first.</li>
+  <li><strong>Restoring rejected pushes.</strong>
+    <code>tryRestoreRejectedCalendarItem</code> and friends put the local item
+    back to its last-known blob when the server refuses a push. Right instinct;
+    needs a discussion of when it should and should not fire.</li>
+</ul>
+
+<h3>Rebase state</h3>
+<p>Master has since moved the add-on into <code>src/</code>; git follows the
+rename, so the move is not the problem — the overlapping fixes are. A
+test-merge of master into the PR conflicts in <code>background.mjs</code>,
+<code>manifest.json</code>, <code>eas-provider.mjs</code>,
+<code>oauth.mjs</code>, <code>upgrades.mjs</code> and
+<code>calendar-codec.mjs</code>. <code>sync-runner.mjs</code> merges clean.
+Rebasing reports fewer conflicts only because it stops at the first conflicting
+commit, so nothing in <code>7ae5b07</code> is ever attempted.</p>
+
+<script>
+  // Cumulative poll times come straight from settleWaitMs(): 2+4+8+10+10.
+  const POLLS = [2000, 6000, 14000, 24000, 34000];
+
+  const PANELS = [
+    {
+      title: "#339 as it stands — the response is sent, the update is never fetched",
+      verdict: "bad", verdictText: "stays Tentative until the next sync",
+      caption:
+        "MeetingResponse is answered Status 1 at once, so the sync finishes. Exchange applies the " +
+        "answer afterwards and nothing is listening. autoSyncIntervalMinutes defaults to 0, so " +
+        "there may be no next sync until the user starts one.",
+      band: { t0: 24000, t1: 34000, label: "server applies the answer, unobserved" },
+      msgs: [
+        { t: 300, from: 0, to: 1, kind: "ok", label: "MeetingResponse", side: "above1" },
+        { t: 900, from: 1, to: 0, kind: "ok", label: "Status 1", side: "above2" },
+      ],
+      marks: [{ lane: 0, t: 1600, label: "sync ends", kind: "bad" }],
+    },
+    {
+      title: "#339 plus the re-poll commit — polling on a fixed schedule",
+      verdict: "bad", verdictText: "account is locked for a prolonged time",
+      caption:
+        "Each MeetingResponse registers its ServerId; the follow-up pull re-polls until a command " +
+        "for every registered id arrives, or five pulls pass. Waits back off 2/4/8/10/10 s. The " +
+        "sync stays open throughout, so the account is locked and cannot be cancelled.",
+      lockSpan: { t0: 0, t1: 34000, label: "account locked — Sync, Remove, Disconnect all greyed out" },
+      band: { t0: 24000, t1: 34000, label: "server applies the answer" },
+      msgs: [
+        { t: 300, from: 0, to: 1, kind: "ok", label: "MeetingResponse", side: "above1" },
+        { t: 900, from: 1, to: 0, kind: "ok", label: "Status 1", side: "above2" },
+        ...POLLS.slice(0, 4).map((t, i) => ({
+          t, from: 0, to: 1, kind: "bad",
+          label: i === 2 ? "polls 1-4 — nothing yet" : null, side: "below",
+        })),
+        { t: 34000, from: 1, to: 0, kind: "ok", label: "poll 5 — update arrives", side: "mid" },
+      ],
+    },
+    {
+      title: "With a Ping listener — the server announces the change",
+      verdict: "ok", verdictText: "no schedule, no lock",
+      caption:
+        "Ping is a request the server holds open until one of the named collections changes. The " +
+        "sync ends normally; when Exchange applies the answer the held request returns the changed " +
+        "collection id, an ordinary Sync fetches it, and the client reissues the Ping. Same channel " +
+        "for any incoming change, not only this one.",
+      band: { t0: 24000, t1: 34000, label: "whenever the server applies it" },
+      heldSpan: { t0: 1600, t1: 29000, label: "Ping held open — no sync running, account usable" },
+      msgs: [
+        { t: 300, from: 0, to: 1, kind: "ok", label: "MeetingResponse", side: "above1" },
+        { t: 900, from: 1, to: 0, kind: "ok", label: "Status 1", side: "above2" },
+        { t: 29000, from: 1, to: 0, kind: "ok", label: "Ping returns: collection changed", side: "mid" },
+        { t: 31000, from: 0, to: 1, kind: "ok", label: "Sync", side: "below" },
+      ],
+      marks: [
+        { lane: 0, t: 1600, label: "sync ends", kind: "ok" },
+        { lane: 0, t: 32500, label: "update applied", kind: "ok" },
+      ],
+    },
+  ];
+
+  const W = 940, PAD_L = 132, PAD_R = 150, MAX = 40000, STEP = 5000;
+  // One vertical slot per kind of annotation, so nothing shares a row.
+  const Y = { lock: 22, band: 58, above1: 76, above2: 94, grid: 106,
+              lane0: 138, lane1: 268, held: 197, mid: 214, below: 292, axis: 318 };
+  const H = 340;
+  const LANES = [
+    { name: "Thunderbird", sub: "EAS provider", color: "var(--prov)", y: Y.lane0 },
+    { name: "Exchange", sub: "server", color: "var(--host)", y: Y.lane1 },
+  ];
+
+  const el = (n, a = {}, kids = []) => {
+    const e = document.createElementNS("http://www.w3.org/2000/svg", n);
+    for (const [k, v] of Object.entries(a)) e.setAttribute(k, v);
+    for (const c of [].concat(kids)) e.append(c);
+    return e;
+  };
+  const txt = (s, a) => el("text", a, [document.createTextNode(s)]);
+  const fmt = (ms) => (ms >= 1000 ? ms / 1000 + "s" : ms + "ms");
+  const x = (t) => PAD_L + (Math.min(t, MAX) / MAX) * (W - PAD_L - PAD_R);
+
+  /** Place a label beside `X`, flipping to the left near the right edge so it
+   *  never runs off the page. */
+  function label(svg, s, X, y, fill) {
+    const flip = X > PAD_L + 0.62 * (W - PAD_L - PAD_R);
+    svg.append(txt(s, {
+      x: flip ? X - 8 : X + 8, y,
+      "text-anchor": flip ? "end" : "start",
+      fill, "font-size": 11,
+    }));
+  }
+
+  function drawPanel(p) {
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+      "aria-label": `${p.title} — ${p.verdictText}` });
+
+    if (p.band) {
+      const x0 = x(p.band.t0), x1 = x(p.band.t1);
+      svg.append(el("rect", { x: x0, y: Y.grid, width: x1 - x0, height: Y.axis - 14 - Y.grid,
+        fill: "var(--bandbg)" }));
+      svg.append(txt(p.band.label, { x: (x0 + x1) / 2, y: Y.band, "text-anchor": "middle",
+        fill: "var(--muted)", "font-size": 11 }));
+    }
+
+    for (let t = 0; t <= MAX; t += STEP) {
+      svg.append(el("line", { x1: x(t), y1: Y.grid, x2: x(t), y2: Y.axis - 14,
+        stroke: "var(--rule)", "stroke-dasharray": "2 4" }));
+      svg.append(txt(fmt(t), { x: x(t), y: Y.axis, "text-anchor": "middle",
+        fill: "var(--muted)", "font-size": 11 }));
+    }
+
+    for (const [span, y, fill, col] of [
+      [p.lockSpan, Y.lock, "var(--lockbg)", "var(--bad)"],
+      [p.heldSpan, Y.held, "var(--spanbg)", "var(--muted)"],
+    ]) {
+      if (!span) continue;
+      const x0 = x(span.t0), x1 = x(span.t1);
+      svg.append(el("rect", { x: x0, y, width: x1 - x0, height: 15, rx: 3, fill }));
+      svg.append(txt(span.label, { x: x0 + 7, y: y + 11, fill: col, "font-size": 10.5 }));
+    }
+
+    for (const L of LANES) {
+      svg.append(el("line", { x1: PAD_L, y1: L.y, x2: W - PAD_R, y2: L.y,
+        stroke: L.color, "stroke-width": 2 }));
+      svg.append(txt(L.name, { x: PAD_L - 12, y: L.y - 3, "text-anchor": "end",
+        fill: L.color, "font-size": 13, "font-weight": 600 }));
+      svg.append(txt(L.sub, { x: PAD_L - 12, y: L.y + 13, "text-anchor": "end",
+        fill: "var(--muted)", "font-size": 11 }));
+    }
+
+    for (const m of p.msgs ?? []) {
+      const y0 = LANES[m.from].y, y1 = LANES[m.to].y, dir = y1 > y0 ? 1 : -1, X = x(m.t);
+      const col = m.kind === "bad" ? "var(--bad)" : "var(--ok)";
+      svg.append(el("line", { x1: X, y1: y0 + 15 * dir, x2: X, y2: y1 - 15 * dir, stroke: col,
+        "stroke-width": 1.4, "stroke-dasharray": m.kind === "bad" ? "3 3" : "none" }));
+      const ty = y1 - 15 * dir;
+      svg.append(el("path", { d: `M ${X - 4} ${ty - 6 * dir} L ${X} ${ty} L ${X + 4} ${ty - 6 * dir}`,
+        fill: "none", stroke: col, "stroke-width": 1.4 }));
+      if (m.label) label(svg, m.label, X, Y[m.side ?? "mid"], col);
+    }
+
+    for (const m of p.marks ?? []) {
+      const X = x(m.t), col = m.kind === "bad" ? "var(--bad)" : "var(--ok)";
+      svg.append(el("circle", { cx: X, cy: LANES[m.lane].y, r: 4.5, fill: col }));
+      label(svg, m.label, X, LANES[m.lane].y - 14, col);
+    }
+    return svg;
+  }
+
+  const host = document.getElementById("panels");
+  for (const p of PANELS) {
+    const head = document.createElement("div");
+    head.className = "panel-title";
+    head.innerHTML = `<span>${p.title}</span><span class="verdict ${p.verdict}">${p.verdictText}</span>`;
+    const fig = document.createElement("figure");
+    const scr = document.createElement("div");
+    scr.className = "scroller";
+    scr.append(drawPanel(p));
+    const cap = document.createElement("figcaption");
+    cap.textContent = p.caption;
+    fig.append(scr, cap);
+    host.append(head, fig);
+  }
+  const legend = document.createElement("div");
+  legend.className = "legend";
+  legend.innerHTML =
+    `<span><i class="sw" style="border-color:var(--ok)"></i>delivered</span>` +
+    `<span><i class="sw" style="border-color:var(--bad);border-top-style:dashed"></i>returned nothing</span>` +
+    `<span><i class="sw" style="border-color:var(--bandbg);border-top-width:10px"></i>when the server applies it</span>` +
+    `<span><i class="sw" style="border-color:var(--lockbg);border-top-width:10px"></i>account locked</span>`;
+  host.append(legend);
+</script>
+
+</main>
+</div>

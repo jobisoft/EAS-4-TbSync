@@ -1,0 +1,82 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//EAS-4-TbSync//timezone round-trip test//EN
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:America/New_York
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+TZNAME:EDT
+DTSTART:19700308T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+TZNAME:EST
+DTSTART:19701101T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:tbsync-tz-1-allday-single@example.invalid
+DTSTAMP:20260801T120000Z
+DTSTART;VALUE=DATE:20260915
+DTEND;VALUE=DATE:20260916
+SUMMARY:TZ1 all-day single — expect 15 Sep
+DESCRIPTION:No zone must ever travel with this. Regression check on the path
+ the 16.1 fix deliberately left alone.
+END:VEVENT
+BEGIN:VEVENT
+UID:tbsync-tz-2-allday-span@example.invalid
+DTSTAMP:20260801T120000Z
+DTSTART;VALUE=DATE:20260921
+DTEND;VALUE=DATE:20260924
+SUMMARY:TZ2 all-day span — expect 21-23 Sep inclusive
+DESCRIPTION:DTEND is exclusive\, so the last day is 23 Sep. A single-day event
+ would hide an off-by-one at the end boundary. OWA shows the exclusive end\, so
+ it may read 21-24 Sep there.
+END:VEVENT
+BEGIN:VEVENT
+UID:tbsync-tz-3-allday-until@example.invalid
+DTSTAMP:20260801T120000Z
+DTSTART;VALUE=DATE:20260910
+DTEND;VALUE=DATE:20260911
+RRULE:FREQ=DAILY;UNTIL=20260917
+SUMMARY:TZ3 all-day series UNTIL — expect 8 days\, 10-17 Sep
+DESCRIPTION:The UNTIL fix. A floating DATE converted through the host zone
+ became 20261116T230000Z\, ending the series a day early for anyone east of
+ UTC. The last occurrence must be 17 Sep\, not 16 Sep.
+END:VEVENT
+BEGIN:VEVENT
+UID:tbsync-tz-4-dst-series@example.invalid
+DTSTAMP:20260801T120000Z
+DTSTART;TZID=America/New_York:20261013T150000
+DTEND;TZID=America/New_York:20261013T160000
+RRULE:FREQ=WEEKLY;COUNT=6
+SUMMARY:TZ4 weekly 15:00 New York — expect 21:00 Berlin except 27 Oct = 20:00
+DESCRIPTION:The reported bug. The EU leaves DST on 25 Oct 2026\, the US on
+ 1 Nov\, so exactly one occurrence differs. If all six read 21:00 the authoring
+ zone was lost and the series got anchored to the local zone.
+END:VEVENT
+BEGIN:VEVENT
+UID:tbsync-tz-5-series-exception@example.invalid
+DTSTAMP:20260801T120000Z
+DTSTART;TZID=America/New_York:20260908T110000
+DTEND;TZID=America/New_York:20260908T120000
+RRULE:FREQ=WEEKLY;COUNT=4
+SUMMARY:TZ5 weekly 11:00 New York — expect 17:00 Berlin
+DESCRIPTION:Master of the series whose third occurrence is overridden below.
+END:VEVENT
+BEGIN:VEVENT
+UID:tbsync-tz-5-series-exception@example.invalid
+DTSTAMP:20260801T120000Z
+RECURRENCE-ID;TZID=America/New_York:20260922T110000
+DTSTART;TZID=America/New_York:20260922T140000
+DTEND;TZID=America/New_York:20260922T150000
+SUMMARY:TZ5 moved occurrence — expect 22 Sep at 20:00 Berlin
+DESCRIPTION:Pushed as its own per-instance <Change> on 16.1\, which is the path
+ that newly carries its own TimeZone blob.
+END:VEVENT
+END:VCALENDAR
