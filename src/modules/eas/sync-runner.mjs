@@ -953,7 +953,9 @@ async function buildPushBatch(ctx, slice) {
 
 /* ── Apply responses to our push ──────────────────────────────────── */
 
-async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
+// Exported for tests only - every production caller still reaches this
+// through the pushPhase loop inside runOneSync.
+export async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
   const { hadResponsesElement = true } = opts;
   if (!hadResponsesElement) {
     const sentCount = sent.adds.length + sent.mods.length + sent.dels.length;
@@ -1360,7 +1362,9 @@ function buildSyncBody({
   return w.getBytes();
 }
 
-function appendCommands(
+// Exported for tests only - every production caller still reaches this
+// through buildSyncBody inside pushPhase.
+export function appendCommands(
   w,
   {
     adds,
