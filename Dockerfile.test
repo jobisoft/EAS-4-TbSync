@@ -1,0 +1,10 @@
+# Reproducible local test run, matching what CI does.
+#
+# Build:  docker build -f Dockerfile.test -t eas-4-tbsync-tests .
+# Run:    docker run --rm eas-4-tbsync-tests
+FROM node:20-slim
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+CMD ["npm", "test"]
