@@ -148,18 +148,46 @@ export function registerCalendarProvider() {
     return {};
   }, options);
 
-  // Fired by the calendar's own refresh - the reload button, and the
-  // periodic refresh Thunderbird runs for provider calendars. TbSync owns
-  // scheduling, so this is a request to sync, not a sync of its own.
-  provider.onSync.addListener((calendar) => {
-    onSyncRequested?.(calendar?.id);
+  // The calendar asking to be refreshed: the Reload button, and the timer
+  // Thunderbird arms for every calendar that says it can refresh - ours does.
+  // We do not sync ourselves; the host owns the schedule, the folder status it
+  // paints into the manager, and the lock that keeps two runs apart. Awaited,
+  // so the calendar's spinner ends when the sync does rather than at once.
+  provider.onSync.addListener(async (calendar) => {
+    const targetID = calendar?.id;
+    if (!targetID || !host) return;
+    try {
+      await host.requestSync({ parentId: targetID });
+    } catch (err) {
+      report?.({
+        level: "warning",
+        message: `[target] sync request for ${targetID} failed: ${err?.message ?? String(err)}`,
+      });
+    }
   });
 
-  // A user asking for a clean slate through the calendar UI. The folder's
-  // sync key has to go, which only the host can do, so it is handed up the
-  // same way.
-  provider.onResetSync.addListener((calendar) => {
-    onResetRequested?.(calendar?.id);
+  // A user asking, through the calendar's own properties, to start over. The
+  // cache has been emptied, so our sync key and index describe items that are
+  // no longer there - clear them before asking for the sync, or the server
+  // answers "nothing has changed" and the calendar stays empty.
+  provider.onResetSync.addListener(async (calendar) => {
+    const targetID = calendar?.id;
+    if (!targetID || !host) return;
+    const mine = (await ourTargets()).get(targetID);
+    if (!mine) return;
+    try {
+      await host.updateFolder({
+        accountId: mine.accountId,
+        folderId: mine.folderId,
+        patch: { custom: { synckey: "0", indexMap: [] } },
+      });
+      await host.requestSync({ parentId: targetID });
+    } catch (err) {
+      report?.({
+        level: "warning",
+        message: `[target] reset of ${mine.accountId}/${mine.folderId} failed: ${err?.message ?? String(err)}`,
+      });
+    }
   });
 
   registerTargetLifecycle();
@@ -261,19 +289,10 @@ function registerTargetLifecycle() {
 /* Wired by background.mjs, which is the only thing that knows how to reach
  * the host. Kept as plain hooks so this module has no dependency on the
  * provider object. */
-let onSyncRequested = null;
-let onResetRequested = null;
 let report = null;
 let host = null;
 
-export function setSyncHandlers({
-  onSync,
-  onReset,
-  reportEventLog,
-  provider,
-} = {}) {
-  onSyncRequested = onSync ?? null;
-  onResetRequested = onReset ?? null;
+export function setSyncHandlers({ reportEventLog, provider } = {}) {
   report = reportEventLog ?? null;
   host = provider ?? null;
 }
