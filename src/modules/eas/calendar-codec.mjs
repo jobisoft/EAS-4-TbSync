@@ -408,10 +408,19 @@ export function applyInstanceChange({
  *  Each descriptor's `emit(builder)` writes one complete command. The
  *  builder must be on the AirSync codepage on entry; it is left there.
  *
- *  Limitation: a user un-deleting an EXDATE or removing an override
- *  cannot be expressed in EAS without comparing against the server's
- *  last-known state (which we don't currently snapshot). The unwanted
- *  EXDATE / override stays server-side until manually re-edited there.
+ *  `previous` is the exception fingerprint the item carried before the
+ *  user's edit, taken from the changelog entry. When supplied, only
+ *  exceptions that actually differ from it produce a command: re-asserting
+ *  a cancellation Exchange already has earns a rejection and a round of
+ *  retries, and a series whose master changed would otherwise re-send every
+ *  occurrence it has. Without it - a newly added item, or an edit recorded
+ *  before the entry carried one - everything is emitted, which is the older
+ *  behaviour and always safe.
+ *
+ *  Limitation: a user un-deleting an EXDATE or removing an override still
+ *  cannot be expressed in EAS. `previous` now tells us it happened, but
+ *  there is no command for "make this occurrence ordinary again"; the
+ *  unwanted EXDATE / override stays server-side until re-edited there.
  *
  *  @returns {Array<{kind: string, serverID: string, instanceId: string,
  *                   emit: (builder: object) => void}>}
@@ -425,6 +434,7 @@ export function listInstanceCommands({
   userEmail,
   fallbackOrganizerName,
   eventLog,
+  previous = null,
 }) {
   if (asVersion !== "16.1") return [];
   const vcal = parseVCalendar(blob);
@@ -445,6 +455,13 @@ export function listInstanceCommands({
     if (subUid === masterUid && rid) overrides.push(sub);
   }
 
+  // What the server already had, if the caller knew. Same shape and same
+  // digest function as exceptionFingerprint, so the two are comparable.
+  const knownExdates = new Set(previous?.exdates ?? []);
+  const knownOverrides = new Map(
+    (previous?.overrides ?? []).map((o) => [o.rid, o.digest]),
+  );
+
   const commands = [];
   // A cancelled occurrence is a <Delete>, not a <Change> carrying
   // <Deleted>. [MS-ASCAL] §2.2.2.16 allows `Deleted` only as a child of
@@ -457,6 +474,9 @@ export function listInstanceCommands({
   // specific occurrence".
   for (const ex of exdates) {
     const instanceId = icalTimeToBasicUtc(ex);
+    // Already cancelled server-side. Sending it again is rejected, and the
+    // rejection costs a retry budget and shows up as a failed element.
+    if (previous && knownExdates.has(instanceId)) continue;
     commands.push({
       kind: "delete",
       serverID,
@@ -474,6 +494,14 @@ export function listInstanceCommands({
   for (const override of overrides) {
     const rid = override.getFirstPropertyValue("recurrence-id");
     const instanceId = icalTimeToBasicUtc(rid);
+    // Unchanged since the server last saw it: the whole point of carrying a
+    // baseline. An override is pushed whole, so an identical digest means
+    // there is nothing to say about this occurrence.
+    if (
+      previous &&
+      knownOverrides.get(instanceId) === digestOf(override.toString())
+    )
+      continue;
     commands.push({
       kind: "change",
       serverID,

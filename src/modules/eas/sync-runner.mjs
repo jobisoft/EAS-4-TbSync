@@ -357,8 +357,7 @@ async function runOneSync({
   // (`folder.downloadOnly`). When set, we discard pending user-side edits
   // before pulling, and skip the push phase entirely. Matches legacy's
   // `revertLocalChanges` + downloadonly gate (legacy sync.js:349-378).
-  const effectiveDownloadOnly =
-    !!folder.readOnly || !!folder.downloadOnly;
+  const effectiveDownloadOnly = !!folder.readOnly || !!folder.downloadOnly;
 
   const ctx = {
     provider,
@@ -937,7 +936,14 @@ async function pushPhase(ctx, userEdits) {
           continue;
         }
         if (blobHasInstanceOverrides(m.item.blob)) {
-          instanceMasters.push({ serverID: m.serverID, blob: m.item.blob });
+          instanceMasters.push({
+            serverID: m.serverID,
+            blob: m.item.blob,
+            // The exception set as it stood before this edit, recorded by
+            // the provider when the user saved. Lets the instance phase
+            // send only what changed instead of re-asserting the lot.
+            previous: m.entry?.detail?.exceptions ?? null,
+          });
         }
       }
     }
@@ -1010,9 +1016,10 @@ function blobHasInstanceOverrides(blob) {
  * travel one at a time. This is also why a master being *modified* sends
  * its exceptions here rather than alongside its own <Change>.
  *
- * Deliberately independent of the changelog - `added_by_user` and
- * friends are on their way out with the move to a custom calendar type,
- * and everything needed is in hand from the push response.
+ * Which commands to send is decided against the exception fingerprint the
+ * changelog entry carried, so a master that changed on its own re-sends
+ * none of its occurrences. An added item has no such baseline and sends
+ * everything, which is correct: the server has just met it.
  */
 async function instancePhase(ctx, masters) {
   const commands = [];
@@ -1020,6 +1027,7 @@ async function instancePhase(ctx, masters) {
     const built = ctx.itemKind.codec.listInstanceCommands({
       blob: m.blob,
       serverID: m.serverID,
+      previous: m.previous ?? null,
       asVersion: ctx.asVersion,
       defaultTimezone: ctx.defaultTimezone,
       syncRecurrence: ctx.syncRecurrence,
@@ -1250,6 +1258,8 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     // once the server has acked this Add. Note the pair down for the
     // instance phase; nothing can send them before this point.
     if (instanceMasters && blobHasInstanceOverrides(sentEntry.item.blob)) {
+      // No `previous`: the server has just learned about this item, so
+      // every exception it carries is new to it.
       instanceMasters.push({ serverID: serverId, blob: sentEntry.item.blob });
     }
     await ctx.provider.changelogRemove({
