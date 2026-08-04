@@ -1601,7 +1601,10 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
  *  into a JS Date. EAS encodes the original master occurrence in UTC. */
 function parseEasInstanceId(s) {
   if (!s) return null;
-  const compact = String(s).replace(/[-:]/g, "");
+  // Fraction as well as separators - see parseEasUtc. A null here is not
+  // inert: the caller falls back to treating a per-occurrence change as a
+  // change to the whole series.
+  const compact = String(s).replace(/[-:]|\.\d+/g, "");
   const m = /^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?(\d{2})?Z?$/.exec(compact);
   if (!m) return null;
   const [, y, mo, d, h = "0", mi = "0", se = "0"] = m;

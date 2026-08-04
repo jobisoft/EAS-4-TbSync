@@ -1077,8 +1077,12 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay, fromBlob) {
 
 function parseEasUtc(s) {
   if (!s) return null;
-  // Accept extended ISO and basic compact forms.
-  const compact = s.replace(/[-:]/g, "");
+  // Accept extended ISO and basic compact forms. The fraction goes with
+  // the separators: both are what distinguishes extended from compact, and
+  // EAS's extended form carries milliseconds (2026-10-01T00:00:00.000Z).
+  // Stripping only the separators left a fraction the pattern below cannot
+  // match, so a value this function says it accepts returned null.
+  const compact = s.replace(/[-:]|\.\d+/g, "");
   const m = /^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?(\d{2})?Z?$/.exec(compact);
   if (!m) return null;
   const [, y, mo, d, h = "0", mi = "0", se = "0"] = m;
