@@ -12,7 +12,7 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
-import { rruleToEas } from "./recurrence.mjs";
+import { rruleToEas, easToRrule } from "./recurrence.mjs";
 import {
   guessTimezoneByCurrentOffset,
   getIcalTimezone,
@@ -200,7 +200,7 @@ export function applicationDataToIcal({
     const recNode = childByTag(adNode, "Recurrence");
     if (recNode) {
       vtodo.removeAllProperties("rrule");
-      const rrule = recurrenceToRrule(recNode);
+      const rrule = easToRrule(recNode);
       if (rrule && /^FREQ=[A-Z]+/.test(rrule)) {
         const prop = new ICAL.Property("rrule", vtodo);
         prop.setValue(ICAL.Recur.fromString(rrule));
@@ -466,43 +466,6 @@ function appendBody(builder, vtodo, asVersion) {
 }
 
 /* ── Recurrence (RRULE only; tasks have no exceptions) ────────────── */
-
-function recurrenceToRrule(recNode) {
-  const type = readPathFrom(recNode, ["Type"]);
-  const freq = {
-    0: "DAILY",
-    1: "WEEKLY",
-    2: "MONTHLY",
-    3: "MONTHLY",
-    5: "YEARLY",
-    6: "YEARLY",
-  }[type];
-  if (!freq) return null;
-  const parts = [`FREQ=${freq}`];
-  const interval = readPathFrom(recNode, ["Interval"]);
-  if (interval) parts.push(`INTERVAL=${interval}`);
-  const dow = readPathFrom(recNode, ["DayOfWeek"]);
-  if (dow) {
-    const bits = parseInt(dow, 10) || 0;
-    const week = readPathFrom(recNode, ["WeekOfMonth"]);
-    const ical = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
-    const days = [];
-    for (let i = 0; i < 7; i++) if (bits & (1 << i)) days.push(ical[i]);
-    if (days.length) {
-      const prefix = week === "5" ? "-1" : week ? String(week) : "";
-      parts.push("BYDAY=" + days.map((d) => prefix + d).join(","));
-    }
-  }
-  const dom = readPathFrom(recNode, ["DayOfMonth"]);
-  if (dom) parts.push(`BYMONTHDAY=${dom}`);
-  const moy = readPathFrom(recNode, ["MonthOfYear"]);
-  if (moy) parts.push(`BYMONTH=${moy}`);
-  const occ = readPathFrom(recNode, ["Occurrences"]);
-  if (occ) parts.push(`COUNT=${occ}`);
-  const until = readPathFrom(recNode, ["Until"]);
-  if (until) parts.push(`UNTIL=${until.replace(/[-:]/g, "")}`);
-  return parts.join(";");
-}
 
 /** `[MS-ASTASK]` 2.2.2.31. Every element qualifying the type has to be here:
  *  without them the server rejects the whole Add with Status 6, and since only

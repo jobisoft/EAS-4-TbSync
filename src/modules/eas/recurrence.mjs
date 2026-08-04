@@ -1,12 +1,13 @@
 /**
- * iCal RRULE → ActiveSync `<Recurrence>` field derivation, shared by the
- * calendar and task codecs.
+ * iCal RRULE ⇆ ActiveSync `<Recurrence>` mapping, shared by the calendar and
+ * task codecs.
  *
- * Only the *mapping* lives here: which EAS recurrence type an RRULE is, and
- * which of the qualifying fields that type needs. Emitting is left to each
- * codec, because the two disagree on everything else - `[MS-ASCAL]` and
- * `[MS-ASTASK]` are different namespaces with different element sets (a task
- * carries `<Start>`, an event does not), and they format `Until` differently.
+ * Only the *mapping* lives here: which EAS recurrence type an RRULE is, which
+ * of the qualifying fields that type needs, and the reverse. Emitting is left
+ * to each codec, because the two disagree on everything else - `[MS-ASCAL]`
+ * and `[MS-ASTASK]` are different namespaces with different element sets (a
+ * task carries `<Start>`, an event does not), and they format `Until`
+ * differently. Reading has no such split, so `easToRrule` is shared whole.
  *
  * Shared because they had drifted. The task codec was a stripped-down copy
  * that emitted the type but none of the fields qualifying it, so every task
@@ -27,6 +28,8 @@
  * Daily needing nothing is exactly why it was the only kind of recurring task
  * that worked.
  */
+
+import { readPathFrom } from "./wbxml-helpers.mjs";
 
 /** Sunday-first, matching the EAS `DayOfWeek` bitmask: SU=1 … SA=64. */
 const ICAL_DAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
@@ -103,4 +106,56 @@ export function rruleToEas(rruleProp, startProp) {
     count: r.count ?? null,
     until: r.until ?? null,
   };
+}
+
+/**
+ * The reverse: an ActiveSync `<Recurrence>` node → an RRULE string, or null if
+ * the node carries no type this maps.
+ *
+ * Shared verbatim. Both codecs carried byte-equivalent copies of this - the
+ * only differences were blank lines and one statement reorder - which is the
+ * same duplication that let the outbound halves drift until a task could only
+ * recur daily. One copy means a mapping fixed here is fixed for both.
+ *
+ * @param {object} recNode  the `<Recurrence>` node
+ * @returns {string|null}
+ */
+export function easToRrule(recNode) {
+  const type = readPathFrom(recNode, ["Type"]);
+  const freq = {
+    0: "DAILY",
+    1: "WEEKLY",
+    2: "MONTHLY",
+    3: "MONTHLY",
+    5: "YEARLY",
+    6: "YEARLY",
+  }[type];
+  if (!freq) return null;
+  const parts = [`FREQ=${freq}`];
+  const interval = readPathFrom(recNode, ["Interval"]);
+  if (interval) parts.push(`INTERVAL=${interval}`);
+
+  const dow = readPathFrom(recNode, ["DayOfWeek"]);
+  if (dow) {
+    const bits = parseInt(dow, 10) || 0;
+    const week = readPathFrom(recNode, ["WeekOfMonth"]);
+    const days = [];
+    for (let i = 0; i < 7; i++) if (bits & (1 << i)) days.push(ICAL_DAYS[i]);
+    if (days.length) {
+      // WeekOfMonth 5 is "last", which iCal spells -1.
+      const prefix = week === "5" ? "-1" : week ? String(week) : "";
+      parts.push("BYDAY=" + days.map((d) => prefix + d).join(","));
+    }
+  }
+  const dom = readPathFrom(recNode, ["DayOfMonth"]);
+  if (dom) parts.push(`BYMONTHDAY=${dom}`);
+  const moy = readPathFrom(recNode, ["MonthOfYear"]);
+  if (moy) parts.push(`BYMONTH=${moy}`);
+
+  const occ = readPathFrom(recNode, ["Occurrences"]);
+  if (occ) parts.push(`COUNT=${occ}`);
+  const until = readPathFrom(recNode, ["Until"]);
+  if (until) parts.push(`UNTIL=${until.replace(/[-:]/g, "")}`);
+
+  return parts.join(";");
 }
