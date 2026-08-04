@@ -129,6 +129,44 @@ the calendar.</p>
 <p>3.6 is <strong>not</strong> fully verified for the all-day cases — see the
 all-day <code>RECURRENCE-ID</code> defect in <a href="todos.html">Todos</a>.</p>
 
+<h3>Digest selectivity — needs more than one override</h3>
+<p>3.4 cannot prove the fingerprint works: its fixture has a single override,
+so "exactly one <code>&lt;Change&gt;</code>" is satisfied whether the digest
+skips the unchanged ones or there were none to skip. Selectivity only shows up
+with several. No fixture — build it inline: a weekly series of four from
+<code>20260907T090000Z</code> with overrides on the 14th, 21st and 28th,
+distinct <code>SUMMARY</code> each.</p>
+<table>
+  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
+  <tr><td>3.8</td><td>create, sync</td><td>master <code>&lt;Add&gt;</code>, then one instance command per override</td></tr>
+  <tr><td>3.9</td><td>read the item, note each override's <code>DTSTAMP</code> / <code>LAST-MODIFIED</code></td><td></td></tr>
+  <tr><td>3.10</td><td><code>items.update</code> changing <strong>one</strong> override's <code>SUMMARY</code>, then re-read</td><td>the other two overrides' stamps are <strong>untouched</strong> — the digest covers the whole serialised <code>VEVENT</code>, so a restamp would make every override read as changed</td></tr>
+  <tr><td>3.11</td><td>sync</td><td>one master <code>&lt;Change&gt;</code>, and exactly <strong>one</strong> instance <code>&lt;Change&gt;</code> — carrying the <code>InstanceId</code> of the edited occurrence only</td></tr>
+</table>
+<p>3.10 answers whether Thunderbird rewrites <code>DTSTAMP</code> /
+<code>LAST-MODIFIED</code> on components it did not touch. Measured 4 Aug 2026:
+it does not — the stamps held and no <code>LAST-MODIFIED</code> was added at
+all, so the fingerprint stays meaningful across the <code>items.update</code>
+path. What is still unmeasured is an edit made in Thunderbird's own event
+dialog, which builds the item itself rather than taking ours verbatim; that
+needs a human.</p>
+<div class="note"><strong>3.11 currently fails at the server.</strong> The
+selection is right — one instance command, for the edited occurrence, the other
+two correctly skipped — but Exchange answers <strong>Status 6</strong> and the
+folder ends the sync at <code>warning</code>:
+
+<p><code>[event-sync] server rejected instance change 20260921T090000Z …
+(Status 6)</code></p>
+
+<p>The payload looks well-formed — <code>ServerId</code> +
+<code>airsyncbase:InstanceId</code> + <code>ApplicationData</code>, one command
+in its own request. What differs from 3.4 is that the master
+<code>&lt;Change&gt;</code> goes in the same sync, immediately before it, since
+editing an override rewrites the whole local item. Whether that is what the
+server objects to is unestablished. Not a regression from the recurrence work:
+the instance payload carries no <code>&lt;Recurrence&gt;</code>, and the
+master's is byte-identical to before that change.</p></div>
+
 <h2 id="provider-calendar">4. Provider-backed calendar</h2>
 <table>
   <tr><th>#</th><th>Step</th><th>Expect</th></tr>
