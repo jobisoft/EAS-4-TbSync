@@ -26,6 +26,7 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
+import { rruleToEas } from "./recurrence.mjs";
 import { TimeZoneBlob, isAllZero } from "./timezone-blob.mjs";
 import {
   guessTimezoneByStdDstOffset,
@@ -1544,58 +1545,28 @@ function recurrenceToRrule(recNode) {
   return parts.join(";");
 }
 
+/** Element order is `[MS-ASCAL]`'s and is load-bearing - the server validates
+ *  against a sequence - so it is kept exactly as it was when this derivation
+ *  moved into `recurrence.mjs`. */
 function appendRecurrence(builder, rruleProp, dtstartProp) {
-  const r = rruleProp.getFirstValue(); // ICAL.Recur
-  if (!r) return;
-
-  const freq = r.freq;
-  const startDate = dtstartProp?.getFirstValue();
-  let type = 0;
-  let monthDays = r.parts?.BYMONTHDAY ?? [];
-  let weekDays = (r.parts?.BYDAY ?? []).slice();
-  let months = r.parts?.BYMONTH ?? [];
-  const weeks = [];
-
-  // Unpack ±NDD style days into weekDays + weekOfMonth.
-  for (let i = 0; i < weekDays.length; i++) {
-    const m = /^([+-]?\d*)(SU|MO|TU|WE|TH|FR|SA)$/.exec(weekDays[i]);
-    if (!m) continue;
-    const n = parseInt(m[1] || "0", 10);
-    const dow = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"].indexOf(m[2]) + 1;
-    weekDays[i] = dow;
-    if (n) weeks[i] = n === -1 ? 5 : n;
-  }
-
-  if (freq === "WEEKLY") {
-    type = 1;
-    if (!weekDays.length && startDate)
-      weekDays = [startDate.dayOfWeek?.() ?? 1];
-  } else if (freq === "MONTHLY" && weeks.length) {
-    type = 3;
-  } else if (freq === "MONTHLY") {
-    type = 2;
-    if (!monthDays.length && startDate) monthDays = [startDate.day];
-  } else if (freq === "YEARLY" && weeks.length) {
-    type = 6;
-  } else if (freq === "YEARLY") {
-    type = 5;
-    if (!monthDays.length && startDate) monthDays = [startDate.day];
-    if (!months.length && startDate) months = [startDate.month];
-  }
+  const rec = rruleToEas(rruleProp, dtstartProp);
+  if (!rec) return;
 
   builder.otag("Recurrence");
-  builder.atag("Type", String(type));
-  if (monthDays[0]) builder.atag("DayOfMonth", String(monthDays[0]));
-  if (weekDays.length) {
-    let bits = 0;
-    for (const d of weekDays) bits |= 1 << (d - 1);
-    builder.atag("DayOfWeek", String(bits));
+  builder.atag("Type", String(rec.type));
+  if (rec.dayOfMonth !== null) {
+    builder.atag("DayOfMonth", String(rec.dayOfMonth));
   }
-  builder.atag("Interval", String(r.interval ?? 1));
-  if (months.length) builder.atag("MonthOfYear", String(months[0]));
-  if (r.count) builder.atag("Occurrences", String(r.count));
-  else if (r.until) builder.atag("Until", untilFor(r.until));
-  if (weeks.length) builder.atag("WeekOfMonth", String(weeks[0]));
+  if (rec.dayOfWeek !== null) builder.atag("DayOfWeek", String(rec.dayOfWeek));
+  builder.atag("Interval", String(rec.interval));
+  if (rec.monthOfYear !== null) {
+    builder.atag("MonthOfYear", String(rec.monthOfYear));
+  }
+  if (rec.count) builder.atag("Occurrences", String(rec.count));
+  else if (rec.until) builder.atag("Until", untilFor(rec.until));
+  if (rec.weekOfMonth !== null) {
+    builder.atag("WeekOfMonth", String(rec.weekOfMonth));
+  }
   builder.ctag();
 }
 

@@ -12,6 +12,7 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
+import { rruleToEas } from "./recurrence.mjs";
 import {
   guessTimezoneByCurrentOffset,
   getIcalTimezone,
@@ -503,20 +504,38 @@ function recurrenceToRrule(recNode) {
   return parts.join(";");
 }
 
+/** `[MS-ASTASK]` 2.2.2.31. Every element qualifying the type has to be here:
+ *  without them the server rejects the whole Add with Status 6, and since only
+ *  daily needs none, that used to be the only recurring task that could be
+ *  created. The rejected entry is then re-staged and retried on every sync,
+ *  leaving the folder in `warning` until the task is deleted.
+ *
+ *  `<Start>` is task-only - an event's recurrence is anchored on its own
+ *  StartTime - and `Until` uses this codec's own formatter. Everything else is
+ *  in the same relative order as the calendar codec, which the server accepts.
+ *
+ *  Not emitted: `Regenerate` and `DeadOccur` (we never regenerate a task), and
+ *  `CalendarType` (this server takes monthly and yearly *events* without it). */
 function appendRecurrence(builder, rruleProp, startProp, localStart) {
-  const r = rruleProp.getFirstValue();
-  if (!r) return;
-  let type = 0;
-  if (r.freq === "DAILY") type = 0;
-  else if (r.freq === "WEEKLY") type = 1;
-  else if (r.freq === "MONTHLY") type = 2;
-  else if (r.freq === "YEARLY") type = 5;
+  const rec = rruleToEas(rruleProp, startProp);
+  if (!rec) return;
+
   builder.otag("Recurrence");
-  builder.atag("Type", String(type));
+  builder.atag("Type", String(rec.type));
   builder.atag("Start", localStart);
-  builder.atag("Interval", String(r.interval ?? 1));
-  if (r.count) builder.atag("Occurrences", String(r.count));
-  else if (r.until) builder.atag("Until", toExtendedIsoUtc(r.until));
+  if (rec.dayOfMonth !== null) {
+    builder.atag("DayOfMonth", String(rec.dayOfMonth));
+  }
+  if (rec.dayOfWeek !== null) builder.atag("DayOfWeek", String(rec.dayOfWeek));
+  builder.atag("Interval", String(rec.interval));
+  if (rec.monthOfYear !== null) {
+    builder.atag("MonthOfYear", String(rec.monthOfYear));
+  }
+  if (rec.count) builder.atag("Occurrences", String(rec.count));
+  else if (rec.until) builder.atag("Until", toExtendedIsoUtc(rec.until));
+  if (rec.weekOfMonth !== null) {
+    builder.atag("WeekOfMonth", String(rec.weekOfMonth));
+  }
   builder.ctag();
 }
 
