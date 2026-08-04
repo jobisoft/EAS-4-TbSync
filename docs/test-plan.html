@@ -19,6 +19,7 @@
     <li><a href="#round-trip">2. Item round trip</a></li>
     <li><a href="#recurrence">3. Recurrence and exceptions</a></li>
     <li><a href="#provider-calendar">4. Provider-backed calendar</a></li>
+    <li><a href="#task-recurrence">5. Task recurrence</a></li>
   </ul>
   <h2>At the UI</h2>
   <ul class="toc">
@@ -51,6 +52,20 @@ installs usually coexist:</p>
 <p><strong>The Event Log lives in <code>storage.session</code></strong>, so a
 restart wipes it. Read it first. <code>debug</code> entries need
 <code>setLogLevel</code> raised to 3.</p>
+<div class="note"><strong>A passing item count is not a passing test.</strong>
+<code>items.query</code> and <code>contacts.query</code> read <em>local</em>
+state, so every check here can go green while nothing reached the server at
+all. That is not hypothetical: a run that earned an HTTP 503 — forty syncs in a
+few minutes will — reported <em>PASS</em> on every step of sections 2 and 5
+with an empty wire log, because create-then-delete returns the local count to
+its baseline whether or not a single byte was sent.
+
+<p>So assert the <code>&lt;Add&gt;</code> / <code>&lt;Change&gt;</code> /
+<code>&lt;Delete&gt;</code> in the Event Log, not only the count. And where
+what the <em>server</em> holds is the actual question, finish with a <strong>clean
+pull</strong>: deselect the folder, reselect it, sync. That drops the local
+copy and re-fetches everything, which is the only way to see what was stored
+rather than what was sent.</p></div>
 <div class="note"><strong>End every bridge session by deselecting the
 authorized calendar, then reloading — in that order.</strong> Deselecting
 resets the folder's sync key so the next run starts fresh, and reloading
@@ -131,6 +146,54 @@ unregisters, and something has to not mistake that for a deletion. 4.4 guards
 the pre-tag leak: 46 stale <code>added_by_server</code> entries after a single
 resync. 4.6 is the counterpart to 4.2 — the case that must <em>not</em> be
 ignored.</p>
+
+<h2 id="task-recurrence">5. Task recurrence</h2>
+<p>Needs the <strong>tasks</strong> grant; pass <code>resource: "tasks"</code>
+on the <code>items.*</code> verbs. Every rule goes in its own sync, so a
+rejection names the rule that caused it rather than the batch.</p>
+<p><code>[MS-ASTASK]</code> 2.2.2.31 qualifies each recurrence type with
+further elements — <code>DayOfWeek</code> for weekly, <code>DayOfMonth</code>
+for monthly, <code>DayOfMonth</code> + <code>MonthOfYear</code> for yearly,
+plus <code>WeekOfMonth</code> for the nth-weekday forms. Emit the type without
+them and the server rejects the whole <code>&lt;Add&gt;</code> with
+<strong>Status 6</strong>. Daily needs none, which is why it was the only
+recurring task that could be created until Aug 2026 — and why a green daily
+case proves almost nothing on its own.</p>
+<p>All rules use <code>DTSTART:20260901T080000Z</code>, deliberately: 1 Sep
+2026 is a <em>Tuesday</em> and the <em>1st</em> of month <em>9</em>, so each
+implied field has a value you can check by eye.</p>
+<table>
+  <tr><th>#</th><th>RRULE</th><th>Expect on the wire</th></tr>
+  <tr><td>5.1</td><td><code>FREQ=DAILY;COUNT=4</code></td><td><code>Type 0</code>, no qualifying element</td></tr>
+  <tr><td>5.2</td><td><code>FREQ=WEEKLY;COUNT=4</code></td><td><code>Type 1</code> + <code>DayOfWeek 4</code> — filled from DTSTART, which iCal leaves implicit and EAS will not</td></tr>
+  <tr><td>5.3</td><td><code>FREQ=WEEKLY;BYDAY=MO,WE;COUNT=4</code></td><td><code>Type 1</code> + <code>DayOfWeek 10</code> (2\|8)</td></tr>
+  <tr><td>5.4</td><td><code>FREQ=WEEKLY;INTERVAL=2;COUNT=4</code></td><td><code>Interval 2</code> survives</td></tr>
+  <tr><td>5.5</td><td><code>FREQ=MONTHLY;COUNT=4</code></td><td><code>Type 2</code> + <code>DayOfMonth 1</code></td></tr>
+  <tr><td>5.6</td><td><code>FREQ=MONTHLY;BYDAY=2TU;COUNT=4</code></td><td><code>Type 3</code> + <code>DayOfWeek</code> + <code>WeekOfMonth 2</code></td></tr>
+  <tr><td>5.7</td><td><code>FREQ=YEARLY;COUNT=4</code></td><td><code>Type 5</code> + <code>DayOfMonth 1</code> + <code>MonthOfYear 9</code></td></tr>
+  <tr><td>5.8</td><td><code>FREQ=YEARLY;BYDAY=1MO;BYMONTH=9;COUNT=4</code></td><td><code>Type 6</code> + <code>WeekOfMonth</code> as well</td></tr>
+  <tr><td>5.9</td><td><code>FREQ=DAILY;UNTIL=20261001T000000Z</code></td><td><code>Until</code> instead of <code>Occurrences</code></td></tr>
+  <tr><td>5.10</td><td>push all nine, then a <strong>clean pull</strong></td><td>each rule comes back semantically unchanged</td></tr>
+</table>
+<p>Pass for 5.1–5.9 is the folder staying <code>success</code> with no rejection
+warning and the changelog emptying. A rejected rule does not merely fail: it is
+re-staged and retried on <em>every</em> subsequent sync, so the folder sits at
+<code>warning</code> until the task is deleted. Delete the probe before moving
+on, or the next case inherits the failure.</p>
+<div class="note"><strong>5.10 is the step that matters</strong>, and the one
+that found a real bug. The rules come back with their implied fields made
+explicit — <code>FREQ=WEEKLY</code> returns as
+<code>FREQ=WEEKLY;BYDAY=TU</code>, <code>FREQ=YEARLY</code> as
+<code>FREQ=YEARLY;BYMONTHDAY=1;BYMONTH=9</code> — which is correct and is
+exactly what the qualifying elements are for. What is <em>not</em> correct is
+anything else changing: 5.9 used to return
+<code>UNTIL=20261001T000000</code>, having lost its <code>Z</code> and become
+a floating time, which RFC 5545 forbids beside a UTC DTSTART.
+
+<p><strong>Match by <code>SUMMARY</code>, not UID.</strong> A clean pull mints
+a fresh UID for every task, because <code>[MS-ASTASK]</code> has no UID element
+for the server to have stored. Identity is not stable across a resync for
+tasks, unlike events.</p></div>
 
 <h1 id="ui-part">Part 2 — needs a human at the UI</h1>
 
