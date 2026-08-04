@@ -155,7 +155,16 @@ export function easToRrule(recNode) {
   const occ = readPathFrom(recNode, ["Occurrences"]);
   if (occ) parts.push(`COUNT=${occ}`);
   const until = readPathFrom(recNode, ["Until"]);
-  if (until) parts.push(`UNTIL=${until.replace(/[-:]/g, "")}`);
+  // Both EAS date shapes reach here, because this is shared: an event's
+  // `Until` is compact basic (20261001T000000Z) and needs nothing removed,
+  // while a task's is extended with milliseconds
+  // (2026-10-01T00:00:00.000Z). iCal's DATE-TIME has no fractional part, so
+  // the fraction has to go along with the separators - dropping only the
+  // separators left `20261001T000000.000Z`, which ICAL.js does not accept and
+  // normalises by discarding the fraction *and* the `Z`. That silently turned
+  // a UTC UNTIL into a floating one, which RFC 5545 forbids next to a UTC
+  // DTSTART.
+  if (until) parts.push(`UNTIL=${until.replace(/[-:]|\.\d+/g, "")}`);
 
   return parts.join(";");
 }
