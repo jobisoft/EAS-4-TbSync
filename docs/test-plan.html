@@ -66,6 +66,21 @@ what the <em>server</em> holds is the actual question, finish with a <strong>cle
 pull</strong>: deselect the folder, reselect it, sync. That drops the local
 copy and re-fetches everything, which is the only way to see what was stored
 rather than what was sent.</p></div>
+
+<div class="note"><strong>After a clean pull, match items by
+<code>SUMMARY</code> — never by UID.</strong> Every item comes back with a
+freshly minted UID, so a script looking for the one it sent finds nothing and
+reports the item missing when it is sitting right there.
+
+<p>Two causes, same effect: <code>[MS-ASTASK]</code> has no UID element at all,
+and for events the UID is deliberately suppressed on 16.1. Either way the
+server never held ours, so the codec mints a new one on the way in. Only ≤14.x
+events keep theirs.</p>
+
+<p>This is also why identity across a resync is the <strong>ServerId</strong>
+and never the UID — what <code>indexMap</code> and the
+<code>X-EAS-SERVERID</code> stamp are for. Any check that assumes a stable UID
+is testing something the protocol does not promise.</p></div>
 <div class="note"><strong>End every bridge session by deselecting the
 authorized calendar, then reloading — in that order.</strong> Deselecting
 resets the folder's sync key so the next run starts fresh, and reloading
@@ -226,10 +241,7 @@ anything else changing: 5.9 used to return
 <code>UNTIL=20261001T000000</code>, having lost its <code>Z</code> and become
 a floating time, which RFC 5545 forbids beside a UTC DTSTART.
 
-<p><strong>Match by <code>SUMMARY</code>, not UID.</strong> A clean pull mints
-a fresh UID for every task, because <code>[MS-ASTASK]</code> has no UID element
-for the server to have stored. Identity is not stable across a resync for
-tasks, unlike events.</p></div>
+<p>Match by <code>SUMMARY</code>, not UID — see <em>Before you start</em>.</p></div>
 
 <h1 id="ui-part">Part 2 — needs a human at the UI</h1>
 
