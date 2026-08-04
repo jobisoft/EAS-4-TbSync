@@ -179,8 +179,30 @@ export async function removeMailingListMember(listId, contactId) {
   }
 }
 
-/** Match Thunderbird's "unknown id" errors - wording varies across versions. */
+/** True for Thunderbird's "there is no such id" error, and nothing else.
+ *
+ *  Matching on prose is not a choice we get to make: these APIs throw a bare
+ *  `ExtensionError`, and only its message survives the boundary - no code, no
+ *  name, no subclass. So the message is the whole signal.
+ *
+ *  What we can choose is to match it exactly. `ext-addressBook.js` raises this
+ *  from three places - `findAddressBookById`, `findMailingListById`,
+ *  `findContactById` - all with one shape, so the pattern is that shape and
+ *  not a bag of keywords. The previous `/no such|not found|invalid id/`
+ *  matched **none** of them (Thunderbird says "could *not be* found"), which
+ *  made every tolerant branch in this file throw instead of returning null.
+ *  That is how one mailing list could fail an entire contacts sync: the push
+ *  path already skips an item it cannot read, but the read threw before it
+ *  got the chance.
+ *
+ *  Erring tight is deliberate. Too loose swallows a real defect - "Invalid
+ *  vCard data", "The card's UID may not be changed", "Duplicate contact id"
+ *  are all our own bug, and losing them silently loses data. Too tight fails
+ *  a sync loudly, which is recoverable and gets reported. If a future
+ *  Thunderbird rewords this, we want the loud one. */
+const NOT_FOUND =
+  /^(addressBook|mailingList|contact) with id=.* could not be found\.$/;
+
 function isNotFoundError(err) {
-  const msg = String(err?.message ?? err ?? "");
-  return /no such|not found|invalid id/i.test(msg);
+  return NOT_FOUND.test(String(err?.message ?? err ?? ""));
 }

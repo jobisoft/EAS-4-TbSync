@@ -454,12 +454,42 @@ async function runOneSync({
   let pushed = { changedAnything: false };
   if (!effectiveDownloadOnly) {
     const changelog = Array.isArray(folder.changelog) ? folder.changelog : [];
-    const userEdits = changelog.filter(
+    const pending = changelog.filter(
       (e) =>
         e?.status === "added_by_user" ||
         e?.status === "modified_by_user" ||
         e?.status === "deleted_by_user",
     );
+    // ActiveSync has no mailing list: [MS-ASCNTC] describes a contact and
+    // nothing else, so a Thunderbird list in a synced book has nowhere to go.
+    // The host watches address books generically and queues one anyway, and
+    // handing it to the contact push path means `contacts.get` on a list id -
+    // which throws, fails the whole folder, and keeps failing until the list
+    // is deleted. Drop it here instead, and say so once, exactly as the
+    // legacy provider did.
+    //
+    // Every changelog row carries a `kind`, so this needs no fallback.
+    const userEdits = [];
+    for (const e of pending) {
+      if (e.kind !== ctx.itemKind.changelogKind) {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message:
+            `[${ctx.itemKind.changelogKind}-sync] skipping a ${e.kind} ` +
+            `("${e.itemId}"): ActiveSync cannot store one, so it stays local`,
+        });
+        await ctx.provider.changelogRemove({
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          parentId: e.parentId,
+          itemId: e.itemId,
+        });
+        continue;
+      }
+      userEdits.push(e);
+    }
     if (userEdits.length) {
       pushed = await pushPhase(ctx, userEdits);
       if (pushed.code) return await finishWith(ctx, pushed);
@@ -1155,6 +1185,30 @@ async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
   return (await retry(status)) ?? reject(status);
 }
 
+/** A queued edit that no sync can carry out, for the reason given. Skipping
+ *  such a row without removing it leaves it queued for good and the account
+ *  reported dirty forever, so it is retired here and said out loud.
+ *
+ *  Matches what the `deleted_by_user` branch already does for its own dead
+ *  end, so all three statuses behave alike: nothing is passed over in
+ *  silence. */
+async function dropUnsatisfiableEntry(ctx, entry, reason) {
+  ctx.provider.reportEventLog({
+    level: "warning",
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    message:
+      `[${ctx.itemKind.changelogKind}-sync] dropping a queued ` +
+      `${entry.status.replace("_by_user", "")} of "${entry.itemId}": ${reason}`,
+  });
+  await ctx.provider.changelogRemove({
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    parentId: entry.parentId,
+    itemId: entry.itemId,
+  });
+}
+
 async function buildPushBatch(ctx, slice) {
   const adds = [];
   const mods = [];
@@ -1162,16 +1216,49 @@ async function buildPushBatch(ctx, slice) {
   for (const entry of slice) {
     if (entry.status === "added_by_user") {
       const it = await ctx.store.get(entry.itemId);
-      if (!it?.blob) continue;
+      if (!it?.blob) {
+        await dropUnsatisfiableEntry(
+          ctx,
+          entry,
+          "there is no such local item, so nothing can be sent for it",
+        );
+        continue;
+      }
       const clientId = `c-${Date.now().toString(36)}-${adds.length}`;
       adds.push({ entry, clientId, item: it });
     } else if (entry.status === "modified_by_user") {
       const it = await ctx.store.get(entry.itemId);
-      if (!it?.blob) continue;
+      if (!it?.blob) {
+        await dropUnsatisfiableEntry(
+          ctx,
+          entry,
+          "there is no such local item, so nothing can be sent for it",
+        );
+        continue;
+      }
       const serverID =
         ctx.itemKind.codec.readEasServerIdFromBlob(it.blob) ??
         findServerIdByUid(ctx, entry.itemId);
-      if (!serverID) continue;
+      // The item is here, but neither its own stamp nor the indexMap can say
+      // what the server calls it, so a Change has no address to carry. Not
+      // something waiting to resolve itself: on an incremental sync the
+      // server sends nothing for an item it already has, so nothing will
+      // ever fill the gap. Same dead end the delete branch below describes,
+      // and it needs the same recovery - a syncKey reset, after which the
+      // server re-offers the item as an Add.
+      //
+      // Reaching it means the local item was never stamped: in practice a
+      // folder whose legacy upgrade did not finish. Ordinary edits cannot,
+      // since an add edited before it is pushed stays `added_by_user`.
+      if (!serverID) {
+        await dropUnsatisfiableEntry(
+          ctx,
+          entry,
+          "no ServerId in the item or the indexMap, so a change cannot be " +
+            "addressed - a syncKey reset is what recovers this",
+        );
+        continue;
+      }
       mods.push({ entry, serverID, item: it });
     } else if (entry.status === "deleted_by_user") {
       const serverID = findServerIdByUid(ctx, entry.itemId);
