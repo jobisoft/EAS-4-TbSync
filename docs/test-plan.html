@@ -150,22 +150,20 @@ all, so the fingerprint stays meaningful across the <code>items.update</code>
 path. What is still unmeasured is an edit made in Thunderbird's own event
 dialog, which builds the item itself rather than taking ours verbatim; that
 needs a human.</p>
-<div class="note"><strong>3.11 currently fails at the server.</strong> The
-selection is right — one instance command, for the edited occurrence, the other
-two correctly skipped — but Exchange answers <strong>Status 6</strong> and the
-folder ends the sync at <code>warning</code>:
+<div class="note"><strong>3.11 used to fail, and is worth keeping for what it
+caught.</strong> The selection was always right — one instance command, for the
+edited occurrence — but Exchange answered <strong>Status 6</strong> and the
+edit never reached the server. The instance payload carried a
+<code>TimeZone</code>, which describes the series and is not among an
+<code>Exception</code>'s children in <code>[MS-ASCAL]</code> §2.2.2.21. Fixed;
+the element is now suppressed for exceptions in every version.
 
-<p><code>[event-sync] server rejected instance change 20260921T090000Z …
-(Status 6)</code></p>
-
-<p>The payload looks well-formed — <code>ServerId</code> +
-<code>airsyncbase:InstanceId</code> + <code>ApplicationData</code>, one command
-in its own request. What differs from 3.4 is that the master
-<code>&lt;Change&gt;</code> goes in the same sync, immediately before it, since
-editing an override rewrites the whole local item. Whether that is what the
-server objects to is unestablished. Not a regression from the recurrence work:
-the instance payload carries no <code>&lt;Recurrence&gt;</code>, and the
-master's is byte-identical to before that change.</p></div>
+<p>It also has to be checked <em>against the server</em>, not against the local
+copy. After the edit syncs, deselect the calendar, reselect it and resync, then
+read the occurrence. A settle sync only shows that nothing overwrote the local
+item — it cannot tell that apart from the server having stored the edit, which
+is exactly the distinction that matters when the failure mode is a silent
+drop.</p></div>
 
 <h2 id="provider-calendar">4. Provider-backed calendar</h2>
 <table>
