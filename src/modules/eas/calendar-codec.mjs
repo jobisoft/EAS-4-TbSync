@@ -616,9 +616,10 @@ export function appendApplicationDataFromIcal({
   //    plausible, and wrong. Exchange rejects the command outright with
   //    Status 6, "malformed or invalid item", which [MS-ASCMD] marks not
   //    transient and tells the client to stop sending. Removing this one
-  //    element is the whole difference between test-plan 3.4 failing and
-  //    passing; the payloads are otherwise byte-identical to the ones the
-  //    server accepts when the same exceptions are first created.
+  //    element is the whole difference between test 3.4 failing and passing
+  //    (`test/test_3_recurrence.py`); the payloads are otherwise
+  //    byte-identical to the ones the server accepts when the same
+  //    exceptions are first created.
   //  - an all-day event on 16.1. [MS-ASCAL] §2.2.2.1 is explicit: with
   //    AllDayEvent set to 1 the client "MUST NOT include the TimeZone
   //    element", and the server will not send one either - "a client

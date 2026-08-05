@@ -8,7 +8,7 @@ protocol reading and debugging.
 | --- | --- |
 | [**How things work**](descriptions.html) | Descriptions of the provider's mechanisms, and why each is built the way it is. |
 | [**Todos**](todos.html) | What is outstanding, with what is understood about each so far. |
-| [**Test plan**](test-plan.html) | What to check before a release, and how. |
+| [**Manual test plan**](manual-test-plan.html) | What a person has to check before a release. The bridge-runnable half is `test/`, run with `npm test`. |
 
 The host's own notes, including the bridge these tests are driven from, are at
 [TbSync](https://jobisoft.github.io/TbSync/).
