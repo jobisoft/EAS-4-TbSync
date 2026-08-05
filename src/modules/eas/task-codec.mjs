@@ -267,11 +267,23 @@ export function appendApplicationDataFromIcal({
     builder.atag("Categories");
   }
 
-  // Recurrence outbound (RRULE only; tasks have no exceptions). Need a
-  // localStart to put inside <Start> per legacy.
+  // Recurrence outbound (RRULE only; tasks have no exceptions). The
+  // anchor `<Start>` carries: on ≤14.x the real UTC instant, on 16.x the
+  // fake-local form legacy has always sent - see `appendRecurrence`.
   if (syncRecurrence && localStart) {
     const rrule = vtodo.getFirstProperty("rrule");
-    if (rrule) appendRecurrence(builder, rrule, startProp, localStart);
+    const utcStart = startProp
+      ? toExtendedIsoUtc(startProp.getFirstValue())
+      : null;
+    if (rrule)
+      appendRecurrence(
+        builder,
+        rrule,
+        startProp,
+        localStart,
+        utcStart,
+        asVersion,
+      );
   }
 
   // Complete.
@@ -477,15 +489,42 @@ function appendBody(builder, vtodo, asVersion) {
  *  StartTime - and `Until` uses this codec's own formatter. Everything else is
  *  in the same relative order as the calendar codec, which the server accepts.
  *
+ *  **`<Start>` on ≤14.x is a real UTC instant, not the fake-local form used
+ *  for `StartDate`/`DueDate`.** Exchange 14.1 derives the stored
+ *  `UtcStartDate` of a *recurring* task from this element and reads it as
+ *  UTC, so sending local wall-clock numerals moved every recurring task by
+ *  the sender's offset: a task at 08:00Z came back at 10:00Z in Europe/Berlin,
+ *  and again on each round trip's worth of edits. Measured by making the three
+ *  values disagree - `UtcStartDate` 08:00Z, `StartDate` 10:00, `Start` 08:00Z -
+ *  and observing the task return at 08:00Z; with `Start` at 10:00 it returned
+ *  at 10:00Z. A non-recurring task was never affected, since it sends no
+ *  `<Start>` and the server then keeps `UtcStartDate` verbatim.
+ *
+ *  **16.x keeps the legacy fake-local value, and must.** The same round trip
+ *  on an Office 365 16.1 account returns `DTSTART` 08:00Z and `DUE` 09:00Z
+ *  untouched for all nine recurrence types, so 16.1 reads `<Start>` the way
+ *  legacy always assumed. The two servers genuinely disagree about this
+ *  element; sending the real UTC instant to both would move a currently
+ *  correct round trip rather than fix a second broken one.
+ *
  *  Not emitted: `Regenerate` and `DeadOccur` (we never regenerate a task), and
  *  `CalendarType` (this server takes monthly and yearly *events* without it). */
-function appendRecurrence(builder, rruleProp, startProp, localStart) {
+function appendRecurrence(
+  builder,
+  rruleProp,
+  startProp,
+  localStart,
+  utcStart,
+  asVersion,
+) {
   const rec = rruleToEas(rruleProp, startProp);
   if (!rec) return;
 
+  const legacy = !String(asVersion ?? "").startsWith("16.");
+
   builder.otag("Recurrence");
   builder.atag("Type", String(rec.type));
-  builder.atag("Start", localStart);
+  builder.atag("Start", legacy && utcStart ? utcStart : localStart);
   if (rec.dayOfMonth !== null) {
     builder.atag("DayOfMonth", String(rec.dayOfMonth));
   }
