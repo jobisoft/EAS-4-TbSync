@@ -123,7 +123,7 @@
     "message": "Ange server-URL."
   },
   "setup.error.serverInvalid": {
-    "message": "Oanvändbar server-URL: $URL$ — den måste börja med https:// eller http:// (eller vara enbart ett värdnamn) och får inte innehålla användarnamn, lösenord, frågesträng eller fragment. Exempel: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Oanvändbar server-URL: $URL$. Den måste börja med https:// eller http:// (eller vara enbart ett värdnamn) och får inte innehålla användarnamn, lösenord, frågesträng eller fragment. Exempel: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Tvinga provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Vissa servrar (t.ex. Kerio) kräver att provisioning skickas innan något annat kommando. De flesta servrar - inklusive Microsoft Exchange och Microsoft 365 - begär det automatiskt vid behov; du behöver inte aktivera detta manuellt för dem."
+    "message": "Vissa servrar (t.ex. Kerio) kräver att provisioning skickas innan något annat kommando. De flesta servrar - inklusive Microsoft Exchange och Microsoft 365 - begär det automatiskt vid behov. Du behöver inte aktivera detta manuellt för dem."
   },
   "config.contacts.displayOverride": {
     "message": "Åsidosätt visningsnamnet med \"Förnamn\" + \"Efternamn\""
@@ -321,7 +321,7 @@
     "message": "Objekt per synkroniseringsbatch"
   },
   "options.maxitems.hint": {
-    "message": "Maximalt antal objekt som servern får returnera per synkroniseringsförfrågan (EAS WindowSize). Större värden synkroniserar snabbare på stabila anslutningar; mindre värden är mer pålitliga på instabila och använder mindre minne. Standard: 25."
+    "message": "Maximalt antal objekt som servern får returnera per synkroniseringsförfrågan (EAS WindowSize). Större värden synkroniserar snabbare på stabila anslutningar, mindre värden är mer pålitliga på instabila och använder mindre minne. Standard: 25."
   },
   "options.mstodo": {
     "message": "Kompatibilitetsläge för Microsoft To Do"

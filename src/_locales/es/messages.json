@@ -123,7 +123,7 @@
     "message": "Introduzca la URL del servidor."
   },
   "setup.error.serverInvalid": {
-    "message": "URL del servidor no utilizable: $URL$ — debe empezar por https:// o http:// (o ser un nombre de host simple) y no debe contener nombre de usuario, contraseña, cadena de consulta ni fragmento. Ejemplo: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "URL del servidor no utilizable: $URL$. Debe empezar por https:// o http:// (o ser un nombre de host simple) y no debe contener nombre de usuario, contraseña, cadena de consulta ni fragmento. Ejemplo: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Forzar el aprovisionamiento"
   },
   "config.protocol.provision.hint": {
-    "message": "Algunos servidores (p. ej. Kerio) exigen enviar el aprovisionamiento antes de cualquier otra orden. La mayoría de servidores -incluidos Microsoft Exchange y Microsoft 365- lo solicitan automáticamente cuando es necesario; no es necesario activarlo manualmente para ellos."
+    "message": "Algunos servidores (p. ej. Kerio) exigen enviar el aprovisionamiento antes de cualquier otra orden. La mayoría de servidores -incluidos Microsoft Exchange y Microsoft 365- lo solicitan automáticamente cuando es necesario. No es necesario activarlo manualmente para ellos."
   },
   "config.contacts.displayOverride": {
     "message": "Reemplazar el nombre mostrado por «Nombre» + «Apellidos»"
@@ -321,7 +321,7 @@
     "message": "Elementos por lote de sincronización"
   },
   "options.maxitems.hint": {
-    "message": "Número máximo de elementos que el servidor puede devolver por solicitud de sincronización (el WindowSize de EAS). Valores mayores sincronizan más rápido en conexiones estables; valores menores son más fiables en conexiones inestables y consumen menos memoria. Predeterminado: 25."
+    "message": "Número máximo de elementos que el servidor puede devolver por solicitud de sincronización (el WindowSize de EAS). Valores mayores sincronizan más rápido en conexiones estables, valores menores son más fiables en conexiones inestables y consumen menos memoria. Predeterminado: 25."
   },
   "options.mstodo": {
     "message": "Modo de compatibilidad con Microsoft To Do"

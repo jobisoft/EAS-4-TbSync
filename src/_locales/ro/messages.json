@@ -123,7 +123,7 @@
     "message": "Introdu URL-ul serverului."
   },
   "setup.error.serverInvalid": {
-    "message": "URL de server inutilizabil: $URL$ — trebuie să înceapă cu https:// sau http:// (ori să fie doar un nume de gazdă) și nu trebuie să conțină nume de utilizator, parolă, șir de interogare sau fragment. Exemplu: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "URL de server inutilizabil: $URL$. Trebuie să înceapă cu https:// sau http:// (ori să fie doar un nume de gazdă) și nu trebuie să conțină nume de utilizator, parolă, șir de interogare sau fragment. Exemplu: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Forțează provisioning-ul"
   },
   "config.protocol.provision.hint": {
-    "message": "Unele servere (ex. Kerio) cer ca provisioning-ul să fie trimis înaintea oricărei alte comenzi. Majoritatea serverelor - inclusiv Microsoft Exchange și Microsoft 365 - îl solicită automat când e nevoie; nu trebuie să-l activezi manual pentru acestea."
+    "message": "Unele servere (ex. Kerio) cer ca provisioning-ul să fie trimis înaintea oricărei alte comenzi. Majoritatea serverelor - inclusiv Microsoft Exchange și Microsoft 365 - îl solicită automat când e nevoie. Nu trebuie să-l activezi manual pentru acestea."
   },
   "config.contacts.displayOverride": {
     "message": "Suprascrie numele afișat cu „Prenume” + „Nume”"
@@ -321,7 +321,7 @@
     "message": "Elemente per lot de sincronizare"
   },
   "options.maxitems.hint": {
-    "message": "Numărul maxim de elemente pe care serverul le poate returna pentru o cerere de sincronizare (EAS WindowSize). Valorile mai mari sincronizează mai rapid pe conexiuni stabile; cele mai mici sunt mai fiabile pe conexiuni instabile și folosesc mai puțină memorie. Implicit: 25."
+    "message": "Numărul maxim de elemente pe care serverul le poate returna pentru o cerere de sincronizare (EAS WindowSize). Valorile mai mari sincronizează mai rapid pe conexiuni stabile, cele mai mici sunt mai fiabile pe conexiuni instabile și folosesc mai puțină memorie. Implicit: 25."
   },
   "options.mstodo": {
     "message": "Mod de compatibilitate Microsoft To Do"

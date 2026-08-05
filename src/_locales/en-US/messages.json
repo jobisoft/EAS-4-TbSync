@@ -123,7 +123,7 @@
     "message": "Please enter the server URL."
   },
   "setup.error.serverInvalid": {
-    "message": "Not a usable server URL: $URL$ — it must start with https:// or http:// (or be a plain host name) and must not contain a user name, password, query string or fragment. Example: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Not a usable server URL: $URL$. It must start with https:// or http:// (or be a plain host name) and must not contain a user name, password, query string or fragment. Example: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Enforce provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Some servers (e.g. Kerio) require provisioning to be sent before any other command. Most servers - including Microsoft Exchange and Microsoft 365 - request it automatically when needed; you do not need to enable this manually for them."
+    "message": "Some servers (e.g. Kerio) require provisioning to be sent before any other command. Most servers - including Microsoft Exchange and Microsoft 365 - request it automatically when needed. You do not need to enable this manually for them."
   },
   "config.contacts.displayOverride": {
     "message": "Override Display Name with \"First Name\" + \"Second Name\""

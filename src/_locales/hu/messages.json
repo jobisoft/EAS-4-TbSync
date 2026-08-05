@@ -123,7 +123,7 @@
     "message": "Adja meg a kiszolgáló URL-címét."
   },
   "setup.error.serverInvalid": {
-    "message": "Nem használható kiszolgáló URL-cím: $URL$ — https:// vagy http:// előtaggal kell kezdődnie (vagy egyszerű gépnévnek kell lennie), és nem tartalmazhat felhasználónevet, jelszót, lekérdezési karakterláncot vagy fragmentumot. Példa: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Nem használható kiszolgáló URL-cím: $URL$. A címnek https:// vagy http:// előtaggal kell kezdődnie (vagy egyszerű gépnévnek kell lennie), és nem tartalmazhat felhasználónevet, jelszót, lekérdezési karakterláncot vagy fragmentumot. Példa: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Provisioning kényszerítése"
   },
   "config.protocol.provision.hint": {
-    "message": "Egyes kiszolgálók (pl. Kerio) megkövetelik, hogy a provisioning más parancs előtt érkezzen meg. A legtöbb kiszolgáló - köztük a Microsoft Exchange és a Microsoft 365 - automatikusan kéri, ha szükséges; ezeknél nem kell kézzel bekapcsolni ezt a beállítást."
+    "message": "Egyes kiszolgálók (pl. Kerio) megkövetelik, hogy a provisioning más parancs előtt érkezzen meg. A legtöbb kiszolgáló - köztük a Microsoft Exchange és a Microsoft 365 - automatikusan kéri, ha szükséges. Ezeknél nem kell kézzel bekapcsolni ezt a beállítást."
   },
   "config.contacts.displayOverride": {
     "message": "A megjelenített név felülírása ezzel: „Keresztnév” + „Vezetéknév”"
@@ -321,7 +321,7 @@
     "message": "Elem szinkronizációs kötegenként"
   },
   "options.maxitems.hint": {
-    "message": "Az elemek maximális száma, amelyet a kiszolgáló egy szinkronizációs kérésre visszaadhat (az EAS WindowSize értéke). A nagyobb értékek stabil kapcsolaton gyorsabban szinkronizálnak; a kisebbek megbízhatóbbak instabil kapcsolaton, és kevesebb memóriát használnak. Alapértelmezett: 25."
+    "message": "Az elemek maximális száma, amelyet a kiszolgáló egy szinkronizációs kérésre visszaadhat (az EAS WindowSize értéke). A nagyobb értékek stabil kapcsolaton gyorsabban szinkronizálnak, a kisebbek megbízhatóbbak instabil kapcsolaton, és kevesebb memóriát használnak. Alapértelmezett: 25."
   },
   "options.mstodo": {
     "message": "Microsoft To Do kompatibilitási mód"

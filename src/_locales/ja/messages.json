@@ -123,7 +123,7 @@
     "message": "サーバー URL を入力してください。"
   },
   "setup.error.serverInvalid": {
-    "message": "使用できないサーバー URL です: $URL$ — https:// または http:// で始まる (もしくはホスト名のみである) 必要があり、ユーザー名、パスワード、クエリ文字列、フラグメントを含めることはできません。例: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "使用できないサーバー URL です: $URL$。https:// または http:// で始まる (もしくはホスト名のみである) 必要があり、ユーザー名、パスワード、クエリ文字列、フラグメントを含めることはできません。例: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",

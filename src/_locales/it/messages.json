@@ -123,7 +123,7 @@
     "message": "Inserisci l’URL del server."
   },
   "setup.error.serverInvalid": {
-    "message": "URL del server non utilizzabile: $URL$ — deve iniziare con https:// o http:// (o essere un semplice nome host) e non deve contenere nome utente, password, stringa di query o frammento. Esempio: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "URL del server non utilizzabile: $URL$. Deve iniziare con https:// o http:// (o essere un semplice nome host) e non deve contenere nome utente, password, stringa di query o frammento. Esempio: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Forza il provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Alcuni server (es. Kerio) richiedono che il provisioning venga inviato prima di qualsiasi altro comando. La maggior parte dei server - inclusi Microsoft Exchange e Microsoft 365 - lo richiede automaticamente quando serve; non è necessario abilitarlo manualmente per essi."
+    "message": "Alcuni server (es. Kerio) richiedono che il provisioning venga inviato prima di qualsiasi altro comando. La maggior parte dei server - inclusi Microsoft Exchange e Microsoft 365 - lo richiede automaticamente quando serve. Non è necessario abilitarlo manualmente per essi."
   },
   "config.contacts.displayOverride": {
     "message": "Sovrascrivi il nome visualizzato con «Nome» + «Cognome»"
@@ -321,7 +321,7 @@
     "message": "Elementi per lotto di sincronizzazione"
   },
   "options.maxitems.hint": {
-    "message": "Numero massimo di elementi che il server può restituire per richiesta di sincronizzazione (la WindowSize EAS). Valori più alti sincronizzano più velocemente su connessioni stabili; valori più bassi sono più affidabili su connessioni instabili e usano meno memoria. Predefinito: 25."
+    "message": "Numero massimo di elementi che il server può restituire per richiesta di sincronizzazione (la WindowSize EAS). Valori più alti sincronizzano più velocemente su connessioni stabili, valori più bassi sono più affidabili su connessioni instabili e usano meno memoria. Predefinito: 25."
   },
   "options.mstodo": {
     "message": "Modalità di compatibilità con Microsoft To Do"

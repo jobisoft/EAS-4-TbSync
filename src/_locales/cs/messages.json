@@ -123,7 +123,7 @@
     "message": "Zadejte URL serveru."
   },
   "setup.error.serverInvalid": {
-    "message": "Nepoužitelné URL serveru: $URL$ — musí začínat https:// nebo http:// (nebo být pouhým názvem hostitele) a nesmí obsahovat uživatelské jméno, heslo, dotaz ani fragment. Příklad: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Nepoužitelné URL serveru: $URL$. Musí začínat https:// nebo http:// (nebo být pouhým názvem hostitele) a nesmí obsahovat uživatelské jméno, heslo, dotaz ani fragment. Příklad: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Vynutit provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Některé servery (např. Kerio) vyžadují, aby provisioning byl odeslán před jakýmkoli jiným příkazem. Většina serverů - včetně Microsoft Exchange a Microsoft 365 - si o něj automaticky řekne, když je třeba; u nich nemusíte tuto volbu zapínat ručně."
+    "message": "Některé servery (např. Kerio) vyžadují, aby provisioning byl odeslán před jakýmkoli jiným příkazem. Většina serverů - včetně Microsoft Exchange a Microsoft 365 - si o něj automaticky řekne, když je třeba. U nich nemusíte tuto volbu zapínat ručně."
   },
   "config.contacts.displayOverride": {
     "message": "Přepsat zobrazované jméno tvarem „Křestní jméno“ + „Příjmení“"
@@ -321,7 +321,7 @@
     "message": "Položek na dávku synchronizace"
   },
   "options.maxitems.hint": {
-    "message": "Maximální počet položek, které server může vrátit na jeden synchronizační požadavek (EAS WindowSize). Vyšší hodnoty zrychlují synchronizaci na stabilních připojeních; nižší hodnoty jsou spolehlivější na nestabilních a využívají méně paměti. Výchozí: 25."
+    "message": "Maximální počet položek, které server může vrátit na jeden synchronizační požadavek (EAS WindowSize). Vyšší hodnoty zrychlují synchronizaci na stabilních připojeních, nižší hodnoty jsou spolehlivější na nestabilních a využívají méně paměti. Výchozí: 25."
   },
   "options.mstodo": {
     "message": "Režim kompatibility s Microsoft To Do"

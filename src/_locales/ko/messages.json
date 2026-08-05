@@ -123,7 +123,7 @@
     "message": "서버 URL을 입력하세요."
   },
   "setup.error.serverInvalid": {
-    "message": "사용할 수 없는 서버 URL입니다: $URL$ — https:// 또는 http://로 시작하거나 호스트 이름만 입력해야 하며, 사용자 이름, 비밀번호, 쿼리 문자열, 프래그먼트를 포함할 수 없습니다. 예: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "사용할 수 없는 서버 URL입니다: $URL$. https:// 또는 http://로 시작하거나 호스트 이름만 입력해야 하며, 사용자 이름, 비밀번호, 쿼리 문자열, 프래그먼트를 포함할 수 없습니다. 예: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",

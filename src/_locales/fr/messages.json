@@ -123,7 +123,7 @@
     "message": "Veuillez saisir l’URL du serveur."
   },
   "setup.error.serverInvalid": {
-    "message": "URL du serveur inutilisable : $URL$ — elle doit commencer par https:// ou http:// (ou être un simple nom d’hôte) et ne doit contenir ni nom d’utilisateur, ni mot de passe, ni chaîne de requête, ni fragment. Exemple : https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "URL du serveur inutilisable : $URL$. Elle doit commencer par https:// ou http:// (ou être un simple nom d’hôte) et ne doit contenir ni nom d’utilisateur, ni mot de passe, ni chaîne de requête, ni fragment. Exemple : https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Forcer le provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Certains serveurs (par ex. Kerio) exigent l’envoi du provisioning avant toute autre commande. La plupart des serveurs - y compris Microsoft Exchange et Microsoft 365 - le demandent automatiquement quand c’est nécessaire ; vous n’avez pas besoin d’activer cette option manuellement pour eux."
+    "message": "Certains serveurs (par ex. Kerio) exigent l’envoi du provisioning avant toute autre commande. La plupart des serveurs - y compris Microsoft Exchange et Microsoft 365 - le demandent automatiquement quand c’est nécessaire. Vous n’avez pas besoin d’activer cette option manuellement pour eux."
   },
   "config.contacts.displayOverride": {
     "message": "Remplacer le nom affiché par « Prénom » + « Nom »"
@@ -273,7 +273,7 @@
     "message": "Ajoute un carnet d’adresses par compte qui est rempli à la volée lorsque vous tapez une requête dans la zone de recherche du carnet d’adresses de Thunderbird. Rien n’est téléchargé ni stocké localement : chaque recherche interroge le serveur."
   },
   "config.gal.notSupported": {
-    "message": "Votre serveur n’annonce pas la commande Search ; la liste d’adresses globale n’est donc pas disponible pour ce compte."
+    "message": "Votre serveur n’annonce pas la commande Search, la liste d’adresses globale n’est donc pas disponible pour ce compte."
   },
   "config.error.invalidAsVersion": {
     "message": "Version ActiveSync sélectionnée non valide."
@@ -321,13 +321,13 @@
     "message": "Éléments par lot de synchronisation"
   },
   "options.maxitems.hint": {
-    "message": "Nombre maximal d’éléments que le serveur peut renvoyer par requête de synchronisation (la WindowSize EAS). Des valeurs plus grandes synchronisent plus rapidement sur des connexions saines ; des valeurs plus petites sont plus fiables sur des connexions instables et utilisent moins de mémoire. Par défaut : 25."
+    "message": "Nombre maximal d’éléments que le serveur peut renvoyer par requête de synchronisation (la WindowSize EAS). Des valeurs plus grandes synchronisent plus rapidement sur des connexions saines, des valeurs plus petites sont plus fiables sur des connexions instables et utilisent moins de mémoire. Par défaut : 25."
   },
   "options.mstodo": {
     "message": "Mode de compatibilité Microsoft To Do"
   },
   "options.mstodo.hint": {
-    "message": "Microsoft To Do publie les tâches avec une date d’échéance sans heure et sans date de début ; les rappels apparaissent donc à minuit dans Lightning. Lorsque cette option est activée, une tâche entrante avec un rappel est réécrite pour que ses dates de début et d’échéance soient égales à l’heure du rappel, et le rappel se déclenche exactement lorsque la tâche est due. Activez cette option uniquement lors de la synchronisation avec Microsoft To Do."
+    "message": "Microsoft To Do publie les tâches avec une date d’échéance sans heure et sans date de début, les rappels apparaissent donc à minuit dans Lightning. Lorsque cette option est activée, une tâche entrante avec un rappel est réécrite pour que ses dates de début et d’échéance soient égales à l’heure du rappel, et le rappel se déclenche exactement lorsque la tâche est due. Activez cette option uniquement lors de la synchronisation avec Microsoft To Do."
   },
   "options.showItemsInTrash": {
     "message": "Afficher les éléments des dossiers Corbeille"

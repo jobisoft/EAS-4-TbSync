@@ -123,7 +123,7 @@
     "message": "Wprowadź adres URL serwera."
   },
   "setup.error.serverInvalid": {
-    "message": "Nieprawidłowy adres URL serwera: $URL$ — musi zaczynać się od https:// lub http:// (albo być samą nazwą hosta) i nie może zawierać nazwy użytkownika, hasła, ciągu zapytania ani fragmentu. Przykład: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Nieprawidłowy adres URL serwera: $URL$. Musi zaczynać się od https:// lub http:// (albo być samą nazwą hosta) i nie może zawierać nazwy użytkownika, hasła, ciągu zapytania ani fragmentu. Przykład: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Wymuś provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Niektóre serwery (np. Kerio) wymagają wysłania provisioningu przed jakimkolwiek innym poleceniem. Większość serwerów - w tym Microsoft Exchange i Microsoft 365 - żąda go automatycznie, gdy jest potrzebny; dla nich nie trzeba włączać tej opcji ręcznie."
+    "message": "Niektóre serwery (np. Kerio) wymagają wysłania provisioningu przed jakimkolwiek innym poleceniem. Większość serwerów - w tym Microsoft Exchange i Microsoft 365 - żąda go automatycznie, gdy jest potrzebny. Dla nich nie trzeba włączać tej opcji ręcznie."
   },
   "config.contacts.displayOverride": {
     "message": "Zastąp wyświetlaną nazwę formą „Imię” + „Nazwisko”"
@@ -321,7 +321,7 @@
     "message": "Elementy na partię synchronizacji"
   },
   "options.maxitems.hint": {
-    "message": "Maksymalna liczba elementów, które serwer może zwrócić w jednym żądaniu synchronizacji (EAS WindowSize). Większe wartości synchronizują się szybciej przy stabilnych połączeniach; mniejsze są bardziej niezawodne przy słabych i zużywają mniej pamięci. Domyślnie: 25."
+    "message": "Maksymalna liczba elementów, które serwer może zwrócić w jednym żądaniu synchronizacji (EAS WindowSize). Większe wartości synchronizują się szybciej przy stabilnych połączeniach, mniejsze są bardziej niezawodne przy słabych i zużywają mniej pamięci. Domyślnie: 25."
   },
   "options.mstodo": {
     "message": "Tryb zgodności z Microsoft To Do"

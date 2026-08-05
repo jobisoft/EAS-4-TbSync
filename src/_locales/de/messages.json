@@ -123,7 +123,7 @@
     "message": "Bitte geben Sie die Server-URL ein."
   },
   "setup.error.serverInvalid": {
-    "message": "Keine verwendbare Server-URL: $URL$ — sie muss mit https:// oder http:// beginnen (oder ein reiner Hostname sein) und darf keinen Benutzernamen, kein Passwort, keine Abfrageparameter und kein Fragment enthalten. Beispiel: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Keine verwendbare Server-URL: $URL$. Sie muss mit https:// oder http:// beginnen (oder ein reiner Hostname sein) und darf keinen Benutzernamen, kein Passwort, keine Abfrageparameter und kein Fragment enthalten. Beispiel: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,7 @@
     "message": "Provisionierung erzwingen"
   },
   "config.protocol.provision.hint": {
-    "message": "Einige Server (z. B. Kerio) verlangen, dass die Provisionierung vor allen anderen Befehlen gesendet wird. Die meisten Server - einschließlich Microsoft Exchange und Microsoft 365 - fordern sie bei Bedarf automatisch an; für diese müssen Sie diese Option nicht manuell aktivieren."
+    "message": "Einige Server (z. B. Kerio) verlangen, dass die Provisionierung vor allen anderen Befehlen gesendet wird. Die meisten Server - einschließlich Microsoft Exchange und Microsoft 365 - fordern sie bei Bedarf automatisch an. Für diese müssen Sie diese Option nicht manuell aktivieren."
   },
   "config.contacts.displayOverride": {
     "message": "Anzeigenamen mit „Vorname“ + „Nachname“ überschreiben"
@@ -321,7 +321,7 @@
     "message": "Elemente pro Synchronisationsschritt"
   },
   "options.maxitems.hint": {
-    "message": "Maximale Anzahl an Elementen, die der Server pro Synchronisationsanfrage zurückgeben darf (die EAS WindowSize). Größere Werte synchronisieren bei stabilen Verbindungen schneller; kleinere Werte sind bei unzuverlässigen Verbindungen robuster und benötigen weniger Speicher. Standard: 25."
+    "message": "Maximale Anzahl an Elementen, die der Server pro Synchronisationsanfrage zurückgeben darf (die EAS WindowSize). Größere Werte synchronisieren bei stabilen Verbindungen schneller, kleinere Werte sind bei unzuverlässigen Verbindungen robuster und benötigen weniger Speicher. Standard: 25."
   },
   "options.mstodo": {
     "message": "Microsoft-To-Do-Kompatibilitätsmodus"
