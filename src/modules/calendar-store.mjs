@@ -94,13 +94,30 @@ export async function pickCalendarColor() {
 }
 
 /**
- * Create a calendar of our own provider type. `kind` is "events" or
- * "tasks"; both live in one type, and the sync codec dispatch already
- * constrains what gets written, so a calendar accepting both is harmless.
+ * Create a calendar of our own provider type. `kind` is "events" or "tasks",
+ * and it decides what the calendar tells Thunderbird it can hold.
  *
- * Capabilities are declared once in the manifest rather than per calendar -
- * the Experiment only accepts them for a type the extension owns, and one
- * declaration for every EAS calendar is what we want anyway.
+ * An EAS folder stores one or the other, never both, and a calendar that
+ * claims both is offered wherever either is wanted: a Tasks-backed calendar
+ * turns up in the New Event dialog, a Calendar-backed one in the task
+ * pickers. Saving into the wrong one produces an item the folder's codec
+ * cannot express and the server predictably rejects.
+ *
+ * The provider as a whole still supports both - that stays declared in the
+ * manifest's `calendar_provider.capabilities`, and the Experiment merges the
+ * two as `{...manifestCapabilities, ...overrideCapabilities}`. So `mutable`
+ * and `requiresNetwork` keep coming from the manifest while `events` and
+ * `tasks` are decided here, per calendar.
+ *
+ * Note the names: the schema wants plain `capabilities.events` /
+ * `capabilities.tasks`. `capabilities.events.supported` is Thunderbird's
+ * internal property name, which the Experiment derives from these.
+ *
+ * This only governs what the calendar is *offered* for. The item API does
+ * not consult capabilities, so a programmatic write of the wrong type still
+ * lands; the push-side guard in `eas/sync-runner.mjs` is what stops one
+ * reaching the server.
+ *
  * Returns the new calendar id.
  */
 export async function createCalendar({ name, kind, color }) {
@@ -116,6 +133,10 @@ export async function createCalendar({ name, kind, color }) {
     name: name.trim(),
     type: PROVIDER_TYPE,
     url: PROVIDER_URL,
+    capabilities: {
+      events: kind === "events",
+      tasks: kind === "tasks",
+    },
   };
   if (color) props.color = color;
   const calendar = await messenger.calendar.calendars.create(props);
