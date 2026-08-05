@@ -209,27 +209,27 @@ function populateVeventFromAd({
   // always stores that form for all-day.
   //
   // The zone is still needed to *read* the boundary, though, and only
-  // then - which is what `fromBlob` selects. Exchange ≤14.x encodes an
-  // all-day boundary as midnight-in-zone expressed as UTC, so recovering
-  // the calendar date from `20230831T220000Z` needs the zone; it is then
-  // discarded. An all-day event on AS 16.1 carries no blob and needs no
-  // zone, because its wire value is already the date.
-  const { tzId, fromBlob } = resolveTimezone(adNode, defaultTimezone);
+  // then. Exchange ≤14.x encodes an all-day boundary as midnight-in-zone
+  // expressed as UTC, so recovering the calendar date from
+  // `20230831T220000Z` needs the zone; it is then discarded. An all-day
+  // event on AS 16.1 carries no blob and needs no zone, because its wire
+  // value is already the date. `writeDateProp` picks between the two on
+  // the shape of the value - see there for why the blob cannot decide it.
+  const { tzId } = resolveTimezone(adNode, defaultTimezone);
   const allDay = readPathFrom(adNode, ["AllDayEvent"]) === "1";
 
   // Start / End. EAS sends UTC strings; convert on the way in.
   const startUtc = readPathFrom(adNode, ["StartTime"]);
   const endUtc = readPathFrom(adNode, ["EndTime"]);
-  if (startUtc)
-    writeDateProp(vevent, "dtstart", startUtc, tzId, allDay, fromBlob);
-  if (endUtc) writeDateProp(vevent, "dtend", endUtc, tzId, allDay, fromBlob);
+  if (startUtc) writeDateProp(vevent, "dtstart", startUtc, tzId, allDay);
+  if (endUtc) writeDateProp(vevent, "dtend", endUtc, tzId, allDay);
 
   // DtStamp - preserve when present. A 16.x *client* MUST NOT send it
   // ([MS-ASCAL] §2.2.2.18), which is why the writer omits it there, but
   // the server does send it on 16.1 - observed on every item of an
   // Exchange Online initial sync.
   const dtStamp = readPathFrom(adNode, ["DtStamp"]);
-  if (dtStamp) writeDateProp(vevent, "dtstamp", dtStamp, "UTC", false, false);
+  if (dtStamp) writeDateProp(vevent, "dtstamp", dtStamp, "UTC", false);
 
   // BusyStatus → TRANSP. STATUS is computed below from BusyStatus +
   // MeetingStatus together (legacy calendarsync.js:235-265).
@@ -624,9 +624,7 @@ export function appendApplicationDataFromIcal({
   //    element", and the server will not send one either - "a client
   //    SHOULD interpret this event to be at the given date(s) regardless
   //    of the time zone used". That is the floating semantics iCalendar
-  //    gives a DATE value, so the two formats agree. Sending a blob would
-  //    also flip `fromBlob` on the echo, converting a value that has to
-  //    be read verbatim.
+  //    gives a DATE value, so the two formats agree.
   const floatingAllDay = allDay && asVersion === "16.1";
   if (!isException && !floatingAllDay) {
     const blob = buildTimezoneBlob(vevent, defaultTimezone);
@@ -870,16 +868,17 @@ export function stampEasServerId(ical, serverID) {
 
 /* ── Helpers: timezone resolution ──────────────────────────────────── */
 
-/** Resolve the effective IANA tzid for an inbound event and report
- *  whether it came from a real (non-empty) TimeZone blob. `fromBlob`
- *  drives the all-day boundary reading: a real blob means the server
- *  encoded all-day Start/End as midnight-in-zone-expressed-as-UTC (real
- *  Exchange ≤14.x), which must be converted back through the zone; a
- *  missing/empty blob (all-day events on AS 16.1, and
- *  Z-Push/Kopano/Grommunio, which send an all-zero blob) means the date
- *  is a literal "fake local as UTC" and must be read verbatim — see
- *  writeDateProp. Keyed on the item rather than the version: Exchange
- *  sends a blob on 16.1 for timed events. */
+/** Resolve the effective IANA tzid for an inbound event, falling back to
+ *  the host's default zone when the item carries no usable blob (all-day
+ *  events on AS 16.1, and Z-Push/Kopano/Grommunio, which send an all-zero
+ *  one). Keyed on the item rather than the version: Exchange sends a blob
+ *  on 16.1 for timed events.
+ *
+ *  `fromBlob` reports whether a real blob supplied the zone. It is no
+ *  longer what selects the all-day boundary encoding — Exchange 14.1 drops
+ *  the TimeZone element when echoing an all-day item back, so the flag
+ *  says "16.1-style" for a value that is not. `writeDateProp` decides on
+ *  the value instead. */
 function resolveTimezone(adNode, defaultTimezone) {
   const blobB64 = readPathFrom(adNode, ["TimeZone"]);
   if (!blobB64 || isAllZero(blobB64)) {
@@ -989,7 +988,7 @@ function pickSourceTzid(vevent) {
   return null;
 }
 
-function writeDateProp(vevent, name, easUtc, tzId, allDay, fromBlob) {
+function writeDateProp(vevent, name, easUtc, tzId, allDay) {
   // Replace any existing property of this name so merge-mode partial
   // Changes don't duplicate dtstart/dtend/dtstamp on the master.
   vevent.removeAllProperties(name);
@@ -998,23 +997,38 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay, fromBlob) {
     const d = parseEasUtc(easUtc);
     if (!d) return;
     // The calendar date of an all-day boundary depends on how the server
-    // encodes it. Real Exchange ≤14.x sends the midnight that begins the
-    // day in the event's TimeZone, expressed as UTC ([MS-ASCAL] §2.2.2.39);
-    // for a non-UTC zone that instant lands on the previous/next UTC
-    // calendar day, so taking getUTCDate() directly shifts the event by
-    // ±1 day. Convert into the resolved zone first and take the wall-clock
-    // date there. Items that carry NO real TimeZone blob — all-day events
-    // on AS 16.1, and Z-Push/Kopano/Grommunio (all-zero blob) — instead
-    // send a "fake local
-    // as UTC" YYYYMMDDT000000Z whose UTC date already IS the intended date
-    // (it mirrors what we emit outbound), so it must be read verbatim;
-    // converting it would shift the date by a day for users west of UTC.
-    // `fromBlob` is the discriminator: convert only when a real blob gave
-    // us the zone, otherwise read the UTC date verbatim.
+    // encodes it, and the two encodings in the wild are told apart by the
+    // value itself:
+    //
+    //  - "fake local as UTC", YYYYMMDDT000000Z. The UTC date already IS
+    //    the intended date. All-day events on AS 16.1 use it (§2.2.2.1
+    //    forbids a TimeZone element there), as do Z-Push/Kopano/Grommunio
+    //    (all-zero blob). It mirrors what `fakeLocalAsUtcDate` emits
+    //    outbound. Read verbatim - converting would shift the date by a
+    //    day for users west of UTC.
+    //
+    //  - midnight-in-zone expressed as UTC, e.g. 20261006T220000Z for the
+    //    7th in Europe/Berlin. Real Exchange ≤14.x uses this
+    //    ([MS-ASCAL] §2.2.2.39) and it is what `allDayMidnightUtc` emits.
+    //    For a non-UTC zone that instant lands on the previous/next UTC
+    //    calendar day, so getUTCDate() shifts the event by ±1 day; the
+    //    value has to be converted into the zone first.
+    //
+    // A midnight-UTC time-of-day is the discriminator, NOT the presence of
+    // a real TimeZone blob. Exchange 14.1 was measured echoing an all-day
+    // item back with StartTime 20261006T220000Z and no TimeZone element at
+    // all, having accepted exactly that value from us moments earlier: a
+    // blob-keyed test reads such an echo verbatim and moves every all-day
+    // event one day earlier on the next pull. The value cannot lie the same
+    // way - 220000Z is not a date-shaped value under any encoding.
     let year = d.getUTCFullYear();
     let month = d.getUTCMonth() + 1;
     let day = d.getUTCDate();
-    if (fromBlob && tzId && tzId !== "UTC") {
+    const midnightUtc =
+      d.getUTCHours() === 0 &&
+      d.getUTCMinutes() === 0 &&
+      d.getUTCSeconds() === 0;
+    if (!midnightUtc && tzId && tzId !== "UTC") {
       const zone = getIcalTimezone(tzId);
       if (zone) {
         const utc = new ICAL.Time({
