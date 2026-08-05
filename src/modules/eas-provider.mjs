@@ -457,12 +457,18 @@ export class EasProvider extends TbSyncProviderImplementation {
     if (folder.targetID) {
       await safeDeleteTarget(folder);
     }
+    // Clear the binding and the sync state, but keep `targetName` and
+    // `targetColor`. The calendar or book is gone, so the id and the sync
+    // position describe nothing and must not survive; the name and colour
+    // describe what the user *chose*, and enabling the resource again should
+    // give them back what they had rather than a freshly generated name and
+    // an arbitrary colour. Nothing else remembers: no ActiveSync folder
+    // element carries either, so clearing them here loses them for good.
     await this.updateFolder({
       accountId,
       folderId,
       patch: {
         targetID: null,
-        targetName: null,
         custom: { synckey: "0", indexMap: [] },
       },
     }).catch((err) =>
@@ -929,16 +935,28 @@ export class EasProvider extends TbSyncProviderImplementation {
           !(await calendarStore.calendarExists(folder.targetID))
         ) {
           const name = localNameForFolder(folder, ctx);
+          // The colour the user last gave this folder, or a fresh one from
+          // the palette. Written back either way, so an assigned colour is
+          // remembered from then on and the calendar keeps it through the
+          // next disable/enable.
+          const color =
+            folder.targetColor || (await calendarStore.pickCalendarColor());
           const targetID = await calendarStore.createCalendar({
             name,
             kind: tt === "calendars" ? "events" : "tasks",
+            color,
           });
           await this.updateFolder({
             accountId,
             folderId,
-            patch: { targetID, targetName: name },
+            patch: { targetID, targetName: name, targetColor: color },
           });
-          folder = { ...folder, targetID, targetName: name };
+          folder = {
+            ...folder,
+            targetID,
+            targetName: name,
+            targetColor: color,
+          };
         }
       }
 

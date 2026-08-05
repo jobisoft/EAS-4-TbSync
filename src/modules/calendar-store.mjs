@@ -28,6 +28,71 @@ export function cacheId(calendarId) {
 
 /* ── Calendar level ───────────────────────────────────────────────── */
 
+/** The palette a new calendar is coloured from, carried over verbatim from
+ *  v4 (`TbSync/content/modules/lightning.js`). Order matters: it is the
+ *  tie-break when several colours are equally unused. */
+const CALENDAR_PALETTE = [
+  "#3366CC",
+  "#DC3912",
+  "#FF9900",
+  "#109618",
+  "#990099",
+  "#3B3EAC",
+  "#0099C6",
+  "#DD4477",
+  "#66AA00",
+  "#B82E2E",
+  "#316395",
+  "#994499",
+  "#22AA99",
+  "#AAAA11",
+  "#6633CC",
+  "#E67300",
+  "#8B0707",
+  "#329262",
+  "#5574A6",
+  "#3B3EAC",
+];
+
+/**
+ * Choose the colour for a calendar we are about to create: the palette entry
+ * in least use across every calendar in the profile, ties going to the
+ * earliest in the list.
+ *
+ * Needed because nothing else will supply one. ActiveSync's folder hierarchy
+ * has no colour element in any protocol version, so the server cannot tell us
+ * what colour a calendar "is", and Thunderbird sets none of its own - a
+ * calendar created without this renders in the placeholder shade the calendar
+ * API substitutes for "no colour", making every EAS calendar look alike.
+ *
+ * Counts all calendars rather than only ours, as v4 did: the point is a colour
+ * that stands out in the user's calendar list, and the other entries in that
+ * list are just as much a part of it.
+ *
+ * Falls back to the head of the palette if the calendar list cannot be read -
+ * a colour we cannot justify is still better than failing the bind.
+ */
+export async function pickCalendarColor() {
+  let used = [];
+  try {
+    const all = await messenger.calendar.calendars.query({});
+    used = all.map((c) => (c?.color ?? "").toUpperCase());
+  } catch {
+    return CALENDAR_PALETTE[0];
+  }
+  let best = CALENDAR_PALETTE[0];
+  let bestCount = Infinity;
+  for (const color of CALENDAR_PALETTE) {
+    const count = used.filter((u) => u === color.toUpperCase()).length;
+    if (count < bestCount) {
+      bestCount = count;
+      best = color;
+      if (count === 0) break;
+    }
+  }
+  return best;
+}
+
 /**
  * Create a calendar of our own provider type. `kind` is "events" or
  * "tasks"; both live in one type, and the sync codec dispatch already

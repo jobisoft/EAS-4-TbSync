@@ -48,9 +48,13 @@
 import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
 
 /** Every folder of ours that is bound to a calendar, as
- *  `targetID -> {accountId, folderId, targetName}`. The host owns the folder
- *  table; this is a read of it, refreshed on demand rather than cached, since
- *  a target id changes whenever a folder is rebound. */
+ *  `targetID -> {accountId, folderId, targetName, targetColor}`. The host owns
+ *  the folder table; this is a read of it, refreshed on demand rather than
+ *  cached, since a target id changes whenever a folder is rebound.
+ *
+ *  The remembered name and colour ride along because the lifecycle listener
+ *  needs them to tell a real change from the platform re-announcing what we
+ *  already know. */
 async function ourTargets() {
   const out = new Map();
   if (!host) return out;
@@ -63,6 +67,7 @@ async function ourTargets() {
         accountId,
         folderId: f.folderId,
         targetName: f.targetName ?? null,
+        targetColor: f.targetColor ?? null,
       });
     }
   }
@@ -195,27 +200,49 @@ export function registerCalendarProvider() {
 }
 
 /**
- * The calendars we supply are ours to keep an eye on: a rename has to reach
- * the folder row the manager displays, and a deletion has to clear the
- * binding. The host cannot do either - it has no calendar API, and it could
- * not tell a deletion from our own extension restarting even if it had one.
+ * The calendars we supply are ours to keep an eye on: a rename or a recolour
+ * has to reach the folder row, and a deletion has to clear the binding. The
+ * host cannot do either - it has no calendar API, and it could not tell a
+ * deletion from our own extension restarting even if it had one.
+ *
+ * Name and colour are mirrored for the same reason: both outlive the calendar
+ * they describe. Disabling a resource deletes the calendar, so when the user
+ * enables it again the only record of what they had called it, and what colour
+ * they had given it, is the one kept here. Nothing can be recovered from the
+ * server - ActiveSync's folder hierarchy carries neither.
  */
 function registerTargetLifecycle() {
   messenger.calendar.calendars.onUpdated.addListener(
     async (calendar, changes) => {
-      if (!changes || !("name" in changes)) return;
+      if (!changes) return;
+      const renamed = "name" in changes;
+      const recoloured = "color" in changes;
+      if (!renamed && !recoloured) return;
       const mine = (await ourTargets()).get(calendar?.id);
-      if (!mine || mine.targetName === changes.name) return;
+      if (!mine) return;
+
+      // The platform re-announces properties it has not changed (creating a
+      // calendar alone fires several), so compare before writing rather than
+      // patching the folder row on every event.
+      const patch = {};
+      if (renamed && mine.targetName !== changes.name) {
+        patch.targetName = changes.name;
+      }
+      if (recoloured && mine.targetColor !== changes.color) {
+        patch.targetColor = changes.color;
+      }
+      if (!Object.keys(patch).length) return;
+
       await host
         ?.updateFolder({
           accountId: mine.accountId,
           folderId: mine.folderId,
-          patch: { targetName: changes.name },
+          patch,
         })
         .catch((err) =>
           report?.({
             level: "warning",
-            message: `[target] could not mirror the rename of ${calendar?.id}: ${err?.message ?? String(err)}`,
+            message: `[target] could not mirror ${Object.keys(patch).join(" + ")} of ${calendar?.id}: ${err?.message ?? String(err)}`,
           }),
         );
     },
