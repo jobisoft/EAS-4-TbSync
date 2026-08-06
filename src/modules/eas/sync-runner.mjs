@@ -1471,7 +1471,7 @@ async function applyAdd(ctx, addNode) {
   if (!ad) return;
   await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = await findExistingByServerId(ctx, serverID);
-  if (existing) return applyChangeFromAd(ctx, ad, existing);
+  if (existing) return applyChangeFromAd(ctx, ad, existing, serverID);
 
   const newId = crypto.randomUUID();
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
@@ -1527,14 +1527,14 @@ async function applyChange(ctx, changeNode) {
     ctx.syncRecurrence &&
     ctx.itemKind.codec.applyInstanceChange
   ) {
-    return applyExceptionChange(ctx, ad, existing, instanceId);
+    return applyExceptionChange(ctx, ad, existing, instanceId, serverID);
   }
-  return applyChangeFromAd(ctx, ad, existing);
+  return applyChangeFromAd(ctx, ad, existing, serverID);
 }
 
-async function applyExceptionChange(ctx, ad, existing, instanceId) {
+async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
   const instanceUtc = parseEasInstanceId(instanceId);
-  if (!instanceUtc) return applyChangeFromAd(ctx, ad, existing);
+  if (!instanceUtc) return applyChangeFromAd(ctx, ad, existing, serverID);
 
   const deleted = readPathFrom(ad, ["Deleted"]) === "1";
   const codec = ctx.itemKind.codec;
@@ -1565,6 +1565,22 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
     return;
   }
 
+  // This path rewrites the blob from itself, so an item that arrived here
+  // without a stamp would be stored without one again. The command knows
+  // the id, so restore it while we are writing anyway - same repair as
+  // applyChangeFromAd, which this function otherwise bypasses.
+  if (serverID && !codec.readEasServerIdFromBlob(nextBlob)) {
+    ctx.provider.reportEventLog({
+      level: "debug",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[${ctx.itemKind.changelogKind}-sync] itemId=${existing.itemId} carried ` +
+        `no ServerId stamp; restamping from the server command (${serverID})`,
+    });
+    nextBlob = codec.stampEasServerId(nextBlob, serverID);
+  }
+
   await ctx.provider.changelogMarkServerWrite({
     accountId: ctx.accountId,
     folderId: ctx.folderId,
@@ -1588,10 +1604,14 @@ async function applyExceptionChange(ctx, ad, existing, instanceId) {
       after: nextBlob,
     },
   );
-  // Re-key by the master's serverId (unchanged); keep the new blob.
+  // Re-key by the master's serverId (unchanged); keep the new blob. The
+  // caller's id is the last fallback rather than the first choice: this
+  // path rewrites one occurrence of an existing series, so the blob's own
+  // stamp is the value to keep. It only runs out when the blob lost it.
   const masterServerId =
     codec.readEasServerIdFromBlob(nextBlob) ??
-    codec.readEasServerIdFromBlob(existing.blob);
+    codec.readEasServerIdFromBlob(existing.blob) ??
+    serverID;
   if (masterServerId) {
     upsertIndexMap(ctx, existing.itemId, masterServerId);
   }
@@ -1611,7 +1631,34 @@ function parseEasInstanceId(s) {
   return new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +se));
 }
 
-async function applyChangeFromAd(ctx, ad, existing) {
+async function applyChangeFromAd(ctx, ad, existing, serverID = null) {
+  // The caller's ServerId wins over the blob's. It comes from the command
+  // we are applying, so it is what the server calls this item right now;
+  // the stamp in the blob is a cache of the same value, kept so a rebind
+  // can rebuild the index from the items alone.
+  //
+  // The two can disagree: anything that replaces an item's body wholesale
+  // - an import, another add-on, a re-imported test fixture - drops the
+  // X- property while the index keeps the mapping. Reading the cache first
+  // meant handing the codec a null and killing the whole folder sync at
+  // the moment the server was telling us the answer. The push path never
+  // had this problem: it has always resolved blob ?? index.
+  const stamped = ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob);
+  const id = serverID ?? stamped;
+  if (id && !stamped) {
+    // Not silent: the blob is written back stamped below, so this is the
+    // only trace that an item had lost its identity. If it shows up on an
+    // account nobody re-imported into, something else is eating the
+    // property and that is a separate bug.
+    ctx.provider.reportEventLog({
+      level: "debug",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[${ctx.itemKind.changelogKind}-sync] itemId=${existing.itemId} carried ` +
+        `no ServerId stamp; restamping from the server command (${id})`,
+    });
+  }
   // Pass `existingBlob` so the codec merges the partial AD into the
   // current local blob instead of rebuilding from scratch. Exchange
   // routinely echoes Changes carrying only the modified fields (e.g.
@@ -1619,7 +1666,7 @@ async function applyChangeFromAd(ctx, ad, existing) {
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
     existingBlob: existing.blob,
-    serverID: ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob),
+    serverID: id,
     asVersion: ctx.asVersion,
     separator: ctx.separator,
     defaultTimezone: ctx.defaultTimezone,

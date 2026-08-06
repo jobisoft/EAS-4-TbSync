@@ -8,6 +8,19 @@ untouched overrides - a DTSTAMP refresh, a re-serialisation - makes every one
 of them read as changed. 5.3 is where that shows up, and 5.4 is the wire
 proof: exactly one occurrence, identified by its InstanceId.
 
+5.3 edits by re-importing the fixture rather than by editing the item it read
+back, and that is deliberate - every other `items.update` in this suite does
+the opposite. A re-import replaces the whole body, so the `X-EAS-SERVERID`
+the provider stamped on after 5.1's push is gone, while the index still maps
+the item to its ServerId. That is what a real import, or another add-on
+writing through the calendar API, does to an item.
+
+It used to kill the folder sync: the server answered 5.4's instance change
+with Status 7 and echoed its own copy back, and applying that Change looked
+the ServerId up in the blob - the one place it was missing - and handed the
+codec a null. So 5.4 asserts the repair as well as the digest: the sync
+survives, and the item comes back stamped.
+
 Self-contained: 5.1 clears and builds its own series.
 """
 
@@ -93,7 +106,12 @@ def t_5_2(s):
     harness.eq(len(stamps), 3, f"expected three overrides, found {len(stamps)}")
 
 
-@test("5.3", "edit one override - the other two stamps are untouched", VERSIONS)
+@test(
+    "5.3",
+    "re-import the fixture - one override moves, the other two keep their "
+    "stamps (and the item loses its ServerId stamp, on purpose)",
+    VERSIONS,
+)
 def t_5_3(s):
     item = s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event")
     before = _stamps(item["item"])
@@ -109,7 +127,12 @@ def t_5_3(s):
     )
 
 
-@test("5.4", "sync - one master <Change> and exactly one instance <Change>", VERSIONS)
+@test(
+    "5.4",
+    "sync - one master <Change>, one instance <Change>, and the stamp 5.3 "
+    "dropped is restored rather than failing the folder",
+    VERSIONS,
+)
 def t_5_4(s):
     s.mark()
     s.sync()
@@ -128,4 +151,18 @@ def t_5_4(s):
         f"only the edited occurrence may be sent, got {cmds}",
     )
     harness.eq(s.changelog("events"), [], "changelog drained")
+
+    # The repair. 5.3 removed the stamp; the server's reply to this sync
+    # carries the ServerId, so applying it must put the stamp back. Without
+    # that, the sync reading the blob for an id it no longer holds took the
+    # whole folder down - `s.sync()` above would already have raised.
+    item = s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event")
+    harness.true(item is not None, "the series must survive its own sync")
+    harness.contains(
+        item["item"].upper(),
+        "X-EAS-SERVERID",
+        "the item is still unstamped after a server change carrying its "
+        "ServerId - nothing will repair it, and the next change to it fails "
+        "the folder sync",
+    )
     probes.reset(s)
