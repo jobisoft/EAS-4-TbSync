@@ -103,8 +103,9 @@ export async function applicationDataToVCard({
 }) {
   // Merge mode: parse the existing vCard and overlay only fields the
   // AD mentions. Fall through to a fresh build for server-pushed Adds
-  // or when the existing blob is unparseable. Preserves UID and
-  // X-EAS-SERVERID when present on the existing card.
+  // or when the existing blob is unparseable. Keeps the card's UID;
+  // overwrites its X-EAS-SERVERID, since the caller's id is the one the
+  // server just used.
   const comp = (existingVcard ? parseVCard(existingVcard) : null) ?? newVCard();
   if (uid && !comp.getFirstPropertyValue("uid")) {
     comp.addPropertyWithValue("uid", uid);
