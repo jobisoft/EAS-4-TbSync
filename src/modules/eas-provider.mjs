@@ -279,11 +279,14 @@ export class EasProvider extends TbSyncProviderImplementation {
     await disableGal({ provider: this, accountId });
     const ctx = await this.#loadContext(accountId);
     if (!ctx) return null;
-    // Drop local TB books. Leave account-level credentials and deviceId
-    // intact so re-enable works without re-setup. The host wipes its
-    // folder rows right after this returns, so per-folder custom.*
-    // doesn't need clearing here.
-    await this.#deleteAccountTargets(ctx.folders);
+    // No target deletion here: the host owns resource deletion in every
+    // flow and deletes them right after this returns. This hook drops
+    // provider-side state only - and that division is what makes the
+    // disconnect a recovery path, because it works the same when this
+    // provider is not around to run it. Account-level credentials and
+    // deviceId stay so re-enable works without re-setup; the host wipes
+    // its folder rows after this returns, so per-folder custom.* doesn't
+    // need clearing here.
     // Force a fresh FolderSync on re-enable. Also invalidate the OPTIONS
     // probe cache so the next enable re-runs the probe - this is the
     // backfill path for users on 5.0.1 whose `allowedEasCommands` was
@@ -301,14 +304,12 @@ export class EasProvider extends TbSyncProviderImplementation {
     return null;
   }
 
-  async onAccountDeleted({ accountId, purgeTargets }) {
+  async onAccountDeleted({ accountId }) {
+    // Same contract as onAccountDisabled: stop, drop provider state, never
+    // touch resources - the host deletes them (or keeps them, its call)
+    // and then forgets the account entirely.
     forgetAuth(accountId);
     await disableGal({ provider: this, accountId });
-    const ctx = await this.#loadContext(accountId);
-    if (!ctx) return null;
-    if (purgeTargets !== false) {
-      await this.#deleteAccountTargets(ctx.folders);
-    }
     return null;
   }
 
@@ -454,9 +455,8 @@ export class EasProvider extends TbSyncProviderImplementation {
   async onFolderDisabled({ accountId, folderId }) {
     const folder = await this.#getFolder(accountId, folderId);
     if (!folder) return null;
-    if (folder.targetID) {
-      await safeDeleteTarget(folder);
-    }
+    // The calendar or book itself is the host's to delete, right after this
+    // returns - this hook only unhooks.
     // Clear the binding and the sync state, but keep `targetName` and
     // `targetColor`. The calendar or book is gone, so the id and the sync
     // position describe nothing and must not survive; the name and colour
@@ -739,21 +739,20 @@ export class EasProvider extends TbSyncProviderImplementation {
       const initial = syncResult.adds
         .map((a) => folderDescriptorFromAdd(a))
         .filter(Boolean);
-      await deleteDroppedTargets(
-        await this.pushFolderList({
-          accountId,
-          folders: await finalizeFolderListForPush(initial),
-        }),
-      );
+      await this.pushFolderList({
+        accountId,
+        folders: await finalizeFolderListForPush(initial),
+      });
     } else if (
       syncResult.adds.length ||
       syncResult.updates.length ||
       syncResult.deletes.length
     ) {
       const merged = await mergeFolderDeltas(ctx.folders, syncResult);
-      await deleteDroppedTargets(
-        await this.pushFolderList({ accountId, folders: merged }),
-      );
+      // The host deletes the targets behind dropped folders itself, inside
+      // its PUSH_FOLDER_LIST handler - it always did for address books, and
+      // owns calendars too now.
+      await this.pushFolderList({ accountId, folders: merged });
     }
 
     // 6) Persist the new FolderSync continuation key.
@@ -1270,46 +1269,9 @@ export class EasProvider extends TbSyncProviderImplementation {
     const ctx = await this.#loadContext(accountId);
     return ctx?.folders.find((f) => f.folderId === folderId) ?? null;
   }
-
-  async #deleteAccountTargets(folderList) {
-    for (const folder of folderList) {
-      if (folder.targetID) {
-        await safeDeleteTarget(folder);
-      }
-    }
-  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-/** Remove the local resources behind folders the server no longer lists.
- *
- *  `pushFolderList` replaces the folder table wholesale and hands back the
- *  targets that fell out of it. Deleting them is ours to do: the host has no
- *  calendar API, and these are our calendars. Same work `onFolderDisabled`
- *  and `onAccountDeleted` already do for the two other ways a folder stops
- *  being synced. */
-async function deleteDroppedTargets(result) {
-  for (const target of result?.removedTargets ?? []) {
-    if (!target?.targetID) continue;
-    await safeDeleteTarget(target);
-  }
-}
-
-async function safeDeleteTarget(folder) {
-  try {
-    if (folder.targetType === "calendars" || folder.targetType === "tasks") {
-      await calendarStore.deleteCalendar(folder.targetID);
-    } else {
-      await addressBook.deleteBook(folder.targetID);
-    }
-  } catch (err) {
-    console.warn(
-      `[eas-4-tbsync] delete target ${folder.targetID} failed:`,
-      err?.message ?? err,
-    );
-  }
-}
 
 /** Resolve the local TB address-book / calendar name for a folder.
  *  Reuses whatever the user (or a previous bind) put in
