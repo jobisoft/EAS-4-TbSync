@@ -164,9 +164,14 @@ export function registerCalendarProvider() {
     try {
       await host.requestSync({ parentId: targetID });
     } catch (err) {
+      // Name it. Once the binding is gone nothing can resolve the id back to
+      // a folder, so a bare uuid leaves the reader correlating by timestamp -
+      // and this is the line that says a live calendar is asking for syncs we
+      // cannot serve.
+      const name = calendar?.name ? `"${calendar.name}" ` : "";
       report?.({
         level: "warning",
-        message: `[target] sync request for ${targetID} failed: ${err?.message ?? String(err)}`,
+        message: `[target] sync request for ${name}${targetID} failed: ${err?.message ?? String(err)}`,
       });
     }
   });
