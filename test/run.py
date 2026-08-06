@@ -34,9 +34,16 @@ from harness import REGISTRY, run, select
 # builds whatever it needs, so `npm test -- 5` is a complete run. Steps
 # within a section chain on purpose - re-establishing the fixture per step
 # would mean several more full syncs against a server that throttles.
+# Run order, which is not section order. Section numbers are shared
+# vocabulary - cited in code comments and in docs/manual-test-plan.html - so
+# a new section takes the next free number rather than renumbering the rest.
+# Where it *runs* is a separate question: 8 is cheap and version-independent,
+# and the heavy sections (5 onwards) have twice drawn a 503 out of a
+# throttled account and stopped the run before reaching it.
 MODULES = [
     "test_1_handshake",
     "test_2_round_trip",
+    "test_8_refresh",
     "test_3_exceptions",
     "test_4_timezones",
     "test_5_digest",
