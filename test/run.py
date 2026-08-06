@@ -49,6 +49,7 @@ MODULES = [
     "test_5_digest",
     "test_6_provider_calendar",
     "test_7_task_recurrence",
+    "test_10_contacts",
     # Last, and not by number: disconnecting clears the account's folder
     # records, and a provider that mints fresh folder ids on reconnect (as
     # google does) leaves the bridge's folder-scoped grant pointing at ids

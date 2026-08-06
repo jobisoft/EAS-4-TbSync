@@ -80,6 +80,45 @@ def task(slug, rrule=None, summary=None, lines=()):
     return "\r\n".join(body) + "\r\n"
 
 
+def card(slug, extra=()):
+    """A contact with enough shape to notice a codec regression: structured
+    name, three emails (the EAS ceiling), typed phones, two addresses, a
+    birthday, nickname, categories and a note with non-ASCII in it.
+
+    The email is the anchor - `slug@probe.invalid` survives a round trip
+    unchanged, while FN can be rebuilt from name parts and the UID is minted
+    fresh on a clean pull.
+    """
+    lines = [
+        "BEGIN:VCARD",
+        "VERSION:4.0",
+        f"FN:{MARKER} {slug}",
+        f"N:{slug};{MARKER};Q;Dr.;jun.",
+        "NICKNAME:Probey",
+        "ORG:Beispiel GmbH;Entwicklung",
+        "TITLE:Protokolltester",
+        f"EMAIL;TYPE=work:{slug}@probe.invalid",
+        f"EMAIL;TYPE=home:{slug}-home@probe.invalid",
+        f"EMAIL:{slug}-third@probe.invalid",
+        "TEL;TYPE=work:+49 228 1234567",
+        "TEL;TYPE=cell:+49 170 7654321",
+        "TEL;TYPE=home:+49 228 7654321",
+        "ADR;TYPE=work:;;Musterweg 4;Bonn;NRW;53111;Deutschland",
+        "ADR;TYPE=home:;;Heimstr. 2;Bonn;NRW;53111;Deutschland",
+        "BDAY:19800229",
+        "URL:https://example.invalid/probe",
+        "CATEGORIES:Probes,Tests",
+        "NOTE:Angelegt vom Test. Umlaute: äöü ÄÖÜ ß.",
+    ]
+    lines += list(extra) + ["END:VCARD", ""]
+    return "\r\n".join(lines)
+
+
+def email_of(slug):
+    """The anchor a test matches on - stable across a round trip."""
+    return f"{slug}@probe.invalid"
+
+
 def reset(s, kinds=None, report=True):
     """Evaluate the current state and clear anything a test left behind.
 
@@ -111,6 +150,14 @@ def reset(s, kinds=None, report=True):
 
     removed = []
     for kind in kinds:
+        if kind == "contacts":
+            for card in s.cards():
+                vcard = (card.get("properties") or {}).get("vCard") or ""
+                if "probe.invalid" not in vcard:
+                    continue
+                removed.append(card["id"])
+                rpc("contacts.remove", id=card["id"])
+            continue
         type_ = "task" if kind == "tasks" else "event"
         args = {"resource": "tasks"} if kind == "tasks" else {}
         for item in s.items(kind, type_):
