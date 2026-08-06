@@ -85,7 +85,7 @@ import { syncContactFolder } from "./eas/contact-sync.mjs";
 import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
 import { sendDeviceInformation } from "./eas/settings.mjs";
 import { runGalSearch as runGalSearchRequest } from "./eas/gal-search.mjs";
-import { NET_ERR } from "./network.mjs";
+import { NET_ERR, setSyncSignalResolver } from "./network.mjs";
 import {
   enableGal,
   disableGal,
@@ -229,6 +229,10 @@ export class EasProvider extends TbSyncProviderImplementation {
     // (`network.mjs`) emits debug entries for every WBXML send/receive;
     // before this binding the calls silently no-op.
     setEventLogSink((args) => this.reportEventLog(args));
+    // Let the wire layer see the running sync's AbortSignal, so a cancel
+    // drops the request in flight rather than after the server answers -
+    // or, when it never does, after the connection timeout.
+    setSyncSignalResolver((accountId) => this.syncSignal(accountId));
     // One-shot global listener that mirrors GAL directory renames back
     // into `account.custom.galName` so the rename survives across the
     // teardown/recreate cycle on next TB start.
@@ -252,10 +256,6 @@ export class EasProvider extends TbSyncProviderImplementation {
     await enableGalForAllAccounts(this);
     return null;
   }
-  async onCancelSync(_args) {
-    return null;
-  }
-
   // ── Account lifecycle ──────────────────────────────────────────────────
 
   async onAccountEnabled({ accountId }) {
@@ -693,10 +693,40 @@ export class EasProvider extends TbSyncProviderImplementation {
     );
 
     // 4) FolderSync, with provision/sync-key recovery loops.
-    const priorFolderSyncKey = ctx.account.custom?.foldersynckey ?? "0";
+    //
+    // A non-zero synckey with zero host folder rows is a contradiction: an
+    // incremental FolderSync only makes sense when we hold the folders the
+    // increments apply to. The state is real, not hypothetical - a
+    // disconnect while this provider was dead tears down host-side only, so
+    // onAccountDisabled's foldersynckey reset never runs, and the stale key
+    // makes the next enable pull "no changes" and announce nothing. The
+    // account then looks connected but has no resources. Trust the row
+    // count over the key: start over.
+    let priorFolderSyncKey = ctx.account.custom?.foldersynckey ?? "0";
+    if (priorFolderSyncKey !== "0" && ctx.folders.length === 0) {
+      this.reportEventLog({
+        level: "info",
+        accountId,
+        message:
+          "[eas] FolderSync key present but no folders on record - the " +
+          "account was torn down while this provider could not hear it; " +
+          "starting folder discovery over",
+      });
+      priorFolderSyncKey = "0";
+      ctx.account.custom.foldersynckey = "0";
+    }
     const { syncResult, ctx: ctxAfterSync } =
       await this.#runFolderSyncWithRecovery(accountId, ctx, asVersion);
     ctx = ctxAfterSync;
+
+    // Between the wire work above and the writes below: the host may have
+    // cancelled this sync while our FolderSync was in flight - a fetch that
+    // had already resolved never feels the abort. Writing anyway is how a
+    // cancelled sync corrupted a disconnect: its synckey persist landed on
+    // top of the foldersynckey:"0" reset that onAccountDisabled had just
+    // written, so the next enable ran an incremental FolderSync, saw no
+    // changes, pushed no folders, and the account came back empty.
+    this.throwIfCancelled(accountId);
 
     // 5) Apply Add/Update/Delete to the host's folder list.
     //    - Initial sync (priorFolderSyncKey === "0"): server emits every
@@ -727,6 +757,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     }
 
     // 6) Persist the new FolderSync continuation key.
+    this.throwIfCancelled(accountId);
     await this.updateAccount({
       accountId,
       patch: { custom: { foldersynckey: syncResult.synckey } },

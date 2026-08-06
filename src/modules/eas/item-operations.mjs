@@ -34,6 +34,7 @@
 
 import { createWBXML } from "../wbxml.mjs";
 import { easRequest } from "../network.mjs";
+import { ERR } from "../../vendor/tbsync/provider.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 
 function buildBody({ collectionId, serverID }) {
@@ -78,7 +79,14 @@ export async function fetchServerItem({
       body: buildBody({ collectionId, serverID }),
       asVersion,
     });
-  } catch {
+  } catch (err) {
+    // "Could not ask" and "the server says it is gone" must not look the
+    // same to the caller. `revertLocalChanges` reads null as the latter and
+    // deletes the local item - so a cancelled request, which fails
+    // instantly and for every remaining item, would wipe the user's pending
+    // edits on a read-only folder. A cancel is not an answer about the
+    // server's state; rethrow and let the sync unwind.
+    if (err?.name === "AbortError" || err?.code === ERR.CANCELLED) throw err;
     return null;
   }
   if (!resp?.doc) return null;

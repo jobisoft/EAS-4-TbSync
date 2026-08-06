@@ -607,6 +607,12 @@ async function revertLocalChanges(ctx) {
   }
 
   for (const e of userEdits) {
+    // Before touching anything: this loop deletes local items and drops
+    // changelog entries, so being interrupted half-way is the one place a
+    // cancel could cost the user work. `fetchServerItem` rethrows a cancel
+    // rather than reporting "gone", and this stops the loop entering the
+    // next item at all.
+    throwIfCancelled(ctx);
     if (e.status === "added_by_user") {
       try {
         await ctx.store.delete(e.itemId);
@@ -740,6 +746,19 @@ async function finishWith(ctx, result) {
 
 /* ── Pull phase ───────────────────────────────────────────────────── */
 
+/** Stop here if the host has cancelled this account's sync.
+ *
+ *  The abort signal already kills the request in flight, so this covers the
+ *  gaps between requests - a long pull, a batched push - where we would
+ *  otherwise start work nobody is waiting for any more.
+ *
+ *  Every call site is *before* sending or storing, never between a server
+ *  acknowledgement and the changelog entry it settles: unwinding there is
+ *  how a user edit gets lost. Redoing a whole batch costs one request. */
+function throwIfCancelled(ctx) {
+  ctx.provider?.throwIfCancelled?.(ctx.accountId);
+}
+
 async function pullPhase(ctx) {
   const estimate = await runGetItemEstimate({
     account: ctx.account,
@@ -758,6 +777,7 @@ async function pullPhase(ctx) {
   // to converge. Initial syncs of large folders (10k+ items) hit dozens
   // of iterations and any cap risks a spurious abort mid-pull.
   for (;;) {
+    throwIfCancelled(ctx);
     const body = buildSyncBody({
       synckey: ctx.synckey,
       collectionId: ctx.collectionId,
@@ -823,6 +843,7 @@ async function pushPhase(ctx, userEdits) {
   reportProgress(ctx, itemsDone, itemsTotal);
 
   while (pending.length) {
+    throwIfCancelled(ctx);
     const slice = [];
     while (pending.length && slice.length < batchSize) {
       const e = pending.shift();
@@ -1445,6 +1466,10 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
 
 async function applyServerCommands(ctx, commands) {
   let processed = 0;
+  // Once, at the top: the loops below write to the store, and a check
+  // between two of those writes would leave the batch half-applied for no
+  // benefit - the server will re-send what we did not acknowledge.
+  throwIfCancelled(ctx);
   for (const node of commands.adds) {
     await applyAdd(ctx, node);
     processed++;

@@ -377,6 +377,26 @@ def _granted_folders(account_id):
     return found
 
 
+def rediscover(session, tries=10):
+    """Refresh `session.folders` from the host.
+
+    Needed after a disconnect: the host forgets its folder records, and the
+    provider re-announces them on connect. The ids have been stable in
+    practice, but a run that assumes so would fail as "folder has vanished"
+    rather than saying what happened.
+    """
+    for _ in range(tries):
+        found = _granted_folders(session.account_id)
+        if found:
+            session.folders = found
+            return found
+        time.sleep(2)
+    raise AssertionError(
+        "the account announced no folders after reconnecting - the provider "
+        "never re-ran its folder discovery"
+    )
+
+
 def select_resources(session, kinds, indent="  "):
     """Select exactly `kinds`; deselect every other granted resource.
 

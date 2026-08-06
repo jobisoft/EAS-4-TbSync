@@ -146,10 +146,11 @@ export async function easOptions({ account }) {
     "User-Agent": await getUserAgent(),
   });
   stampAnchorMailbox(headers, custom);
-  const resp = await fetchWithTimeout(serverUrl, {
-    method: "OPTIONS",
-    headers,
-  });
+  const { resp } = await fetchWithTimeout(
+    serverUrl,
+    { method: "OPTIONS", headers },
+    syncSignalFor(account?.accountId),
+  );
   if (resp.status === 401 || resp.status === 403) {
     throw new EasHttpError(NET_ERR.AUTH, resp.status);
   }
@@ -159,6 +160,16 @@ export async function easOptions({ account }) {
     versions: parseList(resp.headers.get("MS-ASProtocolVersions")),
     commands: parseList(resp.headers.get("MS-ASProtocolCommands")),
   };
+}
+
+/** How this module reaches the running sync's AbortSignal.
+ *
+ *  Wired once by the provider rather than threaded through eight call sites -
+ *  and threading would have missed the ones that matter, since Provision,
+ *  Settings and FolderSync all run inside a sync too. */
+let syncSignalFor = () => null;
+export function setSyncSignalResolver(fn) {
+  syncSignalFor = typeof fn === "function" ? fn : () => null;
 }
 
 export async function easRequest({ account, command, body, asVersion }) {
@@ -192,7 +203,12 @@ export async function easRequest({ account, command, body, asVersion }) {
     }
 
     logSendXML({ account, command, body });
-    const resp = await fetchWithTimeout(url, { method: "POST", headers, body });
+    const { resp, buf: rawBuf } = await fetchWithTimeout(
+      url,
+      { method: "POST", headers, body },
+      syncSignalFor(account?.accountId),
+      { readBody: true },
+    );
 
     if (resp.status === 401 || resp.status === 403) {
       // OAuth-specific recovery: cached access token may be stale despite
@@ -212,7 +228,7 @@ export async function easRequest({ account, command, body, asVersion }) {
     if (resp.status === 451) throw redirectError(resp);
     if (!resp.ok) throw new EasHttpError(NET_ERR.HTTP, resp.status);
 
-    const buf = new Uint8Array(await resp.arrayBuffer());
+    const buf = rawBuf ?? new Uint8Array(0);
     if (buf.length === 0) return { xml: "", doc: null };
 
     if (!hasWbxmlMagic(buf)) {
@@ -403,16 +419,38 @@ async function buildAuthHeader(account) {
  *  AbortError (timeout) and other fetch errors both map to E:NETWORK. */
 const NETWORK_RETRY_DELAY_MS = 500;
 
-async function fetchWithTimeout(url, init) {
+async function fetchWithTimeout(url, init, cancelSignal = null, opts = {}) {
   const timeout = await getConnectionTimeout();
+  // Read the body inside the guarded window when asked. Headers arriving
+  // says nothing about the body: a server can answer 200 and then stall the
+  // stream, and a read outside this loop would hang past both the timeout
+  // and the cancel signal. (Before the cancel work, the timer happened to
+  // stay armed across the caller's read and covered this by accident.)
+  const { readBody = false } = opts;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
+    // The host asking us to stop has to reach the socket, not just the loop
+    // between requests: a server that never answers is exactly the case the
+    // Disconnect button exists for, and waiting out the connection timeout
+    // first would make the button feel broken.
+    const onCancel = () => controller.abort();
+    if (cancelSignal) {
+      if (cancelSignal.aborted) controller.abort();
+      else cancelSignal.addEventListener("abort", onCancel, { once: true });
+    }
     try {
-      return await fetch(url, { ...init, signal: controller.signal });
+      const resp = await fetch(url, { ...init, signal: controller.signal });
+      if (!readBody || !resp.ok) return { resp, buf: null };
+      const buf = new Uint8Array(await resp.arrayBuffer());
+      return { resp, buf };
     } catch (err) {
       clearTimeout(timer);
+      // A cancellation is not a network failure and must not be retried or
+      // reported as one. Rethrown as-is so the AbortError name survives to
+      // the port, where it becomes E:CANCELLED rather than E:PROVIDER_FAULT.
+      if (cancelSignal?.aborted) throw err;
       const isTimeout = err.name === "AbortError";
       if (attempt === 0) {
         // Brief pause before the retry so we don't immediately re-hit a
@@ -428,6 +466,9 @@ async function fetchWithTimeout(url, init) {
       throw new EasHttpError(NET_ERR.NETWORK, 0, { cause: err });
     } finally {
       clearTimeout(timer);
+      // Every request of a sync shares one signal, so a listener left behind
+      // on the success path accumulates for the length of the sync.
+      cancelSignal?.removeEventListener("abort", onCancel);
     }
   }
   // Unreachable: the loop either returns or throws.
