@@ -168,6 +168,50 @@ def t_10_4(s):
     harness.eq(s.changelog("contacts"), [], "changelog drained")
 
 
+@test(
+    "10.7",
+    "field removal - a cleared birthday, note, categories and nickname "
+    "stay cleared on the server",
+)
+def t_10_7(s):
+    # The class of bug 10.6 caught for photos, tested for every other
+    # clearable field the probe card carries: ActiveSync keeps omitted
+    # elements unchanged, so a writer that skips absent fields makes local
+    # removals silently immortal.
+    s.mark()
+    ok("contacts.create", vCard=probes.card(SLUG))
+    s.sync()
+    card = _probe_card(s)
+    harness.true(card is not None, "setup card did not survive the push")
+
+    cleared = ("BDAY", "NOTE", "CATEGORIES", "NICKNAME")
+    kept = [
+        line
+        for line in _unfold(_vcard(card)).splitlines()
+        if not line.upper().startswith(cleared)
+    ]
+    ok("contacts.update", id=card["id"], vCard="\r\n".join(kept) + "\r\n")
+    s.sync()
+    s.rebind("contacts")
+    card2 = _probe_card(s)
+    harness.true(card2 is not None, "the card did not survive the re-pull")
+    body = _unfold(_vcard(card2))
+    survivors = [
+        f
+        for f in cleared
+        if re.search(rf"^{f}[^:\r\n]*:.", body, re.M | re.I)
+    ]
+    harness.eq(
+        survivors,
+        [],
+        "locally removed fields came back from the server - their writers "
+        "omit the element instead of sending it empty, so the server keeps "
+        f"its copy; the pulled card was:\n{body}",
+    )
+    ok("contacts.remove", id=card2["id"])
+    s.sync()
+
+
 @test("10.5", "photo round trip - the Picture survives a clean re-pull")
 def t_10_5(s):
     s.mark()

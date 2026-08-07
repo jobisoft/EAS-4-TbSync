@@ -187,10 +187,10 @@ export function appendApplicationDataFromVCard({
   writeNote(builder, comp, asVersion);
   
   builder.switchpage("Contacts2");
-  emitIf(
-    builder,
+  // Always emitted (empty clears), same reasoning as writeDates.
+  builder.atag(
     "NickName",
-    stringOf(comp.getFirstPropertyValue("nickname")),
+    stringOf(comp.getFirstPropertyValue("nickname")) || "",
   );
   emitIf(
     builder,
@@ -307,10 +307,14 @@ function readDates(adNode, comp) {
 }
 
 function writeDates(b, comp) {
+  // Always emitted, empty when absent: ActiveSync keeps omitted elements
+  // unchanged on the server, so skipping absent fields makes local
+  // removals silently immortal - the deleted birthday came back on every
+  // clean pull. Empty-means-clear is what readDates has honored all along.
   const bday = stringOf(comp.getFirstPropertyValue("bday"));
-  if (bday) b.atag("Birthday", toIsoDateTime(bday));
+  b.atag("Birthday", bday ? toIsoDateTime(bday) : "");
   const ann = stringOf(comp.getFirstPropertyValue("anniversary"));
-  if (ann) b.atag("Anniversary", toIsoDateTime(ann));
+  b.atag("Anniversary", ann ? toIsoDateTime(ann) : "");
 }
 
 /* ── Emails ────────────────────────────────────────────────────────── */
@@ -754,10 +758,18 @@ function readCategories(adNode, comp) {
 }
 
 function writeCategories(b, comp) {
+  // Empty <Categories/> when the card has none - the reader's own comment
+  // states the convention ("an empty <Categories/> clears it"); the writer
+  // just never held up its half until now, so removed categories were
+  // resurrected by the next pull.
   const prop = comp.getFirstProperty("categories");
-  if (!prop) return;
-  const values = prop.getValues().map(stringOf).filter(Boolean);
-  if (!values.length) return;
+  const values = prop
+    ? prop.getValues().map(stringOf).filter(Boolean)
+    : [];
+  if (!values.length) {
+    b.atag("Categories", "");
+    return;
+  }
   b.otag("Categories");
   for (const v of values) b.atag("Category", v);
   b.ctag();
