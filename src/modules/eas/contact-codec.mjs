@@ -724,12 +724,16 @@ function readPicture(adNode, comp) {
 }
 
 function writePicture(b, comp) {
+  // Always emitted, empty when the card has no photo. ActiveSync Change
+  // semantics keep any omitted element unchanged on the server, so leaving
+  // <Picture> out is not neutral - it makes photo removal impossible: the
+  // deleted photo comes back on the next clean pull. Empty-means-clear is
+  // the same convention readPicture honors inbound.
   const photo = comp.getFirstProperty("photo");
-  if (!photo) return;
-  const value = stringOf(photo.getFirstValue());
-  if (!value) return;
+  const value = photo ? stringOf(photo.getFirstValue()) : "";
   const m = /^data:image\/[^;]+;base64,(.+)$/i.exec(value);
   if (m) b.atag("Picture", m[1]);
+  else b.atag("Picture", "");
 }
 
 /* ── Categories ────────────────────────────────────────────────────── */

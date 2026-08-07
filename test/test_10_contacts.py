@@ -10,6 +10,11 @@ the server actually stored.
 Anchoring rule, learned the hard way in the google suite: match a contact by
 its probe email, never by FN (rebuilt from name parts) and never by UID (a
 clean pull mints fresh ones).
+
+10.5/10.6 cover the photo: unlike Google, ActiveSync carries the bytes
+inline (<Picture>, base64 in ApplicationData), so a photo is just another
+field of the Sync payload - but Exchange re-encodes it, so presence is
+asserted, never byte identity.
 """
 
 import re
@@ -63,6 +68,21 @@ def _vcard(card):
 
 def _probe_card(s):
     return s.find_card(ANCHOR)
+
+
+# A 10x10 JPEG (same fixture as the google suite's photo section). Tiny on
+# purpose: Exchange caps <Picture> via policy, and the test is about the
+# round trip, not the payload.
+JPEG_B64 = (
+    "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRof"
+    "Hh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwh"
+    "MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAAR"
+    "CAAKAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAA"
+    "AAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oA"
+    "DAMBAAIRAxEAPwCdABmX/9k="
+)
+PHOTO_SLUG = "eas-foto"
+PHOTO_ANCHOR = probes.email_of(PHOTO_SLUG)
 
 
 def _server_id(card):
@@ -146,3 +166,50 @@ def t_10_4(s):
     s.sync()
     harness.true(_probe_card(s) is None, "the echo re-created the card")
     harness.eq(s.changelog("contacts"), [], "changelog drained")
+
+
+@test("10.5", "photo round trip - the Picture survives a clean re-pull")
+def t_10_5(s):
+    s.mark()
+    ok(
+        "contacts.create",
+        vCard=probes.card(
+            PHOTO_SLUG,
+            extra=(f"PHOTO;VALUE=URI:data:image/jpeg;base64,{JPEG_B64}",),
+        ),
+    )
+    s.sync()
+    harness.contains(s.wire(), "SEND Add", "the create must reach the server")
+    s.rebind("contacts")
+    card = s.find_card(PHOTO_ANCHOR)
+    harness.true(card is not None, "the card did not survive the re-pull")
+    body = _unfold(_vcard(card))
+    harness.true(
+        re.search(r"^PHOTO[^:\r\n]*:data:image/", body, re.M | re.I),
+        f"no PHOTO came back from Exchange; the pulled card was:\n{body}",
+    )
+
+
+@test("10.6", "photo removal - stripping the PHOTO reaches the server")
+def t_10_6(s):
+    card = s.find_card(PHOTO_ANCHOR)
+    harness.true(card is not None, "10.5 must have left the card in place")
+    kept = [
+        line
+        for line in _unfold(_vcard(card)).splitlines()
+        if not line.upper().startswith("PHOTO")
+    ]
+    s.mark()
+    ok("contacts.update", id=card["id"], vCard="\r\n".join(kept) + "\r\n")
+    s.sync()
+    harness.contains(s.wire(), "SEND Change", "the edit must reach the server")
+    s.rebind("contacts")
+    card2 = s.find_card(PHOTO_ANCHOR)
+    harness.true(card2 is not None, "the card did not survive the re-pull")
+    harness.true(
+        not re.search(r"^PHOTO", _unfold(_vcard(card2)), re.M | re.I),
+        "the photo came back after removal - the empty <Picture> never "
+        "reached the server",
+    )
+    ok("contacts.remove", id=card2["id"])
+    s.sync()
