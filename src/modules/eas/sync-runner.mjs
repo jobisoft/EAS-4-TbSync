@@ -99,19 +99,6 @@ const STATUS_ACCESS_DENIED = new Set([
 // Provision and let the host re-run the account sync.
 const STATUS_PROVISION_REQUIRED = new Set(["141", "142", "143", "144"]);
 
-// Exchange sometimes re-sends a local change back to us as a server change
-// after it has already acked it. Under our server-wins policy that echo
-// overwrites whatever the user changed in the meantime - so we wait for it
-// here and let it land in this sync, rather than meeting it on the next one
-// with newer local edits to lose. 2000 ms is the value legacy settled on
-// (v4 sync.js::easFolder); it is a hope, not a guarantee, and always was.
-//
-// Opt-in via the `postPushSettle` advanced option, off by default. The
-// behaviour it defends against is old and may not survive on 16.x, and the
-// cost - two seconds plus a second pull on every sync that uploaded
-// anything - is paid by everyone whether their server does it or not.
-const POST_PUSH_WAIT_MS = 2000;
-
 // How often one instance command may be re-sent before it is reported. Per
 // command, not per pass: each occurrence is an independent request, and one
 // exception exhausting its attempts says nothing about the next.
@@ -225,16 +212,6 @@ async function readMsTodoCompat() {
   return msTodoCompat === true;
 }
 
-/** Whether to wait for Exchange's echo of a change it already acked - see
- *  POST_PUSH_WAIT_MS. Absent means off, matching the options page, which
- *  removes the key rather than storing `false`. */
-async function readPostPushSettle() {
-  const { postPushSettle } = await browser.storage.local.get({
-    postPushSettle: false,
-  });
-  return postPushSettle === true;
-}
-
 /* ── Entry point ──────────────────────────────────────────────────── */
 
 export async function runItemSync({
@@ -337,6 +314,15 @@ export async function runItemSync({
 
 /* ── One full sync pass ───────────────────────────────────────────── */
 
+/** The account's stated conflict preference, sent as `<Conflict>` in every
+ *  Options block: "1" = the server's copy wins (the default, and what both
+ *  Exchange and Z-Push do when nothing is sent - stated explicitly so we
+ *  rely on a declared contract instead of a default), "0" = this device
+ *  wins. Anything else in storage falls back to "1". */
+function conflictPolicyOf(account) {
+  return account?.custom?.conflict === "0" ? "0" : "1";
+}
+
 async function runOneSync({
   provider,
   account,
@@ -352,7 +338,6 @@ async function runOneSync({
   let synckey = String(folder.custom?.synckey ?? "0");
   const maxItems = await readMaxItems();
   const msTodoCompat = await readMsTodoCompat();
-  const postPushSettle = await readPostPushSettle();
   // Effective read-only: server-imposed (`folder.readOnly`) OR user-toggled
   // (`folder.downloadOnly`). When set, we discard pending user-side edits
   // before pulling, and skip the push phase entirely. Matches legacy's
@@ -372,7 +357,7 @@ async function runOneSync({
     defaultTimezone,
     syncRecurrence: account.custom?.syncrecurrence === true,
     msTodoCompat,
-    postPushSettle,
+    conflict: conflictPolicyOf(account),
     itemKind,
     store: itemKind.storeFactory(folder.targetID),
     synckey,
@@ -444,14 +429,19 @@ async function runOneSync({
     ctx.syncKeyDirty = true;
   }
 
-  // 2) Pull pass.
-  const firstPull = await pullPhase(ctx);
-  if (firstPull.code) return await finishWith(ctx, firstPull);
-
-  // 3) Push pass — skipped entirely on a read-only folder. Any edits the
-  // user made between the revert above and the pull will be re-reverted on
-  // the next sync; the runner is the single authority for upsync gating.
-  let pushed = { changedAnything: false };
+  // 2) Push pass, BEFORE the pull - the order [MS-ASCMD] shapes a Sync
+  // around (client Commands are applied before GetChanges is answered).
+  // Pulling first meant the pull could apply a server <Change> over a
+  // pending local edit and the push then re-sent the server's own data;
+  // with the push first, the pending edit reaches the server before
+  // anything can overwrite it, and a genuine two-writer conflict is
+  // decided by the only party that knows both sides - the server, per
+  // the <Conflict> preference every request now states.
+  //
+  // Skipped entirely on a read-only folder. Any edits the user made
+  // between the revert above and this point will be re-reverted on the
+  // next sync; the runner is the single authority for upsync gating.
+  let pushed = {};
   if (!effectiveDownloadOnly) {
     const changelog = Array.isArray(folder.changelog) ? folder.changelog : [];
     const pending = changelog.filter(
@@ -496,10 +486,10 @@ async function runOneSync({
     }
   }
 
-  // 3b) Exceptions of the recurring masters this push sent. Each keys on
+  // 3) Exceptions of the recurring masters this push sent. Each keys on
   // the master's ServerId and cannot share a request with it, so they
-  // need their own pass - see instancePhase. Ahead of the settle pull
-  // below, so that pull sees the server's finished state.
+  // need their own pass - see instancePhase. Ahead of the pull below,
+  // so that pull sees the server's finished state.
   let instanceFailed = 0;
   if (pushed.instanceMasters?.length) {
     const inst = await instancePhase(ctx, pushed.instanceMasters);
@@ -508,16 +498,15 @@ async function runOneSync({
     instanceFailed = inst.failedCount ?? 0;
   }
 
-  // 4) Follow-up pull, after the settle window - this is what catches
-  // Exchange's echo of a change it already acked. Only when the push
-  // actually sent something, since there is otherwise no echo to wait for,
-  // and only when the user asked for it: the wait and this pull are one
-  // workaround, and pulling without waiting would just race the echo.
-  if (pushed.changedAnything && ctx.postPushSettle) {
-    await sleep(POST_PUSH_WAIT_MS);
-    const second = await pullPhase(ctx);
-    if (second.code) return await finishWith(ctx, second);
-  }
+  // 4) Pull pass. Running after the push makes everything it delivers
+  // server-authoritative by construction: our own changes are already part
+  // of the state it reports, so there is no echo to defend against and no
+  // window in which it could overwrite a pending local edit. When a push
+  // lost a conflict (Status 7), this is also where the server's winning
+  // copy arrives - the losing edit is visibly replaced, never silently
+  // dropped.
+  const pull = await pullPhase(ctx);
+  if (pull.code) return await finishWith(ctx, pull);
 
   // Final status — `warning` if push rejected any items so the user sees
   // a count in the manager; `ok` otherwise. The warning's text comes
@@ -787,6 +776,7 @@ async function pullPhase(ctx) {
       className: ctx.itemKind.className,
       filterType: ctx.itemKind.filterType,
       windowSize: ctx.maxItems,
+      conflict: ctx.conflict,
     });
     const r = await sendSync({
       account: ctx.account,
@@ -837,7 +827,6 @@ async function pushPhase(ctx, userEdits) {
       : null;
   let batchSize = ctx.maxItems;
   let pending = userEdits.slice();
-  let changedAnything = false;
   let itemsDone = 0;
   const itemsTotal = userEdits.length;
   reportProgress(ctx, itemsDone, itemsTotal);
@@ -906,6 +895,7 @@ async function pushPhase(ctx, userEdits) {
         },
         className: ctx.itemKind.className,
         filterType: ctx.itemKind.filterType,
+        conflict: ctx.conflict,
       }),
     });
 
@@ -950,7 +940,6 @@ async function pushPhase(ctx, userEdits) {
           "[eas:sync] empty-body Sync response on push (no ACKs, syncKey unchanged)",
       });
     }
-    changedAnything = true;
     // Reset batch size after a successful round-trip so subsequent
     // batches return to the configured maxItems. Without this the
     // `batchSize / 5` shrinkage triggered by an earlier MALFORMED
@@ -1033,7 +1022,6 @@ async function pushPhase(ctx, userEdits) {
   }
 
   return {
-    changedAnything,
     failedCount: failedItems.size,
     instanceMasters: instanceMasters ?? [],
   };
@@ -1754,7 +1742,12 @@ function buildSyncBody({
   className,
   filterType,
   windowSize,
+  conflict,
 }) {
+  // The account's conflict preference is stated on every request that has
+  // an Options block or carries Commands - not on AS 2.5, which keeps the
+  // server default: that branch is minimal-touch by policy and untestable.
+  const sendConflict = conflict != null && asVersion !== "2.5";
   const w = createWBXML();
   w.switchpage("AirSync");
   w.otag("Sync");
@@ -1775,6 +1768,7 @@ function buildSyncBody({
       // by emitting the tag only for the Calendar class.
       if (className === "Calendar") w.atag("FilterType", String(filterType));
       w.atag("Class", className);
+      if (sendConflict) w.atag("Conflict", conflict);
       w.switchpage("AirSyncBase");
       w.otag("BodyPreference");
       w.atag("Type", "1");
@@ -1790,6 +1784,19 @@ function buildSyncBody({
       w.atag("FilterType", String(filterType));
       w.ctag();
     }
+  }
+  // A Commands-only push batch states the preference too - it is the
+  // request the server resolves conflicts IN. Options precedes Commands in
+  // the Collection schema. Instance-command requests are deliberately
+  // excluded: an exception <Change> always follows our own master push in
+  // the same sync, and with an explicit <Conflict> Exchange conflict-checks
+  // it against exactly that master change and discards it with Status 7
+  // (measured on Exchange Online; without the element the same request is
+  // accepted). A conflict verdict against our own change is never wanted.
+  if (!withChanges && withCommands && sendConflict) {
+    w.otag("Options");
+    w.atag("Conflict", conflict);
+    w.ctag();
   }
   if (withCommands) appendCommands(w, withCommands);
   if (withInstanceCommand) appendInstanceCommand(w, withInstanceCommand);
@@ -2020,8 +2027,13 @@ function parseSyncResponse(doc) {
  *
  *  The local item is gone, so `findExistingByServerId` cannot answer - but
  *  the indexMap still maps that ServerId, because it is only cleaned once
- *  the delete has been acknowledged, which happens in the push pass after
- *  this one. That leftover mapping is what makes the question answerable.
+ *  the delete has been acknowledged. With the push running before the
+ *  pull, an acked delete leaves nothing behind by the time server
+ *  commands are applied - so this only answers "yes" in the window where
+ *  the push could not get rid of the item (the server refused the delete,
+ *  or the push itself failed) and the pull then hands us a `<Change>` for
+ *  it. That mapping-plus-queued-entry pair is what makes the question
+ *  answerable.
  *
  *  It does not survive a heavy reset, which empties the indexMap before
  *  re-pulling: in that window a queued delete is invisible here. */
@@ -2040,11 +2052,14 @@ function hasPendingUserDelete(ctx, serverId) {
  *  is stateful enough for that to mean something: our SyncKey acknowledged
  *  the item. Not finding it locally therefore has exactly two readings.
  *
- *  Either we are about to tell the server it is gone - the delete is queued
- *  and this is the echo of a change we pushed just before it - which is
- *  ordinary and silent. Or the two states have drifted, which is a defect
- *  in the sync engine, ours or the server's, and the only evidence of it is
- *  this moment; hence the warning.
+ *  Either a delete for it is still queued - this sync's push failed to
+ *  land it, and the change arriving now is for an item the user already
+ *  removed - which is ordinary and silent; the delete retries next sync.
+ *  Or the two states have drifted, which is a defect in the sync engine,
+ *  ours or the server's, and the only evidence of it is this moment;
+ *  hence the warning. (With the push ahead of the pull, an *acked* delete
+ *  cannot produce this situation - neither tested server sends changes
+ *  for an item it has agreed is gone.)
  *
  *  Neither reading justifies re-creating the item from the change. Doing so
  *  used to hide the first case behind an orphaned copy and the second case

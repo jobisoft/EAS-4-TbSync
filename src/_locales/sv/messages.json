@@ -227,6 +227,18 @@
   "config.protocol.provision.hint": {
     "message": "Vissa servrar (t.ex. Kerio) kräver att provisioning skickas innan något annat kommando. De flesta servrar - inklusive Microsoft Exchange och Microsoft 365 - begär det automatiskt vid behov. Du behöver inte aktivera detta manuellt för dem."
   },
+  "config.protocol.conflict": {
+    "message": "Motstridiga ändringar"
+  },
+  "config.protocol.conflict.hint": {
+    "message": "Om ett objekt har ändrats både här och på servern avgör servern vilken version som vinner; den förlorande ändringen ersätts vid synkroniseringen."
+  },
+  "config.protocol.conflict.serverWins": {
+    "message": "Servern vinner (rekommenderas)"
+  },
+  "config.protocol.conflict.deviceWins": {
+    "message": "Den här enheten vinner"
+  },
   "config.contacts.displayOverride": {
     "message": "Åsidosätt visningsnamnet med \"Förnamn\" + \"Efternamn\""
   },
@@ -334,12 +346,6 @@
   },
   "options.showItemsInTrash.hint": {
     "message": "Vissa servrar behåller borttagna kalendrar, adressböcker och uppgiftslistor i en Papperskorg-mapp istället för att ta bort dem helt. Som standard är dessa dolda från mapplistan. Aktivera detta alternativ för att göra dem synliga - de visas med ett lokaliserat \"Papperskorg | \"-prefix så att du kan särskilja dem och välja om du vill synkronisera dem. Träder i kraft vid nästa uppdatering av mapplistan."
-  },
-  "options.postPushSettle": {
-    "message": "Vänta på att servern skickar tillbaka uppladdade ändringar"
-  },
-  "options.postPushSettle.hint": {
-    "message": "Vissa Exchange-servrar skickar tillbaka en ändring som sin egen kort efter att ha godkänt den. Utan det här alternativet kommer ekot vid nästa synkronisering, där det kan skriva över ändringar som gjorts under tiden. När det är aktiverat väntar varje synkronisering som laddat upp något i ungefär två sekunder och hämtar en gång till för att ta emot ekot direkt. Aktivera bara om lokala ändringar försvinner."
   },
   "options.clientid": {
     "message": "Anpassat OAuth-klient-ID"

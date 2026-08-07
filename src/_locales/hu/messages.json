@@ -227,6 +227,18 @@
   "config.protocol.provision.hint": {
     "message": "Egyes kiszolgálók (pl. Kerio) megkövetelik, hogy a provisioning más parancs előtt érkezzen meg. A legtöbb kiszolgáló - köztük a Microsoft Exchange és a Microsoft 365 - automatikusan kéri, ha szükséges. Ezeknél nem kell kézzel bekapcsolni ezt a beállítást."
   },
+  "config.protocol.conflict": {
+    "message": "Ütköző módosítások"
+  },
+  "config.protocol.conflict.hint": {
+    "message": "Ha egy elem itt és a kiszolgálón is módosult, a kiszolgáló dönti el, melyik változat nyer; a vesztes módosítás a szinkronizálás során felülíródik."
+  },
+  "config.protocol.conflict.serverWins": {
+    "message": "A kiszolgáló nyer (ajánlott)"
+  },
+  "config.protocol.conflict.deviceWins": {
+    "message": "Ez az eszköz nyer"
+  },
   "config.contacts.displayOverride": {
     "message": "A megjelenített név felülírása ezzel: „Keresztnév” + „Vezetéknév”"
   },
@@ -334,12 +346,6 @@
   },
   "options.showItemsInTrash.hint": {
     "message": "Egyes kiszolgálók a törölt naptárakat, címjegyzékeket és feladatlistákat egy Lomtár mappában tartják, ahelyett, hogy ténylegesen eltávolítanák őket. Alapértelmezés szerint ezek el vannak rejtve a mappalistából. Engedélyezze ezt a beállítást, hogy láthatóvá váljanak - egy lokalizált „Lomtár | ” előtaggal jelennek meg, így megkülönböztetheti őket, és eldöntheti, hogy szinkronizálja-e őket. A következő mappalista-frissítéskor lép életbe."
-  },
-  "options.postPushSettle": {
-    "message": "Várakozás a feltöltött módosítások szerveroldali visszaküldésére"
-  },
-  "options.postPushSettle.hint": {
-    "message": "Egyes Exchange-kiszolgálók a módosítás elfogadása után röviddel sajátjukként küldik vissza azt. E beállítás nélkül ez a visszhang csak a következő szinkronizáláskor érkezik meg, és felülírhatja az időközben végzett módosításokat. Bekapcsolva minden feltöltéssel járó szinkronizálás körülbelül két másodpercet vár, és újra letölt, hogy a visszhangot azonnal átvegye. Csak akkor kapcsolja be, ha helyi módosítások vesznek el."
   },
   "options.clientid": {
     "message": "Egyéni OAuth ügyfélazonosító"

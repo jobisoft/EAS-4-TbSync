@@ -16,6 +16,8 @@ run. The steps within it deliberately chain, because re-importing the series
 per step would mean four more full syncs against a server that throttles.
 """
 
+import re
+
 import harness
 import probes
 from bridge import ok
@@ -81,15 +83,34 @@ def t_3_3(s):
 @test("3.4", "move the override - exactly one <Change>, no <Delete>", VERSIONS)
 def t_3_4(s):
     item = _series(s)
-    s.mark()
-    ok(
-        "items.update",
-        id=item["id"],
-        ical=item["item"].replace(
-            "DTSTART;TZID=America/New_York:20260909T130000",
-            "DTSTART;TZID=America/New_York:20260909T140000",
-        ),
+    body = item["item"]
+    # The override's DTSTART is representation-fragile: the fixture wrote
+    # America/New_York 13:00, but as soon as any server echo rebuilds the
+    # item (Exchange re-sends the master with its Exceptions shortly after
+    # a push, and the post-push pull may pick that up), the codec renders
+    # the same instant in the default timezone - Europe/Berlin 19:00. So
+    # find the override COMPONENT by its RECURRENCE-ID and move whatever
+    # DTSTART it carries one hour later; both forms land on the same UTC
+    # instant, which is what 3.5 verifies after the clean pull.
+    block_re = re.compile(
+        r"BEGIN:VEVENT(?:(?!BEGIN:VEVENT)[\s\S])*?"
+        r"RECURRENCE-ID[^\r\n]*20260909T130000Z[\s\S]*?END:VEVENT"
     )
+    m = block_re.search(body)
+    harness.true(
+        m is not None,
+        "the 9 Sep override is not in the local item - it never survived "
+        "the 3.1 import (check 3.1's instance <Change> for a rejection)",
+    )
+    block = m.group(0)
+    dt = re.search(r"DTSTART;TZID=([^:;\r\n]+):20260909T(\d{2})(\d{4})", block)
+    harness.true(dt is not None, "the override carries no TZID DTSTART to move")
+    hour = int(dt.group(2)) + 1
+    moved_block = block.replace(
+        dt.group(0), f"DTSTART;TZID={dt.group(1)}:20260909T{hour:02d}{dt.group(3)}"
+    )
+    s.mark()
+    ok("items.update", id=item["id"], ical=body.replace(block, moved_block))
     s.sync()
     cmds = s.instance_commands()
     harness.eq([c[0] for c in cmds], ["Change"], f"instance commands sent: {cmds}")

@@ -280,10 +280,12 @@ something visible.</p>
   Tomas measured the post-response fan-out at <strong>~30&nbsp;s under load</strong>.
   The 34&nbsp;s is what the re-poll schedule budgets for itself —
   <code>2+4+8+10+10</code> from
-  <code>settleWaitMs(n) = min(POST_PUSH_WAIT_MS · 2<sup>n-1</sup>, 10000)</code>
+  <code>settleWaitMs(n) = min(2000&nbsp;ms · 2<sup>n-1</sup>, 10000)</code>
   over five pulls — with each iteration adding a full <code>pullPhase</code> on
-  top. The measurement is bracketed by the polls that produced it: absent at
-  24&nbsp;s, present at 34&nbsp;s.
+  top. (The 2000&nbsp;ms base was <code>POST_PUSH_WAIT_MS</code>, removed with
+  the <code>postPushSettle</code> option when the sync moved to
+  push-before-pull.) The measurement is bracketed by the polls that produced
+  it: absent at 24&nbsp;s, present at 34&nbsp;s.
 </p>
 
 <h3>A Ping-based listener</h3>
@@ -358,11 +360,11 @@ something visible.</p>
     re-poll commit on Tomas Kovacik's branch polls on a fixed schedule with the
     sync held open. Ping is the direction we would rather take. The diagnosis
     behind it stands - the server really does apply the answer later, and that is
-    worth acting on - but through a listener. If any of that branch is taken as-is in the meantime,
-    its step 4 condition also has to be reconciled with the
-    <code>postPushSettle</code> gate:
-    <code>if ((pushed.changedAnything &amp;&amp; ctx.postPushSettle) ||
-    ctx.pendingResponseServerIds.size)</code>.</li>
+    worth acting on - but through a listener. Note the branch predates the
+    push-before-pull reorder: the <code>postPushSettle</code> option its step 4
+    condition gated on is gone (the pull now runs after the push structurally),
+    so only <code>ctx.pendingResponseServerIds.size</code> remains as a
+    trigger.</li>
 </ul>
 
 <h3>Status</h3>

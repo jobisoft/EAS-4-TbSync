@@ -227,6 +227,18 @@
   "config.protocol.provision.hint": {
     "message": "Algunos servidores (p. ej. Kerio) exigen enviar el aprovisionamiento antes de cualquier otra orden. La mayoría de servidores -incluidos Microsoft Exchange y Microsoft 365- lo solicitan automáticamente cuando es necesario. No es necesario activarlo manualmente para ellos."
   },
+  "config.protocol.conflict": {
+    "message": "Cambios en conflicto"
+  },
+  "config.protocol.conflict.hint": {
+    "message": "Si un elemento se modificó aquí y también en el servidor, el servidor decide qué copia gana; el cambio perdedor se reemplaza durante la sincronización."
+  },
+  "config.protocol.conflict.serverWins": {
+    "message": "Gana el servidor (recomendado)"
+  },
+  "config.protocol.conflict.deviceWins": {
+    "message": "Gana este dispositivo"
+  },
   "config.contacts.displayOverride": {
     "message": "Reemplazar el nombre mostrado por «Nombre» + «Apellidos»"
   },
@@ -334,12 +346,6 @@
   },
   "options.showItemsInTrash.hint": {
     "message": "Algunos servidores guardan los calendarios, libretas de direcciones y listas de tareas eliminados dentro de una carpeta Papelera en lugar de eliminarlos por completo. De forma predeterminada, estos quedan ocultos de la lista de carpetas. Active esta opción para hacerlos visibles - aparecen con un prefijo localizado «Papelera | » para que pueda distinguirlos y decidir si los sincroniza. Surte efecto en la próxima actualización de la lista de carpetas."
-  },
-  "options.postPushSettle": {
-    "message": "Esperar a que el servidor devuelva los cambios enviados"
-  },
-  "options.postPushSettle.hint": {
-    "message": "Algunos servidores Exchange devuelven un cambio como si fuera suyo poco después de aceptarlo. Sin esta opción, ese eco llega en la siguiente sincronización, donde puede sobrescribir las ediciones hechas mientras tanto. Al activarla, cada sincronización que haya enviado algo espera unos dos segundos y vuelve a descargar para recoger el eco de inmediato. Actíve la solo si se pierden cambios locales."
   },
   "options.clientid": {
     "message": "ID de cliente OAuth personalizado"

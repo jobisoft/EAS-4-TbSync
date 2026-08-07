@@ -227,6 +227,18 @@
   "config.protocol.provision.hint": {
     "message": "Niektóre serwery (np. Kerio) wymagają wysłania provisioningu przed jakimkolwiek innym poleceniem. Większość serwerów - w tym Microsoft Exchange i Microsoft 365 - żąda go automatycznie, gdy jest potrzebny. Dla nich nie trzeba włączać tej opcji ręcznie."
   },
+  "config.protocol.conflict": {
+    "message": "Sprzeczne zmiany"
+  },
+  "config.protocol.conflict.hint": {
+    "message": "Jeśli element został zmieniony tutaj i na serwerze, serwer decyduje, która wersja wygrywa; przegrana zmiana zostaje zastąpiona podczas synchronizacji."
+  },
+  "config.protocol.conflict.serverWins": {
+    "message": "Wygrywa serwer (zalecane)"
+  },
+  "config.protocol.conflict.deviceWins": {
+    "message": "Wygrywa to urządzenie"
+  },
   "config.contacts.displayOverride": {
     "message": "Zastąp wyświetlaną nazwę formą „Imię” + „Nazwisko”"
   },
@@ -334,12 +346,6 @@
   },
   "options.showItemsInTrash.hint": {
     "message": "Niektóre serwery przechowują usunięte kalendarze, książki adresowe i listy zadań w folderze Kosz, zamiast usuwać je całkowicie. Domyślnie są one ukryte z listy folderów. Włącz tę opcję, aby były widoczne - pojawiają się z lokalizowanym przedrostkiem „Kosz | ”, dzięki czemu można je odróżnić i wybrać, czy mają być synchronizowane. Zacznie obowiązywać przy następnym odświeżeniu listy folderów."
-  },
-  "options.postPushSettle": {
-    "message": "Czekaj, aż serwer odeśle wysłane zmiany"
-  },
-  "options.postPushSettle.hint": {
-    "message": "Niektóre serwery Exchange odsyłają zmianę jako własną tuż po jej przyjęciu. Bez tej opcji takie echo dociera dopiero przy następnej synchronizacji i może nadpisać zmiany wprowadzone w międzyczasie. Po włączeniu każda synchronizacja, która coś wysłała, czeka około dwóch sekund i pobiera dane ponownie, aby od razu przyjąć echo. Włącz tylko wtedy, gdy lokalne zmiany giną."
   },
   "options.clientid": {
     "message": "Niestandardowy identyfikator klienta OAuth"

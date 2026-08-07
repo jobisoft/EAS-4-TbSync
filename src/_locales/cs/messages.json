@@ -227,6 +227,18 @@
   "config.protocol.provision.hint": {
     "message": "Některé servery (např. Kerio) vyžadují, aby provisioning byl odeslán před jakýmkoli jiným příkazem. Většina serverů - včetně Microsoft Exchange a Microsoft 365 - si o něj automaticky řekne, když je třeba. U nich nemusíte tuto volbu zapínat ručně."
   },
+  "config.protocol.conflict": {
+    "message": "Konfliktní změny"
+  },
+  "config.protocol.conflict.hint": {
+    "message": "Pokud byla položka změněna zde i na serveru, server rozhodne, která verze zvítězí; prohrávající změna je při synchronizaci nahrazena."
+  },
+  "config.protocol.conflict.serverWins": {
+    "message": "Vyhrává server (doporučeno)"
+  },
+  "config.protocol.conflict.deviceWins": {
+    "message": "Vyhrává toto zařízení"
+  },
   "config.contacts.displayOverride": {
     "message": "Přepsat zobrazované jméno tvarem „Křestní jméno“ + „Příjmení“"
   },
@@ -334,12 +346,6 @@
   },
   "options.showItemsInTrash.hint": {
     "message": "Některé servery uchovávají odstraněné kalendáře, adresáře a seznamy úkolů uvnitř složky Koš, místo aby je úplně odstranily. Tyto položky jsou ve výchozím stavu ze seznamu složek skryté. Aktivací této volby je zviditelníte - zobrazují se s lokalizovaným prefixem „Koš | “, abyste je rozlišili a mohli rozhodnout, zda je synchronizovat. Projeví se při příštím obnovení seznamu složek."
-  },
-  "options.postPushSettle": {
-    "message": "Počkat, až server vrátí odeslané změny"
-  },
-  "options.postPushSettle.hint": {
-    "message": "Některé servery Exchange vrátí změnu jako vlastní krátce poté, co ji přijaly. Bez této volby dorazí taková ozvěna až při příští synchronizaci, kde může přepsat úpravy provedené mezitím. Po zapnutí každá synchronizace, která něco odeslala, počká asi dvě sekundy a znovu stáhne data, aby ozvěnu převzala ihned. Zapínejte jen tehdy, když se místní změny ztrácejí."
   },
   "options.clientid": {
     "message": "Vlastní ID klienta OAuth"

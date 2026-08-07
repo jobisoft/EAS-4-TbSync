@@ -24,9 +24,9 @@
  *
  * The rest fall into three groups: the OPTIONS probe cache
  * (`allowedEasVersions`, `allowedEasCommands`, `lastEasOptionsUpdate`), the
- * config-popup options (`asversionselected`, `provision`, `syncrecurrence`,
- * `synclimit`, `displayoverride`, `seperator` - spelled that way on disk),
- * and GAL state (`galenabled`, `galName`).
+ * config-popup options (`asversionselected`, `provision`, `conflict`,
+ * `syncrecurrence`, `synclimit`, `displayoverride`, `seperator` - spelled
+ * that way on disk), and GAL state (`galenabled`, `galName`).
  *
  * Credentials sit in that account row in `storage.local`, unencrypted. A
  * WebExtension has no write path to Thunderbird's password manager - the
@@ -125,6 +125,11 @@ const ALLOWED_NAME_SEPARATORS = ["10", "44"];
 /** EAS FilterType codes for calendar windowing, sent on the wire as
  *  `<FilterType>…</FilterType>` in the Sync request. */
 const ALLOWED_CALENDAR_SYNC_LIMITS = ["0", "4", "5", "6", "7"];
+
+/** `<Conflict>` values, sent in every Sync Options block: "1" = the
+ *  server's copy wins a two-writer conflict (default), "0" = this device
+ *  wins. */
+const ALLOWED_CONFLICT_VALUES = ["0", "1"];
 
 /** Setup-type → fixed EAS host. Only the OAuth setup types appear here. */
 const HOST_BY_SERVERTYPE = {
@@ -1060,6 +1065,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           // is a pre-emptive override for servers that need provisioning
           // but don't return 449 (e.g. Kerio).
           provision: false,
+          conflict: "1",
           syncrecurrence: true,
         },
       };
@@ -1086,6 +1092,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           policykey: "0",
           foldersynckey: "0",
           provision: false,
+          conflict: "1",
           syncrecurrence: true,
         },
       };
@@ -1115,6 +1122,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         policykey: "0",
         foldersynckey: "0",
         provision: false,
+        conflict: "1",
         syncrecurrence: true,
       },
     };
@@ -1147,6 +1155,9 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Legacy default is off. The 449 self-correction path will flip
       // it on automatically when the server demands provisioning.
       provision: !!c.provision,
+      // Absent (pre-option accounts) means server wins - the value the
+      // sync also falls back to.
+      conflict: c.conflict === "0" ? "0" : "1",
       // Contacts section.
       contactsDisplayOverride: !!c.displayoverride,
       contactsNameSeparator: c.seperator || "10",
@@ -1199,6 +1210,16 @@ export class EasProvider extends TbSyncProviderImplementation {
     }
     if ("provision" in patch) {
       customPatch.provision = !!patch.provision;
+    }
+    if ("conflict" in patch) {
+      const v = String(patch.conflict ?? "");
+      if (!ALLOWED_CONFLICT_VALUES.includes(v)) {
+        throw withCode(
+          new Error("Invalid conflict-policy selection"),
+          ERR.UNKNOWN_COMMAND,
+        );
+      }
+      customPatch.conflict = v;
     }
     if ("contactsDisplayOverride" in patch) {
       customPatch.displayoverride = !!patch.contactsDisplayOverride;
