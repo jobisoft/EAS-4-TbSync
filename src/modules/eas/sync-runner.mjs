@@ -847,7 +847,7 @@ async function pushPhase(ctx, userEdits) {
     }
     if (!slice.length) break;
 
-    const built = await buildPushBatch(ctx, slice);
+    const built = await buildPushBatch(ctx, slice, failedItems);
     if (!built.adds.length && !built.mods.length && !built.dels.length) {
       itemsDone += slice.length;
       reportProgress(ctx, itemsDone, itemsTotal);
@@ -1226,7 +1226,38 @@ async function dropUnsatisfiableEntry(ctx, entry, reason) {
   });
 }
 
-async function buildPushBatch(ctx, slice) {
+/** An item the codec cannot put on the wire without changing its meaning
+ *  is treated like a server rejection, client-side: warned about with the
+ *  item and the reason, counted into the folder's "server did not accept
+ *  N elements" warning, and held in the queue so it retries every sync
+ *  until the user changes or removes it. Deliberate retry-forever - the
+ *  same visibility decision the task-recurrence rejection made: a lie on
+ *  the wire is worse than a nagging warning. NOT dropUnsatisfiableEntry,
+ *  which removes the entry permanently.
+ *
+ *  Returns true when the entry was held. */
+async function holdIfUnrepresentable(ctx, entry, it, operation, failedItems) {
+  const reason = ctx.itemKind.codec.clientRejectReason?.({
+    blob: it.blob,
+    syncRecurrence: ctx.syncRecurrence,
+    asVersion: ctx.asVersion,
+  });
+  if (!reason) return false;
+  ctx.provider.reportEventLog({
+    level: "warning",
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    message:
+      `[${ctx.itemKind.changelogKind}-sync] cannot send ${operation} for ` +
+      `local item ${entry.itemId}: ${reason}: ` +
+      `${summarizeBlobForLog(it.blob, ctx.itemKind.changelogKind)}`,
+    details: it.blob,
+  });
+  failedItems.add(entry.itemId);
+  return true;
+}
+
+async function buildPushBatch(ctx, slice, failedItems) {
   const adds = [];
   const mods = [];
   const dels = [];
@@ -1241,6 +1272,9 @@ async function buildPushBatch(ctx, slice) {
         );
         continue;
       }
+      if (await holdIfUnrepresentable(ctx, entry, it, "add", failedItems)) {
+        continue;
+      }
       const clientId = `c-${Date.now().toString(36)}-${adds.length}`;
       adds.push({ entry, clientId, item: it });
     } else if (entry.status === "modified_by_user") {
@@ -1251,6 +1285,9 @@ async function buildPushBatch(ctx, slice) {
           entry,
           "there is no such local item, so nothing can be sent for it",
         );
+        continue;
+      }
+      if (await holdIfUnrepresentable(ctx, entry, it, "change", failedItems)) {
         continue;
       }
       const serverID =

@@ -848,6 +848,31 @@ export function appendApplicationDataFromIcal({
 
 /* ── ID stamping ───────────────────────────────────────────────────── */
 
+/** Names why an event cannot go on the wire without changing its
+ *  meaning, or null when it can. The EAS Recurrence Type enum has no
+ *  sub-daily frequencies, so an HOURLY/MINUTELY/SECONDLY rule would
+ *  silently sync as DAILY - the runner holds such an item as a
+ *  client-side rejection instead (warned, counted, retried every sync
+ *  until the user changes or removes it). Gated on `syncRecurrence`:
+ *  with the flag off no recurrence is emitted at all, so nothing is
+ *  misrepresented. The regex pre-filter is safe - VTIMEZONE transition
+ *  rules are only ever yearly. */
+const SUB_DAILY_FREQ = /FREQ=(HOURLY|MINUTELY|SECONDLY)/;
+
+export function clientRejectReason({ blob, syncRecurrence }) {
+  if (!syncRecurrence || typeof blob !== "string") return null;
+  if (!SUB_DAILY_FREQ.test(blob)) return null;
+  const vcal = parseVCalendar(blob);
+  const master = vcal ? pickMasterVevent(vcal) : null;
+  const freq = String(
+    master?.getFirstProperty("rrule")?.getFirstValue()?.freq ?? "",
+  ).toUpperCase();
+  if (freq === "HOURLY" || freq === "MINUTELY" || freq === "SECONDLY") {
+    return `EAS cannot represent a recurrence below daily (FREQ=${freq})`;
+  }
+  return null;
+}
+
 export function readEasServerIdFromIcal(ical) {
   const v = parseFirstVevent(ical);
   if (!v) return null;

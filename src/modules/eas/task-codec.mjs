@@ -246,7 +246,8 @@ export function appendApplicationDataFromIcal({
     localStart = fakeLocalAsUtc(startProp.getFirstValue());
     builder.atag("StartDate", localStart);
   }
-  const dueProp = vtodo.getFirstProperty("due") ?? startProp;
+  const rawDueProp = vtodo.getFirstProperty("due");
+  const dueProp = rawDueProp ?? startProp;
   if (dueProp) {
     builder.atag("UtcDueDate", toExtendedIsoUtc(dueProp.getFirstValue()));
     builder.atag("DueDate", fakeLocalAsUtc(dueProp.getFirstValue()));
@@ -270,20 +271,27 @@ export function appendApplicationDataFromIcal({
   // Recurrence outbound (RRULE only; tasks have no exceptions). The
   // anchor `<Start>` carries: on ≤14.x the real UTC instant, on 16.x the
   // fake-local form legacy has always sent - see `appendRecurrence`.
-  if (syncRecurrence && localStart) {
+  // A task without a DTSTART anchors its series on DUE - Exchange models
+  // recurring tasks on the start/due pair, so the due date is a faithful
+  // anchor and the rule survives instead of being silently dropped. A
+  // rule with NEITHER anchor never gets here: `clientRejectReason` holds
+  // the item before the push.
+  const anchorProp = startProp ?? rawDueProp;
+  if (syncRecurrence && anchorProp) {
     const rrule = vtodo.getFirstProperty("rrule");
-    const utcStart = startProp
-      ? toExtendedIsoUtc(startProp.getFirstValue())
-      : null;
-    if (rrule)
+    if (rrule) {
+      const anchorLocal =
+        localStart ?? fakeLocalAsUtc(anchorProp.getFirstValue());
+      const anchorUtc = toExtendedIsoUtc(anchorProp.getFirstValue());
       appendRecurrence(
         builder,
         rrule,
-        startProp,
-        localStart,
-        utcStart,
+        anchorProp,
+        anchorLocal,
+        anchorUtc,
         asVersion,
       );
+    }
   }
 
   // Complete.
@@ -320,6 +328,31 @@ export function appendApplicationDataFromIcal({
 }
 
 /* ── ID stamping ───────────────────────────────────────────────────── */
+
+/** Names why a task cannot go on the wire without changing its meaning,
+ *  or null when it can. Two cases: EAS has no sub-daily recurrence
+ *  frequencies, and a recurring task needs an anchor - the series is
+ *  emitted against DTSTART or, failing that, DUE. Only when a rule has
+ *  neither is the item held. Gated on `syncRecurrence` like the
+ *  emission itself. */
+export function clientRejectReason({ blob, syncRecurrence }) {
+  if (!syncRecurrence || typeof blob !== "string") return null;
+  if (!blob.includes("RRULE")) return null;
+  const vtodo = parseFirstVtodo(blob);
+  const rrule = vtodo?.getFirstProperty("rrule");
+  if (!rrule) return null;
+  const freq = String(rrule.getFirstValue()?.freq ?? "").toUpperCase();
+  if (freq === "HOURLY" || freq === "MINUTELY" || freq === "SECONDLY") {
+    return `EAS cannot represent a recurrence below daily (FREQ=${freq})`;
+  }
+  if (!vtodo.getFirstProperty("dtstart") && !vtodo.getFirstProperty("due")) {
+    return (
+      "a recurring task needs a start or a due date - EAS anchors the " +
+      "series on one of them"
+    );
+  }
+  return null;
+}
 
 export function readEasServerIdFromIcal(ical) {
   const v = parseFirstVtodo(ical);

@@ -61,6 +61,9 @@ function makeCodec(modCodec) {
     },
     readEasServerIdFromBlob: modCodec.readEasServerIdFromIcal,
     stampEasServerId: modCodec.stampEasServerId,
+    // Optional: names why an item cannot go on the wire without changing
+    // its meaning - the runner then holds it as a client-side rejection.
+    clientRejectReason: modCodec.clientRejectReason,
     // Optional 16.1 exception methods (calendar only). The runner falls
     // back to a normal master-update for codecs that don't implement them.
     applyInstanceChange: modCodec.applyInstanceChange,
