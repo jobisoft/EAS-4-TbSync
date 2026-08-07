@@ -475,6 +475,7 @@ async function runOneSync({
           folderId: ctx.folderId,
           parentId: e.parentId,
           itemId: e.itemId,
+          kind: e.kind,
         });
         continue;
       }
@@ -590,6 +591,7 @@ async function revertLocalChanges(ctx) {
         folderId: ctx.folderId,
         parentId: e.parentId,
         itemId: e.itemId,
+        kind: e.kind,
       });
     }
     return true;
@@ -613,6 +615,7 @@ async function revertLocalChanges(ctx) {
         folderId: ctx.folderId,
         parentId: e.parentId,
         itemId: e.itemId,
+        kind: e.kind,
       });
       continue;
     }
@@ -635,6 +638,7 @@ async function revertLocalChanges(ctx) {
         folderId: ctx.folderId,
         parentId: e.parentId,
         itemId: e.itemId,
+        kind: e.kind,
       });
       continue;
     }
@@ -662,6 +666,7 @@ async function revertLocalChanges(ctx) {
         folderId: ctx.folderId,
         parentId: e.parentId,
         itemId: e.itemId,
+        kind: e.kind,
       });
       continue;
     }
@@ -706,6 +711,7 @@ async function revertLocalChanges(ctx) {
       folderId: ctx.folderId,
       parentId: e.parentId,
       itemId: e.itemId,
+      kind: e.kind,
     });
   }
   return false;
@@ -1008,6 +1014,7 @@ async function pushPhase(ctx, userEdits) {
           items: failedEntries.map((e) => ({
             parentId: e.parentId,
             itemId: e.itemId,
+            kind: e.kind,
           })),
         });
       } catch (err) {
@@ -1215,6 +1222,7 @@ async function dropUnsatisfiableEntry(ctx, entry, reason) {
     folderId: ctx.folderId,
     parentId: entry.parentId,
     itemId: entry.itemId,
+    kind: entry.kind,
   });
 }
 
@@ -1294,6 +1302,7 @@ async function buildPushBatch(ctx, slice) {
           folderId: ctx.folderId,
           parentId: entry.parentId,
           itemId: entry.itemId,
+          kind: entry.kind,
         });
         continue;
       }
@@ -1363,6 +1372,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       folderId: ctx.folderId,
       parentId: sentEntry.entry.parentId,
       itemId: sentEntry.entry.itemId,
+      kind: sentEntry.entry.kind,
     });
   }
   for (const node of responses.changes) {
@@ -1380,6 +1390,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
           folderId: ctx.folderId,
           parentId: sentEntry.entry.parentId,
           itemId: sentEntry.entry.itemId,
+          kind: sentEntry.entry.kind,
         });
       }
       continue;
@@ -1405,6 +1416,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         folderId: ctx.folderId,
         parentId: sentEntry.entry.parentId,
         itemId: sentEntry.entry.itemId,
+        kind: sentEntry.entry.kind,
       });
       removeFromIndexMap(ctx, sentEntry.entry.itemId);
     } else {
@@ -1428,6 +1440,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         folderId: ctx.folderId,
         parentId: m.entry.parentId,
         itemId: m.entry.itemId,
+        kind: m.entry.kind,
       });
     }
     // Status 7/8: changelogRemove already happened in the per-response
@@ -1444,6 +1457,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         folderId: ctx.folderId,
         parentId: d.entry.parentId,
         itemId: d.entry.itemId,
+        kind: d.entry.kind,
       });
       removeFromIndexMap(ctx, d.entry.itemId);
     }
