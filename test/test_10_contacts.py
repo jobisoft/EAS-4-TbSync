@@ -49,6 +49,12 @@ ROUND_TRIP_FIELDS = [
     ("home street", r"^ADR[^:\r\n]*:[^\r\n]*Heimstr\. 2"),
     ("birthday", r"^BDAY[^:\r\n]*:1980-?02-?29"),
     ("note umlauts", r"^NOTE[^:\r\n]*:[^\r\n]*(äöü|\\u00e4)"),
+    # The four custom slots (OfficeLocation/CustomerId/GovernmentId/
+    # AccountName on the wire) - TB's Custom 1-4 fields.
+    ("custom 1", r"^X-CUSTOM1:Erste Notiz"),
+    ("custom 2", r"^X-CUSTOM2:Zweite Notiz"),
+    ("custom 3", r"^X-CUSTOM3:Dritte Notiz"),
+    ("custom 4", r"^X-CUSTOM4:Vierte Notiz"),
 ]
 
 
@@ -184,7 +190,19 @@ def t_10_7(s):
     card = _probe_card(s)
     harness.true(card is not None, "setup card did not survive the push")
 
-    cleared = ("BDAY", "NOTE", "CATEGORIES", "NICKNAME")
+    # X-CUSTOM1..4 ride the four EAS custom slots (OfficeLocation,
+    # CustomerId, GovernmentId, AccountName) - TB's Custom 1-4 editor
+    # fields, clearable by any user, so their removal must stick too.
+    cleared = (
+        "BDAY",
+        "NOTE",
+        "CATEGORIES",
+        "NICKNAME",
+        "X-CUSTOM1",
+        "X-CUSTOM2",
+        "X-CUSTOM3",
+        "X-CUSTOM4",
+    )
     kept = [
         line
         for line in _unfold(_vcard(card)).splitlines()

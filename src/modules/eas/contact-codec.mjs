@@ -179,10 +179,11 @@ export function appendApplicationDataFromVCard({
   writeOrganization(builder, comp);
   writeStandardPhones(builder, phoneBuckets);
   writeAddresses(builder, comp, separator);
-  emitIf(
+  emitIfOrClear(
     builder,
     "OfficeLocation",
     stringOf(comp.getFirstPropertyValue("x-custom1")),
+    emitClears,
   );
   // Picture sits outside 16.x's full-replacement contract - omitting it
   // KEEPS the server's photo on every version (measured on 16.1, where
@@ -209,20 +210,23 @@ export function appendApplicationDataFromVCard({
     if (nick) builder.atag("NickName", nick);
     else if (emitClears) builder.atag("NickName", "");
   }
-  emitIf(
+  emitIfOrClear(
     builder,
     "CustomerId",
     stringOf(comp.getFirstPropertyValue("x-custom2")),
+    emitClears,
   );
-  emitIf(
+  emitIfOrClear(
     builder,
     "GovernmentId",
     stringOf(comp.getFirstPropertyValue("x-custom3")),
+    emitClears,
   );
-  emitIf(
+  emitIfOrClear(
     builder,
     "AccountName",
     stringOf(comp.getFirstPropertyValue("x-custom4")),
+    emitClears,
   );
   writeIMs(builder, comp);
   // CompanyMainPhone tag lives in the Contacts2 codepage per
@@ -926,6 +930,19 @@ function parseVCard(vCard) {
 function emitIf(b, tag, value) {
   const s = stringOf(value);
   if (s) b.atag(tag, s);
+}
+
+/** Like emitIf, but a Change on <=14.x emits the explicit empty element
+ *  when the value is absent - the delta-semantics clear. On Adds and 16.x
+ *  Changes the element is omitted (nothing to clear / full replacement
+ *  clears by omission). Same model writeDates and NickName use. Needed by
+ *  the four custom slots: they surface as TB's Custom 1-4 editor fields,
+ *  so users clear them like any mapped field - and any WebExtension can
+ *  strip the vCard properties programmatically. */
+function emitIfOrClear(b, tag, value, emitClears) {
+  const s = stringOf(value);
+  if (s) b.atag(tag, s);
+  else if (emitClears) b.atag(tag, "");
 }
 
 function paramTypes(prop) {
