@@ -142,9 +142,19 @@ export function appendApplicationDataFromVCard({
   vCard,
   asVersion,
   separator,
+  op = "change",
 }) {
   const comp = parseVCard(vCard);
   if (!comp) return;
+  // Empty-means-clear is *delta* Change semantics, which is a pre-16
+  // notion. Measured against live servers: 14.1 keeps omitted elements and
+  // clears on empty (so removals need the empty form); 16.1 answers
+  // Status 6 (malformed) to empty elements in Adds AND Changes, because
+  // 16.x Changes are full replacements - omitting an element is what
+  // deletes it. So the clear-capable writers emit their empty form only
+  // for a pre-16 Change; everywhere else absence speaks for itself.
+  const emitClears =
+    op !== "add" && !String(asVersion ?? "").startsWith("16");
 
   // Phone bucketing happens once: standard types go to the Contacts
   // page below and CompanyMainPhone goes to the Contacts2 page at the
@@ -161,7 +171,7 @@ export function appendApplicationDataFromVCard({
   builder.switchpage("Contacts");
 
   writeFileAs(builder, comp);
-  writeDates(builder, comp);
+  writeDates(builder, comp, emitClears);
   writeNames(builder, comp);
   // Notes are emitted later by writeNote between the two pages.
   writeEmails(builder, comp);
@@ -174,10 +184,15 @@ export function appendApplicationDataFromVCard({
     "OfficeLocation",
     stringOf(comp.getFirstPropertyValue("x-custom1")),
   );
-  writePicture(builder, comp);
+  // Picture sits outside 16.x's full-replacement contract - omitting it
+  // KEEPS the server's photo on every version (measured on 16.1, where
+  // omission cleared every other field). The explicit empty <Picture/> is
+  // the documented delete and is accepted by both generations; only Adds
+  // omit it, since there is nothing to clear.
+  writePicture(builder, comp, op !== "add");
   writePrefixedPhonesContacts(builder, phoneBuckets);
   writePassThroughsContacts(builder, comp);
-  writeCategories(builder, comp);
+  writeCategories(builder, comp, emitClears);
   writeChildren(builder, comp);
 
   // Body emission sits between the Contacts and Contacts2 pages
@@ -187,11 +202,13 @@ export function appendApplicationDataFromVCard({
   writeNote(builder, comp, asVersion);
   
   builder.switchpage("Contacts2");
-  // Always emitted (empty clears), same reasoning as writeDates.
-  builder.atag(
-    "NickName",
-    stringOf(comp.getFirstPropertyValue("nickname")) || "",
-  );
+  // Empty clears on a Change, omitted on an Add - same reasoning as
+  // writeDates.
+  {
+    const nick = stringOf(comp.getFirstPropertyValue("nickname"));
+    if (nick) builder.atag("NickName", nick);
+    else if (emitClears) builder.atag("NickName", "");
+  }
   emitIf(
     builder,
     "CustomerId",
@@ -306,15 +323,19 @@ function readDates(adNode, comp) {
   }
 }
 
-function writeDates(b, comp) {
-  // Always emitted, empty when absent: ActiveSync keeps omitted elements
-  // unchanged on the server, so skipping absent fields makes local
-  // removals silently immortal - the deleted birthday came back on every
-  // clean pull. Empty-means-clear is what readDates has honored all along.
+function writeDates(b, comp, emitClears) {
+  // On a Change, always emitted, empty when absent: ActiveSync keeps
+  // omitted elements unchanged on the server, so skipping absent fields
+  // makes local removals silently immortal - the deleted birthday came
+  // back on every clean pull. Empty-means-clear is what readDates has
+  // honored all along. On an Add the empty form is omitted: nothing to
+  // clear, and 16.1 rejects it as malformed.
   const bday = stringOf(comp.getFirstPropertyValue("bday"));
-  b.atag("Birthday", bday ? toIsoDateTime(bday) : "");
+  if (bday) b.atag("Birthday", toIsoDateTime(bday));
+  else if (emitClears) b.atag("Birthday", "");
   const ann = stringOf(comp.getFirstPropertyValue("anniversary"));
-  b.atag("Anniversary", ann ? toIsoDateTime(ann) : "");
+  if (ann) b.atag("Anniversary", toIsoDateTime(ann));
+  else if (emitClears) b.atag("Anniversary", "");
 }
 
 /* ── Emails ────────────────────────────────────────────────────────── */
@@ -727,17 +748,17 @@ function readPicture(adNode, comp) {
   comp.addProperty(prop);
 }
 
-function writePicture(b, comp) {
-  // Always emitted, empty when the card has no photo. ActiveSync Change
-  // semantics keep any omitted element unchanged on the server, so leaving
-  // <Picture> out is not neutral - it makes photo removal impossible: the
-  // deleted photo comes back on the next clean pull. Empty-means-clear is
-  // the same convention readPicture honors inbound.
+function writePicture(b, comp, emitClears) {
+  // On a Change, always emitted, empty when the card has no photo -
+  // ActiveSync keeps omitted elements unchanged, so leaving <Picture> out
+  // makes photo removal impossible: the deleted photo comes back on the
+  // next clean pull. Empty-means-clear is what readPicture honors inbound.
+  // On an Add the empty form is omitted (16.1: Status 6).
   const photo = comp.getFirstProperty("photo");
   const value = photo ? stringOf(photo.getFirstValue()) : "";
   const m = /^data:image\/[^;]+;base64,(.+)$/i.exec(value);
   if (m) b.atag("Picture", m[1]);
-  else b.atag("Picture", "");
+  else if (emitClears) b.atag("Picture", "");
 }
 
 /* ── Categories ────────────────────────────────────────────────────── */
@@ -757,17 +778,17 @@ function readCategories(adNode, comp) {
   }
 }
 
-function writeCategories(b, comp) {
-  // Empty <Categories/> when the card has none - the reader's own comment
-  // states the convention ("an empty <Categories/> clears it"); the writer
-  // just never held up its half until now, so removed categories were
-  // resurrected by the next pull.
+function writeCategories(b, comp, emitClears) {
+  // Empty <Categories/> on a Change when the card has none - the reader's
+  // own comment states the convention ("an empty <Categories/> clears
+  // it"); the writer just never held up its half, so removed categories
+  // were resurrected by the next pull. Omitted on an Add (16.1: Status 6).
   const prop = comp.getFirstProperty("categories");
   const values = prop
     ? prop.getValues().map(stringOf).filter(Boolean)
     : [];
   if (!values.length) {
-    b.atag("Categories", "");
+    if (emitClears) b.atag("Categories", "");
     return;
   }
   b.otag("Categories");

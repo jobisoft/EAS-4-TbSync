@@ -31,12 +31,13 @@ const codec = {
       uid,
     });
   },
-  appendApplicationDataFromBlob({ builder, blob, asVersion, separator }) {
+  appendApplicationDataFromBlob({ builder, blob, asVersion, separator, op }) {
     return appendApplicationDataFromVCard({
       builder,
       vCard: blob,
       asVersion,
       separator,
+      op,
     });
   },
   readEasServerIdFromBlob: readEasServerIdFromVCard,

@@ -1833,6 +1833,7 @@ function appendCommands(
     w.otag("ApplicationData");
     codec.appendApplicationDataFromBlob({
       builder: w,
+      op: "add",
       blob: a.item.blob,
       asVersion,
       separator,
@@ -1852,6 +1853,7 @@ function appendCommands(
     w.otag("ApplicationData");
     codec.appendApplicationDataFromBlob({
       builder: w,
+      op: "change",
       blob: m.item.blob,
       asVersion,
       separator,
