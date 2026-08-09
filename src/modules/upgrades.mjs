@@ -45,6 +45,7 @@ import * as eventCodec from "./eas/calendar-codec.mjs";
 import * as taskCodec from "./eas/task-codec.mjs";
 import { localQueue } from "../vendor/tbsync/change-queue.mjs";
 import {
+  CHANGELOG_KINDS,
   isUserEntry,
   SERVER_TAG_STATUSES,
 } from "../vendor/tbsync/changelog-core.mjs";
@@ -290,8 +291,17 @@ async function adoptHostChangelogs(provider) {
         observed: folder.targetType === "contacts",
       });
       let adopted = 0;
+      let refused = 0;
       for (const e of entries) {
         if (!isUserEntry(e?.status)) continue;
+        // `record` throws on a kind outside CHANGELOG_KINDS. The inbox is
+        // whatever the v4 importer wrote, and one malformed row must not
+        // abort the whole migration - skip it, count it, and let the
+        // summary line below name the loss.
+        if (!CHANGELOG_KINDS.includes(e.kind)) {
+          refused++;
+          continue;
+        }
         await queue.record({
           parentId: e.parentId,
           itemId: e.itemId,
@@ -307,10 +317,14 @@ async function adoptHostChangelogs(provider) {
         patch: { changelog: [] },
       });
       provider.reportEventLog({
-        level: "info",
+        level: refused ? "warning" : "info",
         accountId,
         folderId: folder.folderId,
-        message: `[upgrade] adopted ${adopted} queued edit(s) from the host`,
+        message:
+          `[upgrade] adopted ${adopted} queued edit(s) from the host` +
+          (refused
+            ? `; refused ${refused} with an unknown changelog kind`
+            : ""),
       });
     }
   }
@@ -920,9 +934,13 @@ async function migrateCalendarItemsForFolder(
       // would not do here: our own calendars are not observed, so nothing
       // would ever consume one - the suppression has to be structural,
       // exactly as it is for a sync write.
-      await calendarStore.updateItem(calendarStore.cacheId(folder.targetID), id, {
-        ical: stamped,
-      });
+      await calendarStore.updateItem(
+        calendarStore.cacheId(folder.targetID),
+        id,
+        {
+          ical: stamped,
+        },
+      );
 
       // Legacy convention: item.id === EAS ServerId. Populate the
       // indexMap so `buildPushBatch`'s deleted_by_user path (which only

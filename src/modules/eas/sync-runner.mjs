@@ -48,7 +48,10 @@ import {
   localQueue,
   rememberBindings,
 } from "../../vendor/tbsync/change-queue.mjs";
-import { SERVER_TAG_STATUSES } from "../../vendor/tbsync/changelog-core.mjs";
+import {
+  CHANGELOG_KINDS,
+  SERVER_TAG_STATUSES,
+} from "../../vendor/tbsync/changelog-core.mjs";
 import {
   ok,
   warning as warningStatus,
@@ -507,13 +510,23 @@ async function runOneSync({
     const userEdits = [];
     for (const e of pending) {
       if (e.kind !== ctx.itemKind.changelogKind) {
+        // Two different situations share this branch and must not share a
+        // message: a *known* foreign kind is a real item EAS has no wire
+        // format for (the mailing-list case above), while a kind outside
+        // the vocabulary is a bug in whatever queued it, and calling it
+        // "unsupported" would send the reader to the protocol instead of
+        // to the writer.
+        const message = CHANGELOG_KINDS.includes(e.kind)
+          ? `[${ctx.itemKind.changelogKind}-sync] skipping a ${e.kind} ` +
+            `("${e.itemId}"): ActiveSync cannot store one, so it stays local`
+          : `[${ctx.itemKind.changelogKind}-sync] skipping a queued edit ` +
+            `of "${e.itemId}": unknown changelog kind ` +
+            `${JSON.stringify(e.kind)} - a bug in whatever queued it`;
         ctx.provider.reportEventLog({
           level: "warning",
           accountId: ctx.accountId,
           folderId: ctx.folderId,
-          message:
-            `[${ctx.itemKind.changelogKind}-sync] skipping a ${e.kind} ` +
-            `("${e.itemId}"): ActiveSync cannot store one, so it stays local`,
+          message,
         });
         await ctx.queue.remove({
           parentId: e.parentId,
