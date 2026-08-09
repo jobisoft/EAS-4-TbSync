@@ -365,13 +365,19 @@ export function applyInstanceChange({
   // override.
   const master = pickMasterVevent(vcal);
   if (!master) return ical;
+  // An all-day master's exceptions are DATEs, like its DTSTART - RFC 5545
+  // §3.8.4.4 matches RECURRENCE-ID to the occurrence by value type, so a
+  // DATE-TIME one binds nothing. A 16.1 all-day InstanceId is the
+  // fake-local form (date at T000000Z), so no zone is needed to derive
+  // the date.
+  const allDay = !!master.getFirstPropertyValue("dtstart")?.isDate;
 
   removeExdate(master, instanceUtc);
 
   // Drop any existing override for this RECURRENCE-ID before re-creating.
   for (const sub of vcal.getAllSubcomponents("vevent")) {
     const rid = sub.getFirstPropertyValue("recurrence-id");
-    if (rid && rid.toString() === instanceUtcToIcalString(instanceUtc)) {
+    if (rid && namesInstance(rid, instanceUtc, null)) {
       vcal.removeSubcomponent(sub);
     }
   }
@@ -382,7 +388,11 @@ export function applyInstanceChange({
   if (masterUid) override.updatePropertyWithValue("uid", masterUid);
   // RECURRENCE-ID anchors the override to the original master occurrence.
   const ridProp = new ICAL.Property("recurrence-id", override);
-  ridProp.setValue(instanceUtcToIcalTime(instanceUtc));
+  ridProp.setValue(
+    allDay
+      ? allDayIcalDate(instanceUtc, null)
+      : instanceUtcToIcalTime(instanceUtc),
+  );
   override.addProperty(ridProp);
   populateVeventFromAd({
     adNode: adNode,
@@ -474,7 +484,7 @@ export function listInstanceCommands({
   // master item as well as the airsyncbase:InstanceId element of the
   // specific occurrence".
   for (const ex of exdates) {
-    const instanceId = icalTimeToBasicUtc(ex);
+    const instanceId = instanceKey(ex);
     // Already cancelled server-side. Sending it again is rejected, and the
     // rejection costs a retry budget and shows up as a failed element.
     if (previous && knownExdates.has(instanceId)) continue;
@@ -494,7 +504,7 @@ export function listInstanceCommands({
   }
   for (const override of overrides) {
     const rid = override.getFirstPropertyValue("recurrence-id");
-    const instanceId = icalTimeToBasicUtc(rid);
+    const instanceId = instanceKey(rid);
     // Unchanged since the server last saw it: the whole point of carrying a
     // baseline. An override is pushed whole, so an identical digest means
     // there is nothing to say about this occurrence.
@@ -552,16 +562,17 @@ export function applyInstanceDelete({ ical, instanceUtc }) {
   // The vevent without a RECURRENCE-ID - see applyInstanceChange above.
   const master = pickMasterVevent(vcal);
   if (!master) return ical;
+  const allDay = !!master.getFirstPropertyValue("dtstart")?.isDate;
 
   // Drop any existing override at this RECURRENCE-ID - server says it's
   // gone now.
   for (const sub of vcal.getAllSubcomponents("vevent")) {
     const rid = sub.getFirstPropertyValue("recurrence-id");
-    if (rid && rid.toString() === instanceUtcToIcalString(instanceUtc)) {
+    if (rid && namesInstance(rid, instanceUtc, null)) {
       vcal.removeSubcomponent(sub);
     }
   }
-  addExdate(master, instanceUtc);
+  addExdate(master, instanceUtc, allDay);
   return vcal.toString();
 }
 
@@ -1014,6 +1025,71 @@ function pickSourceTzid(vevent) {
   return null;
 }
 
+/** The calendar date of an all-day boundary, from the UTC instant EAS put
+ *  on the wire. The encoding depends on the server, and the two encodings
+ *  in the wild are told apart by the value itself:
+ *
+ *  - "fake local as UTC", YYYYMMDDT000000Z. The UTC date already IS
+ *    the intended date. All-day events on AS 16.1 use it (§2.2.2.1
+ *    forbids a TimeZone element there), as do Z-Push/Kopano/Grommunio
+ *    (all-zero blob). It mirrors what `fakeLocalAsUtcDate` emits
+ *    outbound. Read verbatim - converting would shift the date by a
+ *    day for users west of UTC.
+ *
+ *  - midnight-in-zone expressed as UTC, e.g. 20261006T220000Z for the
+ *    7th in Europe/Berlin. Real Exchange ≤14.x uses this
+ *    ([MS-ASCAL] §2.2.2.39) and it is what `allDayMidnightUtc` emits.
+ *    For a non-UTC zone that instant lands on the previous/next UTC
+ *    calendar day, so getUTCDate() shifts the event by ±1 day; the
+ *    value has to be converted into the zone first.
+ *
+ *  A midnight-UTC time-of-day is the discriminator, NOT the presence of
+ *  a real TimeZone blob. Exchange 14.1 was measured echoing an all-day
+ *  item back with StartTime 20261006T220000Z and no TimeZone element at
+ *  all, having accepted exactly that value from us moments earlier: a
+ *  blob-keyed test reads such an echo verbatim and moves every all-day
+ *  event one day earlier on the next pull. The value cannot lie the same
+ *  way - 220000Z is not a date-shaped value under any encoding.
+ *
+ *  Every all-day boundary goes through this one derivation - DTSTART and
+ *  DTEND here, RECURRENCE-ID and EXDATE in the exception readers - so an
+ *  exception lands on the same calendar date as the occurrence it names. */
+function allDayDateFromUtcInstant(d, tzId) {
+  let year = d.getUTCFullYear();
+  let month = d.getUTCMonth() + 1;
+  let day = d.getUTCDate();
+  const midnightUtc =
+    d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
+  if (!midnightUtc && tzId && tzId !== "UTC") {
+    const zone = getIcalTimezone(tzId);
+    if (zone) {
+      const utc = new ICAL.Time({
+        year,
+        month,
+        day,
+        hour: d.getUTCHours(),
+        minute: d.getUTCMinutes(),
+        second: d.getUTCSeconds(),
+        isDate: false,
+      });
+      utc.zone = ICAL.Timezone.utcTimezone;
+      const local = utc.convertToZone(zone);
+      year = local.year;
+      month = local.month;
+      day = local.day;
+    }
+  }
+  return { year, month, day };
+}
+
+/** Same, as a DATE-valued ICAL.Time - the stored form of every all-day
+ *  property (RFC 5545 §3.8.4.4: a RECURRENCE-ID must match the value type
+ *  of the DTSTART it binds to, so an all-day master's exceptions are DATEs
+ *  or they bind nothing). */
+function allDayIcalDate(d, tzId) {
+  return new ICAL.Time({ ...allDayDateFromUtcInstant(d, tzId), isDate: true });
+}
+
 function writeDateProp(vevent, name, easUtc, tzId, allDay) {
   // Replace any existing property of this name so merge-mode partial
   // Changes don't duplicate dtstart/dtend/dtstamp on the master.
@@ -1022,59 +1098,7 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay) {
   if (allDay) {
     const d = parseEasUtc(easUtc);
     if (!d) return;
-    // The calendar date of an all-day boundary depends on how the server
-    // encodes it, and the two encodings in the wild are told apart by the
-    // value itself:
-    //
-    //  - "fake local as UTC", YYYYMMDDT000000Z. The UTC date already IS
-    //    the intended date. All-day events on AS 16.1 use it (§2.2.2.1
-    //    forbids a TimeZone element there), as do Z-Push/Kopano/Grommunio
-    //    (all-zero blob). It mirrors what `fakeLocalAsUtcDate` emits
-    //    outbound. Read verbatim - converting would shift the date by a
-    //    day for users west of UTC.
-    //
-    //  - midnight-in-zone expressed as UTC, e.g. 20261006T220000Z for the
-    //    7th in Europe/Berlin. Real Exchange ≤14.x uses this
-    //    ([MS-ASCAL] §2.2.2.39) and it is what `allDayMidnightUtc` emits.
-    //    For a non-UTC zone that instant lands on the previous/next UTC
-    //    calendar day, so getUTCDate() shifts the event by ±1 day; the
-    //    value has to be converted into the zone first.
-    //
-    // A midnight-UTC time-of-day is the discriminator, NOT the presence of
-    // a real TimeZone blob. Exchange 14.1 was measured echoing an all-day
-    // item back with StartTime 20261006T220000Z and no TimeZone element at
-    // all, having accepted exactly that value from us moments earlier: a
-    // blob-keyed test reads such an echo verbatim and moves every all-day
-    // event one day earlier on the next pull. The value cannot lie the same
-    // way - 220000Z is not a date-shaped value under any encoding.
-    let year = d.getUTCFullYear();
-    let month = d.getUTCMonth() + 1;
-    let day = d.getUTCDate();
-    const midnightUtc =
-      d.getUTCHours() === 0 &&
-      d.getUTCMinutes() === 0 &&
-      d.getUTCSeconds() === 0;
-    if (!midnightUtc && tzId && tzId !== "UTC") {
-      const zone = getIcalTimezone(tzId);
-      if (zone) {
-        const utc = new ICAL.Time({
-          year,
-          month,
-          day,
-          hour: d.getUTCHours(),
-          minute: d.getUTCMinutes(),
-          second: d.getUTCSeconds(),
-          isDate: false,
-        });
-        utc.zone = ICAL.Timezone.utcTimezone;
-        const local = utc.convertToZone(zone);
-        year = local.year;
-        month = local.month;
-        day = local.day;
-      }
-    }
-    const date = new ICAL.Time({ year, month, day, isDate: true });
-    prop.setValue(date);
+    prop.setValue(allDayIcalDate(d, tzId));
   } else {
     const d = parseEasUtc(easUtc);
     if (!d) return;
@@ -1246,6 +1270,13 @@ function appendInboundExceptions({
   const wrapper = childByTag(adNode, "Exceptions");
   if (!wrapper) return;
   const masterUid = stringOf(vevent.getFirstPropertyValue("uid"));
+  // An all-day master stores DATE-valued exceptions, derived from the wire
+  // instant exactly the way its own DTSTART was - same discriminator, same
+  // zone - so RECURRENCE-ID/EXDATE land on the dates the RRULE generates
+  // and Thunderbird can bind them (RFC 5545 §3.8.4.4 matches by value
+  // type).
+  const allDay = readPathFrom(adNode, ["AllDayEvent"]) === "1";
+  const { tzId } = resolveTimezone(adNode, defaultTimezone);
 
   for (const exc of wrapper.children) {
     if (exc.tagName !== "Exception") continue;
@@ -1260,7 +1291,7 @@ function appendInboundExceptions({
     if (!ridDate) continue;
 
     if (readPathFrom(exc, ["Deleted"]) === "1") {
-      addExdate(vevent, ridDate);
+      addExdate(vevent, ridDate, allDay, tzId);
       continue;
     }
 
@@ -1268,7 +1299,9 @@ function appendInboundExceptions({
     vcal.addSubcomponent(override);
     if (masterUid) override.updatePropertyWithValue("uid", masterUid);
     const ridProp = new ICAL.Property("recurrence-id", override);
-    ridProp.setValue(jsDateToIcalUtcTime(ridDate));
+    ridProp.setValue(
+      allDay ? allDayIcalDate(ridDate, tzId) : jsDateToIcalUtcTime(ridDate),
+    );
     override.addProperty(ridProp);
     populateVeventFromAd({
       adNode: exc,
@@ -1306,18 +1339,22 @@ function appendOutboundExceptions({
     if (subUid === masterUid && rid) overrides.push(sub);
   }
   if (!exdates.length && !overrides.length) return;
+  // For DATE-valued rows (all-day) the wire form is the master StartTime's
+  // own encoding - see `exceptionStartTimeFor`. Same zone precedence as
+  // the master's blob, so both land on one grid.
+  const sourceTzid = pickSourceTzid(vevent) ?? defaultTimezone ?? "UTC";
 
   builder.otag("Exceptions");
   for (const ex of exdates) {
     builder.otag("Exception");
-    builder.atag("ExceptionStartTime", icalTimeToBasicUtc(ex));
+    builder.atag("ExceptionStartTime", exceptionStartTimeFor(ex, sourceTzid));
     builder.atag("Deleted", "1");
     builder.ctag();
   }
   for (const override of overrides) {
     const rid = override.getFirstPropertyValue("recurrence-id");
     builder.otag("Exception");
-    builder.atag("ExceptionStartTime", icalTimeToBasicUtc(rid));
+    builder.atag("ExceptionStartTime", exceptionStartTimeFor(rid, sourceTzid));
     // Recurse into the writer in exception-mode. We're already on the
     // Calendar codepage; the recursive call may switch to AirSyncBase
     // (Body / Location 16.1) and switches back to Calendar before
@@ -1344,21 +1381,27 @@ function appendOutboundExceptions({
  *  block on a re-delivered master, and a 16.1 per-instance `<Delete>` for an
  *  instance we EXDATE'd on an earlier sync. A duplicate is not inert: each
  *  copy becomes its own outbound `<Delete>` command. */
-function addExdate(vevent, jsDate) {
-  const target = formatBasicUtc(jsDate);
+function addExdate(vevent, jsDate, allDay = false, tzId = null) {
+  // `namesInstance` matches both stored forms, so a DATE row written now
+  // and a DATE-TIME row from an older blob both count as "already
+  // excluded" - each duplicate would otherwise become its own outbound
+  // <Delete>.
   for (const existing of collectExdates(vevent)) {
-    if (icalTimeToBasicUtc(existing) === target) return;
+    if (namesInstance(existing, jsDate, tzId)) return;
   }
   const prop = new ICAL.Property("exdate", vevent);
-  prop.setValue(jsDateToIcalUtcTime(jsDate));
+  prop.setValue(
+    allDay ? allDayIcalDate(jsDate, tzId) : jsDateToIcalUtcTime(jsDate),
+  );
   vevent.addProperty(prop);
 }
 
-function removeExdate(vevent, jsDate) {
-  const target = formatBasicUtc(jsDate);
+function removeExdate(vevent, jsDate, tzId = null) {
+  // Match-only, so no allDay parameter: `namesInstance` recognises both
+  // stored forms on its own.
   for (const p of vevent.getAllProperties("exdate")) {
     const v = p.getFirstValue();
-    if (v instanceof ICAL.Time && icalTimeToBasicUtc(v) === target) {
+    if (v instanceof ICAL.Time && namesInstance(v, jsDate, tzId)) {
       vevent.removeProperty(p);
     }
   }
@@ -1391,7 +1434,7 @@ export function exceptionFingerprint(ical) {
   if (!master) return null;
 
   const exdates = collectExdates(master)
-    .map((t) => icalTimeToBasicUtc(t))
+    .map((t) => instanceKey(t))
     .sort();
 
   const overrides = [];
@@ -1399,7 +1442,7 @@ export function exceptionFingerprint(ical) {
     const rid = sub.getFirstProperty("recurrence-id");
     if (!rid) continue;
     overrides.push({
-      rid: icalTimeToBasicUtc(sub.getFirstPropertyValue("recurrence-id")),
+      rid: instanceKey(sub.getFirstPropertyValue("recurrence-id")),
       digest: digestOf(sub.toString()),
     });
   }
@@ -1457,8 +1500,50 @@ function instanceUtcToIcalTime(jsDate) {
   return jsDateToIcalUtcTime(jsDate);
 }
 
-function instanceUtcToIcalString(jsDate) {
-  return jsDateToIcalUtcTime(jsDate).toString();
+/** Whether a stored RECURRENCE-ID / EXDATE names the occurrence EAS
+ *  identified by the UTC instant `jsDate`. Two stored forms exist and
+ *  both must keep matching: a DATE row (all-day, the form the writers
+ *  emit) names the calendar date the instant derives to, and a DATE-TIME
+ *  row (timed events, and every all-day blob written before the DATE
+ *  form) names the instant itself. */
+function namesInstance(t, jsDate, tzId) {
+  if (!(t instanceof ICAL.Time)) return false;
+  if (!t.isDate) return icalTimeToBasicUtc(t) === formatBasicUtc(jsDate);
+  const d = allDayDateFromUtcInstant(jsDate, tzId);
+  return t.year === d.year && t.month === d.month && t.day === d.day;
+}
+
+/** The instance identity a 16.1 exchange runs on - the wire InstanceId,
+ *  and the key `exceptionFingerprint` and `listInstanceCommands` agree
+ *  through. A DATE row keys as the fake-local form the protocol itself
+ *  uses for all-day instances (`YYYYMMDDT000000Z`); a DATE-TIME row keys
+ *  as its instant, which keeps old-form blobs comparable to fingerprints
+ *  taken before the DATE form existed. */
+function instanceKey(t) {
+  return t instanceof ICAL.Time && t.isDate
+    ? fakeLocalAsUtcFromValue(t)
+    : icalTimeToBasicUtc(t);
+}
+
+/** ExceptionStartTime for the ≤14.x embedded block. An all-day DATE row
+ *  is encoded exactly like the master's StartTime - local midnight in the
+ *  series' source zone, expressed as UTC - so the server lands master and
+ *  exceptions on one occurrence grid. */
+function exceptionStartTimeFor(t, sourceTzid) {
+  if (!(t instanceof ICAL.Time) || !t.isDate) return icalTimeToBasicUtc(t);
+  const zone =
+    sourceTzid && sourceTzid !== "UTC" ? getIcalTimezone(sourceTzid) : null;
+  const localMidnight = new ICAL.Time({
+    year: t.year,
+    month: t.month,
+    day: t.day,
+    hour: 0,
+    minute: 0,
+    second: 0,
+    isDate: false,
+  });
+  localMidnight.zone = zone ?? ICAL.Timezone.utcTimezone;
+  return formatBasicUtc(localMidnight.toJSDate());
 }
 
 /* ── Helpers: alarms ───────────────────────────────────────────────── */
