@@ -1021,6 +1021,21 @@ export class EasProvider extends TbSyncProviderImplementation {
         accountId,
         patch: { custom: { refreshToken: live } },
       });
+      // Rotation cannot be provoked - the server decides when to hand back
+      // a new token - so the only way to confirm this path works is to
+      // catch it happening. Without a line here that means noting the
+      // stored token, using the account for days, and diffing storage by
+      // hand, with a *negative* as the pass condition: no re-authentication
+      // prompt after a restart. This turns that into something readable,
+      // and puts a marker just before any prompt that does appear.
+      //
+      // The token itself is never logged, in whole or in part: an event log
+      // ends up in bug reports.
+      this.reportEventLog({
+        level: "debug",
+        accountId,
+        message: "[oauth] the server rotated the refresh token; stored the new one",
+      });
     } catch (err) {
       // Losing the write costs a re-auth at worst; failing the sync that
       // otherwise succeeded would be the bigger harm.

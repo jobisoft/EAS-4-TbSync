@@ -175,11 +175,20 @@ is not a Status 3 resync, so the fallback itself remains unproven.</p>
 <p>M8.1 and M8.3 have been run on 153.0.1. Nothing has been run on 154.</p>
 
 <h2 id="m9">M9. Cannot be forced — watch for it instead</h2>
-<p><strong>Rotated refresh tokens.</strong> Microsoft decides when to hand
-back a new one. Note the stored <code>refreshToken</code>, use the account
-across several restarts, and re-check. What you are watching for is the
-<em>absence</em> of a spurious <em>Authenticate</em> prompt after a
-restart.</p>
+<p><strong>Rotated refresh tokens.</strong> The server decides when to hand
+back a new one, so this cannot be provoked - only caught. Raise the log
+level to 3 and use the account normally; when a rotation happens the sync
+that saw it logs</p>
+
+<pre><code>[oauth] the server rotated the refresh token; stored the new one</code></pre>
+
+<p>which is the whole check: the new token reached storage, so the next
+start will not come back on a retired one. The token itself is never
+logged.</p>
+
+<p>If an account ever does ask to authenticate again after a restart, look
+for that line just before it - its presence or absence says whether a
+rotation was involved, which is the first thing worth knowing.</p>
 
 </main>
 </div>
