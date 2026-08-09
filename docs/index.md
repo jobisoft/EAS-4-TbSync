@@ -1,14 +1,17 @@
-# EAS-4-TbSync working notes
+# EAS-4-TbSync developer notes
 
-Notes for the Exchange ActiveSync provider — the codec, the sync engine, and
-the calendars it supplies. Written down as they are found, during audits,
-protocol reading and debugging.
+The Exchange ActiveSync provider for
+[TbSync](https://jobisoft.github.io/TbSync/). It speaks EAS 2.5, 14.0, 14.1
+and 16.1 to Exchange, Office 365, Z-Push, Kopano and Grommunio, and supplies
+Thunderbird with the calendars, task lists and address books it syncs.
+
+These pages are for people working on the add-on. For user documentation see
+the [wiki](https://github.com/jobisoft/EAS-4-TbSync/wiki/About:-Provider-for-Exchange-ActiveSync).
 
 | | |
 | --- | --- |
-| [**How things work**](descriptions.html) | Descriptions of the provider's mechanisms, and why each is built the way it is. |
-| [**Todos**](todos.html) | What is outstanding, with what is understood about each so far. |
-| [**Manual test plan**](manual-test-plan.html) | What a person has to check before a release. The bridge-runnable half is `test/`, run with `npm test`. |
+| [**How things work**](descriptions.html) | The mechanisms worth understanding before changing the sync engine or the codecs. |
+| [**Manual test plan**](manual-test-plan.html) | What a person has to check before a release. The automated half is `test/`. |
 
-The host's own notes, including the bridge these tests are driven from, are at
-[TbSync](https://jobisoft.github.io/TbSync/).
+The host's own mechanisms — the provider handshake, sessions, the E:AUTH
+rule — are in the [TbSync notes](https://jobisoft.github.io/TbSync/).

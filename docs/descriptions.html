@@ -1,53 +1,10 @@
 <link rel="stylesheet" href="docs.css">
 
-<style>
-  :root {
-    --bg:#fff; --fg:#1b1b1d; --muted:#6b6b70; --rule:#d7d7db;
-    --req:#2b6cb0; --res:#7a4fb5; --bad:#c0392b; --bandbg:#f2f2f4;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#1b1b1d; --fg:#ececed; --muted:#9b9ba1; --rule:#3a3a3f;
-      --req:#74a9dc; --res:#b795e0; --bad:#e8796b; --bandbg:#232327; }
-  }
-  :root[data-theme="dark"] { --bg:#1b1b1d; --fg:#ececed; --muted:#9b9ba1;
-    --rule:#3a3a3f; --req:#74a9dc; --res:#b795e0; --bad:#e8796b; --bandbg:#232327; }
-  :root[data-theme="light"] { --bg:#fff; --fg:#1b1b1d; --muted:#6b6b70;
-    --rule:#d7d7db; --req:#2b6cb0; --res:#7a4fb5; --bad:#c0392b; --bandbg:#f2f2f4; }
-  h1 { font-size:1.6rem; margin:0 0 .5rem; }
-  h2 { font-size:1.15rem; margin:2.4rem 0 .6rem; padding-top:.9rem;
-    border-top:1px solid var(--rule); }
-  .lede { color:var(--muted); margin:0 0 1.5rem; }
-  code, .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em; }
-  figure { margin:1.2rem 0 1.6rem; }
-  figcaption { color:var(--muted); font-size:.9em; margin-top:.4rem; }
-  svg { width:100%; height:auto; overflow:visible; }
-  dt { font-weight:600; margin-top:.9rem; }
-  dd { margin:.2rem 0 0 1.4rem; }
-  .tag { font-size:.72em; font-weight:600; letter-spacing:.04em;
-    border:1px solid var(--rule); border-radius:4px; padding:.05em .35em;
-    color:var(--muted); vertical-align:.15em; }
-  .callout { border-left:3px solid var(--req); padding:.5rem 0 .5rem .9rem;
-    margin:1.2rem 0; color:var(--fg); }
-  /* diagram */
-  .lane { font-size:13px; font-weight:600; fill:var(--fg); }
-  .life { stroke:var(--rule); stroke-width:1.5; }
-  .band { fill:var(--bandbg); }
-  .phase { font-size:11.5px; font-weight:600; fill:var(--muted);
-    letter-spacing:.05em; text-transform:uppercase; }
-  .req { stroke:var(--req); stroke-width:1.6; }
-  .res { stroke:var(--res); stroke-width:1.6; stroke-dasharray:5 3; }
-  .msg { font-size:12.5px; fill:var(--fg); }
-  .svg-note { font-size:11px; fill:var(--muted); }
-  .self { font-size:12px; fill:var(--muted); font-style:italic; }
-  .dot { fill:var(--muted); }
-</style>
-
 <div class="shell">
 <nav class="sidebar">
   <h2>Notes</h2>
   <ul>
     <li><a href="descriptions.html" class="here">How things work</a></li>
-    <li><a href="todos.html">Todos</a></li>
     <li><a href="manual-test-plan.html">Manual test plan</a></li>
   </ul>
   <h2>Host</h2>
@@ -57,478 +14,220 @@
   </ul>
   <h2>On this page</h2>
   <ul class="toc">
-    <li><a href="#provider-calendar">Provider calendar type</a></li>
+    <li><a href="#calendars">Our own calendar type</a></li>
     <li><a href="#identity">Item identity</a></li>
-    <li><a href="#exceptions">Recurrence exceptions</a></li>
-    <li><a href="#uid">The discarded UID</a></li>
-    <li><a href="#sync-sequence">The sync sequence</a></li>
-    <li><a href="#pr322">History: PR #322</a></li>
+    <li><a href="#sequence">The sync sequence</a></li>
+    <li><a href="#exceptions">Exceptions on 16.x</a></li>
+    <li><a href="#uid">The server's UID on 16.x</a></li>
   </ul>
 </nav>
 
 <main class="content">
 
 <h1>How things work</h1>
-<p class="lede">How EAS-4-TbSync behaves, and why. The host's own mechanisms — the provider handshake, the E:AUTH rule, CANCEL_SYNC — are in the <a href="https://jobisoft.github.io/TbSync/descriptions.html">TbSync notes</a>.</p>
+<p class="lede">The mechanisms worth understanding before changing the sync
+engine or the codecs. The host's own — the handshake, sessions, the E:AUTH
+rule — are in the <a href="https://jobisoft.github.io/TbSync/">TbSync
+notes</a>.</p>
 
-<h2 id="provider-calendar">EAS calendars are a provider calendar type</h2>
-<p><strong>Repo: EAS-4-TbSync</strong>, with host support in TbSync.</p>
+<h2 id="calendars">Our own calendar type</h2>
 
-<p>A plain <code>storage</code> calendar cannot tell one kind of write from
-another: the user editing an event and the sync writing down what the server
-sent look identical. TbSync used to compensate by pre-tagging each of its own
-writes so the observer would ignore them, and even then the record it kept was
-item-level, so a series with one moved occurrence was re-sent whole.</p>
-
-<p>EAS registers its own calendar type, <code>ext-eas4tbsync@jobisoft.de</code>.
-The two directions become different objects:</p>
+<p>EAS registers the calendar type <code>ext-eas4tbsync@jobisoft.de</code>,
+so the two directions of a sync are different objects:</p>
 
 <table>
-  <tr><th>direction</th><th>route</th><th>fires provider hooks?</th></tr>
-  <tr><td>user edits</td>
-      <td><code>calendar.provider.onItem{Created,Updated,Removed}</code></td>
-      <td>yes, with the <strong>previous item</strong> attached</td></tr>
-  <tr><td>our own sync writes</td><td><code>&lt;id&gt;#cache</code></td><td>no</td></tr>
+<tr><th>direction</th><th>route</th><th>fires provider hooks?</th></tr>
+<tr><td>user edits</td><td><code>calendar.provider.onItem{Created,Updated,Removed}</code></td><td>yes, with the <em>previous</em> item attached</td></tr>
+<tr><td>our sync writes</td><td><code>&lt;id&gt;#cache</code></td><td>no</td></tr>
 </table>
 
-<p><code>&lt;id&gt;#cache</code> is the storage calendar behind the cached one,
-reachable via <code>calendars.get(id + "#cache")</code>. Both share an id, so a
-write there shows up on a normal read immediately.</p>
+<p><code>&lt;id&gt;#cache</code> is the storage calendar behind the cached
+one, reachable via <code>calendars.get(id + "#cache")</code>. Both share an
+id, so a write there shows up on a normal read immediately.</p>
 
-<p><strong>The hooks do not push.</strong> They fire while the platform holds
+<p><strong>The hooks do not push.</strong> They fire while Thunderbird holds
 the user's save, so a network round trip there would fail the edit outright
-when the connection is down. They record; the scheduled sync pushes.</p>
+when the connection is down. They queue; the scheduled sync pushes.</p>
 
-<p><strong>Nor do they hold the record.</strong> The provider owns no
-persistent storage — the host owns accounts, folders and the changelog — so a
-queue in the provider would be lost on every reload. The hooks report through
-<code>changelogRecordUserEdit</code> into the same <code>folder.changelog</code>
-the push already reads. Only the <em>author</em> of the entry changed, which is
-what lets it carry an exception fingerprint as <code>detail</code>.</p>
+<p><strong>The queue is ours.</strong> It lives in this add-on's storage
+(<code>eas/change-queue.mjs</code>), keyed by the binding the host names in
+<code>folder.sessionId</code>. The record has to be durable before the hook
+answers and must not depend on the host being alive — our calendars keep
+working when it is not. Address books are the other way round: Thunderbird
+offers no provider API for them, so the host observes those and owns their
+entries in <code>folder.changelog</code>.</p>
 
 <ul>
-  <li><strong>Only calendars moved.</strong> Address books have no provider
-    API, so they are still observed and still use pre-tagging. Both
-    <code>*_by_user</code> and <code>*_by_server</code> remain in use there.</li>
-  <li><strong><code>*_by_server</code> no longer appears for calendars.</strong>
-    The runner still calls <code>changelogMarkServerWrite</code> — it is shared
-    with contacts — but the host drops the call for provider-owned targets.
-    Without that the tags accumulate, one per synced item, because the observer
-    that consumed them has stepped back.</li>
-  <li><strong>The target's lifecycle is ours too.</strong> The host has no
-    calendar API at all now, so a rename reaching the folder row and a
-    deletion clearing the binding are both this provider's work. See below.</li>
-  <li><strong>Disabling EAS force-disables its calendars.</strong> They become
-    dummy entries until it is enabled again; the data survives.</li>
-  <li><strong>No migration path.</strong> Deselect and reselect a folder to
-    rebind it.</li>
+  <li><code>*_by_server</code> pre-tags are meaningless for our calendars —
+      nothing observes them — so the runner's mark-server-write call is a
+      local no-op.</li>
+  <li>Disabling the add-on force-disables its calendars. They become dummy
+      entries until it is enabled again; the data survives.</li>
+  <li>There is no migration path from a plain storage calendar. Deselect and
+      reselect a folder to rebind it.</li>
 </ul>
 
 <h3>Watching our own targets</h3>
 
-<p><code>calendars.onUpdated</code> mirrors a rename into
-<code>folder.targetName</code>, which is what the manager displays.</p>
+<p><code>calendars.onUpdated</code> mirrors a rename or recolour into the
+folder row, which is what the manager displays.</p>
 
-<p><code>calendars.onRemoved</code> is the interesting one, because it fires
-for two different things: a calendar the user deleted, and every one of ours
-when our own calendar type unregisters — which happens on each reload, update
-and disable. Nothing in the event distinguishes them, so the handler asks
-afterwards instead of trusting it:</p>
+<p><code>calendars.onRemoved</code> is the interesting one: it fires both for
+a calendar the user deleted and for every one of ours when our calendar type
+unregisters — which happens on each reload, update and disable. Nothing in
+the event distinguishes them, so the handler asks afterwards:</p>
 
 <ul>
-  <li>the calendar is gone → a real deletion → report it</li>
+  <li>the calendar is gone → a real deletion → report it;</li>
   <li>it is still there but force-disabled → our type is unregistering →
-    ignore</li>
-  <li>the question cannot be answered at all → we are being torn down →
-    ignore</li>
+      ignore;</li>
+  <li>the question cannot be answered → we are being torn down → ignore.</li>
 </ul>
 
 <p>A verified deletion is reported with <code>FOLDER_TARGET_REMOVED</code>,
-and the sync key and index are reset first. They described a calendar that no
-longer exists, and leaving them would bind a fresh empty calendar to a key the
-server answers with "nothing has changed" — the user would get a calendar that
-stays empty. Those are the provider's state, so the provider clears them.</p>
+and the sync key and index map are reset first: they describe a calendar that
+no longer exists, and leaving them would bind a fresh empty calendar to a key
+the server answers with "nothing has changed". Those are our state, so we
+clear them.</p>
 
-<p>This is also why the listener belongs here rather than in the host. The
-event fires as the provider goes away; a listener inside the provider is being
-torn down at that moment, while a separate extension that stays alive would
-see it and act. Which is exactly what used to deselect a folder on every
-update.</p>
+<p>This is also why the listener belongs here and not in the host: the event
+fires as the provider goes away, so a listener inside it is being torn down
+at that moment, while a separate extension would see it and act — which is
+what would deselect a folder on every update.</p>
 
-<p>Folders the server drops are the third way a folder stops being synced,
-after <code>onFolderDisabled</code> and <code>onAccountDeleted</code>.
-<code>pushFolderList</code> hands back the targets that fell out of the folder
-table, and this provider deletes them.</p>
-
-<h2 id="identity">Item identity, and why the blob stamp is the authority</h2>
-<p><strong>Repo: EAS-4-TbSync.</strong> Identity lives in the provider; the
-host only stores the blob it is handed.</p>
+<h2 id="identity">Item identity</h2>
 
 <p>The server-id stamped inside each stored blob is the <strong>authority</strong>
 for which local item a server item is. <code>custom.indexMap</code> is a
-<strong>cache</strong> in front of it.</p>
+<em>cache</em> in front of it. <code>findExistingByServerId</code> reads the
+index first and, on a miss, falls back to a lazily-built
+<code>serverId → itemId</code> map read from the blob stamps, repopulating
+the index on a hit. The map is built at most once per pass and only when
+something misses, so a healthy incremental sync never reads the store in
+bulk.</p>
 
-<p><code>findExistingByServerId</code> reads the indexMap first and, on a miss,
-falls back to a lazily-built <code>serverId → itemId</code> map read from the
-blob stamps, repopulating the indexMap on a hit. The map is built at most once
-per pass and only when something misses, so a healthy incremental sync never
-reads the store in bulk.</p>
-
-<p>Both halves matter. The indexMap alone is not enough: a server-initiated
+<p>Both halves are needed. The index alone is not enough: a server-initiated
 resync (Sync Status 3) resets it to <code>[]</code> along with
 <code>synckey: "0"</code>, so every item arrives as an <code>&lt;Add&gt;</code>
 with nothing to match against. The blob stamps alone are not enough either: a
-locally-deleted item leaves no blob to read, so the indexMap is the only
+locally-deleted item leaves no blob to read, so the index is the only
 remaining record of that item's server id.</p>
 
-<h2 id="exceptions">Recurrence exceptions on EAS 16.x</h2>
-<p><strong>Repo: EAS-4-TbSync</strong>, all in
-<code>src/modules/eas/calendar-codec.mjs</code>.</p>
+<h2 id="sequence">The sync sequence</h2>
 
-<p>Inbound exceptions arrive in two shapes, both gated on the account's
-<code>syncRecurrence</code> option (off by default):
-<strong>embedded</strong>, an <code>&lt;Exceptions&gt;</code> block on the
-master; and <strong>per-instance</strong>, one <code>&lt;Change&gt;</code> or
+<p>The account level lives in TbSync's <code>sync-coordinator.mjs</code>: it
+asks the provider to sync the account, gets a sorted folder list back, and
+drives one <code>SYNC_FOLDER</code> per selected folder. Everything below
+happens inside one of those, in <code>runOneSync</code>.</p>
+
+<dl>
+  <dt>Bootstrap</dt>
+  <dd>Only when the folder has no SyncKey — a new folder, or one whose key
+      the server rejected. A <code>Sync</code> with <code>SyncKey=0</code>
+      returns a usable key and no items. A clean resync is this: deselecting
+      throws the key away, so reselecting starts here.</dd>
+
+  <dt>Push</dt>
+  <dd>Skipped entirely for a read-only or download-only folder. Otherwise the
+      queue's pending entries become one or more <code>Sync</code> requests
+      carrying <code>Commands</code>, batched up to the account's item limit.
+      The reply is sparse by design: the server answers only failures, plus
+      the <code>ServerId</code> for each accepted <code>Add</code>. Silence
+      means success.</dd>
+
+  <dt>Instances <small>(16.1)</small></dt>
+  <dd>A recurrence exception is a sibling command carrying the master's
+      <code>ServerId</code> and an <code>InstanceId</code>, so it cannot be
+      sent until the server has assigned that ServerId. Hence its own pass,
+      after the push.</dd>
+
+  <dt>Pull</dt>
+  <dd><code>GetItemEstimate</code> first, so the progress bar means
+      something, then <code>Sync</code> with <code>GetChanges</code>,
+      repeated while the server sets <code>MoreAvailable</code>.</dd>
+</dl>
+
+<p><strong>Push before pull</strong> is the order <a
+href="https://learn.microsoft.com/openspecs/exchange_server_protocols/ms-ascmd/">[MS-ASCMD]</a>
+shapes a Sync around, and it is what makes the pull authoritative: our own
+changes are already part of the state the server reports, so nothing arriving
+can be an echo that overwrites a pending edit. A genuine two-writer conflict
+is then decided by the only party that knows both sides — the server — per
+the <code>&lt;Conflict&gt;</code> preference every request states
+(<code>1</code> = server wins, the default; <code>0</code> = this device
+wins). Exchange answers a losing push with <code>Status 7</code> and delivers
+the winning copy in the same sync's pull; Z-Push discards the stale change
+silently with Status 1 and the loser converges on its next pull.</p>
+
+<div class="note">
+<p>Instance-command requests must <strong>not</strong> carry
+<code>&lt;Conflict&gt;</code>. Exchange conflict-checks the exception change
+against our own just-pushed master and discards it with Status 7 when the
+element is present; without it the same request gets Status 1.</p>
+</div>
+
+<h2 id="exceptions">Recurrence exceptions on 16.x</h2>
+
+<p>All in <code>src/modules/eas/calendar-codec.mjs</code>, and all gated on
+the account's <code>syncRecurrence</code> option (off by default).</p>
+
+<p>Inbound, exceptions arrive in two shapes: <em>embedded</em>, an
+<code>&lt;Exceptions&gt;</code> block on the master, and
+<em>per-instance</em>, one <code>&lt;Change&gt;</code> or
 <code>&lt;Delete&gt;</code> per occurrence carrying
 <code>airsyncbase:InstanceId</code>.</p>
 
-<p>Outbound on 16.1 it is per-instance only. <strong>The embedded block is not
-accepted in a Sync request</strong> — tested against Exchange, which answers
-Status 6 for the wrapper itself, whether the exception is keyed by
-<code>InstanceId</code> or <code>ExceptionStartTime</code>, and whether or not
-it carries <code>&lt;Deleted&gt;</code>. A control run with the block
-suppressed and nothing else changed was accepted. <code>[MS-ASCAL]</code>
-2.2.2.21 lists <code>Exception</code> as supported on 16.0/16.1 and
-<code>[MS-ASAIRS]</code> puts <code>InstanceId</code> under
-<code>calendar:Exception</code> "in a Sync command request and response", so
-the server disagrees with both.</p>
+<p><strong>Outbound on 16.1 it is per-instance only.</strong> The embedded
+block is not accepted in a Sync request — tested against Exchange, which
+answers Status 6 for the wrapper itself, whether the exception is keyed by
+<code>InstanceId</code> or <code>ExceptionStartTime</code>, and whether or
+not it carries <code>&lt;Deleted&gt;</code>. A control run with the block
+suppressed and nothing else changed was accepted. Both [MS-ASCAL] 2.2.2.21
+and [MS-ASAIRS] say otherwise; the server disagrees with both.</p>
 
 <p>Two further rules the wire forced:</p>
 <ul>
   <li><strong>A cancelled occurrence is a <code>&lt;Delete&gt;</code></strong>,
-    not a <code>&lt;Change&gt;</code> carrying <code>&lt;Deleted&gt;</code>.
-    <code>Deleted</code> is only legal inside the embedded block, which 16.x
-    replaced. The 16.x form is ServerId plus
-    <code>airsyncbase:InstanceId</code>, no ApplicationData at all.</li>
-  <li><strong>One instance command per request.</strong> Exchange will not take
-    two commands against the same ServerId in one
-    <code>&lt;Commands&gt;</code> block: it applies the first, faults on the
-    second, and answers a global Status 16 that discards the response while
-    keeping what the first did. Every exception of a master shares that
-    master's ServerId — which is also why a modified master sends its
-    exceptions in a separate pass.</li>
+      not a <code>&lt;Change&gt;</code> carrying <code>&lt;Deleted&gt;</code>
+      — that is only legal inside the embedded block. The 16.x form is
+      ServerId plus <code>InstanceId</code>, no ApplicationData at all.</li>
+  <li><strong>One instance command per request.</strong> Exchange will not
+      take two commands against the same ServerId in one
+      <code>&lt;Commands&gt;</code> block: it applies the first, faults on
+      the second, and answers a global Status 16 that discards the response
+      while keeping what the first did. Every exception of a master shares
+      that master's ServerId.</li>
 </ul>
 
-<p><strong>Only changed exceptions are sent.</strong> The changelog entry
-carries a fingerprint of the exception set from <em>before</em> the edit — the
-cancelled instances plus each override keyed by <code>RECURRENCE-ID</code> with
-a digest of its content — so <code>listInstanceCommands</code> skips a
-cancellation the server already has and an override whose digest has not moved.
-An added item has no baseline and sends everything: the server has only just
-met it. An override is pushed whole, so knowing <em>that</em> one changed is
-enough.</p>
+<p><strong>Only changed exceptions are sent.</strong> The queued entry carries
+a fingerprint of the exception set from <em>before</em> the edit — the
+cancelled instances, plus each override keyed by <code>RECURRENCE-ID</code>
+with a digest of its content — so a cancellation the server already has, and
+an override whose digest has not moved, are skipped. An added item has no
+baseline and sends everything.</p>
 
-<div class="note">Already-synced items need a one-time calendar re-download
-(deselect → sync → reselect → sync) before a codec change affects them, so a
-fix can look inert on existing data.</div>
+<p>Already-synced items need a one-time re-download (deselect → sync →
+reselect → sync) before a codec change affects them, so a fix can look inert
+on existing data.</p>
 
-<h2 id="uid">The server's UID is discarded on 16.x</h2>
-<p><strong>Repo: EAS-4-TbSync.</strong> Harmless today; MeetingResponse will
-care.</p>
+<h2 id="uid">The server's UID on 16.x</h2>
 
-<p>On 16.0/16.1 the client MUST NOT send <code>&lt;UID&gt;</code>
-(<code>[MS-ASCAL]</code> §2.2.2.46), so the server mints its own and returns it.
-We never keep it. Uploading, <code>applyResponses</code> reads
-<code>ClientId</code>, <code>ServerId</code> and <code>Status</code> from the
-acknowledgement and drops the rest. Downloading, <code>applyAdd</code>
-generates <code>crypto.randomUUID()</code> and the server's
-<code>&lt;UID&gt;</code> is never read.</p>
+<p>On 16.0/16.1 the client MUST NOT send <code>&lt;UID&gt;</code> ([MS-ASCAL]
+§2.2.2.46), so the server mints its own and returns it. We never keep it:
+uploading, <code>applyResponses</code> reads only <code>ClientId</code>,
+<code>ServerId</code> and <code>Status</code>; downloading,
+<code>applyAdd</code> generates a fresh <code>crypto.randomUUID()</code> and
+the server's <code>&lt;UID&gt;</code> is never read.</p>
 
-<p>So on 16.x the iCal UID and the server's UID differ in <strong>both</strong>
-directions, invisibly, because nothing consults either. Verified against a live
-Exchange Online mailbox: five events uploaded with zero <code>&lt;UID&gt;</code>
-elements came back after a clean resync carrying server-minted IDs of the form
-<code>040000008200E00074C5B7101A82E008…</code>. On ≤14.x none of this applies —
-the UID is client-generated and we send it.</p>
+<p>So on 16.x the iCal UID and the server's UID differ in both directions,
+invisibly, because nothing consults either — identity uses the EAS ServerId.
+Verified against a live Exchange Online mailbox: five events uploaded with
+zero <code>&lt;UID&gt;</code> elements came back after a clean resync
+carrying server-minted ids. On ≤14.x none of this applies; the UID is
+client-generated and we send it.</p>
 
-<p>It does not matter today because identity uses the EAS ServerId. It may
-matter for iTIP traffic, where the UID correlates an invitation with its
-reply — see <a href="todos.html#uid">Todos</a>.</p>
-
-<h2 id="sync-sequence">The sync sequence</h2>
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <marker id="arrow-req" viewBox="0 0 8 8" refX="7" refY="4"
-            markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M0 0 L8 4 L0 8 z" fill="var(--req)"/>
-    </marker>
-    <marker id="arrow-res" viewBox="0 0 8 8" refX="7" refY="4"
-            markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M0 0 L8 4 L0 8 z" fill="var(--res)"/>
-    </marker>
-  </defs>
-</svg>
-
-
-
-<p class="lede">
-  <strong>Repo: TbSync</strong>, with the folder-level half in EAS-4-TbSync's
-  <code>sync-runner.mjs</code>. What actually goes over the wire during one
-  sync, in order, and where the 16.1 recurrence work sits inside it.
-</p>
-
-<h3>One account sync, start to finish</h3>
-
-<figure>
-  <svg viewBox="0 0 900 602" role="img" aria-label="EAS sync sequence">
-  <title>EAS sync sequence</title>
-  <text class="lane" x="250" y="40" text-anchor="middle">TbSync + EAS provider</text>
-  <line class="life" x1="250" y1="56" x2="250" y2="586"/>
-  <text class="lane" x="760" y="40" text-anchor="middle">Exchange (EAS server)</text>
-  <line class="life" x1="760" y1="56" x2="760" y2="586"/>
-  <rect class="band" x="12" y="80" width="108" height="60" rx="5"/>
-  <text class="phase" x="22" y="100">account</text>
-  <rect class="band" x="12" y="182" width="108" height="60" rx="5"/>
-  <text class="phase" x="22" y="202">bootstrap</text>
-  <rect class="band" x="12" y="250" width="108" height="128" rx="5"/>
-  <text class="phase" x="22" y="270">pull</text>
-  <rect class="band" x="12" y="386" width="108" height="60" rx="5"/>
-  <text class="phase" x="22" y="406">push</text>
-  <rect class="band" x="12" y="454" width="108" height="60" rx="5"/>
-  <text class="phase" x="22" y="474">instances</text>
-  <rect class="band" x="12" y="522" width="108" height="26" rx="5"/>
-  <text class="phase" x="22" y="542">settle</text>
-  <line class="req" x1="250" y1="96" x2="760" y2="96" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="89" text-anchor="start">FolderSync</text>
-  <text class="svg-note" x="262" y="110" text-anchor="start">the folder list, once per account sync</text>
-  <line class="res" x1="760" y1="130" x2="250" y2="130" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="123" text-anchor="end">folders + hierarchy SyncKey</text>
-  <circle class="dot" cx="250" cy="164" r="4"/>
-  <text class="self" x="264" y="168">for each selected folder ↓</text>
-  <line class="req" x1="250" y1="198" x2="760" y2="198" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="191" text-anchor="start">Sync  SyncKey=0</text>
-  <text class="svg-note" x="262" y="212" text-anchor="start">only when the folder has no key yet</text>
-  <line class="res" x1="760" y1="232" x2="250" y2="232" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="225" text-anchor="end">SyncKey assigned</text>
-  <line class="req" x1="250" y1="266" x2="760" y2="266" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="259" text-anchor="start">GetItemEstimate</text>
-  <text class="svg-note" x="262" y="280" text-anchor="start">how much is waiting</text>
-  <line class="res" x1="760" y1="300" x2="250" y2="300" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="293" text-anchor="end">Estimate</text>
-  <line class="req" x1="250" y1="334" x2="760" y2="334" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="327" text-anchor="start">Sync  GetChanges</text>
-  <text class="svg-note" x="262" y="348" text-anchor="start">repeats while MoreAvailable</text>
-  <line class="res" x1="760" y1="368" x2="250" y2="368" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="361" text-anchor="end">Add / Change / Delete commands</text>
-  <text class="svg-note" x="748" y="382" text-anchor="end">server → local</text>
-  <line class="req" x1="250" y1="402" x2="760" y2="402" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="395" text-anchor="start">Sync  Commands: Add, Change, Delete</text>
-  <text class="svg-note" x="262" y="416" text-anchor="start">local → server, batched</text>
-  <line class="res" x1="760" y1="436" x2="250" y2="436" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="429" text-anchor="end">Responses</text>
-  <text class="svg-note" x="748" y="450" text-anchor="end">failures, and ServerIds for Adds</text>
-  <line class="req" x1="250" y1="470" x2="760" y2="470" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="463" text-anchor="start">Sync  one instance command</text>
-  <text class="svg-note" x="262" y="484" text-anchor="start">16.1 only, one per exception</text>
-  <line class="res" x1="760" y1="504" x2="250" y2="504" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="497" text-anchor="end">ack</text>
-  <line class="req" x1="250" y1="538" x2="760" y2="538" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="531" text-anchor="start">Sync  GetChanges</text>
-  <text class="svg-note" x="262" y="552" text-anchor="start">optional settle pull, off by default</text>
-</svg>
-  <figcaption>
-    Arrows are HTTP requests. Everything after <em>bootstrap</em> repeats per
-    selected folder; the account-level FolderSync happens once.
-  </figcaption>
-</figure>
-
-<h3>The phases</h3>
-
-<p>
-  The account level lives in TbSync's <code>sync-coordinator.mjs</code>: it
-  asks the provider to sync the account, gets a sorted folder list back, and
-  then drives one <code>SYNC_FOLDER</code> per selected folder. Everything
-  below happens inside one of those, in EAS's <code>runOneSync</code>.
-</p>
-
-<dl>
-  <dt>Bootstrap</dt>
-  <dd>
-    Only when the folder has no SyncKey - a new folder, or one whose key the
-    server rejected. A <code>Sync</code> with <code>SyncKey=0</code> returns a
-    usable key and no items. This is also what a <em>clean resync</em> is:
-    deselecting a folder throws the key away (and deletes the local calendar),
-    so reselecting starts here and pulls everything down again.
-  </dd>
-
-  <dt>Pull</dt>
-  <dd>
-    <code>GetItemEstimate</code> first, purely so the progress bar means
-    something. Then <code>Sync</code> with <code>GetChanges</code>, repeated
-    while the server sets <code>MoreAvailable</code>. Each response carries
-    server-side <code>Add</code> / <code>Change</code> / <code>Delete</code>
-    commands, which are applied locally.
-  </dd>
-
-  <dt>Push</dt>
-  <dd>
-    Skipped entirely for a read-only or download-only folder. Otherwise the
-    changelog's <code>*_by_user</code> entries become one or more
-    <code>Sync</code> requests carrying <code>Commands</code>, batched up to
-    the account's item limit. The reply is sparse by design: the server
-    answers only failures, plus the <code>ServerId</code> for each accepted
-    <code>Add</code>. Silence means success.
-  </dd>
-
-  <dt>Instances <span class="tag">16.1</span></dt>
-  <dd>
-    A recurrence exception is not part of its master's payload on 16.1. It is
-    a sibling command carrying the master's <code>ServerId</code> and an
-    <code>InstanceId</code> naming the occurrence - <code>Change</code> for a
-    moved one, <code>Delete</code> for a cancelled one. It therefore cannot be
-    sent until the server has assigned that ServerId, which is why this is its
-    own pass after the push rather than part of it.
-  </dd>
-
-  <dt>Settle</dt>
-  <dd>
-    An optional second pull, off by default. Exchange enriches an item after
-    accepting it - UID, DtStamp, organizer - and echoes the result back as a
-    change. Without the wait, that echo is simply picked up by the next sync.
-  </dd>
-</dl>
-
-<h3>Why the instance pass sends one command at a time</h3>
-
-<p>
-  Every exception of a series carries the <em>same</em> ServerId - its
-  master's. Exchange will not take two such commands in one
-  <code>Commands</code> block: it applies the first, faults on the second, and
-  answers a global <strong>Status 16</strong> that discards the response while
-  keeping what the first command already did. So each exception travels in its
-  own request.
-</p>
-
-<figure>
-  <svg viewBox="0 0 900 432" role="img" aria-label="Observed 16.1 instance pass">
-  <title>Observed 16.1 instance pass</title>
-  <text class="lane" x="250" y="40" text-anchor="middle">TbSync + EAS provider</text>
-  <line class="life" x1="250" y1="56" x2="250" y2="416"/>
-  <text class="lane" x="760" y="40" text-anchor="middle">Exchange (EAS server)</text>
-  <line class="life" x1="760" y1="56" x2="760" y2="416"/>
-  <rect class="band" x="12" y="80" width="108" height="60" rx="5"/>
-  <text class="phase" x="22" y="100">push</text>
-  <rect class="band" x="12" y="148" width="108" height="230" rx="5"/>
-  <text class="phase" x="22" y="168">instances</text>
-  <line class="req" x1="250" y1="96" x2="760" y2="96" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="89" text-anchor="start">Sync  Add  (the TZ6 master)</text>
-  <line class="res" x1="760" y1="130" x2="250" y2="130" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="123" text-anchor="end">Status 1  + ServerId</text>
-  <text class="svg-note" x="748" y="144" text-anchor="end">the master exists now</text>
-  <line class="req" x1="250" y1="164" x2="760" y2="164" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="157" text-anchor="start">Sync  Delete @20260916T130000Z</text>
-  <text class="svg-note" x="262" y="178" text-anchor="start">cancel the 16 Sep occurrence</text>
-  <line class="res" x1="760" y1="198" x2="250" y2="198" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="191" text-anchor="end">Status 1, no Responses</text>
-  <text class="svg-note" x="748" y="212" text-anchor="end">accepted</text>
-  <line class="req" x1="250" y1="232" x2="760" y2="232" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="225" text-anchor="start">Sync  Change @20260909T130000Z</text>
-  <text class="svg-note" x="262" y="246" text-anchor="start">move the 9 Sep occurrence</text>
-  <line class="res" x1="760" y1="266" x2="250" y2="266" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="259" text-anchor="end">GLOBAL Status 16</text>
-  <text class="svg-note" x="748" y="280" text-anchor="end">server fault - resend</text>
-  <line class="req" x1="250" y1="300" x2="760" y2="300" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="293" text-anchor="start">Sync  Change @20260909T130000Z</text>
-  <text class="svg-note" x="262" y="314" text-anchor="start">retry 1</text>
-  <line class="res" x1="760" y1="334" x2="250" y2="334" marker-end="url(#arrow-res)"/>
-  <text class="msg" x="748" y="327" text-anchor="end">Status 7</text>
-  <text class="svg-note" x="748" y="348" text-anchor="end">master moved on - apply, retry</text>
-  <line class="req" x1="250" y1="368" x2="760" y2="368" marker-end="url(#arrow-req)"/>
-  <text class="msg" x="262" y="361" text-anchor="start">Sync  Change @20260909T130000Z</text>
-  <text class="svg-note" x="262" y="382" text-anchor="start">retry 2 - needs its own budget</text>
-</svg>
-  <figcaption>
-    An actual run, importing a series with one cancelled and one moved
-    occurrence. The two retries have different causes, which is the point.
-  </figcaption>
-</figure>
-
-<p>
-  One command per request is <em>still</em> not enough to avoid Status 16
-  entirely: the <code>Change</code> above followed a <code>Delete</code>
-  against the same master and faulted anyway, in a request that carried
-  nothing else. The resend worked, so the condition is transient - Exchange
-  settling the master between commands - and <span class="mono">[MS-ASCMD]</span>
-  gives exactly that resolution for Status 16: <em>resend the request</em>.
-</p>
-
-<p>
-  The retry then met <strong>Status 7</strong>, which is a different thing: the
-  server's copy of the master had genuinely moved on, because the
-  <code>Delete</code> and Exchange's own enrichment had both landed since. The
-  reply carries those changes, so applying them and re-sending resolves it.
-</p>
-
-<p class="callout">
-  Two independent conditions, arriving in sequence. Each needs its own retry
-  allowance - a single shared one is spent by the first, and the second is then
-  reported as a failure for something that would have succeeded.
-</p>
-
-<h3>Reading a sync log</h3>
-
-<p>
-  At debug level every request and response is written to the event log as
-  <code>[eas:net] send Sync</code> / <code>receive Sync</code>, with the XML in
-  the entry's details. Useful shapes to look for:
-</p>
-
-<ul>
-  <li><code>&lt;Add&gt;&lt;ClientId&gt;</code> - a local item going up for the
-    first time; the reply's <code>ServerId</code> is its identity from then on.</li>
-  <li><code>&lt;InstanceId&gt;</code> as a sibling of <code>&lt;ServerId&gt;</code>
-    - a 16.1 exception. Inside <code>&lt;ApplicationData&gt;</code> it would be
-    wrong, and Exchange answers Status 6.</li>
-  <li>A bare <code>&lt;Sync&gt;&lt;Status&gt;N&lt;/Status&gt;&lt;/Sync&gt;</code>
-    with no <code>Collection</code> - a <em>global</em> status. The whole
-    request was discarded, though side effects of commands it already processed
-    survive.</li>
-  <li>A <code>Collection</code> with <code>Status 1</code> and no
-    <code>&lt;Responses&gt;</code> - everything was accepted. The server reports
-    only failures.</li>
-</ul>
-
-<h2 id="pr322">History: EAS PR #322</h2>
-<p><strong>Repo: EAS-4-TbSync.</strong> thomcuddihy's
-<a href="https://github.com/jobisoft/EAS-4-TbSync/pull/322">PR #322</a>, based
-on <code>2dfae3f</code> (v5.0.10), two commits, +848/−60 across 11 files.
-Closed in favour of individual patches; this is the map so none of it gets
-lost.</p>
-
-<p>Already covered by master when it closed:</p>
-
-<table>
-  <tr><th>PR</th><th>master</th></tr>
-  <tr><td><code>onReauthenticate</code></td>
-      <td><code>e8fdca1</code>, released 5.0.12, closing
-      <a href="https://github.com/jobisoft/EAS-4-TbSync/issues/321">#321</a></td></tr>
-  <tr><td><code>onPopupOpened</code> / <code>onPopupClosed</code> +
-      <code>registerReauthWindow</code></td>
-      <td><code>onWindowCreated</code> + <code>registerAccountWindow</code>,
-      <code>e116823</code> (EAS) and <code>151764a</code> (TbSync)</td></tr>
-  <tr><td><code>runLegacyMigrationRepair</code>,
-      <code>legacyServerUrlFromAccount</code></td>
-      <td><code>f3da079</code> — <code>repairUnconvertedAccounts</code> +
-      <code>liftHostAndHttpsToServer</code>, plus the
-      <code>allowedEasCommands</code> string→array normalisation</td></tr>
-</table>
-
-<p>The two migration mechanisms differ but reach the same accounts: his re-runs
-the <code>eas.legacy-migration</code> upgrade whenever it finds work; master's
-is upgrade rung 3, re-converting any account without
-<code>legacyMigrationPending</code>.</p>
-
-<p>What remains open is in <a href="todos.html#pr322">Todos</a>.</p>
+<p>It would start to matter for iTIP traffic, where the UID correlates an
+invitation with its reply.</p>
 
 </main>
 </div>

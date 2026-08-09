@@ -5,7 +5,6 @@
   <h2>Notes</h2>
   <ul>
     <li><a href="descriptions.html">How things work</a></li>
-    <li><a href="todos.html">Todos</a></li>
     <li><a href="manual-test-plan.html" class="here">Manual test plan</a></li>
   </ul>
   <h2>Host</h2>
@@ -13,188 +12,174 @@
     <li><a href="https://jobisoft.github.io/TbSync/">TbSync notes</a></li>
     <li><a href="https://jobisoft.github.io/TbSync/bridge.html">The bridge</a></li>
   </ul>
-  <h2>Runnable</h2>
+  <h2>On this page</h2>
   <ul class="toc">
-    <li>&sect;1&ndash;7 are <code>test/</code>, run with <code>npm test</code></li>
-  </ul>
-  <h2>At the UI</h2>
-  <ul class="toc">
-    <li><a href="#install">M1. Install and lockstep</a></li>
-    <li><a href="#auth-failure">M2. Authentication failure</a></li>
-    <li><a href="#gal">M3. GAL autocomplete</a></li>
-    <li><a href="#reauth">M4. Re-authentication</a></li>
-    <li><a href="#focus">M5. Popup focus</a></li>
-    <li><a href="#setup">M6. Setup flow</a></li>
-    <li><a href="#corrupted-sync-key">M7. Corrupted sync key</a></li>
-    <li><a href="#versions">M8. Thunderbird versions</a></li>
-    <li><a href="#rotation">M9. Cannot be forced</a></li>
+    <li><a href="#before">Before you start</a></li>
+    <li><a href="#m1">M1 Install lockstep</a></li>
+    <li><a href="#m2">M2 Auth failure</a></li>
+    <li><a href="#m3">M3 GAL goes quiet</a></li>
+    <li><a href="#m4">M4 Re-authentication</a></li>
+    <li><a href="#m5">M5 Popup focus</a></li>
+    <li><a href="#m6">M6 Setup flow</a></li>
+    <li><a href="#m7">M7 Corrupted sync key</a></li>
+    <li><a href="#m8">M8 Thunderbird versions</a></li>
+    <li><a href="#m9">M9 Watch for it</a></li>
   </ul>
 </nav>
 
 <main class="content">
 
 <h1>Manual test plan</h1>
-<p class="note"><strong>The bridge-runnable half of this plan is now code.</strong> Sections 1&ndash;7 &mdash; handshake, item round trip, exceptions, timezones, digest selectivity, the provider-backed calendar and task recurrence &mdash; live in <code>test/</code> and run with <code>npm test</code>. They kept their numbers, so &sect;3.4 still means what it always did; this plan’s own sections are lettered M1&ndash;M9 so a bare &ldquo;&sect;6&rdquo; is never ambiguous. What is left here is what a person has to do: installing, breaking authentication, watching a popup take focus.</p>
+<p class="lede">What a person still has to check before a release. Everything
+scriptable lives in <code>test/</code> and runs with <code>npm test</code>;
+what is left here needs a human at the UI — installing, breaking
+authentication, watching a popup take focus. Sections are lettered M1–M9 so a
+bare "§6" always means the automated suite.</p>
 
-<p class="lede">Split by who can run it: the bridge drives Thunderbird from a
-shell, so those checks are scriptable; the rest need a human at the UI.
-Everything has been run against a live Exchange mailbox unless it says
-otherwise.</p>
+<h2 id="before">Before you start</h2>
 
-<h2>Before you start</h2>
-<p><strong>Install all three together.</strong> The host refuses any provider
-whose <code>PROTOCOL_VERSION</code> is not exactly its own.</p>
-<p><strong>Which Thunderbird is this?</strong> Ask, do not guess — several
-installs usually coexist:</p>
-<pre><code>{"cmd": "getBrowserInfo"}   →  {"name":"Thunderbird","version":"153.0.1", …}</code></pre>
-<p><strong>The Event Log lives in <code>storage.session</code></strong>, so a
-restart wipes it. Read it first. <code>debug</code> entries need
-<code>setLogLevel</code> raised to 3.</p>
-<div class="note"><strong>A passing item count is not a passing test.</strong>
+<ul>
+  <li><strong>Install all three add-ons together.</strong> The host refuses
+      any provider whose <code>PROTOCOL_VERSION</code> is not exactly its
+      own.</li>
+  <li><strong>Ask which Thunderbird this is</strong> rather than guessing —
+      several installs usually coexist. <code>{"cmd":"getBrowserInfo"}</code>.</li>
+  <li><strong>Read the Event Log first.</strong> It lives in
+      <code>storage.session</code>, so a restart wipes it, and
+      <code>debug</code> entries need the log level raised to 3.</li>
+</ul>
+
+<div class="note">
+<p><strong>A passing item count is not a passing test.</strong>
 <code>items.query</code> and <code>contacts.query</code> read <em>local</em>
-state, so every check here can go green while nothing reached the server at
-all. That is not hypothetical: a run that earned an HTTP 503 — forty syncs in a
-few minutes will — reported <em>PASS</em> on every step of sections 2 and 5
-with an empty wire log, because create-then-delete returns the local count to
-its baseline whether or not a single byte was sent.
-
+state, so a check can go green while nothing reached the server. That is not
+hypothetical: a run throttled with HTTP 503 reported PASS on every step of
+two sections with an empty wire log, because create-then-delete returns the
+local count to its baseline whether or not a byte was sent.</p>
 <p>So assert the <code>&lt;Add&gt;</code> / <code>&lt;Change&gt;</code> /
-<code>&lt;Delete&gt;</code> in the Event Log, not only the count. And where
-what the <em>server</em> holds is the actual question, finish with a <strong>clean
-pull</strong>: deselect the folder, reselect it, sync. That drops the local
-copy and re-fetches everything, which is the only way to see what was stored
-rather than what was sent.</p></div>
+<code>&lt;Delete&gt;</code> in the Event Log, not only the count. Where what
+the <em>server</em> holds is the question, finish with a <strong>clean
+pull</strong>: deselect the folder, reselect, sync.</p>
+</div>
 
-<div class="note"><strong>After a clean pull, match items by
-<code>SUMMARY</code> — never by UID.</strong> Every item comes back with a
-freshly minted UID, so a script looking for the one it sent finds nothing and
-reports the item missing when it is sitting right there.
+<p><strong>After a clean pull, match items by <code>SUMMARY</code>, never by
+UID.</strong> Every item comes back with a freshly minted UID, so a script
+looking for the one it sent reports the item missing when it is sitting right
+there. Two causes: [MS-ASTASK] has no UID element at all, and for events the
+UID is deliberately suppressed on 16.1. Only ≤14.x events keep theirs. This
+is also why identity across a resync is the ServerId and never the UID.</p>
 
-<p>Two causes, same effect: <code>[MS-ASTASK]</code> has no UID element at all,
-and for events the UID is deliberately suppressed on 16.1. Either way the
-server never held ours, so the codec mints a new one on the way in. Only ≤14.x
-events keep theirs.</p>
+<p><strong>End every bridge session by deselecting the authorized calendar,
+then reloading — in that order.</strong> Deselecting resets the folder's sync
+key so the next run starts fresh; reloading mid-sync drops the native port,
+and since <code>SYNC_FOLDER</code> has no timeout nothing rejects the pending
+RPC. Only a manual reload in <code>about:debugging</code> recovers it.</p>
 
-<p>This is also why identity across a resync is the <strong>ServerId</strong>
-and never the UID — what <code>indexMap</code> and the
-<code>X-EAS-SERVERID</code> stamp are for. Any check that assumes a stable UID
-is testing something the protocol does not promise.</p></div>
-<div class="note"><strong>End every bridge session by deselecting the
-authorized calendar, then reloading — in that order.</strong> Deselecting
-resets the folder's sync key so the next run starts fresh, and reloading
-mid-sync drops the native port: <code>SYNC_FOLDER</code> has no timeout, so
-nothing rejects the pending RPC and only a manual reload in
-<code>about:debugging</code> recovers it.</div>
-
-<h1 id="ui-part">What needs a person</h1>
-
-<h2 id="install">M1. Install and version lockstep</h2>
+<h2 id="m1">M1. Install and version lockstep</h2>
 <table>
-  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
-  <tr><td>M1.1</td><td>install all three, restart</td><td>both providers <em>Ready</em>; accounts sync</td></tr>
-  <tr><td>M1.2</td><td>downgrade <strong>one</strong> provider, restart</td><td>that provider does <strong>not</strong> connect; the other still works</td></tr>
-  <tr><td>M1.3</td><td>re-install it at the matching version</td><td>it reconnects</td></tr>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M1.1</td><td>install all three, restart</td><td>both providers <em>Ready</em>; accounts sync</td></tr>
+<tr><td>M1.2</td><td>downgrade <em>one</em> provider, restart</td><td>that provider does <strong>not</strong> connect; the other still works</td></tr>
+<tr><td>M1.3</td><td>re-install it at the matching version</td><td>it reconnects</td></tr>
 </table>
-<p>Failing 6.2 in the other direction — an old provider that <em>does</em>
-connect — is the serious outcome.</p>
+<p>An old provider that <em>does</em> connect is the serious outcome.</p>
 
-<h2 id="auth-failure">M2. Authentication failure</h2>
-<p>An auth failure stamps the error and nothing else. Break the credentials
-(change the password in Settings, or corrupt <code>custom.refreshToken</code>
-from the TbSync console), then <strong>restart</strong> — the provider caches a
-good token in memory — and sync.</p>
+<h2 id="m2">M2. Authentication failure</h2>
+<p>Break the credentials (change the password in Settings, or corrupt
+<code>custom.refreshToken</code> from the TbSync console), then
+<strong>restart</strong> — the provider caches a good token in memory — and
+sync.</p>
 <table>
-  <tr><th>#</th><th>Expect</th><th>Why</th></tr>
-  <tr><td>M2.1</td><td>pill reads <em>Authentication failed</em>; button reads <strong>Authenticate</strong></td><td></td></tr>
-  <tr><td>M2.2</td><td>folder list still listed</td><td></td></tr>
-  <tr><td>M2.3</td><td>local calendars and address books still present, colours intact</td><td></td></tr>
-  <tr><td>M2.4</td><td><code>custom.synckey</code> unchanged, not reset to <code>"0"</code></td><td></td></tr>
-  <tr><td>M2.5</td><td>account still shows connected/enabled</td><td></td></tr>
-  <tr><td>M2.6</td><td>red toolbar badge appears</td><td>the badge filters to enabled accounts before checking errors</td></tr>
-  <tr><td>M2.7</td><td>Sync greyed; <strong>Disconnect</strong> still available</td><td>deliberate</td></tr>
-  <tr><td>M2.8</td><td>wait out an autosync interval: no further sync attempts</td><td>if this fails the account can get locked out at the server</td></tr>
+<tr><th>#</th><th>Expect</th><th>Why</th></tr>
+<tr><td>M2.1</td><td>pill reads <em>Authentication failed</em>; button reads <em>Authenticate</em></td><td></td></tr>
+<tr><td>M2.2</td><td>folder list still listed</td><td></td></tr>
+<tr><td>M2.3</td><td>local calendars and books still present, colours intact</td><td></td></tr>
+<tr><td>M2.4</td><td><code>custom.synckey</code> unchanged, not reset to <code>"0"</code></td><td></td></tr>
+<tr><td>M2.5</td><td>account still shows connected</td><td></td></tr>
+<tr><td>M2.6</td><td>red toolbar badge appears</td><td>the badge filters to enabled accounts before checking errors</td></tr>
+<tr><td>M2.7</td><td>Sync greyed; Disconnect still available</td><td>deliberate</td></tr>
+<tr><td>M2.8</td><td>wait out an autosync interval: no further attempts</td><td>if this fails the account can get locked out at the server</td></tr>
 </table>
 
-<h2 id="gal">M3. GAL autocomplete must go quiet</h2>
-<p>With the account still in <em>Authentication failed</em>, on an EAS server
-that advertises <code>Search</code>:</p>
+<h2 id="m3">M3. GAL autocomplete must go quiet</h2>
+<p>With the account still in <em>Authentication failed</em>, on a server that
+advertises <code>Search</code>:</p>
 <table>
-  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
-  <tr><td>M3.1</td><td>compose window, type 3+ characters in <strong>To:</strong></td><td>no GAL results and <strong>no network attempts</strong> in the Event Log</td></tr>
-  <tr><td>M3.2</td><td>authenticate, type again</td><td>GAL results return without a restart</td></tr>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M3.1</td><td>compose window, type 3+ characters in <em>To:</em></td><td>no GAL results and <strong>no network attempts</strong> in the Event Log</td></tr>
+<tr><td>M3.2</td><td>authenticate, type again</td><td>GAL results return without a restart</td></tr>
 </table>
-<p>8.1 is the one that matters — this path fires on every keystroke. 8.2 proves
-the guard is in the callback, not in listener registration.</p>
+<p>M3.1 is the one that matters — this path fires on every keystroke. M3.2
+proves the guard is in the callback rather than in listener registration.</p>
 
-<h2 id="reauth">M4. Re-authentication</h2>
+<h2 id="m4">M4. Re-authentication</h2>
 <table>
-  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
-  <tr><td>M4.1</td><td><strong>Authenticate</strong> → sign in (OAuth)</td><td>popup closes; account recovers; a sync follows</td></tr>
-  <tr><td>M4.2</td><td>confirm that sync is incremental</td><td>same counts, no duplicates, sync key continues</td></tr>
-  <tr><td>M4.3</td><td>Event Log has no "Re-authentication failed" line</td><td></td></tr>
-  <tr><td>M4.4</td><td>break it, click Authenticate, close without signing in</td><td>stays failed; <strong>no Event Log entry</strong></td></tr>
-  <tr><td>M4.5</td><td>sign in as a <em>different</em> Microsoft account</td><td>refused; stored token unchanged</td></tr>
-  <tr><td>M4.6</td><td>password account: <strong>Authenticate</strong></td><td>the Settings dialog opens, fully editable</td></tr>
-  <tr><td>M4.7</td><td>close it without saving</td><td>stays failed; no Event Log entry</td></tr>
-  <tr><td>M4.8</td><td>enter the correct password, Save</td><td>recovers and syncs</td></tr>
-  <tr><td>M4.9</td><td>enter a <em>wrong</em> password</td><td>error dialog; account left disabled with its error cleared — click <strong>Connect</strong>. Known host behaviour</td></tr>
-</table>
-
-<h2 id="focus">M5. Popup focus</h2>
-<table>
-  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
-  <tr><td>M5.1</td><td>Authenticate (OAuth), bury the consent popup, Authenticate again</td><td>the consent window raises; nothing new opens</td></tr>
-  <tr><td>M5.2</td><td>same with a password account's Settings dialog</td><td>it raises</td></tr>
-  <tr><td>M5.3</td><td>Settings on a healthy account, bury, Settings again</td><td>it raises</td></tr>
-</table>
-<p>10.2 is the one to watch: if the raise fails the button just looks dead.</p>
-
-<h2 id="setup">M6. Setup flow</h2>
-<p>The providers' internal message listeners must not claim every message — the
-setup dialog's completion message goes to a different listener.</p>
-<table>
-  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
-  <tr><td>M6.1</td><td>add an EAS account end to end</td><td>dialog completes and closes; account appears</td></tr>
-  <tr><td>M6.2</td><td>add a Google account</td><td>same</td></tr>
-  <tr><td>M6.3</td><td>cancel a setup halfway</td><td>clean cancellation, no stuck account</td></tr>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M4.1</td><td><em>Authenticate</em> → sign in (OAuth)</td><td>popup closes; account recovers; a sync follows</td></tr>
+<tr><td>M4.2</td><td>confirm that sync is incremental</td><td>same counts, no duplicates, sync key continues</td></tr>
+<tr><td>M4.3</td><td>—</td><td>no "Re-authentication failed" line in the Event Log</td></tr>
+<tr><td>M4.4</td><td>break it, click Authenticate, close without signing in</td><td>stays failed; no Event Log entry</td></tr>
+<tr><td>M4.5</td><td>sign in as a <em>different</em> Microsoft account</td><td>refused; stored token unchanged</td></tr>
+<tr><td>M4.6</td><td>password account: <em>Authenticate</em></td><td>the Settings dialog opens, fully editable</td></tr>
+<tr><td>M4.7</td><td>close it without saving</td><td>stays failed; no Event Log entry</td></tr>
+<tr><td>M4.8</td><td>enter the correct password, Save</td><td>recovers and syncs</td></tr>
+<tr><td>M4.9</td><td>enter a <em>wrong</em> password</td><td>error dialog; account left disabled with its error cleared — click <em>Connect</em>. Known host behaviour</td></tr>
 </table>
 
-<h2 id="corrupted-sync-key">M7. Corrupted sync key — resync must not duplicate</h2>
-<p>The identity fallback. The bridge has no storage verb, so this needs the
-console:</p>
+<h2 id="m5">M5. Popup focus</h2>
+<table>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M5.1</td><td>Authenticate (OAuth), bury the consent popup, Authenticate again</td><td>the consent window raises; nothing new opens</td></tr>
+<tr><td>M5.2</td><td>same with a password account's Settings dialog</td><td>it raises</td></tr>
+<tr><td>M5.3</td><td>Settings on a healthy account, bury, Settings again</td><td>it raises</td></tr>
+</table>
+<p>If the raise fails, the button just looks dead.</p>
+
+<h2 id="m6">M6. Setup flow</h2>
+<p>The providers' internal message listeners must not claim every message —
+the setup dialog's completion message goes to a different listener.</p>
+<table>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M6.1</td><td>add an EAS account end to end</td><td>dialog completes and closes; account appears</td></tr>
+<tr><td>M6.2</td><td>add a Google account</td><td>same</td></tr>
+<tr><td>M6.3</td><td>cancel a setup halfway</td><td>clean cancellation, no stuck account</td></tr>
+</table>
+
+<h2 id="m7">M7. Corrupted sync key — resync must not duplicate</h2>
+<p>This is the identity fallback, and it needs a sync key the server will
+reject. Set one from the TbSync console:</p>
 <pre><code>const K = "tbsync.folders", ID = "1", FID = "&lt;folderId&gt;";
 const f = (await browser.storage.local.get(K))[K];
 f[ID][FID].custom.synckey = "999999999";
 await browser.storage.local.set({ [K]: f });</code></pre>
 <table>
-  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
-  <tr><td>M7.1</td><td>sync a populated folder (20+ items), note the count</td><td></td></tr>
-  <tr><td>M7.2</td><td>corrupt the sync key, sync</td><td>server answers Status 3; the runner resets and re-pulls</td></tr>
-  <tr><td>M7.3</td><td>item count unchanged — <strong>no duplicates</strong></td><td>the whole point</td></tr>
-  <tr><td>M7.4</td><td><code>custom.indexMap</code> rebuilt</td><td>the fallback repopulates it</td></tr>
-  <tr><td>M7.5</td><td>the following sync is a normal incremental one</td><td></td></tr>
-  <tr><td>M7.6</td><td>repeat on a <strong>contacts</strong> folder</td><td>different codec</td></tr>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M7.1</td><td>sync a populated folder (20+ items), note the count</td><td></td></tr>
+<tr><td>M7.2</td><td>corrupt the sync key, sync</td><td>server answers Status 3; the runner resets and re-pulls</td></tr>
+<tr><td>M7.3</td><td>item count unchanged — <strong>no duplicates</strong></td><td>the whole point</td></tr>
+<tr><td>M7.4</td><td><code>custom.indexMap</code> rebuilt</td><td>the fallback repopulates it</td></tr>
+<tr><td>M7.5</td><td>the following sync is a normal incremental one</td><td></td></tr>
+<tr><td>M7.6</td><td>repeat on a <em>contacts</em> folder</td><td>different codec</td></tr>
 </table>
-<p><strong>Still unrun.</strong> The bridge covers the <em>clean</em> resync
-path — no duplicates, indexMap rebuilt, next sync incremental — but that is not
-a Status 3 resync, so the fallback itself remains unproven.</p>
+<p><strong>Still unrun.</strong> The automated suite covers the <em>clean</em>
+resync path — no duplicates, index rebuilt, next sync incremental — but that
+is not a Status 3 resync, so the fallback itself remains unproven.</p>
 
-<h2 id="versions">M8. Thunderbird versions</h2>
+<h2 id="m8">M8. Thunderbird versions</h2>
 <table>
-  <tr><th>#</th><th>Step</th><th>Expect</th></tr>
-  <tr><td>M8.1</td><td>calendar sync on the release version</td><td>works — <strong>run on 153.0.1</strong></td></tr>
-  <tr><td>M8.2</td><td>same on the beta version</td><td>works, and no <code>TypeError</code> from the timezone experiment</td></tr>
-  <tr><td>M8.3</td><td>create / modify / delete plus a full folder sync on beta</td><td>exercises the <code>wrappedJSObject</code>-on-objects paths</td></tr>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M8.1</td><td>calendar sync on the release version</td><td>works — run on 153.0.1</td></tr>
+<tr><td>M8.2</td><td>same on the beta version</td><td>works, and no <code>TypeError</code> from the timezone experiment</td></tr>
+<tr><td>M8.3</td><td>create / modify / delete plus a full folder sync on beta</td><td>exercises the <code>wrappedJSObject</code>-on-objects paths</td></tr>
 </table>
-<p>13.1 and 13.3 have been run on 153.0.1. Nothing has been run on 154.</p>
+<p>M8.1 and M8.3 have been run on 153.0.1. Nothing has been run on 154.</p>
 
-<h2 id="rotation">M9. Cannot be forced — watch for it instead</h2>
-<p><strong>Rotated refresh tokens.</strong> Microsoft decides when to hand back
-a new one. Note the stored <code>refreshToken</code>, use the account across
-several restarts, and re-check. What you are watching for is the
-<em>absence</em> of a spurious <em>Authenticate</em> prompt after a restart. A
-debug-level Event Log line on rotation would make this visible; not written
-yet.</p>
+<h2 id="m9">M9. Cannot be forced — watch for it instead</h2>
+<p><strong>Rotated refresh tokens.</strong> Microsoft decides when to hand
+back a new one. Note the stored <code>refreshToken</code>, use the account
+across several restarts, and re-check. What you are watching for is the
+<em>absence</em> of a spurious <em>Authenticate</em> prompt after a
+restart.</p>
 
 </main>
 </div>
