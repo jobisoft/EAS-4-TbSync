@@ -146,7 +146,7 @@ def t_3_6(s):
     # (the pre-fix form) the override floats beside the series and a
     # cancelled day keeps rendering.
     #
-    # Two-step on purpose: at least one 14.1 server (ekir/Grommunio)
+    # Two-step on purpose: at least one 14.1 server (ekir, running Z-Push)
     # accepts an all-day <Add> whose payload embeds <Exceptions> and then
     # quietly drops the recurrence, series and all. The same exceptions
     # sent as a <Change> on the following sync survive. The same server
