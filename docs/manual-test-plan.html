@@ -146,24 +146,20 @@ the setup dialog's completion message goes to a different listener.</p>
 </table>
 
 <h2 id="m7">M7. Corrupted sync key — resync must not duplicate</h2>
-<p>This is the identity fallback, and it needs a sync key the server will
-reject. Set one from the TbSync console:</p>
+<p><strong>Automated.</strong> This is §13, which corrupts the sync key
+itself, confirms <code>&lt;Status&gt;3&lt;/Status&gt;</code> on the wire and
+that the folder came back as <code>&lt;Add&gt;</code>s, then checks the count
+and the UID set are unchanged and <code>custom.indexMap</code> was rebuilt.</p>
+<table>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M7.1</td><td>repeat it by hand on a <em>contacts</em> folder</td><td>same outcome — no duplicates, index rebuilt</td></tr>
+</table>
+<p>Only the contacts variant is left, because §13 runs on events and the
+codecs are separate. Set the key from the TbSync console:</p>
 <pre><code>const K = "tbsync.folders", ID = "1", FID = "&lt;folderId&gt;";
 const f = (await browser.storage.local.get(K))[K];
 f[ID][FID].custom.synckey = "999999999";
 await browser.storage.local.set({ [K]: f });</code></pre>
-<table>
-<tr><th>#</th><th>Step</th><th>Expect</th></tr>
-<tr><td>M7.1</td><td>sync a populated folder (20+ items), note the count</td><td></td></tr>
-<tr><td>M7.2</td><td>corrupt the sync key, sync</td><td>server answers Status 3; the runner resets and re-pulls</td></tr>
-<tr><td>M7.3</td><td>item count unchanged — <strong>no duplicates</strong></td><td>the whole point</td></tr>
-<tr><td>M7.4</td><td><code>custom.indexMap</code> rebuilt</td><td>the fallback repopulates it</td></tr>
-<tr><td>M7.5</td><td>the following sync is a normal incremental one</td><td></td></tr>
-<tr><td>M7.6</td><td>repeat on a <em>contacts</em> folder</td><td>different codec</td></tr>
-</table>
-<p><strong>Still unrun.</strong> The automated suite covers the <em>clean</em>
-resync path — no duplicates, index rebuilt, next sync incremental — but that
-is not a Status 3 resync, so the fallback itself remains unproven.</p>
 
 <h2 id="m8">M8. Thunderbird versions</h2>
 <table>

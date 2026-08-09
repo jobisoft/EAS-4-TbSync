@@ -336,6 +336,8 @@ def preflight(provider="eas", require=KINDS, bind=None):
             f"the Bridge tab."
         )
 
+    _require_debug_logging()
+
     session = Session(granted, folders, (granted.get("custom") or {}).get("asversion"))
     session.mark()
     try:
@@ -343,6 +345,29 @@ def preflight(provider="eas", require=KINDS, bind=None):
     except AssertionError as e:
         raise PreflightError(f"the initial sync failed.\n  {e}") from None
     return session
+
+
+def _require_debug_logging():
+    """Refuse to run unless the Event Log is capturing `debug`.
+
+    The decoded WBXML of every request and response is logged at that level
+    and nowhere else, so below it `wire()` returns an empty list. Assertions
+    that something *was* sent then fail with a misleading message, and - far
+    worse - the ones checking something was *not* sent pass without looking
+    at anything.
+
+    Checked, not set: the log level is the user's setting, and a suite that
+    quietly rewrote it would hand back a profile in a state its owner did
+    not choose.
+    """
+    level = (ok("storage.snapshot").get("tbsync.settings") or {}).get("logLevel")
+    if level != 3:
+        raise PreflightError(
+            f"the Event Log level is {level}, so the wire is not being "
+            f"captured.\n  Set it to 3 (Debug) in TbSync's Event Log tab - "
+            f"below that, tests that assert nothing was sent pass without "
+            f"testing anything."
+        )
 
 
 def _granted_account(accounts):
