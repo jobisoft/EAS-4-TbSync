@@ -271,17 +271,17 @@ async function adoptHostChangelogs(provider) {
       const entries = Array.isArray(folder.changelog) ? folder.changelog : [];
       if (!entries.length) continue;
       if (!folder.sessionId) {
-        // A host that mints no sessions cannot pair with this build at all
-        // (it would be speaking 1.3 against our PROTOCOL_VERSION 2), so
-        // this is unreachable in practice. Leaving the rows where they are
-        // keeps them readable if it ever is.
-        provider.reportEventLog({
-          level: "warning",
-          accountId,
-          folderId: folder.folderId,
-          message: `[upgrade] cannot adopt ${entries.length} queued edit(s): the folder has no session`,
-        });
-        continue;
+        // No session, but edits to adopt: the host has not (yet) minted
+        // session ids for its rows. Continuing here and letting the ladder
+        // stamp the schema would strand these rows forever - the ladder
+        // never looks back. Throw instead: the rung stays unstamped and
+        // the whole adoption retries on the next start, when the host has
+        // caught up. Observed for real on 10 Aug 2026 during migration
+        // testing - "unreachable in practice" was wrong.
+        throw new Error(
+          `cannot adopt ${entries.length} queued edit(s) of folder ` +
+            `${folder.folderId}: the folder has no session id yet`,
+        );
       }
 
       const queue = localQueue({
@@ -290,10 +290,25 @@ async function adoptHostChangelogs(provider) {
         sessionId: folder.sessionId,
         observed: folder.targetType === "contacts",
       });
+      // A single-kind folder names its rows' kind itself. 5.0.13 was seen
+      // stamping a task DELETION as kind "event" in the wild (the gold
+      // migration baseline, 10 Aug 2026); adopted verbatim, such a row
+      // survives adoption only to be dropped at push as "not this
+      // folder's kind" - and the pull then resurrects the item the user
+      // deleted. Contacts folders hold several kinds and cannot be
+      // healed this way; calendars and tasks hold exactly one.
+      const folderKind = { calendars: "event", tasks: "task" }[
+        folder.targetType
+      ];
       let adopted = 0;
       let refused = 0;
+      let healed = 0;
       for (const e of entries) {
         if (!isUserEntry(e?.status)) continue;
+        if (folderKind && e.kind !== folderKind) {
+          e.kind = folderKind;
+          healed++;
+        }
         // `record` throws on a kind outside CHANGELOG_KINDS. The inbox is
         // whatever the v4 importer wrote, and one malformed row must not
         // abort the whole migration - skip it, count it, and let the
@@ -322,6 +337,7 @@ async function adoptHostChangelogs(provider) {
         folderId: folder.folderId,
         message:
           `[upgrade] adopted ${adopted} queued edit(s) from the host` +
+          (healed ? `; healed ${healed} kind(s) to the folder's own` : "") +
           (refused
             ? `; refused ${refused} with an unknown changelog kind`
             : ""),

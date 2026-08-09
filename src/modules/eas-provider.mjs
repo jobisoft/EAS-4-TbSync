@@ -910,34 +910,29 @@ export class EasProvider extends TbSyncProviderImplementation {
    *  (provision required, via `#withProvisionRecovery`) and Status 9
    *  (invalid sync key, reset to "0" and treat as initial). */
   async #runFolderSyncWithRecovery(accountId, ctx, asVersion) {
-    return this.#withProvisionRecovery(
-      accountId,
-      ctx,
-      asVersion,
-      async (c) => {
-        let resetSyncKey = false;
-        while (true) {
-          try {
-            const syncResult = await runFolderSync({
-              account: c.account,
-              asVersion,
+    return this.#withProvisionRecovery(accountId, ctx, asVersion, async (c) => {
+      let resetSyncKey = false;
+      while (true) {
+        try {
+          const syncResult = await runFolderSync({
+            account: c.account,
+            asVersion,
+          });
+          return { syncResult, ctx: c };
+        } catch (err) {
+          if (err.folderSyncStatus === "9" && !resetSyncKey) {
+            resetSyncKey = true;
+            await this.updateAccount({
+              accountId,
+              patch: { custom: { foldersynckey: "0" } },
             });
-            return { syncResult, ctx: c };
-          } catch (err) {
-            if (err.folderSyncStatus === "9" && !resetSyncKey) {
-              resetSyncKey = true;
-              await this.updateAccount({
-                accountId,
-                patch: { custom: { foldersynckey: "0" } },
-              });
-              c = await this.#loadContext(accountId);
-              continue;
-            }
-            throw err;
+            c = await this.#loadContext(accountId);
+            continue;
           }
+          throw err;
         }
-      },
-    );
+      }
+    });
   }
 
   async #provisionAndPersist(accountId, ctx, asVersion) {
@@ -1034,7 +1029,8 @@ export class EasProvider extends TbSyncProviderImplementation {
       this.reportEventLog({
         level: "debug",
         accountId,
-        message: "[oauth] the server rotated the refresh token; stored the new one",
+        message:
+          "[oauth] the server rotated the refresh token; stored the new one",
       });
     } catch (err) {
       // Losing the write costs a re-auth at worst; failing the sync that
@@ -1092,6 +1088,65 @@ export class EasProvider extends TbSyncProviderImplementation {
           folder = { ...folder, targetID, targetName: name };
         }
       } else {
+        // A calendar from before the provider-calendar switch (any v5 up to
+        // 5.0.13, and v4 through its importer): the visible calendar exists
+        // but it is a plain storage calendar, so the `#cache` addressing
+        // every sync write goes through resolves to nothing and the folder
+        // fails with "Invalid calendar". Convert it: create the
+        // provider-type calendar, copy every local item across PRESERVING
+        // ids - the adopted changelog rows reference them, and an unsynced
+        // add exists nowhere else - then drop the old calendar and repoint
+        // the folder. Idempotent: a converted calendar resolves its cache
+        // id and never enters this branch again.
+        if (
+          folder.targetID &&
+          (await calendarStore.calendarExists(folder.targetID)) &&
+          !(await calendarStore.calendarExists(
+            calendarStore.cacheId(folder.targetID),
+          ))
+        ) {
+          const oldId = folder.targetID;
+          const name = localNameForFolder(folder, ctx);
+          const color =
+            folder.targetColor || (await calendarStore.pickCalendarColor());
+          const targetID = await calendarStore.createCalendar({
+            name,
+            kind: tt === "calendars" ? "events" : "tasks",
+            color,
+            type: CALENDAR_TYPE,
+            url: CALENDAR_URL,
+          });
+          const items = await calendarStore.listItems(oldId);
+          let copied = 0;
+          for (const it of items) {
+            await calendarStore.createItem(calendarStore.cacheId(targetID), {
+              id: it.id,
+              type: it.type,
+              ical: it.item ?? it.ical,
+            });
+            copied++;
+          }
+          await calendarStore.deleteCalendar(oldId);
+          await this.updateFolder({
+            accountId,
+            folderId,
+            patch: { targetID, targetName: name, targetColor: color },
+          });
+          folder = {
+            ...folder,
+            targetID,
+            targetName: name,
+            targetColor: color,
+          };
+          this.reportEventLog({
+            level: "info",
+            accountId,
+            folderId,
+            message:
+              `[upgrade] converted pre-provider calendar to the provider ` +
+              `type (${copied} local item(s) carried over)`,
+          });
+        }
         if (
           !folder.targetID ||
           !(await calendarStore.calendarExists(folder.targetID))
