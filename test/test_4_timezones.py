@@ -1,4 +1,4 @@
-"""4. Timezones and all-day boundaries - AS 16.x only.
+"""4. Timezones and all-day boundaries.
 
 `fixtures/tz-test.ics` holds five independent cases - all-day single, all-day
 span, an all-day series with UNTIL, a series crossing the DST change, and a
@@ -13,6 +13,12 @@ zone moves the event a whole day, which is a bug we have actually shipped.
 Confirming they *render* on the right day stays in the manual plan.
 
 Self-contained: 4.1 imports what 4.2 reads.
+
+Not version-gated: every case is behavioral - a boundary that holds on one
+generation and shifts on the other is exactly what this section exists to
+catch, and the two generations encode every one of these boundaries
+differently. A failure here on one server family is a finding about that
+family, not a broken test.
 """
 
 import re
@@ -27,8 +33,6 @@ from harness import test
 # reason to pull an address book it never reads.
 NEEDS = ("events",)
 
-VERSIONS = ("16",)
-
 
 def _by_summary(s, summary):
     for item in s.items("events", "event"):
@@ -37,7 +41,7 @@ def _by_summary(s, summary):
     return None
 
 
-@test("4.1", "every case survives a clean pull unshifted", VERSIONS)
+@test("4.1", "every case survives a clean pull unshifted")
 def t_4_1(s):
     s.mark()
     # One create per item: items.create takes a single parent item and
@@ -57,21 +61,27 @@ def t_4_1(s):
     harness.true(before, "no TZ fixtures were imported")
 
     s.rebind("events")
+    # Every case is checked before any verdict: the section's value is the
+    # per-case map (which boundary holds on which server family), and a
+    # fail-fast loop reports only the first shifted case while the fate of
+    # the other four stays unknown.
+    wrong = []
     for summary, starts in before.items():
         item = _by_summary(s, summary)
-        harness.true(item is not None, f"{summary!r} did not survive the clean pull")
+        if item is None:
+            wrong.append(f"{summary!r} did not survive the clean pull")
+            continue
         # Compared as instants, not as text. A server may hand an override
         # back in a different zone from the one it was sent in -
         # America/New_York 14:00 returning as Europe/Berlin 20:00 is the same
         # moment, and calling that a shift would be a false alarm.
-        harness.eq(
-            probes.instants(item["item"]),
-            starts,
-            f"{summary!r} moved in time across the round trip",
-        )
+        got = probes.instants(item["item"])
+        if got != starts:
+            wrong.append(f"{summary!r} moved: expected {starts}, got {got}")
+    harness.eq(len(wrong), 0, "shifted across the round trip:\n  " + "\n  ".join(wrong))
 
 
-@test("4.2", "the DST-crossing series keeps its rule and its named zone", VERSIONS)
+@test("4.2", "the DST-crossing series keeps its rule and its named zone")
 def t_4_2(s):
     item = _by_summary(s, "TZ4")
     harness.true(item is not None, "the TZ4 fixture is missing - 4.1 must run first")
