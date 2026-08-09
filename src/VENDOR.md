@@ -32,9 +32,9 @@ This file lists files that were not created by this project and are maintained u
 ## tbsync protocol library
 
 - **Files** : `/vendor/tbsync/*`
-- **Source** : `TbSync/protocol/` — the single source of truth, in the
+- **Source** : `TbSync/common/protocol/` — the single source of truth, in the
   [TbSync repository](https://github.com/jobisoft/TbSync)
-- **Updating** : never edit these copies. Change the file in `TbSync/protocol/`
-  and run `TbSync/protocol/vendor.sh`, which refreshes every consumer and
+- **Updating** : never edit these copies. Change the file in `TbSync/common/protocol/`
+  and run `TbSync/common/vendor.sh`, which refreshes every consumer and
   verifies each copy is byte-identical (`vendor.sh --check` verifies only).
-  See `TbSync/protocol/README.md`.
+  See `TbSync/common/README.md`.

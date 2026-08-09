@@ -1,15 +1,9 @@
-# Vendored from TbSync
+# Vendored test harness
 
-`bridge.py` and `harness.py` are copies of `TbSync/test-harness/*`, verbatim.
-The bridge is TbSync's, and every provider's suite runs the same loop, so both
-files are maintained there and copied here.
+`bridge.py` and `harness.py` are verbatim copies of `TbSync/common/test-harness/*`.
 
-**Do not edit them in this repo.** Change `TbSync/test-harness/`, then:
+**Do not edit them here.** Change the file in `TbSync/common/test-harness/`,
+then run `TbSync/common/vendor.sh`, which refreshes every consumer and
+verifies each copy is byte-identical (`--check` verifies only).
 
-    cp ../TbSync/test-harness/bridge.py  test/vendor/bridge.py
-    cp ../TbSync/test-harness/harness.py test/vendor/harness.py
-
-`diff -q` against the source says whether this copy has fallen behind.
-
-Everything provider-specific — preflight, resource selection, probes, the
-tests themselves — lives one directory up.
+See `TbSync/common/README.md`.
