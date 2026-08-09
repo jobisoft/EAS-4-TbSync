@@ -93,15 +93,26 @@ class Session:
         raise AssertionError(f"folder {wanted} ({kind}) has vanished")
 
     def changelog(self, kind):
-        """Pending entries for a folder.
+        """Pending entries for a folder, wherever they are kept.
 
-        Read from the folder row, which is where the changelog lives. There
-        is no `getChangelog` verb - an earlier helper called one anyway and
-        returned [] when it failed, which is indistinguishable from an empty
-        queue and quietly passed every assertion about a drained changelog.
+        For contacts that is the host's folder row. For events and tasks it
+        is the provider's own storage - it supplies those calendars, so it
+        is handed the user's edits directly and queues them itself, and the
+        folder row's changelog stays permanently empty. Reading the row for
+        those would report "nothing pending" for a folder holding a dozen
+        unpushed edits, and every assertion about a drained queue would pass
+        without ever being tested.
+
+        `getChangelog` asks the right side and raises when it cannot. An
+        earlier helper returned [] on failure, which is indistinguishable
+        from an empty queue - the one bug this must never hide.
         """
         self._active(kind)
-        return self.folder(kind).get("changelog") or []
+        return ok(
+            "getChangelog",
+            accountId=self.account_id,
+            folderId=self.folders[kind],
+        )["entries"]
 
     def status(self, kind):
         self._active(kind)

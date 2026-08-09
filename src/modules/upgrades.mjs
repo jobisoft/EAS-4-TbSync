@@ -43,6 +43,11 @@ import {
 import * as calendarStore from "./calendar-store.mjs";
 import * as eventCodec from "./eas/calendar-codec.mjs";
 import * as taskCodec from "./eas/task-codec.mjs";
+import { localQueue } from "./eas/change-queue.mjs";
+import {
+  isUserEntry,
+  providerOwnsChanges,
+} from "../vendor/tbsync/changelog-core.mjs";
 
 /** Coerce the legacy `Map<uid, serverId>` JSON shape into the new array
  *  of `{uid, serverId}` records. Returns a fresh array — caller is free
@@ -96,7 +101,7 @@ const SCHEMA_KEY = "schemaVersion";
  *  actually changes. Also independent of any other provider's number: a
  *  `2` here and a `2` in google-4-tbsync describe different storages and
  *  must never be compared. */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 /** Steps that raise storage from the previous version to the keyed one,
  *  applied in ascending order. `name` appears in the event log so a
@@ -105,6 +110,7 @@ const SCHEMA_VERSION = 3;
 const MIGRATIONS = {
   2: { name: "lift-legacy-prefs", run: liftLegacyPrefs },
   3: { name: "repair-unconverted-accounts", run: repairUnconvertedAccounts },
+  4: { name: "adopt-host-changelogs", run: adoptHostChangelogs },
 };
 
 let inFlight = null;
@@ -246,6 +252,84 @@ async function repairUnconvertedAccounts(provider) {
     );
   }
 }
+
+/** Rung 4. Take over the calendar and task edits the host is still holding
+ *  for us.
+ *
+ *  Those queues used to live in the host's folder rows, written there by an
+ *  RPC from our item hooks; they now live in our own storage, keyed by the
+ *  folder's binding. An upgrade lands with edits already queued the old
+ *  way, and they are the user's unsynced work - dropping them would be
+ *  exactly the loss this change was made to stop.
+ *
+ *  Import first, remove second. A crash in between leaves an entry in both
+ *  places, and the next run re-imports it onto a queue that already folds
+ *  duplicates by identity - so the repeat is a no-op rather than a second
+ *  copy. The other order would lose entries outright. */
+async function adoptHostChangelogs(provider) {
+  for (const { accountId } of await provider.listAccounts()) {
+    const { folders = [] } = (await provider.getAccount(accountId)) ?? {};
+    for (const folder of folders) {
+      if (!providerOwnsChanges(folder.targetType)) continue;
+      const entries = Array.isArray(folder.changelog) ? folder.changelog : [];
+      if (!entries.length) continue;
+      if (!folder.sessionId) {
+        // A host that mints no sessions cannot pair with this build at all
+        // (PROTOCOL_VERSION 3), so this is unreachable in practice. Leaving
+        // the rows where they are keeps them readable if it ever is.
+        provider.reportEventLog({
+          level: "warning",
+          accountId,
+          folderId: folder.folderId,
+          message: `[upgrade] cannot adopt ${entries.length} queued edit(s): the folder has no session`,
+        });
+        continue;
+      }
+
+      const queue = localQueue({
+        accountId,
+        folderId: folder.folderId,
+        sessionId: folder.sessionId,
+      });
+      let adopted = 0;
+      for (const e of entries) {
+        if (!isUserEntry(e?.status)) continue;
+        await queue.record({
+          parentId: e.parentId,
+          itemId: e.itemId,
+          kind: e.kind,
+          op: OP_FOR_STATUS[e.status],
+          detail: e.detail,
+        });
+        adopted++;
+      }
+      for (const e of entries) {
+        await provider.changelogRemove({
+          accountId,
+          folderId: folder.folderId,
+          parentId: e.parentId,
+          itemId: e.itemId,
+          kind: e.kind,
+        });
+      }
+      provider.reportEventLog({
+        level: "info",
+        accountId,
+        folderId: folder.folderId,
+        message: `[upgrade] adopted ${adopted} queued edit(s) from the host`,
+      });
+    }
+  }
+}
+
+/** The op that produced each user status - `record` speaks ops, a stored
+ *  row states the status it reached. Replaying the op onto an empty queue
+ *  reproduces the row, which is what makes the import idempotent. */
+const OP_FOR_STATUS = {
+  added_by_user: "created",
+  modified_by_user: "updated",
+  deleted_by_user: "deleted",
+};
 
 /* ── Host-flag driven account conversion ────────────────────────────── */
 

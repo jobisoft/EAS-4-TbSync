@@ -174,3 +174,76 @@ def t_6_7(s):
         "server reported no changes and there was nothing to refill from",
     )
     probes.reset(s, ("events",))
+
+
+@test("6.8", "a binding that ends takes its queued edits with it")
+def t_6_8(s):
+    """The queue for one of our calendars lives in the provider, and the only
+    thing tying it to a folder is the session id the host mints for the
+    current binding. Deselecting ends that binding - the calendar is deleted
+    - so an edit still queued against it is an edit to something that no
+    longer exists. Carrying it into the next binding would re-apply it to a
+    freshly downloaded calendar the user never touched.
+
+    This is also the check that the host is minting sessions at all. If it
+    stopped, everything else here would still pass: the queue would simply
+    persist, and only this test would notice.
+    """
+    slug = f"{SLUG}-session"
+    summary = f"SUMMARY:{probes.MARKER} {slug}"
+    ok(
+        "items.create",
+        type="event",
+        ical=probes.event(slug, lines=["DTSTART:20261201T090000Z", "DTEND:20261201T100000Z"]),
+    )
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained after the create")
+    item = s.find("events", f"{probes.MARKER} {slug}", "event")
+    harness.true(item is not None, "the probe was not created")
+    before = s.folder("events")["sessionId"]
+    harness.true(before, "the folder row carries no session id")
+
+    # An edit the sync never gets to see. Only the SUMMARY line is touched -
+    # rewriting the whole slug would rewrite the UID with it and re-key the
+    # item, which is a different test and a confusing failure. Asserted
+    # rather than assumed: a replace that matched nothing would write the
+    # item back unchanged, and "no entry was queued" would look like the
+    # bug this test is here to catch.
+    harness.contains(item["item"], summary, "the summary line to edit")
+    ok("items.update", id=item["id"], ical=item["item"].replace(summary, f"{summary} v2"))
+    harness.true(s.changelog("events"), "the edit was not queued at all")
+
+    s.rebind("events")
+
+    after = s.folder("events")["sessionId"]
+    harness.true(
+        after and after != before,
+        "the host must mint a new session for the new binding - without that "
+        "the provider cannot tell the old queue apart from a live one",
+    )
+    harness.eq(
+        s.changelog("events"),
+        [],
+        "the old binding's queue followed it into the new one",
+    )
+
+    # And the edit really never reached the server: what came back is the
+    # version from before it.
+    fresh = s.find("events", f"{probes.MARKER} {slug}", "event")
+    harness.true(fresh is not None, "the item did not come back from the server")
+    harness.true(
+        f"{slug} v2" not in fresh["item"],
+        "the queued edit was pushed after all - it belonged to a calendar "
+        "that had already been deleted",
+    )
+
+    # The new binding queues and pushes like any other.
+    harness.contains(fresh["item"], summary, "the summary line to edit")
+    ok("items.update", id=fresh["id"], ical=fresh["item"].replace(summary, f"{summary} v3"))
+    harness.true(s.changelog("events"), "an edit under the new session was not queued")
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained")
+
+    done = s.find("events", f"{probes.MARKER} {slug}", "event")
+    ok("items.remove", id=done["id"])
+    s.sync()

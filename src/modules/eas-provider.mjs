@@ -46,9 +46,16 @@
  *   - displayNameRaw  - server-supplied folder name; the visible
  *                       `displayName` is recomputed from this on every
  *                       push (with optional "Trash | " prefix)
- * The host owns `folder.changelog` (top-level field, not in custom);
- * the provider reads it from `getAccount` and clears entries via
- * `changelogRemove` / pre-tags writes via `changelogMarkServerWrite`.
+ * Where a folder's pending user edits are kept depends on who observes the
+ * resource. For an address book that is the host: it watches Thunderbird's
+ * book events and owns `folder.changelog` (a top-level field, not in
+ * custom), which we read from `getAccount` and clear via `changelogRemove`,
+ * pre-tagging our own writes with `changelogMarkServerWrite`. For a
+ * calendar or task list we supply the calendar ourselves and are handed
+ * every user edit directly, so the queue is ours and lives in our own
+ * storage - see `eas/change-queue.mjs`. `folder.changelog` stays empty for
+ * those, and `folder.sessionId` is what ties our copy to the current
+ * binding.
  *
  * Sync entry points: `syncContactFolder` for contacts (vCard codec, TB
  * address book), `syncCalendarFolder` / `syncTaskFolder` for calendars
@@ -100,6 +107,8 @@ import { setEventLogSink } from "./eas-event-log.mjs";
 // are evaluating - both only reach across inside function bodies, by which
 // point both namespaces are complete.
 import { runStartupMigrations } from "./upgrades.mjs";
+import { localQueue, rememberBindings, sweep } from "./eas/change-queue.mjs";
+import { providerOwnsChanges } from "../vendor/tbsync/changelog-core.mjs";
 
 /** EAS FolderSync status codes that indicate the server wants us to run
  *  Provision (in-band equivalent of the HTTP-449 path). */
@@ -259,7 +268,94 @@ export class EasProvider extends TbSyncProviderImplementation {
     // on extension boot, so the listener registrations would otherwise
     // be lost across restarts.
     await enableGalForAllAccounts(this);
+    // Now that the host is answering, reconcile our own per-folder state
+    // with the bindings it names: learn where each calendar belongs, and
+    // drop the queues of bindings that have ended.
+    await this.#reconcileFolderSessions();
     return null;
+  }
+
+  /** Line our own storage up with the bindings the host currently names.
+   *
+   *  Two things at once, from one read of the folder rows:
+   *
+   *  Remembering, so an item hook can file a user edit against the right
+   *  folder without a round trip - it is handed a calendar id and nothing
+   *  else, and the host may be gone by the time the user hits save.
+   *
+   *  Sweeping, which is the entire teardown path for what we store. A
+   *  folder deselected, an account disconnected or removed, a calendar
+   *  deleted - the host ends each of those by minting a new session id and
+   *  telling nobody. It cannot tell us: those flows have to work while this
+   *  add-on is broken or uninstalled, so they cannot wait on it. We find
+   *  out by looking.
+   *
+   *  Reads every account before deciding anything. A partial answer would
+   *  sweep live queues away, so any failure abandons the whole pass - the
+   *  garbage keeps until the next port open, which costs nothing: a queue
+   *  whose session nothing names is never read. */
+  async #reconcileFolderSessions() {
+    const live = new Set();
+    const bindings = [];
+    try {
+      for (const { accountId } of await this.listAccounts()) {
+        const { folders = [] } = (await this.getAccount(accountId)) ?? {};
+        for (const f of folders) {
+          if (!f?.sessionId) continue;
+          live.add(f.sessionId);
+          if (f.targetID && providerOwnsChanges(f.targetType)) {
+            bindings.push({
+              targetID: f.targetID,
+              accountId,
+              folderId: f.folderId,
+              sessionId: f.sessionId,
+            });
+          }
+        }
+      }
+    } catch (err) {
+      this.reportEventLog({
+        level: "debug",
+        message: `[queue] could not read folder sessions; reconcile skipped: ${err?.message ?? String(err)}`,
+      });
+      return;
+    }
+    try {
+      await rememberBindings(bindings);
+      const dropped = await sweep(live);
+      for (const d of dropped) {
+        this.reportEventLog({
+          level: d.entries > 0 ? "info" : "debug",
+          accountId: d.accountId ?? undefined,
+          folderId: d.folderId ?? undefined,
+          message:
+            `[queue] dropped the change queue of a binding that no longer ` +
+            `exists (${d.entries} pending edit(s) went with it)`,
+        });
+      }
+    } catch (err) {
+      this.reportEventLog({
+        level: "warning",
+        message: `[queue] reconcile failed: ${err?.message ?? String(err)}`,
+      });
+    }
+  }
+
+  /** The pending edits we hold for a folder. Read-only, and the only way
+   *  anyone outside this add-on can see a provider-owned queue - the folder
+   *  row's own changelog stays empty for these. */
+  async onGetChangelog({ accountId, folderId }) {
+    const { folders = [] } = (await this.getAccount(accountId)) ?? {};
+    const folder = folders.find((f) => f.folderId === folderId);
+    if (!folder) return null;
+    if (!providerOwnsChanges(folder.targetType) || !folder.sessionId) {
+      return null;
+    }
+    return localQueue({
+      accountId,
+      folderId,
+      sessionId: folder.sessionId,
+    }).entries();
   }
   // ── Account lifecycle ──────────────────────────────────────────────────
 

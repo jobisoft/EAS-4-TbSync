@@ -44,6 +44,8 @@ import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
 import { fetchServerItem } from "./item-operations.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
+import { hostQueue, localQueue, rememberBindings } from "./change-queue.mjs";
+import { providerOwnsChanges } from "../../vendor/tbsync/changelog-core.mjs";
 import {
   ok,
   warning as warningStatus,
@@ -228,6 +230,23 @@ export async function runItemSync({
   const collectionId = folder.custom?.serverID;
   if (!collectionId) return errorStatus("Folder is missing serverID");
 
+  // Bank which folder this target belongs to while we are holding the row.
+  // An item hook is handed a calendar id and nothing else and must be able
+  // to file the user's edit without asking anyone - so the answer has to be
+  // here before it is needed, and a sync is when we legitimately have it.
+  if (providerOwnsChanges(folder.targetType) && folder.sessionId) {
+    await rememberBindings([
+      {
+        targetID: folder.targetID,
+        accountId,
+        folderId,
+        sessionId: folder.sessionId,
+      },
+    ]).catch((err) =>
+      console.debug("[eas] could not bank the folder binding:", err),
+    );
+  }
+
   let workingFolder = folder;
   for (let attempt = 0; attempt < 2; attempt++) {
     const result = await runOneSync({
@@ -323,6 +342,32 @@ function conflictPolicyOf(account) {
   return account?.custom?.conflict === "0" ? "0" : "1";
 }
 
+/** Pick the queue this folder's pending edits live in.
+ *
+ *  Calendars and task lists are ours: we supply the calendar, we are handed
+ *  every user edit directly, and we keep the record locally so making one
+ *  never depends on the host being up. Address books are the host's: it
+ *  observes Thunderbird's book events, so it is where an edit is first
+ *  known.
+ *
+ *  A local queue is addressed by the binding the host names in
+ *  `folder.sessionId`. Without one we cannot safely file anything - see the
+ *  session notes in change-queue.mjs - so we fall back to the host's queue,
+ *  which is the pre-session behaviour and stays correct, just not
+ *  host-independent. In practice this only happens against a host too old
+ *  to mint sessions, which the protocol version already refuses. */
+function makeQueue({ provider, folder, accountId, folderId }) {
+  if (providerOwnsChanges(folder.targetType) && folder.sessionId) {
+    return localQueue({ accountId, folderId, sessionId: folder.sessionId });
+  }
+  return hostQueue({
+    provider,
+    accountId,
+    folderId,
+    changelog: folder.changelog,
+  });
+}
+
 async function runOneSync({
   provider,
   account,
@@ -383,7 +428,16 @@ async function runOneSync({
     serverIdScan: null,
     syncKeyDirty: false,
     maxItems,
+    // Where this folder's pending edits live. A calendar we supply keeps
+    // them in our own storage, namespaced by the binding the host names; an
+    // address book keeps them in the host's folder row, because the host is
+    // what observes it. Same five calls either way, so nothing below has to
+    // know which folder it is working on.
+    queue: makeQueue({ provider, folder, accountId, folderId }),
   };
+  // The queue as this sync found it. Kept because one pull-side decision
+  // needs to ask about it synchronously - see `hasPendingUserDelete`.
+  ctx.pendingAtStart = await ctx.queue.pending();
 
   // Read-only revert pre-step. Drops local edits before the pull so the
   // local store ends up matching the server. ItemOperations.Fetch lets us
@@ -443,13 +497,7 @@ async function runOneSync({
   // next sync; the runner is the single authority for upsync gating.
   let pushed = {};
   if (!effectiveDownloadOnly) {
-    const changelog = Array.isArray(folder.changelog) ? folder.changelog : [];
-    const pending = changelog.filter(
-      (e) =>
-        e?.status === "added_by_user" ||
-        e?.status === "modified_by_user" ||
-        e?.status === "deleted_by_user",
-    );
+    const pending = await ctx.queue.pending();
     // ActiveSync has no mailing list: [MS-ASCNTC] describes a contact and
     // nothing else, so a Thunderbird list in a synced book has nowhere to go.
     // The host watches address books generically and queues one anyway, and
@@ -470,9 +518,7 @@ async function runOneSync({
             `[${ctx.itemKind.changelogKind}-sync] skipping a ${e.kind} ` +
             `("${e.itemId}"): ActiveSync cannot store one, so it stays local`,
         });
-        await ctx.provider.changelogRemove({
-          accountId: ctx.accountId,
-          folderId: ctx.folderId,
+        await ctx.queue.remove({
           parentId: e.parentId,
           itemId: e.itemId,
           kind: e.kind,
@@ -557,15 +603,7 @@ async function runOneSync({
  * (heavy fallback path), `false` otherwise.
  */
 async function revertLocalChanges(ctx) {
-  const changelog = Array.isArray(ctx.folder.changelog)
-    ? ctx.folder.changelog
-    : [];
-  const userEdits = changelog.filter(
-    (e) =>
-      e?.status === "added_by_user" ||
-      e?.status === "modified_by_user" ||
-      e?.status === "deleted_by_user",
-  );
+  const userEdits = await ctx.queue.pending();
   if (userEdits.length === 0) return false;
 
   const codec = ctx.itemKind.codec;
@@ -586,9 +624,7 @@ async function revertLocalChanges(ctx) {
           /* item already gone — fine */
         }
       }
-      await ctx.provider.changelogRemove({
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
+      await ctx.queue.remove({
         parentId: e.parentId,
         itemId: e.itemId,
         kind: e.kind,
@@ -610,9 +646,7 @@ async function revertLocalChanges(ctx) {
       } catch {
         /* already gone */
       }
-      await ctx.provider.changelogRemove({
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
+      await ctx.queue.remove({
         parentId: e.parentId,
         itemId: e.itemId,
         kind: e.kind,
@@ -633,9 +667,7 @@ async function revertLocalChanges(ctx) {
     if (!serverID) {
       // Nothing to fetch — drop the entry and let the regular sync
       // settle the local state.
-      await ctx.provider.changelogRemove({
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
+      await ctx.queue.remove({
         parentId: e.parentId,
         itemId: e.itemId,
         kind: e.kind,
@@ -661,9 +693,7 @@ async function revertLocalChanges(ctx) {
           /* already gone */
         }
       }
-      await ctx.provider.changelogRemove({
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
+      await ctx.queue.remove({
         parentId: e.parentId,
         itemId: e.itemId,
         kind: e.kind,
@@ -684,9 +714,7 @@ async function revertLocalChanges(ctx) {
       eventLog: ctx.eventLog,
     });
 
-    await ctx.provider.changelogMarkServerWrite({
-      accountId: ctx.accountId,
-      folderId: ctx.folderId,
+    await ctx.queue.markServerWrite({
       parentId: ctx.targetID,
       itemId: e.itemId,
       status: "modified_by_server",
@@ -706,9 +734,7 @@ async function revertLocalChanges(ctx) {
       upsertIndexMap(ctx, e.itemId, serverID);
     }
 
-    await ctx.provider.changelogRemove({
-      accountId: ctx.accountId,
-      folderId: ctx.folderId,
+    await ctx.queue.remove({
       parentId: e.parentId,
       itemId: e.itemId,
       kind: e.kind,
@@ -718,10 +744,26 @@ async function revertLocalChanges(ctx) {
 }
 
 async function finishWith(ctx, result) {
-  if (!ctx.syncKeyDirty && !ctx.indexMapDirty) return result;
+  // How much is still queued, for the host's needs-sync badge. Only our own
+  // queue needs reporting - the host can count the one it holds itself -
+  // and it rides along on the flush that was happening anyway. Sent on
+  // every finish, including the early ones: a sync that bailed out still
+  // changed how much is waiting, and a badge that only ever went up would
+  // be worse than none.
+  if (ctx.queue.owner === "local") {
+    try {
+      ctx.pendingCount = await ctx.queue.count();
+    } catch {
+      /* a count we cannot read is a badge we do not update */
+    }
+  }
   const patch = {};
   if (ctx.syncKeyDirty) patch.synckey = ctx.synckey;
   if (ctx.indexMapDirty) patch.indexMap = ctx.indexMap;
+  if (ctx.pendingCount !== undefined) {
+    patch.pendingUserChanges = ctx.pendingCount;
+  }
+  if (!Object.keys(patch).length) return result;
   try {
     await ctx.provider.updateFolder({
       accountId: ctx.accountId,
@@ -1008,21 +1050,19 @@ async function pushPhase(ctx, userEdits) {
     const failedEntries = userEdits.filter((e) => failedItems.has(e.itemId));
     if (failedEntries.length > 0) {
       try {
-        await ctx.provider.changelogMoveToTail({
-          accountId: ctx.accountId,
-          folderId: ctx.folderId,
-          items: failedEntries.map((e) => ({
+        await ctx.queue.moveToTail(
+          failedEntries.map((e) => ({
             parentId: e.parentId,
             itemId: e.itemId,
             kind: e.kind,
           })),
-        });
+        );
       } catch (err) {
         ctx.provider.reportEventLog({
           level: "warning",
           accountId: ctx.accountId,
           folderId: ctx.folderId,
-          message: `[${ctx.itemKind.changelogKind}-sync] changelogMoveToTail failed: ${err?.message ?? String(err)}`,
+          message: `[${ctx.itemKind.changelogKind}-sync] moving failed items to the queue tail failed: ${err?.message ?? String(err)}`,
         });
       }
     }
@@ -1217,9 +1257,7 @@ async function dropUnsatisfiableEntry(ctx, entry, reason) {
       `[${ctx.itemKind.changelogKind}-sync] dropping a queued ` +
       `${entry.status.replace("_by_user", "")} of "${entry.itemId}": ${reason}`,
   });
-  await ctx.provider.changelogRemove({
-    accountId: ctx.accountId,
-    folderId: ctx.folderId,
+  await ctx.queue.remove({
     parentId: entry.parentId,
     itemId: entry.itemId,
     kind: entry.kind,
@@ -1334,9 +1372,7 @@ async function buildPushBatch(ctx, slice, failedItems) {
           folderId: ctx.folderId,
           message: `[${ctx.itemKind.changelogKind}-sync] dropped delete for itemId=${entry.itemId}: no serverID in indexMap`,
         });
-        await ctx.provider.changelogRemove({
-          accountId: ctx.accountId,
-          folderId: ctx.folderId,
+        await ctx.queue.remove({
           parentId: entry.parentId,
           itemId: entry.itemId,
           kind: entry.kind,
@@ -1381,9 +1417,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       sentEntry.item.blob,
       serverId,
     );
-    await ctx.provider.changelogMarkServerWrite({
-      accountId: ctx.accountId,
-      folderId: ctx.folderId,
+    await ctx.queue.markServerWrite({
       parentId: ctx.targetID,
       itemId: sentEntry.item.id,
       status: "modified_by_server",
@@ -1404,9 +1438,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       // every exception it carries is new to it.
       instanceMasters.push({ serverID: serverId, blob: sentEntry.item.blob });
     }
-    await ctx.provider.changelogRemove({
-      accountId: ctx.accountId,
-      folderId: ctx.folderId,
+    await ctx.queue.remove({
       parentId: sentEntry.entry.parentId,
       itemId: sentEntry.entry.itemId,
       kind: sentEntry.entry.kind,
@@ -1422,9 +1454,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       const serverId = readPathFrom(node, ["ServerId"]);
       const sentEntry = sent.mods.find((m) => m.serverID === serverId);
       if (sentEntry) {
-        await ctx.provider.changelogRemove({
-          accountId: ctx.accountId,
-          folderId: ctx.folderId,
+        await ctx.queue.remove({
           parentId: sentEntry.entry.parentId,
           itemId: sentEntry.entry.itemId,
           kind: sentEntry.entry.kind,
@@ -1448,9 +1478,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     const sentEntry = sent.dels.find((d) => d.serverID === serverId);
     if (!sentEntry) continue;
     if (status === STATUS_OK || status === STATUS_OBJECT_NOT_FOUND) {
-      await ctx.provider.changelogRemove({
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
+      await ctx.queue.remove({
         parentId: sentEntry.entry.parentId,
         itemId: sentEntry.entry.itemId,
         kind: sentEntry.entry.kind,
@@ -1472,9 +1500,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     );
     const status = ack ? readPathFrom(ack, ["Status"]) : STATUS_OK;
     if (!ack || status === STATUS_OK) {
-      await ctx.provider.changelogRemove({
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
+      await ctx.queue.remove({
         parentId: m.entry.parentId,
         itemId: m.entry.itemId,
         kind: m.entry.kind,
@@ -1489,9 +1515,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       (n) => readPathFrom(n, ["ServerId"]) === d.serverID,
     );
     if (!ack) {
-      await ctx.provider.changelogRemove({
-        accountId: ctx.accountId,
-        folderId: ctx.folderId,
+      await ctx.queue.remove({
         parentId: d.entry.parentId,
         itemId: d.entry.itemId,
         kind: d.entry.kind,
@@ -1550,9 +1574,7 @@ async function applyAdd(ctx, addNode) {
     userEmail: ctx.account?.custom?.user,
     eventLog: ctx.eventLog,
   });
-  await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId,
-    folderId: ctx.folderId,
+  await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: newId,
     status: "added_by_server",
@@ -1645,9 +1667,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
     nextBlob = codec.stampEasServerId(nextBlob, serverID);
   }
 
-  await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId,
-    folderId: ctx.folderId,
+  await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: existing.itemId,
     status: "modified_by_server",
@@ -1740,9 +1760,7 @@ async function applyChangeFromAd(ctx, ad, existing, serverID = null) {
     userEmail: ctx.account?.custom?.user,
     eventLog: ctx.eventLog,
   });
-  await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId,
-    folderId: ctx.folderId,
+  await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: existing.itemId,
     status: "modified_by_server",
@@ -1769,9 +1787,7 @@ async function applyDelete(ctx, delNode) {
   if (!serverID) return;
   const existing = await findExistingByServerId(ctx, serverID);
   if (!existing) return;
-  await ctx.provider.changelogMarkServerWrite({
-    accountId: ctx.accountId,
-    folderId: ctx.folderId,
+  await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: existing.itemId,
     status: "deleted_by_server",
@@ -2091,10 +2107,11 @@ function parseSyncResponse(doc) {
 function hasPendingUserDelete(ctx, serverId) {
   const entry = ctx.indexMap.find((e) => e.serverId === serverId);
   if (!entry) return false;
-  const changelog = Array.isArray(ctx.folder?.changelog)
-    ? ctx.folder.changelog
-    : [];
-  return changelog.some(
+  // The queue as it stood when this sync began. Reading it live would need
+  // this to be async for no gain: the indexMap check above has already
+  // excluded every delete this sync managed to push, because acknowledging
+  // one removes its mapping.
+  return ctx.pendingAtStart.some(
     (e) => e?.itemId === entry.uid && e?.status === "deleted_by_user",
   );
 }

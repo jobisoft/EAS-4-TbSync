@@ -29,23 +29,33 @@
  *
  * ## Where the record goes
  *
- * Into the host changelog, the same queue as always, via
- * `changelogRecordUserEdit`. The provider holds no state of its own: it does
- * not own the account and folder rows, and a queue that lived here would be
- * lost on every reload, update or background suspend - exactly the edits the
- * changelog exists to keep.
+ * Into our own storage, via `change-queue.mjs`. The hook is holding the
+ * user's save, so the record has to be durable before we answer - and it
+ * cannot be conditional on anything outside this add-on being alive.
  *
- * What changes is only who writes the entry. For a calendar we supply, the
- * host stops observing and we report, which lets the entry carry what the
- * item looked like *before* the edit. Nothing on the host side can
- * reconstruct that once the new version has been written, and it is what
- * makes a per-exception push possible.
+ * It used to go to the host, over `changelogRecordUserEdit`. That made the
+ * record depend on the host answering, and when it did not, the only two
+ * available answers were both wrong: refuse the edit and destroy the user's
+ * work, or accept it and let the queue never hear of it. It accepted, and
+ * logged a warning nobody reads. An enabled EAS provider keeps its
+ * calendars working with or without the host, so that window opened on
+ * every host reload, update and background suspend.
+ *
+ * Writing it here removes the dependency rather than narrowing it. What the
+ * host still gets is a count for its needs-sync badge, sent best-effort: if
+ * that does not arrive, a dot is missing until the next sync, and the edit
+ * is safe either way.
  *
  * Address books are untouched - they have no provider API, so the observer
- * still owns those entries.
+ * still owns those entries and they stay in the host's changelog.
  */
 
 import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
+import {
+  localQueue,
+  lookupBinding,
+  rememberBindings,
+} from "./eas/change-queue.mjs";
 
 /** Every folder of ours that is bound to a calendar, as
  *  `targetID -> {accountId, folderId, targetName, targetColor}`. The host owns
@@ -58,6 +68,7 @@ import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
 async function ourTargets() {
   const out = new Map();
   if (!host) return out;
+  const bindings = [];
   for (const { accountId } of await host.listAccounts()) {
     const { folders = [] } = (await host.getAccount(accountId)) ?? {};
     for (const f of folders) {
@@ -66,55 +77,117 @@ async function ourTargets() {
       out.set(f.targetID, {
         accountId,
         folderId: f.folderId,
+        sessionId: f.sessionId ?? null,
         targetName: f.targetName ?? null,
         targetColor: f.targetColor ?? null,
       });
+      bindings.push({
+        targetID: f.targetID,
+        accountId,
+        folderId: f.folderId,
+        sessionId: f.sessionId ?? null,
+      });
     }
   }
+  // We have the rows in hand for an honest reason, so bank what an item
+  // hook will need when it has no way to ask: which folder a calendar id
+  // belongs to, and which binding of it is current.
+  await rememberBindings(bindings).catch((err) =>
+    report?.({
+      level: "debug",
+      message: `[target] could not cache folder bindings: ${err?.message ?? String(err)}`,
+    }),
+  );
   return out;
 }
 
-/** Report an edit to the host, which folds it into the folder's changelog.
+/** Queue an edit the platform just handed us, in our own storage.
  *
  *  Awaited by the hooks: the platform is holding the user's save until we
  *  answer, and answering before the record is durable would lose the edit if
- *  anything went wrong in between. A failure is logged rather than thrown -
- *  refusing the edit would be worse than a missed sync, and the next full
- *  compare still finds it.
+ *  anything went wrong in between. Nothing outside this add-on is involved,
+ *  which is the point - see the module header.
  *
  *  `detail` carries only what cannot be re-derived: a fingerprint of the
  *  exception set as it was *before* the edit. Not the previous item itself -
- *  that is kilobytes per pending entry in a folder row, to answer a question
- *  ("which exceptions differ?") that a fixed-size digest answers just as
- *  well. */
+ *  that is kilobytes per pending entry, to answer a question ("which
+ *  exceptions differ?") that a fixed-size digest answers just as well. */
 async function record(calendarId, itemId, op, { type, oldIcal } = {}) {
-  if (!calendarId || !itemId || !host) return;
+  if (!calendarId || !itemId) return;
   const before = oldIcal ? exceptionFingerprint(oldIcal) : null;
   // One calendar type serves both, so the item says which it is - a task
   // folder's edits must not be queued as events.
   const kind = type === "task" ? "task" : "event";
+
+  // Which folder this calendar belongs to, and which binding of it is
+  // current. Normally already known - every sync banks it - and then this
+  // costs one storage read and no round trip, which is the point.
+  //
+  // A miss is worth one attempt at the host before giving up: it means we
+  // have never held this folder's row (a resource enabled since our last
+  // sync of it), and the host is the only place that answer exists. If the
+  // host cannot answer either, there is genuinely nothing to file against
+  // and saying so is the honest outcome - inventing a binding would push
+  // the edit into whatever folder the id later turns out to belong to.
+  let binding = await lookupBinding(calendarId);
+  if (!binding?.sessionId && host) {
+    await ourTargets().catch(() => {});
+    binding = await lookupBinding(calendarId);
+  }
+  if (!binding?.sessionId) {
+    report?.({
+      level: "warning",
+      message:
+        `[${kind}-sync] cannot record user ${op} of ${itemId}: ` +
+        `calendar ${calendarId} is not bound to a folder we know`,
+    });
+    return;
+  }
+
+  let pending;
   try {
-    await host.changelogRecordUserEdit({
+    pending = await localQueue(binding).record({
       parentId: calendarId,
       itemId,
       kind,
       op,
       ...(before ? { detail: { exceptions: before } } : {}),
     });
-    report?.({
-      level: "debug",
-      message:
-        `[${kind}-sync] recorded user ${op} of ${itemId}` +
-        (before
-          ? ` (${before.exdates.length} cancelled, ${before.overrides.length} override(s) before the edit)`
-          : ""),
-    });
   } catch (err) {
+    // Storage itself failed - out of quota, or shutting down mid-write.
+    // Nothing is recoverable here and the edit is genuinely lost, so this
+    // is an error, not the warning the host round trip used to log.
     report?.({
-      level: "warning",
-      message: `[${kind}-sync] could not record user ${op} of ${itemId}: ${err?.message ?? String(err)}`,
+      level: "error",
+      message: `[${kind}-sync] FAILED to queue user ${op} of ${itemId}: ${err?.message ?? String(err)}`,
     });
+    return;
   }
+
+  report?.({
+    level: "debug",
+    message:
+      `[${kind}-sync] queued user ${op} of ${itemId}` +
+      (before
+        ? ` (${before.exdates.length} cancelled, ${before.overrides.length} override(s) before the edit)`
+        : ""),
+  });
+
+  // The host paints a needs-sync badge and cannot count a queue it does not
+  // hold. Best-effort on purpose: the edit is already safe, and a badge
+  // that lags until the next sync is not worth failing a save over.
+  await host
+    ?.updateFolder({
+      accountId: binding.accountId,
+      folderId: binding.folderId,
+      patch: { custom: { pendingUserChanges: pending } },
+    })
+    .catch((err) =>
+      report?.({
+        level: "debug",
+        message: `[${kind}-sync] could not update the pending count: ${err?.message ?? String(err)}`,
+      }),
+    );
 }
 
 let registered = false;
