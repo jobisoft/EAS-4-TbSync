@@ -513,10 +513,9 @@ function appendBody(builder, vtodo, asVersion) {
 /* ── Recurrence (RRULE only; tasks have no exceptions) ────────────── */
 
 /** `[MS-ASTASK]` 2.2.2.31. Every element qualifying the type has to be here:
- *  without them the server rejects the whole Add with Status 6, and since only
- *  daily needs none, that used to be the only recurring task that could be
- *  created. The rejected entry is then re-staged and retried on every sync,
- *  leaving the folder in `warning` until the task is deleted.
+ *  without them the server rejects the whole Add with Status 6, and only
+ *  daily needs none. A rejected entry is re-staged and retried on every
+ *  sync, leaving the folder in `warning` until the task is deleted.
  *
  *  `<Start>` is task-only - an event's recurrence is anchored on its own
  *  StartTime - and `Until` uses this codec's own formatter. Everything else is

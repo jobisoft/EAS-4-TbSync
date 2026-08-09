@@ -103,9 +103,10 @@ class Session:
         unpushed edits, and every assertion about a drained queue would pass
         without ever being tested.
 
-        `getChangelog` asks the right side and raises when it cannot. An
-        earlier helper returned [] on failure, which is indistinguishable
-        from an empty queue - the one bug this must never hide.
+        `getChangelog` asks the right side and raises when it cannot. It must
+        never answer [] on failure: that is indistinguishable from an empty
+        queue, and would turn the one breakage these assertions exist to
+        catch into a pass.
         """
         self._active(kind)
         return ok(
@@ -222,9 +223,9 @@ class Session:
         """Remember where the log stands, so `log` and `wire` below report on
         what happens next rather than on the whole run.
 
-        This replaces clearing. The log is the record of what the add-on did
-        and is worth keeping whole - a section that fails is read afterwards,
-        and a clear would have thrown that away.
+        A mark rather than a clear: the log is the record of what the add-on
+        did and is worth keeping whole, since a section that fails is read
+        afterwards.
         """
         self.section_seq = ok("getEventLog")["lastSeq"]
 

@@ -1,53 +1,35 @@
 /**
  * EAS as a calendar provider.
  *
- * Until now every EAS folder synced into a plain `storage` calendar, which
- * cannot tell one kind of write from another: the user editing an event and
- * the sync writing down what the server just sent look identical. TbSync
- * compensates by hand - `changelogMarkServerWrite` pre-tags an entry so the
- * observer ignores the write it is about to make - and even then the record
- * it keeps is item-level, so a series that changed one occurrence is re-sent
- * whole.
- *
- * A provider calendar has the two directions as separate objects:
+ * A provider calendar keeps the two directions apart as separate objects:
  *
  *   user edits    → `calendar.provider.onItem{Created,Updated,Removed}`
  *   our own sync  → written to `<id>#cache`, which fires none of those
  *
- * That is structural rather than tagged, and `onItemUpdated` is handed the
- * *previous* item, so we can see which occurrence of a series moved instead
- * of guessing. Measured, not assumed: both directions were driven on a
- * throwaway calendar before this was written.
+ * The separation is structural rather than tagged, and `onItemUpdated` is
+ * handed the *previous* item, so which occurrence of a series moved is
+ * visible rather than guessed at.
  *
  * ## Why the hooks do not push
  *
  * A hook fires the instant the user hits save and the platform waits for an
  * answer. Pushing to Exchange there would make every edit a network round
- * trip and would fail the edit outright when the connection is down. So we
- * accept the item and let the scheduled sync push it - the same model TbSync
- * has always had.
+ * trip and would fail the edit outright when the connection is down. So the
+ * item is accepted and the scheduled sync pushes it.
  *
  * ## Where the record goes
  *
  * Into our own storage, via `change-queue.mjs`. The hook is holding the
- * user's save, so the record has to be durable before we answer - and it
- * cannot be conditional on anything outside this add-on being alive.
+ * user's save, so the record must be durable before we answer, and it must
+ * not be conditional on anything outside this add-on being alive: these
+ * calendars keep working with the host absent, so a record that needed the
+ * host would be unmakeable on every host reload, update and suspend.
  *
- * It used to go to the host, over `changelogRecordUserEdit`. That made the
- * record depend on the host answering, and when it did not, the only two
- * available answers were both wrong: refuse the edit and destroy the user's
- * work, or accept it and let the queue never hear of it. It accepted, and
- * logged a warning nobody reads. An enabled EAS provider keeps its
- * calendars working with or without the host, so that window opened on
- * every host reload, update and background suspend.
+ * The host gets a count for its needs-sync badge, best-effort. If it does
+ * not arrive, a dot is missing until the next sync; the edit is safe.
  *
- * Writing it here removes the dependency rather than narrowing it. What the
- * host still gets is a count for its needs-sync badge, sent best-effort: if
- * that does not arrive, a dot is missing until the next sync, and the edit
- * is safe either way.
- *
- * Address books are untouched - they have no provider API, so the observer
- * still owns those entries and they stay in the host's changelog.
+ * Address books have no provider API, so the host's observer owns those
+ * entries and they stay in its changelog.
  */
 
 import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
@@ -120,15 +102,14 @@ async function record(calendarId, itemId, op, { type, oldIcal } = {}) {
   const kind = type === "task" ? "task" : "event";
 
   // Which folder this calendar belongs to, and which binding of it is
-  // current. Normally already known - every sync banks it - and then this
-  // costs one storage read and no round trip, which is the point.
+  // current. Normally already banked by a sync, so this is one storage read
+  // and no round trip.
   //
-  // A miss is worth one attempt at the host before giving up: it means we
-  // have never held this folder's row (a resource enabled since our last
-  // sync of it), and the host is the only place that answer exists. If the
-  // host cannot answer either, there is genuinely nothing to file against
-  // and saying so is the honest outcome - inventing a binding would push
-  // the edit into whatever folder the id later turns out to belong to.
+  // A miss means we have never held this folder's row - a resource enabled
+  // since our last sync of it - and the host is the only place that answer
+  // exists, so it is worth one attempt. If the host cannot answer either,
+  // there is nothing to file against: inventing a binding would push the
+  // edit into whatever folder the id turns out to belong to.
   let binding = await lookupBinding(calendarId);
   if (!binding?.sessionId && host) {
     await ourTargets().catch(() => {});

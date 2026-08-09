@@ -16,8 +16,8 @@
  *   - An account whose credentials the server has rejected keeps its
  *     listener but answers with no results, so searching resumes on its
  *     own once the account is authenticated again. Deregistering instead
- *     would need something to put the listener back, and an authentication
- *     failure no longer disables the account.
+ *     would need something to put the listener back, and an
+ *     authentication failure leaves the account enabled.
  *
  * Idempotency: registration is keyed by accountId in a module-scoped
  * map, so re-entry from boot + onAccountEnabled is safe.

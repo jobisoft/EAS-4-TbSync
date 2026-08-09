@@ -6,32 +6,27 @@
  * known and the queue may as well live there. `hostQueue` below is a thin
  * adapter over those RPCs.
  *
- * For a calendar we supply, it is here. We are handed the edit directly by
- * the platform, and the record of it has to be durable before the hook
- * answers - the user's save is being held on that answer. Sending it to the
- * host first made the record depend on the host being up and answering: when
- * it was not, `changelogRecordUserEdit` failed, the hook still had to return
- * the item (refusing it would lose the user's work outright), and the edit
- * was accepted by Thunderbird and known to nobody. An enabled EAS provider
- * keeps working calendars whether or not the host is running, so that window
- * is not a corner case - it is every reload, update and background suspend.
- * Written locally, the record cannot be lost that way at all.
+ * For a calendar we supply, it is here. The platform hands us the edit
+ * directly and holds the user's save until we answer, so the record must be
+ * durable before we do - and it must not depend on anything outside this
+ * add-on being alive. An enabled EAS provider keeps working calendars with
+ * the host absent, and a record that needed the host would be unmakeable on
+ * every host reload, update and background suspend.
  *
- * ## Sessions, and why they are not ours to invent
+ * ## Sessions
  *
  * A folder row outlives its bindings: deselect and reselect, delete the
- * calendar and let the next sync re-create it, and each time the queue from
- * before belongs to something that no longer exists. Pushing those edits
- * into the new binding would be a bug with real consequences - resurrecting
- * items the user deleted along with the calendar.
+ * calendar and let the next sync re-create it, and the queue from before
+ * belongs to something that is gone. Pushing those edits into the new
+ * binding would resurrect items the user deleted along with the calendar.
  *
- * The host tells us which binding is current, as `folder.sessionId`, and
- * mints a new one whenever it ends one. So every key here is a session id
- * and nothing else: finding our queue means looking up the session the row
- * names, and a queue whose session no row names any more is, by that fact
- * alone, garbage. `sweep()` drops those. No teardown message is needed, and
- * none is trusted - Disconnect and Remove have to work when this add-on is
- * broken, so they cannot depend on it doing anything.
+ * The host names the current binding in `folder.sessionId` and mints a new
+ * one whenever it ends one. So every key here is a session id and nothing
+ * else: finding our queue means looking up the session the row names, and a
+ * queue whose session no row names is garbage by that fact alone. `sweep()`
+ * drops those. No teardown message is needed, and none is trusted -
+ * Disconnect and Remove have to work when this add-on is broken, so they
+ * cannot depend on it doing anything.
  *
  * The consequence worth stating: edits made while the host is down are
  * filed under the last session we saw. If that binding was torn down in the

@@ -1,10 +1,9 @@
 """11. Regressions from the v4 issue tracker.
 
-Edge cases users actually hit, fixed in v4, and until now guarded by nothing
-in v5. Each test names its issue. Chosen for being provokable through the
-bridge against a live server; the attendee-crash class (#263) is deliberately
-absent - creating events with attendees makes Exchange send real invitation
-mail, which a test must never do.
+Edge cases users actually hit, each naming its issue. Chosen for being
+provokable through the bridge against a live server; the attendee-crash
+class (#263) is deliberately absent - creating events with attendees makes
+Exchange send real invitation mail, which a test must never do.
 
 Runs against 14.1 and 16.x alike; the all-day and timezone cases are exactly
 where those generations have diverged before.

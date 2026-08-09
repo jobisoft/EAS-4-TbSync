@@ -2129,9 +2129,9 @@ function hasPendingUserDelete(ctx, serverId) {
  *  cannot produce this situation - neither tested server sends changes
  *  for an item it has agreed is gone.)
  *
- *  Neither reading justifies re-creating the item from the change. Doing so
- *  used to hide the first case behind an orphaned copy and the second case
- *  behind no message at all. */
+ *  Neither reading justifies re-creating the item from the change: that
+ *  would hide the first case behind an orphaned copy and the second behind
+ *  no message at all. */
 function declineChangeForUnknownItem(ctx, serverID) {
   if (hasPendingUserDelete(ctx, serverID)) return;
   ctx.eventLog(
@@ -2192,8 +2192,8 @@ async function serverIdScan(ctx) {
       }
       // Items with no stamp were created locally and never pushed, so they
       // belong to no server id. First writer wins on a collision, which
-      // keeps the result stable for anyone already carrying duplicates
-      // from before this fallback existed.
+      // keeps the result stable for a store that already carries
+      // duplicates.
       if (stamped && !map.has(stamped)) map.set(stamped, it.id);
     }
   } catch (err) {
@@ -2390,18 +2390,13 @@ function diffComponentProperties(expectedStr, actualStr, target) {
 /* ── Rejected-item reporting ──────────────────────────────────────────
  *
  * A push the server refuses is counted (`failedItems`) and re-staged at
- * the tail of the changelog, but until now nothing said *which* item it
- * was - the sync only ended with "did not accept N elements", which is
- * issue #319.
+ * the tail of the queue. The folder's own status says only "did not
+ * accept N elements", so these entries name the item (issue #319): a short
+ * summary in the message to keep the log scannable, and the blob itself in
+ * the details.
  *
- * Legacy wrote one event-log entry per failed item, carrying the whole
- * item in the details (`sync.js::updateFailedItems`). The request and
- * response halves it also logged are already here as `[eas:net] send /
- * receive Sync`, so what these add back is the item: a short summary in
- * the message so the log stays scannable, and the blob itself in the
- * details.
- *
- * From thomcuddihy's PR #322, which was closed as a whole.
+ * The request and response halves are already logged as `[eas:net] send /
+ * receive Sync`, so the item is the one thing left to say.
  */
 
 /** One entry naming an item the server refused. `sentEntry` is an

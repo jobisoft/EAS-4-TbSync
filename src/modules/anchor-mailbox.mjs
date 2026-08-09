@@ -74,9 +74,8 @@ function rewriteHeaders(details) {
   // want to invent cookie state for them.)
   if (!mailbox) return {};
 
-  // Replace any pre-existing DefaultAnchorMailbox in the Cookie header
-  // (defensive - should not happen now that we no longer set the cookie
-  // ourselves, but another extension might).
+  // Replace any pre-existing DefaultAnchorMailbox in the Cookie header.
+  // Defensive: nothing here sets that cookie, but another extension might.
   const ours = `DefaultAnchorMailbox=${mailbox}`;
   const cookieHeader = filtered.find((h) => h.name?.toLowerCase() === "cookie");
   if (cookieHeader) {

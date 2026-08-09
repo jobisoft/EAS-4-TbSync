@@ -15,11 +15,11 @@ the provider stamped on after 5.1's push is gone, while the index still maps
 the item to its ServerId. That is what a real import, or another add-on
 writing through the calendar API, does to an item.
 
-It used to kill the folder sync: the server answered 5.4's instance change
-with Status 7 and echoed its own copy back, and applying that Change looked
-the ServerId up in the blob - the one place it was missing - and handed the
-codec a null. So 5.4 asserts the repair as well as the digest: the sync
-survives, and the item comes back stamped.
+That missing stamp is a folder-sync killer if the repair is not there: the
+server answers 5.4's instance change with Status 7 and echoes its own copy
+back, and applying that Change looks the ServerId up in the blob - the one
+place it is missing - and hands the codec a null. So 5.4 asserts the repair
+as well as the digest: the sync survives, and the item comes back stamped.
 
 Self-contained: 5.1 clears and builds its own series.
 """
@@ -154,8 +154,8 @@ def t_5_4(s):
 
     # The repair. 5.3 removed the stamp; the server's reply to this sync
     # carries the ServerId, so applying it must put the stamp back. Without
-    # that, the sync reading the blob for an id it no longer holds took the
-    # whole folder down - `s.sync()` above would already have raised.
+    # the repair, reading the blob for an id it does not hold takes the whole
+    # folder down - `s.sync()` above would already have raised.
     item = s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event")
     harness.true(item is not None, "the series must survive its own sync")
     harness.contains(

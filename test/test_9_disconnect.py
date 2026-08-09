@@ -2,9 +2,9 @@
 
 The manager's Disconnect button is gated on nothing: not on the provider
 being alive, not on a sync being in flight. It is what a user reaches for
-when something is wedged, and until now it was greyed out exactly then -
-`SYNC_FOLDER` has no timeout, so an unanswered sync held the account until
-the host add-on was reloaded.
+when something is wedged, so gating it on either would grey it out exactly
+when it is needed - `SYNC_FOLDER` has no timeout, and an unanswered sync
+would otherwise hold the account until the host add-on is reloaded.
 
 What is asserted here is the whole contract, in order: a sync running,
 disconnect while it runs, and then - the part that matters - connect again

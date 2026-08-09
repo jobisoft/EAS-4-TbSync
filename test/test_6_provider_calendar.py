@@ -1,20 +1,22 @@
 """6. Provider-backed calendar.
 
-The calendars are ours: our own type, our own item hooks, and the host no
-longer watches them. That buys a structural separation between a user edit
-and our own sync write - but it also means several things that used to be
-someone else's problem are now ours to get wrong, and each step here guards
-one of them.
+The calendars are ours: our own type, our own item hooks, and the host does
+not watch them. That buys a structural separation between a user edit and
+our own sync write, and hands us a set of failures that are ours alone.
+Each step guards one.
 
-6.2 is the one with history. The platform announces a removal for every one
-of our calendars whenever our type unregisters, which happens on each reload,
-update or disable - so something has to tell that apart from the user
-actually deleting one, or every reload silently deselects the folder.
+6.2: the platform announces a removal for every one of our calendars
+whenever our type unregisters, which happens on each reload, update and
+disable. Something has to tell that apart from the user deleting one, or a
+reload silently deselects the folder.
 
-6.4 guards the other side: a pre-tag exists only to stop our own observer
-logging a write we are about to make. For a calendar we supply there is
-nothing observing, so a tag left behind is never consumed and sits in the
-changelog forever, one per synced item.
+6.4: a pre-tag exists only to stop an observer logging a write we are about
+to make. Nothing observes a calendar we supply, so a tag left behind is
+never consumed and sits in the queue forever, one per synced item.
+
+6.8: the queue is ours and lives outside the folder row, so what ties it to
+a folder is the session id naming the current binding. If that stops moving,
+edits outlive the calendar they were made against.
 """
 
 import harness

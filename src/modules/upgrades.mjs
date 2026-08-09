@@ -253,18 +253,16 @@ async function repairUnconvertedAccounts(provider) {
   }
 }
 
-/** Rung 4. Take over the calendar and task edits the host is still holding
- *  for us.
+/** Rung 4. Take over any calendar or task edits the host is still holding
+ *  for us, into the local queue keyed by the folder's binding.
  *
- *  Those queues used to live in the host's folder rows, written there by an
- *  RPC from our item hooks; they now live in our own storage, keyed by the
- *  folder's binding. An upgrade lands with edits already queued the old
- *  way, and they are the user's unsynced work - dropping them would be
- *  exactly the loss this change was made to stop.
+ *  A host folder row can carry queued edits for a resource whose changes we
+ *  own - unsynced work of the user's, which has to end up somewhere we will
+ *  read it.
  *
  *  Import first, remove second. A crash in between leaves an entry in both
  *  places, and the next run re-imports it onto a queue that already folds
- *  duplicates by identity - so the repeat is a no-op rather than a second
+ *  duplicates by identity, so the repeat is a no-op rather than a second
  *  copy. The other order would lose entries outright. */
 async function adoptHostChangelogs(provider) {
   for (const { accountId } of await provider.listAccounts()) {
