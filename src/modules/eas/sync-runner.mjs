@@ -44,8 +44,10 @@ import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
 import { fetchServerItem } from "./item-operations.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
-import { hostQueue, localQueue, rememberBindings } from "./change-queue.mjs";
-import { providerOwnsChanges } from "../../vendor/tbsync/changelog-core.mjs";
+import {
+  localQueue,
+  rememberBindings,
+} from "../../vendor/tbsync/change-queue.mjs";
 import {
   ok,
   warning as warningStatus,
@@ -234,13 +236,14 @@ export async function runItemSync({
   // An item hook is handed a calendar id and nothing else and must be able
   // to file the user's edit without asking anyone - so the answer has to be
   // here before it is needed, and a sync is when we legitimately have it.
-  if (providerOwnsChanges(folder.targetType) && folder.sessionId) {
+  if (folder.sessionId) {
     await rememberBindings([
       {
         targetID: folder.targetID,
         accountId,
         folderId,
         sessionId: folder.sessionId,
+        targetType: folder.targetType,
       },
     ]).catch((err) =>
       console.debug("[eas] could not bank the folder binding:", err),
@@ -342,29 +345,22 @@ function conflictPolicyOf(account) {
   return account?.custom?.conflict === "0" ? "0" : "1";
 }
 
-/** Pick the queue this folder's pending edits live in.
+/** The queue this folder's pending edits live in.
  *
- *  Calendars and task lists are ours: we supply the calendar, we are handed
- *  every user edit directly, and we keep the record locally so making one
- *  never depends on the host being up. Address books are the host's: it
- *  observes Thunderbird's book events, so it is where an edit is first
- *  known.
+ *  Always ours, whatever the resource: we are handed a calendar edit
+ *  directly and we watch our own address books, so in both cases the record
+ *  is made here and never depends on the host being up.
  *
- *  A local queue is addressed by the binding the host names in
- *  `folder.sessionId`. Without one we cannot safely file anything - see the
- *  session notes in change-queue.mjs - so we fall back to the host's queue,
- *  which is the pre-session behaviour and stays correct, just not
- *  host-independent. In practice this only happens against a host too old
- *  to mint sessions, which the protocol version already refuses. */
-function makeQueue({ provider, folder, accountId, folderId }) {
-  if (providerOwnsChanges(folder.targetType) && folder.sessionId) {
-    return localQueue({ accountId, folderId, sessionId: folder.sessionId });
-  }
-  return hostQueue({
-    provider,
+ *  `observed` is the one difference. A book fires an event for every write
+ *  including ours, so our writes have to be announced with a pre-tag first;
+ *  a calendar we supply fires nothing for them, so a tag there would never
+ *  be consumed. The queue reads it off the folder's kind. */
+function makeQueue({ folder, accountId, folderId }) {
+  return localQueue({
     accountId,
     folderId,
-    changelog: folder.changelog,
+    sessionId: folder.sessionId,
+    observed: folder.targetType === "contacts",
   });
 }
 
@@ -433,7 +429,7 @@ async function runOneSync({
     // address book keeps them in the host's folder row, because the host is
     // what observes it. Same five calls either way, so nothing below has to
     // know which folder it is working on.
-    queue: makeQueue({ provider, folder, accountId, folderId }),
+    queue: makeQueue({ folder, accountId, folderId }),
   };
   // The queue as this sync found it. Kept because one pull-side decision
   // needs to ask about it synchronously - see `hasPendingUserDelete`.

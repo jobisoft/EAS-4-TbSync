@@ -107,8 +107,12 @@ import { setEventLogSink } from "./eas-event-log.mjs";
 // are evaluating - both only reach across inside function bodies, by which
 // point both namespaces are complete.
 import { runStartupMigrations } from "./upgrades.mjs";
-import { localQueue, rememberBindings, sweep } from "./eas/change-queue.mjs";
-import { providerOwnsChanges } from "../vendor/tbsync/changelog-core.mjs";
+import {
+  localQueue,
+  rememberBindings,
+  sweep,
+} from "../vendor/tbsync/change-queue.mjs";
+import { installContactsObserver } from "../vendor/tbsync/contacts-observer.mjs";
 
 /** EAS FolderSync status codes that indicate the server wants us to run
  *  Provision (in-band equivalent of the HTTP-449 path). */
@@ -272,6 +276,12 @@ export class EasProvider extends TbSyncProviderImplementation {
     // with the bindings it names: learn where each calendar belongs, and
     // drop the queues of bindings that have ended.
     await this.#reconcileFolderSessions();
+    // Watch our own address books. After the reconcile, so the bindings the
+    // observer resolves against are current before the first event lands.
+    installContactsObserver({
+      provider: this,
+      report: (args) => this.reportEventLog(args),
+    });
     return null;
   }
 
@@ -303,12 +313,13 @@ export class EasProvider extends TbSyncProviderImplementation {
         for (const f of folders) {
           if (!f?.sessionId) continue;
           live.add(f.sessionId);
-          if (f.targetID && providerOwnsChanges(f.targetType)) {
+          if (f.targetID) {
             bindings.push({
               targetID: f.targetID,
               accountId,
               folderId: f.folderId,
               sessionId: f.sessionId,
+              targetType: f.targetType,
             });
           }
         }
@@ -348,9 +359,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     const { folders = [] } = (await this.getAccount(accountId)) ?? {};
     const folder = folders.find((f) => f.folderId === folderId);
     if (!folder) return null;
-    if (!providerOwnsChanges(folder.targetType) || !folder.sessionId) {
-      return null;
-    }
+    if (!folder.sessionId) return null;
     return localQueue({
       accountId,
       folderId,

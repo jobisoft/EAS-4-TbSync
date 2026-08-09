@@ -1,17 +1,13 @@
 /**
  * Where a pending user edit waits until the next sync can push it.
  *
- * For an address book that is still the host's `folder.changelog`: the host
- * observes Thunderbird's book events, so the host is where an edit is first
- * known and the queue may as well live there. `hostQueue` below is a thin
- * adapter over those RPCs.
- *
- * For a calendar we supply, it is here. The platform hands us the edit
- * directly and holds the user's save until we answer, so the record must be
- * durable before we do - and it must not depend on anything outside this
- * add-on being alive. An enabled EAS provider keeps working calendars with
- * the host absent, and a record that needed the host would be unmakeable on
- * every host reload, update and background suspend.
+ * A provider owns this. The platform hands it the edit - directly for a
+ * calendar it supplies, through an address-book event for a book it watches
+ * - and in both cases the record must be durable before the provider
+ * answers, and must not depend on anything outside the add-on being alive.
+ * A provider keeps its resources working with the host absent, and a record
+ * that needed the host would be unmakeable on every host reload, update and
+ * background suspend.
  *
  * ## Sessions
  *
@@ -33,24 +29,28 @@
  * meantime, they go with it. That is the correct answer, not a compromise.
  */
 
-import { serialize } from "../../vendor/tbsync/storage-queue.mjs";
+import { serialize } from "./storage-queue.mjs";
 import {
+  applyEvent,
+  findConsumableServerTag,
   isUserEntry,
+  markServerWriteUpdater,
   moveToTailUpdater,
   recordUserEditUpdater,
   removeEntryUpdater,
-} from "../../vendor/tbsync/changelog-core.mjs";
+  userFacingDiffers,
+} from "./changelog-core.mjs";
 
 /** One key per session. The value carries the account and folder it belongs
  *  to, so a sweep can report what it dropped without parsing keys. */
 const QUEUE_PREFIX = "queue.";
 
-/** Which folder each calendar we supply belongs to, as
- *  `targetID -> {accountId, folderId, sessionId}`.
+/** Which folder each resource we sync belongs to, as
+ *  `targetID -> {accountId, folderId, sessionId, targetType}`.
  *
- *  The item hooks are handed a calendar id and nothing else, and must not
- *  ask the host who owns it - that is the round trip this whole module
- *  exists to remove. So the answer is kept here, refreshed every time we
+ *  An item hook is handed a calendar id and an address-book event a book id,
+ *  and neither may ask the host who owns it - that is the round trip this
+ *  whole module exists to remove. So the answer is kept here, refreshed every time we
  *  legitimately have the folder rows in hand (a sync, a lifecycle event).
  *  Stale is survivable and self-correcting: a wrong session files the edit
  *  where the next sweep will find it, which is exactly what a torn-down
@@ -75,12 +75,32 @@ function mutate(binding, updater) {
   return serialize(async () => {
     const key = queueKey(sessionId);
     const rv = await browser.storage.local.get({ [key]: null });
-    const bag = rv[key];
-    const before = Array.isArray(bag?.entries) ? bag.entries : [];
+    const bag = rv[key] ?? {};
+    const before = Array.isArray(bag.entries) ? bag.entries : [];
     const after = updater(before) ?? before;
     if (after === before) return before;
     await browser.storage.local.set({
-      [key]: { accountId, folderId, sessionId, entries: after },
+      [key]: { ...bag, accountId, folderId, sessionId, entries: after },
+    });
+    return after;
+  });
+}
+
+/** Same read-modify-write, over the ghost-gate hashes rather than the queue.
+ *  They live in the same per-session bag because they share its lifetime
+ *  exactly: a hash describes a card in a book that this binding created, and
+ *  means nothing once the binding ends. */
+function mutateHashes(binding, updater) {
+  const { accountId, folderId, sessionId } = binding;
+  return serialize(async () => {
+    const key = queueKey(sessionId);
+    const rv = await browser.storage.local.get({ [key]: null });
+    const bag = rv[key] ?? {};
+    const before = bag.hashes && typeof bag.hashes === "object" ? bag.hashes : {};
+    const after = updater(before) ?? before;
+    if (after === before) return before;
+    await browser.storage.local.set({
+      [key]: { ...bag, accountId, folderId, sessionId, hashes: after },
     });
     return after;
   });
@@ -92,8 +112,17 @@ function mutate(binding, updater) {
  * outlived a sync.
  */
 export function localQueue(binding) {
+  // Whether anything watches the resource this queue belongs to. An address
+  // book is observed - Thunderbird fires an event for every write, including
+  // ours - so our own writes must be announced first or they come back as
+  // the user's. A calendar we supply is not: those writes go to
+  // `<id>#cache`, which fires nothing, so a pre-tag there would never be
+  // consumed and would accumulate one row per synced item.
+  const observed = !!binding.observed;
+
   return {
     owner: "local",
+    observed,
 
     /** Everything waiting to be pushed, oldest first. */
     async pending() {
@@ -141,67 +170,84 @@ export function localQueue(binding) {
       await mutate(binding, (entries) => moveToTailUpdater(entries, items));
     },
 
-    /** Announce a write of our own so an observer does not log it as the
-     *  user's - meaningless here, and deliberately so. Nothing observes a
-     *  calendar we supply: our sync writes go to `<id>#cache`, which fires
-     *  no item hooks at all. The suppression this names is structural, not
-     *  something a marker has to arrange. Kept so both queues answer the
-     *  same calls. */
-    async markServerWrite() {},
+    /** Announce a write we are about to make, so the observer recognises the
+     *  event it produces instead of logging it as the user's. A no-op on an
+     *  unobserved resource - see `observed` above. */
+    async markServerWrite({ parentId, itemId, kind, status }) {
+      if (!observed) return;
+      await mutate(binding, (entries) =>
+        markServerWriteUpdater(entries, {
+          parentId,
+          itemId,
+          kind,
+          status,
+          now: Date.now(),
+        }),
+      );
+    },
+
+    /** Fold an observed Thunderbird event into the queue, applying the
+     *  pre-tag rules. Returns whether the user-facing content changed, which
+     *  is what a caller broadcasts on - every suppressed event still yields a
+     *  new array (the consumed tag is gone), so comparing references would
+     *  fire on every server write. */
+    async recordEvent({ kind, parentId, itemId, name, op }) {
+      let changed = false;
+      await mutate(binding, (entries) => {
+        const next = applyEvent(entries, {
+          kind,
+          parentId,
+          itemId,
+          name,
+          op,
+          now: Date.now(),
+        });
+        changed = userFacingDiffers(entries, next);
+        return next;
+      });
+      return changed;
+    },
+
+    /** Hand back the pre-tag an event would have consumed, for an event that
+     *  is being discarded before it reaches `recordEvent`. Only the tag whose
+     *  announced op this event is: one announcing a different op belongs to
+     *  an event still to come and must stay armed for it. */
+    async consumeServerTag({ kind, parentId, itemId, op }) {
+      await mutate(binding, (entries) => {
+        const idx = findConsumableServerTag(entries, {
+          kind,
+          parentId,
+          itemId,
+          op,
+        });
+        if (idx < 0) return entries;
+        return [...entries.slice(0, idx), ...entries.slice(idx + 1)];
+      });
+    },
+
+    /** The content hash last seen for a card, or null. */
+    async getHash(itemId) {
+      const key = queueKey(binding.sessionId);
+      const rv = await browser.storage.local.get({ [key]: null });
+      return rv[key]?.hashes?.[itemId] ?? null;
+    },
+
+    async setHash(itemId, hash) {
+      await mutateHashes(binding, (m) =>
+        m[itemId] === hash ? m : { ...m, [itemId]: hash },
+      );
+    },
+
+    async dropHash(itemId) {
+      await mutateHashes(binding, (m) => {
+        if (!(itemId in m)) return m;
+        const { [itemId]: _gone, ...rest } = m;
+        return rest;
+      });
+    },
 
     async count() {
       const entries = await readQueue(binding.sessionId);
-      return entries.filter((e) => isUserEntry(e?.status)).length;
-    },
-  };
-}
-
-/**
- * The same shape, backed by the host's changelog RPCs. Used for address
- * books, whose changes the host observes and owns.
- */
-export function hostQueue({ provider, accountId, folderId, changelog }) {
-  return {
-    owner: "host",
-
-    async pending() {
-      const entries = Array.isArray(changelog) ? changelog : [];
-      return entries.filter((e) => isUserEntry(e?.status));
-    },
-
-    // No `record` here on purpose. An address-book edit is not something
-    // this add-on is ever handed - the host observes the book and writes
-    // the entry itself, which is the whole reason that queue is the host's.
-    // A method to report one would have no caller and no way to be right.
-
-    async remove({ parentId, itemId, kind }) {
-      await provider.changelogRemove({
-        accountId,
-        folderId,
-        parentId,
-        itemId,
-        kind,
-      });
-    },
-
-    async moveToTail(items) {
-      if (!items?.length) return;
-      await provider.changelogMoveToTail({ accountId, folderId, items });
-    },
-
-    async markServerWrite({ parentId, itemId, kind, status }) {
-      await provider.changelogMarkServerWrite({
-        accountId,
-        folderId,
-        parentId,
-        itemId,
-        kind,
-        status,
-      });
-    },
-
-    async count() {
-      const entries = Array.isArray(changelog) ? changelog : [];
       return entries.filter((e) => isUserEntry(e?.status)).length;
     },
   };
@@ -218,17 +264,18 @@ export function rememberBindings(list) {
     const rv = await browser.storage.local.get({ [BINDINGS_KEY]: {} });
     const map = rv[BINDINGS_KEY] ?? {};
     let dirty = false;
-    for (const { targetID, accountId, folderId, sessionId } of list) {
+    for (const { targetID, accountId, folderId, sessionId, targetType } of list) {
       if (!targetID || !sessionId) continue;
       const prior = map[targetID];
       if (
         prior?.accountId === accountId &&
         prior?.folderId === folderId &&
-        prior?.sessionId === sessionId
+        prior?.sessionId === sessionId &&
+        prior?.targetType === targetType
       ) {
         continue;
       }
-      map[targetID] = { accountId, folderId, sessionId };
+      map[targetID] = { accountId, folderId, sessionId, targetType };
       dirty = true;
     }
     if (dirty) await browser.storage.local.set({ [BINDINGS_KEY]: map });

@@ -43,11 +43,8 @@ import {
 import * as calendarStore from "./calendar-store.mjs";
 import * as eventCodec from "./eas/calendar-codec.mjs";
 import * as taskCodec from "./eas/task-codec.mjs";
-import { localQueue } from "./eas/change-queue.mjs";
-import {
-  isUserEntry,
-  providerOwnsChanges,
-} from "../vendor/tbsync/changelog-core.mjs";
+import { localQueue } from "../vendor/tbsync/change-queue.mjs";
+import { isUserEntry } from "../vendor/tbsync/changelog-core.mjs";
 
 /** Coerce the legacy `Map<uid, serverId>` JSON shape into the new array
  *  of `{uid, serverId}` records. Returns a fresh array — caller is free
@@ -253,12 +250,11 @@ async function repairUnconvertedAccounts(provider) {
   }
 }
 
-/** Rung 4. Take over any calendar or task edits the host is still holding
- *  for us, into the local queue keyed by the folder's binding.
+/** Rung 4. Take over any edits the host is still holding for us, into the
+ *  local queue keyed by the folder's binding.
  *
- *  A host folder row can carry queued edits for a resource whose changes we
- *  own - unsynced work of the user's, which has to end up somewhere we will
- *  read it.
+ *  A host folder row can carry queued edits for any resource - unsynced work
+ *  of the user's, which has to end up somewhere we will read it.
  *
  *  Import first, remove second. A crash in between leaves an entry in both
  *  places, and the next run re-imports it onto a queue that already folds
@@ -268,7 +264,6 @@ async function adoptHostChangelogs(provider) {
   for (const { accountId } of await provider.listAccounts()) {
     const { folders = [] } = (await provider.getAccount(accountId)) ?? {};
     for (const folder of folders) {
-      if (!providerOwnsChanges(folder.targetType)) continue;
       const entries = Array.isArray(folder.changelog) ? folder.changelog : [];
       if (!entries.length) continue;
       if (!folder.sessionId) {
@@ -289,6 +284,7 @@ async function adoptHostChangelogs(provider) {
         accountId,
         folderId: folder.folderId,
         sessionId: folder.sessionId,
+        observed: folder.targetType === "contacts",
       });
       let adopted = 0;
       for (const e of entries) {

@@ -28,8 +28,9 @@
  * The host gets a count for its needs-sync badge, best-effort. If it does
  * not arrive, a dot is missing until the next sync; the edit is safe.
  *
- * Address books have no provider API, so the host's observer owns those
- * entries and they stay in its changelog.
+ * Address books have no provider API, so they are watched instead - see
+ * `contacts-observer.mjs`. Same queue, same sessions; only the way an edit
+ * is noticed differs.
  */
 
 import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
@@ -37,7 +38,7 @@ import {
   localQueue,
   lookupBinding,
   rememberBindings,
-} from "./eas/change-queue.mjs";
+} from "../vendor/tbsync/change-queue.mjs";
 
 /** Every folder of ours that is bound to a calendar, as
  *  `targetID -> {accountId, folderId, targetName, targetColor}`. The host owns
@@ -55,6 +56,16 @@ async function ourTargets() {
     const { folders = [] } = (await host.getAccount(accountId)) ?? {};
     for (const f of folders) {
       if (!f?.targetID) continue;
+      // Every resource is banked, because the address-book observer needs
+      // its bindings for exactly the same reason the item hooks need
+      // theirs. Only calendars go into the map this function returns.
+      bindings.push({
+        targetID: f.targetID,
+        accountId,
+        folderId: f.folderId,
+        sessionId: f.sessionId ?? null,
+        targetType: f.targetType,
+      });
       if (f.targetType !== "calendars" && f.targetType !== "tasks") continue;
       out.set(f.targetID, {
         accountId,
@@ -62,12 +73,6 @@ async function ourTargets() {
         sessionId: f.sessionId ?? null,
         targetName: f.targetName ?? null,
         targetColor: f.targetColor ?? null,
-      });
-      bindings.push({
-        targetID: f.targetID,
-        accountId,
-        folderId: f.folderId,
-        sessionId: f.sessionId ?? null,
       });
     }
   }
