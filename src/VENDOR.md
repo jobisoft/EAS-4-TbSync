@@ -29,7 +29,12 @@ This file lists files that were not created by this project and are maintained u
 
 ---
 
-## tbsync (still subject to review)
+## tbsync protocol library
 
 - **Files** : `/vendor/tbsync/*`
-- **Source** : https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fjobisoft%2FTbSync%2Ftree%2F151764a3077345ebea9a83c56b04782d5ea93139%2Ftbsync
+- **Source** : `TbSync/protocol/` — the single source of truth, in the
+  [TbSync repository](https://github.com/jobisoft/TbSync)
+- **Updating** : never edit these copies. Change the file in `TbSync/protocol/`
+  and run `TbSync/protocol/vendor.sh`, which refreshes every consumer and
+  verifies each copy is byte-identical (`vendor.sh --check` verifies only).
+  See `TbSync/protocol/README.md`.
