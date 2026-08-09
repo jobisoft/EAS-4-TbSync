@@ -391,3 +391,96 @@ test("an Exception without its own AllDayEvent inherits the master's", () => {
     "RECURRENCE-ID;VALUE=DATE:20261013",
   ]);
 });
+
+// ── #342: a delta must not empty an override ─────────────────────────────
+
+const TIMED_MASTER = ALLDAY_MASTER.replace(
+  "DTSTART;VALUE=DATE:20261012",
+  "DTSTART:20261012T090000Z",
+).replace("DTEND;VALUE=DATE:20261013", "DTEND:20261012T100000Z");
+
+test("#342: a status-only instance Change keeps the override's own fields", () => {
+  // The reporter's trace: after a series-level operation Exchange re-sends
+  // the exception with Subject/Start/End omitted - a delta meaning
+  // "unchanged". Rebuilding from an empty component blanked the title and
+  // times; the rebuild now seeds from the existing override.
+  const withOverride = applyInstanceChange({
+    ical: TIMED_MASTER,
+    adNode: el("ApplicationData", [
+      el("Subject", "kept title"),
+      el("StartTime", "20261013T110000Z"),
+      el("EndTime", "20261013T120000Z"),
+    ]),
+    instanceUtc: new Date("2026-10-13T09:00:00Z"),
+    asVersion: "16.1",
+    defaultTimezone: "UTC",
+    userEmail: null,
+  });
+  const afterDelta = applyInstanceChange({
+    ical: withOverride,
+    adNode: el("ApplicationData", [el("BusyStatus", "0")]),
+    instanceUtc: new Date("2026-10-13T09:00:00Z"),
+    asVersion: "16.1",
+    defaultTimezone: "UTC",
+    userEmail: null,
+  });
+  const override = afterDelta.split("BEGIN:VEVENT")[2];
+  assert.match(override, /SUMMARY:kept title/, "the title must survive");
+  assert.match(override, /DTSTART:20261013T110000Z/, "the moved start too");
+  assert.match(override, /DTEND:20261013T120000Z/, "and the end");
+  assert.equal(
+    afterDelta.split("BEGIN:VEVENT").length,
+    3,
+    "one master, one override - the delta replaced, not duplicated",
+  );
+});
+
+test("#342: with no prior override, omitted fields inherit from the master", () => {
+  const out = applyInstanceChange({
+    ical: TIMED_MASTER,
+    adNode: el("ApplicationData", [el("BusyStatus", "0")]),
+    instanceUtc: new Date("2026-10-13T09:00:00Z"),
+    asVersion: "16.1",
+    defaultTimezone: "UTC",
+    userEmail: null,
+  });
+  const override = out.split("BEGIN:VEVENT")[2];
+  assert.match(
+    override,
+    /SUMMARY:unit allday master/,
+    "the master's title, not a blank",
+  );
+  assert.match(
+    override,
+    /DTSTART:20261013T090000Z/,
+    "the occurrence's own scheduled start",
+  );
+  assert.match(
+    override,
+    /DTEND:20261013T100000Z/,
+    "start plus the master's duration - never a missing DTEND, which " +
+      "later serialised as a malformed change",
+  );
+});
+
+test("#342: a sparse embedded 14.x exception inherits the master's fields", () => {
+  // §2.2.2.21: an absent child element is "the same as the top-level
+  // element". All-day master, so the derived boundaries stay DATEs.
+  const ical = applicationDataToIcal(
+    readerArgs(
+      allDayAdNode({
+        exceptions: [
+          el("Exception", [
+            el("ExceptionStartTime", "20261013T000000Z"),
+            el("BusyStatus", "0"),
+          ]),
+        ],
+      }),
+    ),
+  );
+  const override = ical.split("BEGIN:VEVENT")[2];
+  assert.match(override, /SUMMARY:unit allday master/);
+  assert.match(override, /DTSTART;VALUE=DATE:20261013/);
+  assert.match(override, /DTEND;VALUE=DATE:20261014/);
+  assert.doesNotMatch(override, /RRULE/, "series-defining props are stripped");
+});

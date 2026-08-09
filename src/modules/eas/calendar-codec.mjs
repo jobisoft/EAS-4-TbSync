@@ -382,25 +382,28 @@ export function applyInstanceChange({
 
   removeExdate(master, instanceUtc);
 
-  // Drop any existing override for this RECURRENCE-ID before re-creating.
+  // Replace any existing override for this RECURRENCE-ID - but keep it as
+  // the seed: a 16.1 per-instance <Change> is a delta against it and
+  // omits every field that did not change.
+  let existing = null;
   for (const sub of vcal.getAllSubcomponents("vevent")) {
     const rid = sub.getFirstPropertyValue("recurrence-id");
     if (rid && namesInstance(rid, instanceUtc, null)) {
+      if (!existing) existing = sub;
       vcal.removeSubcomponent(sub);
     }
   }
 
-  const override = new ICAL.Component(["vevent", [], []]);
+  const ridTime = allDay
+    ? allDayIcalDate(instanceUtc, null)
+    : instanceUtcToIcalTime(instanceUtc);
+  const override = seedOverride({ master, existing, ridTime });
   vcal.addSubcomponent(override);
   const masterUid = stringOf(master.getFirstPropertyValue("uid"));
   if (masterUid) override.updatePropertyWithValue("uid", masterUid);
   // RECURRENCE-ID anchors the override to the original master occurrence.
   const ridProp = new ICAL.Property("recurrence-id", override);
-  ridProp.setValue(
-    allDay
-      ? allDayIcalDate(instanceUtc, null)
-      : instanceUtcToIcalTime(instanceUtc),
-  );
+  ridProp.setValue(ridTime);
   override.addProperty(ridProp);
   populateVeventFromAd({
     adNode: adNode,
@@ -556,6 +559,60 @@ export function listInstanceCommands({
     });
   }
   return commands;
+}
+
+function cloneVevent(comp) {
+  return new ICAL.Component(structuredClone(comp.toJSON()));
+}
+
+/** The component a rebuilt override starts from - never an empty one.
+ *
+ *  EAS payloads for an exception omit what did not change, and
+ *  `populateVeventFromAd` is merge-aware throughout: it only touches a
+ *  field whose wire element is present. Both were useless while the
+ *  callers handed it a fresh empty VEVENT - every omitted field then
+ *  came out blank, which is how a status-only delta from Exchange
+ *  emptied an override's title and times (#342), and an override left
+ *  without DTSTART later serialised as a malformed change the server
+ *  rejected.
+ *
+ *  `existing` is the prior override when the wire is a delta against it
+ *  (the 16.1 per-instance <Change>); null on the embedded ≤14.x path,
+ *  where [MS-ASCAL] §2.2.2.21 defines absence as "same as the top-level
+ *  element" - inheritance from the master. The master seed drops the
+ *  series-defining properties and anchors the occurrence's own
+ *  boundaries: its start is the instant the RECURRENCE-ID names, its end
+ *  that plus the master's duration. */
+function seedOverride({ master, existing, ridTime }) {
+  if (existing) {
+    const base = cloneVevent(existing);
+    // The caller writes a fresh RECURRENCE-ID; the clone's would sit
+    // beside it as a duplicate property.
+    base.removeAllProperties("recurrence-id");
+    return base;
+  }
+  const base = cloneVevent(master);
+  base.removeAllProperties("rrule");
+  base.removeAllProperties("exdate");
+  base.removeAllProperties("recurrence-id");
+  const mStart = master.getFirstPropertyValue("dtstart");
+  const mEnd = master.getFirstPropertyValue("dtend");
+  if (ridTime && mStart instanceof ICAL.Time) {
+    const start = ridTime.clone();
+    base.removeAllProperties("dtstart");
+    const ds = new ICAL.Property("dtstart", base);
+    ds.setValue(start);
+    base.addProperty(ds);
+    if (mEnd instanceof ICAL.Time) {
+      const end = ridTime.clone();
+      end.addDuration(mEnd.subtractDate(mStart));
+      base.removeAllProperties("dtend");
+      const de = new ICAL.Property("dtend", base);
+      de.setValue(end);
+      base.addProperty(de);
+    }
+  }
+  return base;
 }
 
 function pickMasterVevent(vcal) {
@@ -1299,13 +1356,17 @@ function appendInboundExceptions({
       continue;
     }
 
-    const override = new ICAL.Component(["vevent", [], []]);
+    const ridTime = allDay
+      ? allDayIcalDate(ridDate, tzId)
+      : jsDateToIcalUtcTime(ridDate);
+    // Seeded from the master, never empty: §2.2.2.21 defines an absent
+    // child element as "same as the top-level element", and this path
+    // rebuilds every override from scratch on each re-delivery.
+    const override = seedOverride({ master: vevent, existing: null, ridTime });
     vcal.addSubcomponent(override);
     if (masterUid) override.updatePropertyWithValue("uid", masterUid);
     const ridProp = new ICAL.Property("recurrence-id", override);
-    ridProp.setValue(
-      allDay ? allDayIcalDate(ridDate, tzId) : jsDateToIcalUtcTime(ridDate),
-    );
+    ridProp.setValue(ridTime);
     override.addProperty(ridProp);
     populateVeventFromAd({
       adNode: exc,
