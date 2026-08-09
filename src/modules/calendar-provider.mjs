@@ -29,7 +29,7 @@
  * not arrive, a dot is missing until the next sync; the edit is safe.
  *
  * Address books have no provider API, so they are watched instead - see
- * `contacts-observer.mjs`. Same queue, same sessions; only the way an edit
+ * the vendored `address-book.mjs`. Same queue, same sessions; only the way an edit
  * is noticed differs.
  */
 

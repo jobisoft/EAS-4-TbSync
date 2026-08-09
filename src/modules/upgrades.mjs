@@ -40,7 +40,7 @@ import {
   finalizeFolderListForPush,
   iconForServerType,
 } from "./eas-provider.mjs";
-import * as calendarStore from "./calendar-store.mjs";
+import * as calendarStore from "../vendor/tbsync/calendar.mjs";
 import * as eventCodec from "./eas/calendar-codec.mjs";
 import * as taskCodec from "./eas/task-codec.mjs";
 import { localQueue } from "../vendor/tbsync/change-queue.mjs";

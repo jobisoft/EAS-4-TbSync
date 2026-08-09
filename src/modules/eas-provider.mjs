@@ -48,7 +48,7 @@
  *                       push (with optional "Trash | " prefix)
  * Pending user edits are ours, for every resource. A calendar we supply
  * hands us the edit directly; an address book we watch (see the vendored
- * `contacts-observer.mjs`), pre-tagging our own writes so the events they
+ * the vendored `address-book.mjs`), pre-tagging our own writes so the events they
  * produce are not mistaken for the user's. Both queues live in our own
  * storage, keyed by `folder.sessionId` - the binding the host names - so
  * they survive the host being absent and vanish when it ends the binding.
@@ -66,8 +66,8 @@ import {
   error,
   TbSyncProviderImplementation,
 } from "../vendor/tbsync/provider.mjs";
-import * as addressBook from "./address-book.mjs";
-import * as calendarStore from "./calendar-store.mjs";
+import * as addressBook from "../vendor/tbsync/address-book.mjs";
+import * as calendarStore from "../vendor/tbsync/calendar.mjs";
 import {
   primeAuth,
   primeAccessToken,
@@ -108,7 +108,13 @@ import {
   rememberBindings,
   sweep,
 } from "../vendor/tbsync/change-queue.mjs";
-import { installContactsObserver } from "../vendor/tbsync/contacts-observer.mjs";
+
+/** This add-on's calendar type, and the scheme its calendars carry. A
+ *  calendar's `type` is the id of the add-on supplying it, so this is the
+ *  one part of calendar handling that cannot be shared - the vendored
+ *  wrapper is told it rather than knowing it. */
+const CALENDAR_TYPE = "ext-eas4tbsync@jobisoft.de";
+const CALENDAR_URL = "moz-eas-calendar://";
 
 /** EAS FolderSync status codes that indicate the server wants us to run
  *  Provision (in-band equivalent of the HTTP-449 path). */
@@ -274,7 +280,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     await this.#reconcileFolderSessions();
     // Watch our own address books. After the reconcile, so the bindings the
     // observer resolves against are current before the first event lands.
-    installContactsObserver({
+    addressBook.installContactsObserver({
       provider: this,
       report: (args) => this.reportEventLog(args),
     });
@@ -1086,6 +1092,8 @@ export class EasProvider extends TbSyncProviderImplementation {
             name,
             kind: tt === "calendars" ? "events" : "tasks",
             color,
+            type: CALENDAR_TYPE,
+            url: CALENDAR_URL,
           });
           await this.updateFolder({
             accountId,

@@ -2,11 +2,11 @@
  * EAS calendar / task sync entry points. Wires the Calendar and Tasks
  * itemKinds into the shared `runItemSync` framework. Codecs live in
  * `calendar-codec.mjs` and `task-codec.mjs`; local store reads/writes
- * go through `calendar-store.mjs`.
+ * go through the vendored `calendar.mjs`.
  */
 
 import { runItemSync } from "./sync-runner.mjs";
-import * as calendarStore from "../calendar-store.mjs";
+import * as calendarStore from "../../vendor/tbsync/calendar.mjs";
 import * as eventCodec from "./calendar-codec.mjs";
 import * as taskCodec from "./task-codec.mjs";
 import { ensureLoaded as ensureTimezoneMappingLoaded } from "./timezone-mapping.mjs";

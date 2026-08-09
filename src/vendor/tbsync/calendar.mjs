@@ -1,4 +1,6 @@
 /**
+ * Everything a provider does with a Thunderbird calendar.
+ *
  * Thin wrapper over `messenger.calendar.calendars.*` and
  * `messenger.calendar.items.*`. Always exchanges iCal strings - the
  * wrapper pins `format: "ical"` on every write and `returnFormat: "ical"`
@@ -14,8 +16,9 @@ const ICAL_FORMAT = "ical";
 /** Our own calendar type, registered by the `calendar_provider` manifest
  *  key. The platform derives it from the extension id, so this must match
  *  what `browser_specific_settings.gecko.id` says. */
-export const PROVIDER_TYPE = "ext-eas4tbsync@jobisoft.de";
-const PROVIDER_URL = "moz-eas-calendar://";
+// No provider identity is baked in. A calendar's `type` is the id of the
+// add-on that supplies it, so it is the one thing here that cannot be
+// shared - `createCalendar` takes it from the caller.
 
 /** The storage calendar behind a provider calendar. Writing here is how the
  *  sync puts server data into the calendar *without* it coming back as a
@@ -120,7 +123,7 @@ export async function pickCalendarColor() {
  *
  * Returns the new calendar id.
  */
-export async function createCalendar({ name, kind, color }) {
+export async function createCalendar({ name, kind, color, type, url }) {
   if (!name || typeof name !== "string" || !name.trim()) {
     throw new Error("createCalendar requires a non-empty name");
   }
@@ -129,10 +132,15 @@ export async function createCalendar({ name, kind, color }) {
       `createCalendar requires kind: 'events' | 'tasks' (got ${kind})`,
     );
   }
+  if (!type || !url) {
+    throw new Error(
+      "createCalendar requires the calling add-on's calendar `type` and `url`",
+    );
+  }
   const props = {
     name: name.trim(),
-    type: PROVIDER_TYPE,
-    url: PROVIDER_URL,
+    type,
+    url,
     capabilities: {
       events: kind === "events",
       tasks: kind === "tasks",

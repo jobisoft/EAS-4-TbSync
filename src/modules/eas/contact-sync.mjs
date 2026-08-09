@@ -1,11 +1,11 @@
 /**
  * EAS contact-sync entry point. Wires the Contacts itemKind into the
  * shared `runItemSync` framework. Codec lives in `contact-codec.mjs`;
- * local store reads/writes go through `address-book.mjs`.
+ * local store reads/writes go through the vendored `address-book.mjs`.
  */
 
 import { runItemSync } from "./sync-runner.mjs";
-import * as addressBook from "../address-book.mjs";
+import * as addressBook from "../../vendor/tbsync/address-book.mjs";
 import {
   applicationDataToVCard,
   appendApplicationDataFromVCard,
