@@ -275,8 +275,9 @@ async function adoptHostChangelogs(provider) {
       if (!entries.length) continue;
       if (!folder.sessionId) {
         // A host that mints no sessions cannot pair with this build at all
-        // (PROTOCOL_VERSION 3), so this is unreachable in practice. Leaving
-        // the rows where they are keeps them readable if it ever is.
+        // (it would be speaking 1.3 against our PROTOCOL_VERSION 2), so
+        // this is unreachable in practice. Leaving the rows where they are
+        // keeps them readable if it ever is.
         provider.reportEventLog({
           level: "warning",
           accountId,
