@@ -177,6 +177,13 @@ function populateVeventFromAd({
   vevent,
   asVersion,
   defaultTimezone,
+  // For an exception body: the master's AllDayEvent value. [MS-ASCAL]
+  // §2.2.2.1 - an Exception without its own AllDayEvent "is assumed to
+  // be the same as the value of the top-level AllDayEvent element", and
+  // Exchange 16.1 does omit it on embedded exceptions. Reading the
+  // absence as 0 turned an all-day override into a timed one, whose
+  // midnight-UTC DTSTART then failed to match anything.
+  inheritedAllDay = false,
   userEmail,
 }) {
   // Subject / Location.
@@ -216,7 +223,8 @@ function populateVeventFromAd({
   // value is already the date. `writeDateProp` picks between the two on
   // the shape of the value - see there for why the blob cannot decide it.
   const { tzId } = resolveTimezone(adNode, defaultTimezone);
-  const allDay = readPathFrom(adNode, ["AllDayEvent"]) === "1";
+  const ownAllDay = readPathFrom(adNode, ["AllDayEvent"]);
+  const allDay = ownAllDay == null ? inheritedAllDay : ownAllDay === "1";
 
   // Start / End. EAS sends UTC strings; convert on the way in.
   const startUtc = readPathFrom(adNode, ["StartTime"]);
@@ -399,6 +407,7 @@ export function applyInstanceChange({
     vevent: override,
     asVersion,
     defaultTimezone,
+    inheritedAllDay: allDay,
     userEmail,
   });
   return vcal.toString();
@@ -585,6 +594,14 @@ export function appendApplicationDataFromIcal({
   defaultTimezone,
   syncRecurrence,
   isException = false,
+  // ≤14.x only: leave the embedded <Exceptions> wrapper out of this
+  // payload. Used by an <Add> whose blob carries exceptions - they are
+  // sent as a follow-up <Change> once the server has assigned a
+  // ServerId, mirroring the shape 16.1 forces for every exception. At
+  // least one server family answers Status 1 to an Add-with-exceptions
+  // and then silently discards the wrapper (and, for an all-day series,
+  // the recurrence with it), so nothing may ride on the Add.
+  suppressExceptions = false,
   userEmail,
   fallbackOrganizerName,
   eventLog,
@@ -605,10 +622,6 @@ export function appendApplicationDataFromIcal({
   const dtstart = vevent.getFirstProperty("dtstart");
   const dtend = vevent.getFirstProperty("dtend");
   const allDay = isAllDayProp(dtstart) && isAllDayProp(dtend);
-  // Source zone for all-day Start/End on ≤14.x — must match the zone we
-  // describe in the TimeZone blob (same precedence as buildTimezoneBlob)
-  // so the server reads the boundary back on the right calendar day.
-  const allDaySourceTzid = pickSourceTzid(vevent) ?? defaultTimezone ?? "UTC";
 
   // Outbound timezone. [MS-ASCAL] §2.2.2.44 lists the element as
   // supported in every protocol version, 16.1 included, and states no
@@ -637,9 +650,19 @@ export function appendApplicationDataFromIcal({
   //    SHOULD interpret this event to be at the given date(s) regardless
   //    of the time zone used". That is the floating semantics iCalendar
   //    gives a DATE value, so the two formats agree.
+  //
+  // An all-day event on ≤14.x DOES get a blob - but a UTC one, whatever
+  // zone the user sits in. Its boundaries go out date-shaped (see
+  // `startTimeFor`), and `date + UTC blob` names the same calendar day
+  // under both reading disciplines in the wild: a blob-reading server
+  // computes midnight UTC → that date, a date-digit reader takes the
+  // digits → that date. A user-zone blob is what used to make the two
+  // readers disagree.
   const floatingAllDay = allDay && asVersion === "16.1";
   if (!isException && !floatingAllDay) {
-    const blob = buildTimezoneBlob(vevent, defaultTimezone);
+    const blob = allDay
+      ? buildUtcTimezoneBlob()
+      : buildTimezoneBlob(vevent, defaultTimezone);
     builder.atag("TimeZone", blob.easTimeZone64);
   }
 
@@ -699,13 +722,9 @@ export function appendApplicationDataFromIcal({
     );
   }
 
-  // EndTime. All-day: 16.1 uses the "fake local as UTC" form; ≤14.x uses
-  // local midnight in the TimeZone-blob zone expressed as UTC. Both avoid
-  // the ±1-day shift a naive UTC conversion would cause in non-UTC zones.
-  builder.atag(
-    "EndTime",
-    endTimeFor(dtend, asVersion, allDay, allDaySourceTzid),
-  );
+  // EndTime. All-day boundaries are date-shaped in every version - see
+  // `startTimeFor` for why.
+  builder.atag("EndTime", endTimeFor(dtend, asVersion, allDay));
 
   // Location.
   const location = stringOf(vevent.getFirstPropertyValue("location"));
@@ -741,10 +760,7 @@ export function appendApplicationDataFromIcal({
 
   // Subject + StartTime.
   builder.atag("Subject", stringOf(vevent.getFirstPropertyValue("summary")));
-  builder.atag(
-    "StartTime",
-    startTimeFor(dtstart, asVersion, allDay, allDaySourceTzid),
-  );
+  builder.atag("StartTime", startTimeFor(dtstart, asVersion, allDay));
 
   // UID (forbidden in 16.1; not inside exceptions either - legacy
   // suppresses UID inside <Exception>, even on 2.5/14.x).
@@ -841,7 +857,7 @@ export function appendApplicationDataFromIcal({
   if (syncRecurrence && !isException) {
     const rrule = vevent.getFirstProperty("rrule");
     if (rrule) appendRecurrence(builder, rrule, dtstart);
-    if (asVersion !== "16.1") {
+    if (asVersion !== "16.1" && !suppressExceptions) {
       appendOutboundExceptions({
         builder,
         vcal,
@@ -1007,6 +1023,15 @@ function buildTimezoneBlob(vevent, defaultTimezone) {
   return blob;
 }
 
+/** The blob for an all-day item on ≤14.x: all zeros - bias 0, no DST, no
+ *  names. That is UTC, and it is also the exact form the Z-Push family
+ *  itself emits for all-day, so both reading disciplines resolve the
+ *  date-shaped boundaries to the same calendar day. Needs nothing from
+ *  the timezone mapping, deliberately: an all-day date has no zone. */
+function buildUtcTimezoneBlob() {
+  return new TimeZoneBlob();
+}
+
 /* ── Helpers: dates ────────────────────────────────────────────────── */
 
 /** Pick the source TZID for the outbound TimeZone blob. Matches the
@@ -1037,8 +1062,8 @@ function pickSourceTzid(vevent) {
  *    day for users west of UTC.
  *
  *  - midnight-in-zone expressed as UTC, e.g. 20261006T220000Z for the
- *    7th in Europe/Berlin. Real Exchange ≤14.x uses this
- *    ([MS-ASCAL] §2.2.2.39) and it is what `allDayMidnightUtc` emits.
+ *    7th in Europe/Berlin. Real Exchange ≤14.x stores this form, so it
+ *    arrives with items other clients created.
  *    For a non-UTC zone that instant lands on the previous/next UTC
  *    calendar day, so getUTCDate() shifts the event by ±1 day; the
  *    value has to be converted into the zone first.
@@ -1204,46 +1229,25 @@ function untilFor(until) {
   return until?.isDate ? fakeLocalAsUtcFromValue(until) : toBasicUtc(until);
 }
 
-/** Midnight (local) of an all-day date in the event's source zone,
- *  expressed as UTC — the form AS ≤14.x expects for all-day Start/End
- *  ([MS-ASCAL] §2.2.2.39). Mirrors the inbound all-day reader so the
- *  round-trip is stable for non-UTC zones. Falls back to treating the
- *  date as UTC midnight when the zone isn't in the loaded set. */
-function allDayMidnightUtc(prop, sourceTzid) {
-  const v = prop?.getFirstValue();
-  if (!(v instanceof ICAL.Time)) return nowBasicUtc();
-  const zone =
-    sourceTzid && sourceTzid !== "UTC" ? getIcalTimezone(sourceTzid) : null;
-  const localMidnight = new ICAL.Time({
-    year: v.year,
-    month: v.month,
-    day: v.day,
-    hour: 0,
-    minute: 0,
-    second: 0,
-    isDate: false,
-  });
-  localMidnight.zone = zone ?? ICAL.Timezone.utcTimezone;
-  return formatBasicUtc(localMidnight.toJSDate());
-}
-
-function startTimeFor(dtstart, asVersion, allDay, sourceTzid) {
-  if (allDay) {
-    // 16.1 uses the "fake local as UTC" form; ≤14.x expects local
-    // midnight in the blob's zone expressed as UTC. A floating date-only
-    // value would otherwise be turned into UTC via the host's local zone
-    // (toJSDate), shifting the date by ±1 day for non-UTC users.
-    if (asVersion === "16.1") return fakeLocalAsUtcDate(dtstart);
-    return allDayMidnightUtc(dtstart, sourceTzid);
-  }
+function startTimeFor(dtstart, asVersion, allDay) {
+  // All-day boundaries are date-shaped in EVERY version, not just 16.1
+  // (where [MS-ASCAL] §2.2.2.1 mandates it). On ≤14.x the spec says only
+  // that an all-day item begins "on midnight of the specified day" - in
+  // no stated zone - and the two server families in the wild read the
+  // value differently: real Exchange through the TimeZone blob, the
+  // Z-Push family off the date digits. `YYYYMMDDT000000Z` with a UTC
+  // blob (see the all-day branch in `appendApplicationDataFromIcal`)
+  // lands on the same calendar date under both readings, in every user
+  // zone. Midnight-in-zone - the previous ≤14.x form - shifted the whole
+  // series a day on a date-digit reader whenever the zone sat east of
+  // UTC. A floating date-only value must not go through toJSDate: that
+  // resolves it in the host zone and shifts the date the same way.
+  if (allDay) return fakeLocalAsUtcDate(dtstart);
   return dtstart ? toBasicUtc(dtstart.getFirstValue()) : nowBasicUtc();
 }
 
-function endTimeFor(dtend, asVersion, allDay, sourceTzid) {
-  if (allDay) {
-    if (asVersion === "16.1") return fakeLocalAsUtcDate(dtend);
-    return allDayMidnightUtc(dtend, sourceTzid);
-  }
+function endTimeFor(dtend, asVersion, allDay) {
+  if (allDay) return fakeLocalAsUtcDate(dtend);
   return dtend ? toBasicUtc(dtend.getFirstValue()) : nowBasicUtc();
 }
 
@@ -1308,6 +1312,7 @@ function appendInboundExceptions({
       vevent: override,
       asVersion,
       defaultTimezone,
+      inheritedAllDay: allDay,
     });
   }
 }
@@ -1339,22 +1344,21 @@ function appendOutboundExceptions({
     if (subUid === masterUid && rid) overrides.push(sub);
   }
   if (!exdates.length && !overrides.length) return;
-  // For DATE-valued rows (all-day) the wire form is the master StartTime's
-  // own encoding - see `exceptionStartTimeFor`. Same zone precedence as
-  // the master's blob, so both land on one grid.
-  const sourceTzid = pickSourceTzid(vevent) ?? defaultTimezone ?? "UTC";
 
   builder.otag("Exceptions");
   for (const ex of exdates) {
     builder.otag("Exception");
-    builder.atag("ExceptionStartTime", exceptionStartTimeFor(ex, sourceTzid));
+    // `instanceKey` keeps a DATE row date-shaped - the same encoding the
+    // all-day master's own StartTime now uses in every version, so the
+    // server lands master and exceptions on one occurrence grid.
+    builder.atag("ExceptionStartTime", instanceKey(ex));
     builder.atag("Deleted", "1");
     builder.ctag();
   }
   for (const override of overrides) {
     const rid = override.getFirstPropertyValue("recurrence-id");
     builder.otag("Exception");
-    builder.atag("ExceptionStartTime", exceptionStartTimeFor(rid, sourceTzid));
+    builder.atag("ExceptionStartTime", instanceKey(rid));
     // Recurse into the writer in exception-mode. We're already on the
     // Calendar codepage; the recursive call may switch to AirSyncBase
     // (Body / Location 16.1) and switches back to Calendar before
@@ -1523,27 +1527,6 @@ function instanceKey(t) {
   return t instanceof ICAL.Time && t.isDate
     ? fakeLocalAsUtcFromValue(t)
     : icalTimeToBasicUtc(t);
-}
-
-/** ExceptionStartTime for the ≤14.x embedded block. An all-day DATE row
- *  is encoded exactly like the master's StartTime - local midnight in the
- *  series' source zone, expressed as UTC - so the server lands master and
- *  exceptions on one occurrence grid. */
-function exceptionStartTimeFor(t, sourceTzid) {
-  if (!(t instanceof ICAL.Time) || !t.isDate) return icalTimeToBasicUtc(t);
-  const zone =
-    sourceTzid && sourceTzid !== "UTC" ? getIcalTimezone(sourceTzid) : null;
-  const localMidnight = new ICAL.Time({
-    year: t.year,
-    month: t.month,
-    day: t.day,
-    hour: 0,
-    minute: 0,
-    second: 0,
-    isDate: false,
-  });
-  localMidnight.zone = zone ?? ICAL.Timezone.utcTimezone;
-  return formatBasicUtc(localMidnight.toJSDate());
 }
 
 /* ── Helpers: alarms ───────────────────────────────────────────────── */

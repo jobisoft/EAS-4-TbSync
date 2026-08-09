@@ -554,6 +554,12 @@ async function runOneSync({
     if (inst.status) return await finishWith(ctx, inst);
     instanceFailed = inst.failedCount ?? 0;
   }
+  if (pushed.followUpMasters?.length) {
+    const follow = await followUpPhase(ctx, pushed.followUpMasters);
+    if (follow.code) return await finishWith(ctx, follow);
+    if (follow.status) return await finishWith(ctx, follow);
+    instanceFailed += follow.failedCount ?? 0;
+  }
 
   // 4) Pull pass. Running after the push makes everything it delivers
   // server-authoritative by construction: our own changes are already part
@@ -883,6 +889,16 @@ async function pushPhase(ctx, userEdits) {
     ctx.itemKind.codec.listInstanceCommands
       ? []
       : null;
+  // The ≤14.x counterpart: masters ADDED this pass whose blob carries
+  // exceptions. Their Add went out without the embedded <Exceptions>
+  // wrapper (see `suppressExceptions` in the codec) because at least one
+  // server family acks an Add-with-exceptions and silently discards the
+  // wrapper - for an all-day series, the recurrence with it. Once the
+  // ack has assigned a ServerId, followUpPhase re-sends each as one full
+  // <Change>, exceptions embedded - the ordinary modify payload, which
+  // the same servers keep.
+  const followUpMasters =
+    ctx.asVersion !== "16.1" && ctx.syncRecurrence ? [] : null;
   let batchSize = ctx.maxItems;
   let pending = userEdits.slice();
   let itemsDone = 0;
@@ -1014,6 +1030,7 @@ async function pushPhase(ctx, userEdits) {
     await applyResponses(ctx, responses, built, failedItems, {
       hadResponsesElement: r.responses != null,
       instanceMasters,
+      followUpMasters,
     });
     if (r.commands) await applyServerCommands(ctx, r.commands);
 
@@ -1081,6 +1098,7 @@ async function pushPhase(ctx, userEdits) {
   return {
     failedCount: failedItems.size,
     instanceMasters: instanceMasters ?? [],
+    followUpMasters: followUpMasters ?? [],
   };
 }
 
@@ -1143,6 +1161,50 @@ async function instancePhase(ctx, masters) {
     // Only what the caller has to act on stops the pass. Anything else
     // has already been reported against its own occurrence, and the
     // remaining commands are independent of it.
+    if (r.code || r.status) return r;
+    if (r.failed) failedCount += 1;
+  }
+  return { failedCount };
+}
+
+/** ≤14.x counterpart of the instance phase: for each master whose Add
+ *  deliberately went out bare, send one full-payload <Change> - the
+ *  ordinary modify writer, exceptions embedded - now that the ack has
+ *  assigned the ServerId it needs. One command per request, through
+ *  `sendInstanceCommand`, which brings the status handling and the
+ *  bounded retries with it; a refused follow-up leaves the master synced
+ *  and its exceptions absent, counted into the folder's rejected total -
+ *  the same trade the 16.1 instance phase makes. */
+async function followUpPhase(ctx, masters) {
+  let failedCount = 0;
+  for (const m of masters) {
+    const command = {
+      kind: "change",
+      serverID: m.serverID,
+      instanceId: "(embedded exceptions)",
+      emit(builder) {
+        builder.otag("Change");
+        builder.atag("ServerId", m.serverID);
+        builder.otag("ApplicationData");
+        ctx.itemKind.codec.appendApplicationDataFromBlob({
+          builder,
+          op: "change",
+          blob: m.blob,
+          asVersion: ctx.asVersion,
+          separator: ctx.separator,
+          defaultTimezone: ctx.defaultTimezone,
+          syncRecurrence: ctx.syncRecurrence,
+          userEmail: ctx.account?.custom?.user,
+          fallbackOrganizerName:
+            ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
+          eventLog: ctx.eventLog,
+        });
+        builder.switchpage("AirSync");
+        builder.ctag();
+        builder.ctag();
+      },
+    };
+    const r = await sendInstanceCommand(ctx, command, m.blob);
     if (r.code || r.status) return r;
     if (r.failed) failedCount += 1;
   }
@@ -1398,7 +1460,11 @@ async function buildPushBatch(ctx, slice, failedItems) {
 /* ── Apply responses to our push ──────────────────────────────────── */
 
 async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
-  const { hadResponsesElement = true, instanceMasters = null } = opts;
+  const {
+    hadResponsesElement = true,
+    instanceMasters = null,
+    followUpMasters = null,
+  } = opts;
   if (!hadResponsesElement) {
     const sentCount = sent.adds.length + sent.mods.length + sent.dels.length;
     ctx.provider.reportEventLog({
@@ -1447,6 +1513,11 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
       // No `previous`: the server has just learned about this item, so
       // every exception it carries is new to it.
       instanceMasters.push({ serverID: serverId, blob: sentEntry.item.blob });
+    }
+    // ≤14.x mirror of the above: the Add deliberately went out without
+    // its exceptions, and only now is there a ServerId to hang them on.
+    if (followUpMasters && blobHasInstanceOverrides(sentEntry.item.blob)) {
+      followUpMasters.push({ serverID: serverId, blob: sentEntry.item.blob });
     }
     await ctx.queue.remove({
       parentId: sentEntry.entry.parentId,
@@ -1923,6 +1994,13 @@ function appendCommands(
       separator,
       defaultTimezone,
       syncRecurrence,
+      // An Add never carries embedded exceptions on ≤14.x - they follow
+      // as a <Change> once the ack yields a ServerId (followUpPhase).
+      // On 16.1 the writer never embeds them anyway.
+      suppressExceptions:
+        asVersion !== "16.1" &&
+        syncRecurrence &&
+        blobHasInstanceOverrides(a.item.blob),
       userEmail,
       fallbackOrganizerName,
       eventLog,

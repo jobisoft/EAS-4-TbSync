@@ -79,4 +79,29 @@ SUMMARY:TZ5 moved occurrence — expect 22 Sep at 20:00 Berlin
 DESCRIPTION:Pushed as its own per-instance <Change> on 16.1\, which is the path
  that newly carries its own TimeZone blob.
 END:VEVENT
+BEGIN:VEVENT
+UID:tbsync-tz-6-allday-exceptions@example.invalid
+DTSTAMP:20260801T120000Z
+DTSTART;VALUE=DATE:20261019
+DTEND;VALUE=DATE:20261020
+RRULE:FREQ=DAILY;COUNT=4
+EXDATE;VALUE=DATE:20261022
+SUMMARY:TZ6 all-day daily with exceptions — expect 19-21 Oct\, 20th renamed\, 22nd gone
+DESCRIPTION:An all-day series CREATED with an override and a cancelled day.
+ On <=14.x this is the Add-then-Change path: exceptions must not ride on
+ the <Add> (one server family acks and silently discards them\, taking the
+ recurrence with them for all-day)\, so they follow as a full <Change> in the
+ same sync. On 16.1 they go as per-instance commands\, as always.
+END:VEVENT
+BEGIN:VEVENT
+UID:tbsync-tz-6-allday-exceptions@example.invalid
+DTSTAMP:20260801T120000Z
+RECURRENCE-ID;VALUE=DATE:20261020
+DTSTART;VALUE=DATE:20261020
+DTEND;VALUE=DATE:20261021
+SUMMARY:TZ6 renamed day — expect 20 Oct\, all-day
+DESCRIPTION:DATE-valued RECURRENCE-ID matching the DATE master (RFC 5545
+ sec 3.8.4.4)\, travelling embedded on <=14.x and as an InstanceId
+ command on 16.1.
+END:VEVENT
 END:VCALENDAR

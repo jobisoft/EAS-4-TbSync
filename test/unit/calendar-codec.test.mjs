@@ -250,3 +250,144 @@ test("an unknown DATE exdate becomes a 16.1 delete with a fake-local InstanceId"
   assert.equal(commands[0].kind, "delete");
   assert.equal(commands[0].instanceId, "20261014T000000Z");
 });
+
+// ── Outbound all-day encoding ────────────────────────────────────────────
+//
+// All-day boundaries go out date-shaped (`YYYYMMDDT000000Z`) in EVERY
+// version, with an all-zero (UTC) TimeZone blob on ≤14.x - see
+// `startTimeFor` for the two reading disciplines this satisfies. Only
+// all-day masters are exercised here: a timed master's blob needs the
+// timezone mapping, which loads through the extension runtime; the live
+// suite covers timed events against real servers.
+
+import { appendApplicationDataFromIcal } from "../../src/modules/eas/calendar-codec.mjs";
+
+/** Records every element the writer emits; enough builder for the codec. */
+function mockBuilder() {
+  const atags = [];
+  const otags = [];
+  return {
+    atags,
+    otags,
+    atag(tag, value) {
+      atags.push([tag, value]);
+    },
+    otag(tag) {
+      otags.push(tag);
+    },
+    ctag() {},
+    switchpage() {},
+  };
+}
+
+const ALLDAY_WITH_EXCEPTIONS = ALLDAY_MASTER.replace(
+  "RRULE:FREQ=DAILY;COUNT=3",
+  "RRULE:FREQ=DAILY;COUNT=3\r\nEXDATE;VALUE=DATE:20261014",
+).replace(
+  "END:VCALENDAR",
+  [
+    "BEGIN:VEVENT",
+    "UID:unit-allday@eas-test.invalid",
+    "RECURRENCE-ID;VALUE=DATE:20261013",
+    "DTSTAMP:20260801T120000Z",
+    "SUMMARY:unit allday OVERRIDDEN",
+    "DTSTART;VALUE=DATE:20261013",
+    "DTEND;VALUE=DATE:20261014",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n"),
+);
+
+// 172 zero bytes: the all-zero blob, which is bias 0 - UTC - and also
+// the exact form the Z-Push family itself uses for all-day.
+const ALL_ZERO_BLOB = Buffer.alloc(172).toString("base64");
+
+function writeArgs(builder, asVersion) {
+  return {
+    builder,
+    ical: ALLDAY_WITH_EXCEPTIONS,
+    asVersion,
+    defaultTimezone: "Europe/Berlin",
+    syncRecurrence: true,
+    userEmail: null,
+    fallbackOrganizerName: null,
+    eventLog: null,
+  };
+}
+
+test("14.1 all-day: date-shaped boundaries, UTC blob, exceptions on the grid", () => {
+  const b = mockBuilder();
+  appendApplicationDataFromIcal(writeArgs(b, "14.1"));
+  const byTag = (t) => b.atags.filter(([tag]) => tag === t).map(([, v]) => v);
+  assert.deepEqual(byTag("StartTime").slice(0, 1), ["20261012T000000Z"]);
+  assert.deepEqual(byTag("EndTime").slice(0, 1), ["20261013T000000Z"]);
+  assert.deepEqual(
+    byTag("TimeZone"),
+    [ALL_ZERO_BLOB],
+    "an all-day ≤14.x master carries the all-zero (UTC) blob - a user-zone " +
+      "blob is what made the two server families read different dates",
+  );
+  assert.deepEqual(
+    byTag("ExceptionStartTime").sort(),
+    ["20261013T000000Z", "20261014T000000Z"],
+    "exceptions are date-shaped too, on the master's own grid",
+  );
+});
+
+test("14.1 all-day: suppressExceptions leaves the wrapper out", () => {
+  const b = mockBuilder();
+  appendApplicationDataFromIcal({
+    ...writeArgs(b, "14.1"),
+    suppressExceptions: true,
+  });
+  assert.ok(
+    !b.otags.includes("Exceptions"),
+    "an <Add> must not embed exceptions - they follow as a <Change>",
+  );
+  assert.ok(
+    b.otags.includes("Recurrence"),
+    "the recurrence itself still rides on the Add",
+  );
+});
+
+test("16.1 all-day: no blob, same date-shaped boundaries", () => {
+  const b = mockBuilder();
+  appendApplicationDataFromIcal(writeArgs(b, "16.1"));
+  const byTag = (t) => b.atags.filter(([tag]) => tag === t).map(([, v]) => v);
+  assert.deepEqual(byTag("TimeZone"), [], "§2.2.2.1: MUST NOT on 16.1");
+  assert.deepEqual(byTag("StartTime").slice(0, 1), ["20261012T000000Z"]);
+  assert.ok(
+    !b.otags.includes("Exceptions"),
+    "16.1 exceptions travel as per-instance commands, never embedded",
+  );
+});
+
+test("an Exception without its own AllDayEvent inherits the master's", () => {
+  // [MS-ASCAL] §2.2.2.1: absent means "same as top-level". Exchange 16.1
+  // omits it on embedded exceptions; reading absence as 0 turned an
+  // all-day override timed, and its midnight-UTC DTSTART bound nothing.
+  const ical = applicationDataToIcal(
+    readerArgs(
+      allDayAdNode({
+        exceptions: [
+          el("Exception", [
+            el("ExceptionStartTime", "20261013T000000Z"),
+            el("Subject", "unit allday OVERRIDDEN"),
+            el("StartTime", "20261013T000000Z"),
+            el("EndTime", "20261014T000000Z"),
+            // no AllDayEvent child - inherited from the master
+          ]),
+        ],
+      }),
+    ),
+  );
+  const overrideStarts = propLines(ical, "DTSTART").slice(1);
+  assert.deepEqual(
+    overrideStarts,
+    ["DTSTART;VALUE=DATE:20261013"],
+    "the override's own boundaries stay DATEs",
+  );
+  assert.deepEqual(propLines(ical, "RECURRENCE-ID"), [
+    "RECURRENCE-ID;VALUE=DATE:20261013",
+  ]);
+});
