@@ -44,7 +44,10 @@ import * as calendarStore from "./calendar-store.mjs";
 import * as eventCodec from "./eas/calendar-codec.mjs";
 import * as taskCodec from "./eas/task-codec.mjs";
 import { localQueue } from "../vendor/tbsync/change-queue.mjs";
-import { isUserEntry } from "../vendor/tbsync/changelog-core.mjs";
+import {
+  isUserEntry,
+  SERVER_TAG_STATUSES,
+} from "../vendor/tbsync/changelog-core.mjs";
 
 /** Coerce the legacy `Map<uid, serverId>` JSON shape into the new array
  *  of `{uid, serverId}` records. Returns a fresh array — caller is free
@@ -298,15 +301,11 @@ async function adoptHostChangelogs(provider) {
         });
         adopted++;
       }
-      for (const e of entries) {
-        await provider.changelogRemove({
-          accountId,
-          folderId: folder.folderId,
-          parentId: e.parentId,
-          itemId: e.itemId,
-          kind: e.kind,
-        });
-      }
+      await provider.updateFolder({
+        accountId,
+        folderId: folder.folderId,
+        patch: { changelog: [] },
+      });
       provider.reportEventLog({
         level: "info",
         accountId,
@@ -696,12 +695,15 @@ async function migrateContactsForFolder(provider, accountId, folder) {
       // any existing entry for the card - any unsynced pre-upgrade user
       // edit's *push intent* is dropped (the data itself is preserved
       // because the migration read-modify-writes the vCard).
-      await provider.changelogMarkServerWrite({
+      await localQueue({
         accountId,
         folderId: folder.folderId,
+        sessionId: folder.sessionId,
+        observed: true,
+      }).markServerWrite({
         parentId: folder.targetID,
         itemId: contactId,
-        status: "modified_by_server",
+        status: SERVER_TAG_STATUSES[1],
         kind: "contact",
       });
 
@@ -913,18 +915,14 @@ async function migrateCalendarItemsForFolder(
       const stamped = itemKind.codec.stampEasServerId(ical, id);
       if (stamped === ical) continue; // codec couldn't parse the iCal; skip.
 
-      // Pre-tag the changelog so the upcoming `items.update` is treated
-      // as self-inflicted by the host's calendar observer (1500 ms
-      // freeze) and doesn't produce a `modified_by_user` entry.
-      await provider.changelogMarkServerWrite({
-        accountId,
-        folderId: folder.folderId,
-        parentId: folder.targetID,
-        itemId: id,
-        status: "modified_by_server",
-        kind: itemKind.changelogKind,
+      // Through the cache, so the write fires no item hook and cannot be
+      // mistaken for the user editing every item in the folder. A pre-tag
+      // would not do here: our own calendars are not observed, so nothing
+      // would ever consume one - the suppression has to be structural,
+      // exactly as it is for a sync write.
+      await calendarStore.updateItem(calendarStore.cacheId(folder.targetID), id, {
+        ical: stamped,
       });
-      await calendarStore.updateItem(folder.targetID, id, { ical: stamped });
 
       // Legacy convention: item.id === EAS ServerId. Populate the
       // indexMap so `buildPushBatch`'s deleted_by_user path (which only

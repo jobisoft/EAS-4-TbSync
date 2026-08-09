@@ -48,6 +48,7 @@ import {
   localQueue,
   rememberBindings,
 } from "../../vendor/tbsync/change-queue.mjs";
+import { SERVER_TAG_STATUSES } from "../../vendor/tbsync/changelog-core.mjs";
 import {
   ok,
   warning as warningStatus,
@@ -713,7 +714,7 @@ async function revertLocalChanges(ctx) {
     await ctx.queue.markServerWrite({
       parentId: ctx.targetID,
       itemId: e.itemId,
-      status: "modified_by_server",
+      status: SERVER_TAG_STATUSES[1],
       kind: ctx.itemKind.changelogKind,
     });
 
@@ -1416,7 +1417,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     await ctx.queue.markServerWrite({
       parentId: ctx.targetID,
       itemId: sentEntry.item.id,
-      status: "modified_by_server",
+      status: SERVER_TAG_STATUSES[1],
       kind: ctx.itemKind.changelogKind,
     });
     await ctx.store.update(sentEntry.item.id, stamped);
@@ -1502,7 +1503,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         kind: m.entry.kind,
       });
     }
-    // Status 7/8: changelogRemove already happened in the per-response
+    // Status 7/8: the queue entry was already dropped in the per-response
     // loop above. Other non-success: leave entry untouched (failedItems
     // tracking happens above, tail-re-stage runs at end of pushPhase).
   }
@@ -1573,7 +1574,7 @@ async function applyAdd(ctx, addNode) {
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: newId,
-    status: "added_by_server",
+    status: SERVER_TAG_STATUSES[0],
     kind: ctx.itemKind.changelogKind,
   });
   const createdId = await ctx.store.create(newId, blob);
@@ -1666,7 +1667,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: existing.itemId,
-    status: "modified_by_server",
+    status: SERVER_TAG_STATUSES[1],
     kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.update(existing.itemId, nextBlob);
@@ -1759,7 +1760,7 @@ async function applyChangeFromAd(ctx, ad, existing, serverID = null) {
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: existing.itemId,
-    status: "modified_by_server",
+    status: SERVER_TAG_STATUSES[1],
     kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.update(existing.itemId, blob);
@@ -1786,7 +1787,7 @@ async function applyDelete(ctx, delNode) {
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: existing.itemId,
-    status: "deleted_by_server",
+    status: SERVER_TAG_STATUSES[2],
     kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.delete(existing.itemId);

@@ -46,16 +46,12 @@
  *   - displayNameRaw  - server-supplied folder name; the visible
  *                       `displayName` is recomputed from this on every
  *                       push (with optional "Trash | " prefix)
- * Where a folder's pending user edits are kept depends on who observes the
- * resource. For an address book that is the host: it watches Thunderbird's
- * book events and owns `folder.changelog` (a top-level field, not in
- * custom), which we read from `getAccount` and clear via `changelogRemove`,
- * pre-tagging our own writes with `changelogMarkServerWrite`. For a
- * calendar or task list we supply the calendar ourselves and are handed
- * every user edit directly, so the queue is ours and lives in our own
- * storage - see `eas/change-queue.mjs`. `folder.changelog` stays empty for
- * those, and `folder.sessionId` is what ties our copy to the current
- * binding.
+ * Pending user edits are ours, for every resource. A calendar we supply
+ * hands us the edit directly; an address book we watch (see the vendored
+ * `contacts-observer.mjs`), pre-tagging our own writes so the events they
+ * produce are not mistaken for the user's. Both queues live in our own
+ * storage, keyed by `folder.sessionId` - the binding the host names - so
+ * they survive the host being absent and vanish when it ends the binding.
  *
  * Sync entry points: `syncContactFolder` for contacts (vCard codec, TB
  * address book), `syncCalendarFolder` / `syncTaskFolder` for calendars
