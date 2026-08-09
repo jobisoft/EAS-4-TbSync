@@ -301,15 +301,17 @@ export class EasProvider extends TbSyncProviderImplementation {
    *  garbage keeps until the next port open, which costs nothing: a queue
    *  whose session nothing names is never read. */
   async #reconcileFolderSessions() {
-    const live = new Set();
+    const liveSessions = new Set();
+    const liveTargets = new Set();
     const bindings = [];
     try {
       for (const { accountId } of await this.listAccounts()) {
         const { folders = [] } = (await this.getAccount(accountId)) ?? {};
         for (const f of folders) {
           if (!f?.sessionId) continue;
-          live.add(f.sessionId);
+          liveSessions.add(f.sessionId);
           if (f.targetID) {
+            liveTargets.add(f.targetID);
             bindings.push({
               targetID: f.targetID,
               accountId,
@@ -329,8 +331,8 @@ export class EasProvider extends TbSyncProviderImplementation {
     }
     try {
       await rememberBindings(bindings);
-      const dropped = await sweep(live);
-      for (const d of dropped) {
+      const { queues, orphans } = await sweep({ liveSessions, liveTargets });
+      for (const d of queues) {
         this.reportEventLog({
           level: d.entries > 0 ? "info" : "debug",
           accountId: d.accountId ?? undefined,
@@ -340,6 +342,9 @@ export class EasProvider extends TbSyncProviderImplementation {
             `exists (${d.entries} pending edit(s) went with it)`,
         });
       }
+      // Whatever those bindings pointed at is no longer synced by anything.
+      // The host marks the ones that still exist; the rest it skips.
+      await this.reportOrphanedTargets(orphans);
     } catch (err) {
       this.reportEventLog({
         level: "warning",
