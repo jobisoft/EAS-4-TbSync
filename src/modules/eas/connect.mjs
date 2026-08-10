@@ -4,16 +4,18 @@
  * highest version present in both the server's list and our supported
  * set.
  *
- * Preference order is 14.1 → 16.1 → 14.0 → 2.5. 14.1 leads because the
- * contact / calendar codecs that we'll port from legacy are most reliably
- * tested against 14.1; 16.1 is a fallback for servers that no longer
- * advertise 14.1; the others are last-resort.
+ * Preference order is 16.1 → 14.1 → 14.0 → 2.5. 16.1 leads: it is the
+ * protocol's current form (per-instance exception commands, saner
+ * all-day semantics per [MS-ASCAL] §2.2.2.1). This picker decides fresh
+ * negotiations only: a connected account keeps its stored asversion
+ * while the server advertises it (see the re-probe in eas-provider),
+ * and an explicit `asversionselected` pin never reaches it.
  */
 
 import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 import { easOptions } from "../network.mjs";
 
-const SUPPORTED = ["14.1", "16.1", "14.0", "2.5"];
+const SUPPORTED = ["16.1", "14.1", "14.0", "2.5"];
 
 export async function negotiateAsVersion({ account }) {
   const probe = await easOptions({ account });

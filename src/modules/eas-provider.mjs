@@ -724,11 +724,24 @@ export class EasProvider extends TbSyncProviderImplementation {
       Date.now() - lastOptionsUpdate > OPTIONS_REPROBE_MS;
     if (needsOptionsProbe) {
       const negotiated = await negotiateAsVersion({ account: ctx.account });
+      // Sticky: a connected account KEEPS the version it was negotiated
+      // onto for as long as the server still advertises it. The re-probe
+      // tracks the server's list; it does not migrate live accounts to
+      // whatever the preference order currently picks - a protocol
+      // switch changes item-identity semantics (UID handling differs
+      // between 14.x and 16.1), so it happens only when the server
+      // drops the stored version. The preference order thus reaches only
+      // fresh negotiations.
+      const current = ctx.account.custom?.asversion;
+      const asversion =
+        current && negotiated.allowedAsVersions.includes(current)
+          ? current
+          : negotiated.asVersion;
       await this.updateAccount({
         accountId,
         patch: {
           custom: {
-            asversion: negotiated.asVersion,
+            asversion,
             allowedEasVersions: negotiated.allowedAsVersions,
             allowedEasCommands: negotiated.allowedCommands,
             lastEasOptionsUpdate: Date.now(),
