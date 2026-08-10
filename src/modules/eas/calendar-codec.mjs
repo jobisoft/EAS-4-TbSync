@@ -230,7 +230,12 @@ async function populateVeventFromAd({
   const startUtc = readPathFrom(adNode, ["StartTime"]);
   const endUtc = readPathFrom(adNode, ["EndTime"]);
   if (startUtc) writeDateProp(vevent, "dtstart", startUtc, tzId, allDay);
-  if (endUtc) writeDateProp(vevent, "dtend", endUtc, tzId, allDay);
+  if (endUtc) {
+    writeDateProp(vevent, "dtend", endUtc, tzId, allDay);
+    // An externally-authored blob may express its end as DURATION.
+    // RFC 5545 forbids carrying both, and DTEND now holds the truth.
+    vevent.removeAllProperties("duration");
+  }
 
   // DtStamp - preserve when present. A 16.x *client* MUST NOT send it
   // ([MS-ASCAL] §2.2.2.18), which is why the writer omits it there, but
@@ -596,7 +601,9 @@ function seedOverride({ master, existing, ridTime }) {
   base.removeAllProperties("exdate");
   base.removeAllProperties("recurrence-id");
   const mStart = master.getFirstPropertyValue("dtstart");
-  const mEnd = master.getFirstPropertyValue("dtend");
+  // Through `eventTimingFor`, not a raw DTEND read - a DURATION master
+  // must seed its overrides with the derived end.
+  const mEnd = itemDateValue(eventTimingFor(master).end);
   if (ridTime && mStart instanceof ICAL.Time) {
     const start = ridTime.clone();
     base.removeAllProperties("dtstart");
@@ -607,6 +614,9 @@ function seedOverride({ master, existing, ridTime }) {
       const end = ridTime.clone();
       end.addDuration(mEnd.subtractDate(mStart));
       base.removeAllProperties("dtend");
+      // The clone may carry the master's DURATION; the override's end is
+      // now this explicit DTEND, and iCal forbids holding both.
+      base.removeAllProperties("duration");
       const de = new ICAL.Property("dtend", base);
       de.setValue(end);
       base.addProperty(de);
@@ -676,9 +686,7 @@ export function appendApplicationDataFromIcal({
   // helpers switch to AirSyncBase as needed and switch back here.
   builder.switchpage("Calendar");
 
-  const dtstart = vevent.getFirstProperty("dtstart");
-  const dtend = vevent.getFirstProperty("dtend");
-  const allDay = isAllDayProp(dtstart) && isAllDayProp(dtend);
+  const { dtstart, end, allDay } = eventTimingFor(vevent);
 
   // Outbound timezone. [MS-ASCAL] §2.2.2.44 lists the element as
   // supported in every protocol version, 16.1 included, and states no
@@ -781,7 +789,7 @@ export function appendApplicationDataFromIcal({
 
   // EndTime. All-day boundaries are date-shaped in every version - see
   // `startTimeFor` for why.
-  builder.atag("EndTime", endTimeFor(dtend, asVersion, allDay));
+  builder.atag("EndTime", endTimeFor(end, asVersion, allDay));
 
   // Location.
   const location = stringOf(vevent.getFirstPropertyValue("location"));
@@ -944,15 +952,40 @@ export function appendApplicationDataFromIcal({
 const SUB_DAILY_FREQ = /FREQ=(HOURLY|MINUTELY|SECONDLY)/;
 
 export function clientRejectReason({ blob, syncRecurrence }) {
-  if (!syncRecurrence || typeof blob !== "string") return null;
-  if (!SUB_DAILY_FREQ.test(blob)) return null;
+  if (typeof blob !== "string") return null;
   const vcal = parseVCalendar(blob);
   const master = vcal ? pickMasterVevent(vcal) : null;
-  const freq = String(
-    master?.getFirstProperty("rrule")?.getFirstValue()?.freq ?? "",
-  ).toUpperCase();
-  if (freq === "HOURLY" || freq === "MINUTELY" || freq === "SECONDLY") {
-    return `EAS cannot represent a recurrence below daily (FREQ=${freq})`;
+  if (!master) return null;
+
+  if (syncRecurrence && SUB_DAILY_FREQ.test(blob)) {
+    const freq = String(
+      master.getFirstProperty("rrule")?.getFirstValue()?.freq ?? "",
+    ).toUpperCase();
+    if (freq === "HOURLY" || freq === "MINUTELY" || freq === "SECONDLY") {
+      return `EAS cannot represent a recurrence below daily (FREQ=${freq})`;
+    }
+  }
+
+  // Timing, for the master and for every override - an occurrence rides
+  // the same writer, so a bad one lands on the wire the same way. An
+  // event with a start but no expressed end, or an end not after its
+  // start, cannot go out without inventing data, so it is held like a
+  // server rejection. A VEVENT with no DTSTART at all is left alone:
+  // that is the status-only exception-delta shape, which is legitimate.
+  for (const comp of vcal.getAllSubcomponents("vevent")) {
+    const startVal = comp.getFirstPropertyValue("dtstart");
+    if (!(startVal instanceof ICAL.Time)) continue;
+    const where =
+      comp === master
+        ? "the event"
+        : `the occurrence on ${comp.getFirstPropertyValue("recurrence-id")}`;
+    const endVal = itemDateValue(eventTimingFor(comp).end);
+    if (!(endVal instanceof ICAL.Time)) {
+      return `${where} has a start but no end (neither DTEND nor DURATION)`;
+    }
+    if (endVal.compare(startVal) <= 0) {
+      return `${where} does not end after it starts`;
+    }
   }
   return null;
 }
@@ -1253,12 +1286,20 @@ function nowBasicUtc() {
   return formatBasicUtc(new Date());
 }
 
-/** Read a property's date as `YYYYMMDDT000000Z` from the *local-clock*
+/** A boundary reaches the writer either as an iCal property or as an
+ *  `ICAL.Time` already derived from one (DTSTART+DURATION); unwrap to
+ *  the value either way. */
+function itemDateValue(propOrValue) {
+  return propOrValue?.getFirstValue ? propOrValue.getFirstValue() : propOrValue;
+}
+
+/** Read a date as `YYYYMMDDT000000Z` from the *local-clock*
  *  year/month/day, with no UTC conversion. Mirrors legacy
  *  `getIsoUtcString(date, false, true, true)` for AS 16.1 all-day. */
-function fakeLocalAsUtcDate(prop) {
-  if (!prop) return nowBasicUtc();
-  return fakeLocalAsUtcFromValue(prop.getFirstValue());
+function fakeLocalAsUtcDate(propOrValue) {
+  const v = itemDateValue(propOrValue);
+  if (!v) return nowBasicUtc();
+  return fakeLocalAsUtcFromValue(v);
 }
 
 /** Same, for a value that is already in hand rather than a property. */
@@ -1303,15 +1344,51 @@ function startTimeFor(dtstart, asVersion, allDay) {
   return dtstart ? toBasicUtc(dtstart.getFirstValue()) : nowBasicUtc();
 }
 
-function endTimeFor(dtend, asVersion, allDay) {
-  if (allDay) return fakeLocalAsUtcDate(dtend);
-  return dtend ? toBasicUtc(dtend.getFirstValue()) : nowBasicUtc();
+function endTimeFor(end, asVersion, allDay) {
+  if (allDay) return fakeLocalAsUtcDate(end);
+  const v = itemDateValue(end);
+  return v ? toBasicUtc(v) : nowBasicUtc();
 }
 
 function isAllDayProp(prop) {
   if (!prop) return false;
   const v = prop.getFirstValue();
   return v instanceof ICAL.Time && v.isDate;
+}
+
+/** Effective timing for the wire. RFC 5545 lets a VEVENT carry its end
+ *  as DTEND or as DURATION (never both); EAS always needs an EndTime, so
+ *  a DURATION event's end is DTSTART+DURATION.
+ *
+ *  A DATE-valued DTSTART with neither is not endless: §3.6.1 states its
+ *  duration "is taken to be one day", so reading it that way is reading
+ *  the item, not defaulting it. The DATE-TIME case gets no such
+ *  treatment here - the spec makes it zero-length, which
+ *  `clientRejectReason` holds as invalid rather than send.
+ *
+ *  `end` is therefore the DTEND property, a derived `ICAL.Time`, or null
+ *  when a timed event expresses no end at all. All-day follows the
+ *  start: a DATE DTSTART is all-day whether its end is a DATE DTEND, a
+ *  DURATION, or the one-day default. */
+function eventTimingFor(vevent) {
+  const dtstart = vevent.getFirstProperty("dtstart");
+  const dtend = vevent.getFirstProperty("dtend");
+  const allDay = isAllDayProp(dtstart) && (!dtend || isAllDayProp(dtend));
+  let end = dtend;
+  if (!end) {
+    const startVal = dtstart?.getFirstValue();
+    const dur = vevent.getFirstProperty("duration")?.getFirstValue();
+    if (startVal instanceof ICAL.Time && dur instanceof ICAL.Duration) {
+      end = startVal.clone();
+      end.addDuration(dur);
+    } else if (startVal instanceof ICAL.Time && allDay) {
+      end = startVal.clone();
+      end.addDuration(new ICAL.Duration({ days: 1 }));
+    } else {
+      end = null;
+    }
+  }
+  return { dtstart, end, allDay };
 }
 
 /* ── Helpers: embedded <Exceptions> round-trip ─────────────────────── */
