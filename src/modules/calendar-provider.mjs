@@ -33,6 +33,7 @@
  * is noticed differs.
  */
 
+import ICAL from "../vendor/ical.min.js";
 import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
 import {
   localQueue,
@@ -99,8 +100,24 @@ async function ourTargets() {
  *  exception set as it was *before* the edit. Not the previous item itself -
  *  that is kilobytes per pending entry, to answer a question ("which
  *  exceptions differ?") that a fixed-size digest answers just as well. */
-async function record(calendarId, itemId, op, { type, oldIcal } = {}) {
-  if (!calendarId || !itemId) return;
+async function record(calendarId, itemId, op, { type, oldIcal, flags } = {}) {
+  if (!calendarId || !itemId) {
+    // Was a silent return, and that silence hid a data-loss bug: a
+    // UI-created item arrives with no id, so every one of them was
+    // dropped here without a trace. `identify` gives a create its id
+    // before this point, so reaching it now means either the platform
+    // named no calendar or minting failed - and for a create that is an
+    // edit nobody will ever push, the same thing the storage failure
+    // below calls an error.
+    report?.({
+      level: op === "created" ? "error" : "warning",
+      message:
+        `[${type === "task" ? "task" : "event"}-sync] cannot record user ` +
+        `${op}: no ${calendarId ? "usable item id" : "calendar id"}` +
+        (op === "created" ? " - this edit will never reach the server" : ""),
+    });
+    return;
+  }
   const before = oldIcal ? exceptionFingerprint(oldIcal) : null;
   // One calendar type serves both, so the item says which it is - a task
   // folder's edits must not be queued as events.
@@ -153,7 +170,7 @@ async function record(calendarId, itemId, op, { type, oldIcal } = {}) {
   report?.({
     level: "debug",
     message:
-      `[${kind}-sync] queued user ${op} of ${itemId}` +
+      `[${kind}-sync] queued user ${op} of ${itemId}${flags ?? ""}` +
       (before
         ? ` (${before.exdates.length} cancelled, ${before.overrides.length} override(s) before the edit)`
         : ""),
@@ -178,6 +195,64 @@ async function record(calendarId, itemId, op, { type, oldIcal } = {}) {
 
 let registered = false;
 
+/** Which of the platform's flags this write arrived with, for the log.
+ *  `invitation` means iTIP processing is writing the item - the user
+ *  accepted an emailed invitation - and `offline` that this is a replay
+ *  of something queued while Thunderbird was offline. Neither changes
+ *  what we do: a replayed edit is still a real edit, and responding to
+ *  an invitation properly is MeetingResponse, which we do not implement
+ *  yet. They are logged because an edit that arrived either way is
+ *  otherwise indistinguishable from a plain one. */
+function flagsOf(hookOptions) {
+  const flags = Object.entries(hookOptions ?? {})
+    .filter(([, on]) => on)
+    .map(([name]) => name);
+  return flags.length ? ` (${flags.join(", ")})` : "";
+}
+
+/** Give a newly created item an id, and hand it back so the platform
+ *  adopts ours.
+ *
+ *  Thunderbird decides an edit is an *addition* precisely by the absence
+ *  of an id, and the experiment mints one only after this hook has run.
+ *  So every item created in Thunderbird's own dialog reaches us with
+ *  `id: null` - and an id is exactly what our queue files against, since
+ *  we record now and push later. Left alone, such an item was dropped
+ *  and never synced.
+ *
+ *  The platform rebuilds the item from returned props whenever they
+ *  carry a `type`, so setting the UID in both the props and the iCal is
+ *  what makes its own fallback id never happen and keeps the two in
+ *  agreement. A provider that pushed inline would instead return the
+ *  item the server named; this is the same mechanism.
+ *
+ *  Returns the props to hand back, or null when the item already has an
+ *  id and nothing needs saying. */
+export function identify(item) {
+  if (!item || item.id) return null;
+  const uid = crypto.randomUUID();
+  try {
+    const vcal = new ICAL.Component(ICAL.parse(item.item));
+    // EVERY component, not just the master. A recurring item arrives with
+    // its modified occurrences beside it, and they are all id-less
+    // together - the platform clears the id on the whole series at once.
+    // Stamping only the first would leave the overrides orphaned, which
+    // is both an iCal violation (RFC 5545 binds an override to its master
+    // by UID) and a rejected save: the platform refuses to rebuild an
+    // exception whose id does not match its parent's.
+    const comps = vcal
+      .getAllSubcomponents()
+      .filter((c) => c.name === "vevent" || c.name === "vtodo");
+    if (!comps.length) return null;
+    for (const comp of comps) comp.updatePropertyWithValue("uid", uid);
+    return { ...item, id: uid, item: vcal.toString() };
+  } catch {
+    // A blob we cannot parse is not worth failing the user's save over -
+    // the caller keeps the item as it came and logs the refusal.
+    return null;
+  }
+}
+
 /** Register the item hooks. Safe to call more than once.
  *
  *  Each hook must return the item, or the platform treats the edit as
@@ -194,21 +269,35 @@ export function registerCalendarProvider() {
 
   const options = { returnFormat: "ical" };
 
-  provider.onItemCreated.addListener(async (calendar, item) => {
-    await record(calendar?.id, item?.id, "created", { type: item?.type });
-    return { item };
-  }, options);
-
-  provider.onItemUpdated.addListener(async (calendar, item, oldItem) => {
-    await record(calendar?.id, item?.id, "updated", {
+  provider.onItemCreated.addListener(async (calendar, item, hookOptions) => {
+    // An item created in Thunderbird's dialog has no id yet; give it one
+    // and hand the props back, so the platform adopts our id instead of
+    // minting its own after we have already filed the queue entry.
+    const identified = identify(item);
+    await record(calendar?.id, identified?.id ?? item?.id, "created", {
       type: item?.type,
-      oldIcal: oldItem?.item ?? null,
+      flags: flagsOf(hookOptions),
     });
-    return { item };
+    return identified ?? { item };
   }, options);
 
-  provider.onItemRemoved.addListener(async (calendar, item) => {
-    await record(calendar?.id, item?.id, "deleted", { type: item?.type });
+  provider.onItemUpdated.addListener(
+    async (calendar, item, oldItem, hookOptions) => {
+      await record(calendar?.id, item?.id, "updated", {
+        type: item?.type,
+        oldIcal: oldItem?.item ?? null,
+        flags: flagsOf(hookOptions),
+      });
+      return { item };
+    },
+    options,
+  );
+
+  provider.onItemRemoved.addListener(async (calendar, item, hookOptions) => {
+    await record(calendar?.id, item?.id, "deleted", {
+      type: item?.type,
+      flags: flagsOf(hookOptions),
+    });
     return {};
   }, options);
 

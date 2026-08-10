@@ -218,3 +218,53 @@ def t_2_7(s):
     ok("items.remove", id=item["id"])
     s.sync()
     harness.eq(s.changelog("events"), [], "changelog drained after cleanup")
+
+
+@test("2.8", "an item created without a UID is still queued, pushed and stored")
+def t_2_8(s):
+    """The shape Thunderbird's own dialog produces.
+
+    Core decides an edit is an *addition* by the absence of an id, and the
+    id is minted after our hook runs - so a UI-created item reaches the
+    provider with none. Every fixture in this suite carries a UID, which
+    is exactly why this went unnoticed until a user lost events to it: the
+    hook dropped the item and nothing was ever queued.
+
+    `probes.event` always writes one, so the fixture is built here.
+    """
+    ical = "\r\n".join(
+        [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//eas-test//EN",
+            "BEGIN:VEVENT",
+            "DTSTAMP:20260801T120000Z",
+            f"SUMMARY:{probes.MARKER} {SLUG}-nouid",
+            "DTSTART:20261203T090000Z",
+            "DTEND:20261203T100000Z",
+            "END:VEVENT",
+            "END:VCALENDAR",
+            "",
+        ]
+    )
+    harness.true("UID:" not in ical, "the fixture must not carry a UID")
+
+    s.mark()
+    ok("items.create", type="event", ical=ical)
+    harness.true(
+        s.changelog("events"),
+        "nothing was queued - the edit was dropped before it could be "
+        "recorded, and a teardown would take it with no trace",
+    )
+    s.sync()
+    harness.contains(s.wire(), "SEND Add", "the create must reach the server")
+    harness.eq(s.changelog("events"), [], "changelog drained")
+
+    # And it really is on the server, not just locally.
+    s.rebind("events")
+    item = s.find("events", f"{probes.MARKER} {SLUG}-nouid", "event")
+    harness.true(item is not None, "the item did not survive the rebuild")
+    # Cleanup.
+    ok("items.remove", id=item["id"])
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained after cleanup")
