@@ -26,6 +26,8 @@ from harness import test
 
 # Resources this section touches.
 NEEDS = ("events", "tasks")
+# Needs the account to sync recurrence - the sub-daily holds are gated on the same flag.
+NEEDS_RECURRENCE = True
 
 
 def _event_hourly(slug):

@@ -347,6 +347,31 @@ def preflight(provider="eas", require=KINDS, bind=None):
     return session
 
 
+def require_recurrence(session, sections):
+    """Refuse to run sections whose subject is recurrence when the account
+    has recurrence sync switched off.
+
+    With `syncrecurrence` false the codec emits no recurrence at all -
+    deliberately, and the client-side rejection for sub-daily rules is
+    gated on the same flag, because nothing can be misrepresented if
+    nothing is sent. Every assertion about a series then fails, or worse
+    passes vacuously: section 12's "the hourly event must not be pushed"
+    reads as a code regression when it is an account setting.
+
+    Checked, not set - like the log level. The flag is the user's
+    choice, and an account created by an older release carries it off.
+    """
+    if (session.account.get("custom") or {}).get("syncrecurrence"):
+        return
+    raise PreflightError(
+        f"{session.account['accountName']} has recurrence sync switched "
+        f"off, and section(s) {', '.join(sections)} test recurrence.\n"
+        f"  Switch 'Synchronize recurring events' on for this account - "
+        f"without it no series reaches the wire, so these tests would "
+        f"report a code fault that is not there."
+    )
+
+
 def _require_debug_logging():
     """Refuse to run unless the Event Log is capturing `debug`.
 

@@ -32,6 +32,8 @@ from harness import test
 # sections need - binding one is a full download, and the suite has no
 # reason to pull an address book it never reads.
 NEEDS = ("events",)
+# Needs the account to sync recurrence - 4.2 asserts a DST-crossing series keeps its rule.
+NEEDS_RECURRENCE = True
 
 
 def _by_summary(s, summary):

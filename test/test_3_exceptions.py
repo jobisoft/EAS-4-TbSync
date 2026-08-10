@@ -28,6 +28,8 @@ from harness import test
 # sections need - binding one is a full download, and the suite has no
 # reason to pull an address book it never reads.
 NEEDS = ("events",)
+# Needs the account to sync recurrence - recurrence overrides are the whole subject.
+NEEDS_RECURRENCE = True
 
 # Matched on the SUMMARY, never the UID: 3.5's clean pull mints fresh UIDs,
 # so a UID-keyed lookup reports an intact series as missing.

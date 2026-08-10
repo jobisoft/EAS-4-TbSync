@@ -26,6 +26,8 @@ from harness import test
 # sections need - binding one is a full download, and the suite has no
 # reason to pull an address book it never reads.
 NEEDS = ("tasks",)
+# Needs the account to sync recurrence - recurring tasks are the whole subject.
+NEEDS_RECURRENCE = True
 
 # slug -> (RRULE, expected Type, elements that must be present)
 CASES = {

@@ -28,6 +28,8 @@ from harness import test
 # sections need - binding one is a full download, and the suite has no
 # reason to pull an address book it never reads.
 NEEDS = ("events",)
+# Needs the account to sync recurrence - the probe is a weekly series.
+NEEDS_RECURRENCE = True
 
 PROVIDER_TYPE = "ext-eas4tbsync@jobisoft.de"
 SLUG = "provider-cal"
