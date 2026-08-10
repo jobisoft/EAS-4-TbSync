@@ -1374,6 +1374,24 @@ function eventTimingFor(vevent) {
   const dtend = vevent.getFirstProperty("dtend");
   const allDay = isAllDayProp(dtstart) && (!dtend || isAllDayProp(dtend));
   let end = dtend;
+  // An all-day item whose DTEND equals its DTSTART is a day long, not
+  // zero. DTEND is exclusive, so the shape is malformed - but Outlook and
+  // a good many .ics exporters write it, and it means the same thing as
+  // the missing DTEND below, which §3.6.1 gives a day. Reading it that way
+  // is reading the item; holding it as unrepresentable would strand an
+  // ordinary imported all-day event and warn about it on every sync.
+  if (allDay && dtend) {
+    const s = dtstart?.getFirstValue();
+    const e = dtend.getFirstValue();
+    if (
+      s instanceof ICAL.Time &&
+      e instanceof ICAL.Time &&
+      e.compare(s) === 0
+    ) {
+      end = e.clone();
+      end.addDuration(new ICAL.Duration({ days: 1 }));
+    }
+  }
   if (!end) {
     const startVal = dtstart?.getFirstValue();
     const dur = vevent.getFirstProperty("duration")?.getFirstValue();

@@ -78,10 +78,19 @@ export function appendBodyFromDescription(builder, comp, asVersion, homePage) {
   const prop = comp.getFirstProperty("description");
   const value = prop ? asText(prop.getFirstValue()) : "";
   const altrep = prop?.getParameter(ALTREP);
-  const html =
-    typeof altrep === "string" && altrep.startsWith(HTML_ALTREP_PREFIX)
-      ? decodeURIComponent(altrep.slice(HTML_ALTREP_PREFIX.length))
-      : null;
+  // An ALTREP we did not write - an item imported from elsewhere - may not
+  // be valid percent-encoding, and `decodeURIComponent` throws on that.
+  // Thrown from here it would escape the whole push and block every other
+  // pending edit in the folder, so one unreadable note would cost the user
+  // all of them. The note's plain text still goes out as Type 1.
+  let html = null;
+  if (typeof altrep === "string" && altrep.startsWith(HTML_ALTREP_PREFIX)) {
+    try {
+      html = decodeURIComponent(altrep.slice(HTML_ALTREP_PREFIX.length));
+    } catch {
+      html = null;
+    }
+  }
 
   // 16.1 omits an empty Body rather than sending a blank one.
   if (asVersion === "16.1" && !value && !html) return;

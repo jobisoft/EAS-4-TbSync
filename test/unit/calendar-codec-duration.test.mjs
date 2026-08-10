@@ -274,3 +274,36 @@ test("inbound: a Change carrying EndTime drops a stale DURATION from the blob", 
   assert.ok(!/(^|\r?\n)DURATION[:;]/.test(after), "DURATION is gone");
   assert.match(after, /DTEND[:;][^\r\n]*20260810T160000Z/);
 });
+
+test("an all-day event whose DTEND equals its DTSTART is a day, not nothing", () => {
+  // Outlook and many .ics exporters write this shape. DTEND is exclusive,
+  // so it is malformed - but it means the same as the missing DTEND that
+  // RFC 5545 gives a day, and holding it would strand an ordinary
+  // imported all-day event with a warning on every sync.
+  assert.equal(
+    clientRejectReason({
+      blob: vcal(["DTSTART;VALUE=DATE:20260810", "DTEND;VALUE=DATE:20260810"]),
+      syncRecurrence: true,
+    }),
+    null,
+    "it must not be held as unrepresentable",
+  );
+  const node = emit(
+    vcal(["DTSTART;VALUE=DATE:20260810", "DTEND;VALUE=DATE:20260810"]),
+  );
+  assert.equal(readPathFrom(node, ["AllDayEvent"]), "1");
+  assert.equal(readPathFrom(node, ["StartTime"]), "20260810T000000Z");
+  assert.equal(readPathFrom(node, ["EndTime"]), "20260811T000000Z");
+});
+
+test("a timed zero-length event is still held - only all-day gets the day", () => {
+  assert.match(
+    String(
+      clientRejectReason({
+        blob: vcal(["DTSTART:20260810T140000Z", "DTEND:20260810T140000Z"]),
+        syncRecurrence: true,
+      }),
+    ),
+    /does not end after it starts/,
+  );
+});

@@ -34,7 +34,6 @@
 
 import { createWBXML } from "../wbxml.mjs";
 import { easRequest } from "../network.mjs";
-import { ERR } from "../../vendor/tbsync/provider.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 
 function buildBody({ collectionId, serverID, bodyType }) {
@@ -64,8 +63,11 @@ function buildBody({ collectionId, serverID, bodyType }) {
 
 /** Fetch the server's current `<Properties>` (same shape as
  *  `<ApplicationData>`) for `(collectionId, serverID)`. Returns the
- *  `<Properties>` element on Status 1, or `null` on any other status /
- *  network-level failure. Callers gate on
+ *  `<Properties>` element on Status 1, or `null` when the server answered
+ *  and the item is not there. A request that failed to reach the server
+ *  throws instead: callers read null as "the server deleted it" and act
+ *  on that, so an unanswered question must never look like an answer.
+ *  Callers gate on
  *  `easCommandLikelyAvailable(account, "ItemOperations")` before calling. */
 export async function fetchServerItem({
   account,
@@ -85,13 +87,14 @@ export async function fetchServerItem({
     });
   } catch (err) {
     // "Could not ask" and "the server says it is gone" must not look the
-    // same to the caller. `revertLocalChanges` reads null as the latter and
-    // deletes the local item - so a cancelled request, which fails
-    // instantly and for every remaining item, would wipe the user's pending
-    // edits on a read-only folder. A cancel is not an answer about the
-    // server's state; rethrow and let the sync unwind.
-    if (err?.name === "AbortError" || err?.code === ERR.CANCELLED) throw err;
-    return null;
+    // same to the caller. `revertLocalChanges` reads null as the latter
+    // and DELETES the local item - so any failure to reach the server
+    // would wipe the user's pending edit on a read-only folder, and one
+    // throttling window would take every remaining item with it. A
+    // request that never got an answer says nothing about the server's
+    // state: it always throws on, and the sync unwinds with an error the
+    // user can see. Only a served answer can mean "gone".
+    throw err;
   }
   if (!resp?.doc) return null;
 

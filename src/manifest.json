@@ -21,7 +21,6 @@
   "permissions": [
     "storage",
     "addressBooks",
-    "notifications",
     "tabs",
     "webRequest",
     "webRequestBlocking",
