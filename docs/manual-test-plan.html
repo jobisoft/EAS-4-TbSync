@@ -23,6 +23,7 @@
     <li><a href="#m6">M6 Setup flow</a></li>
     <li><a href="#m7">M7 Corrupted sync key</a></li>
     <li><a href="#m8">M8 Thunderbird versions</a></li>
+    <li><a href="#m10">M10 Attendee availability</a></li>
     <li><a href="#m9">M9 Watch for it</a></li>
   </ul>
 </nav>
@@ -36,7 +37,7 @@ scriptable lives in <code>test/</code>: pure logic runs as unit tests with
 <code>test/unit/README.md</code>), everything behavioral runs against live
 servers with <code>npm test</code>;
 what is left here needs a human at the UI — installing, breaking
-authentication, watching a popup take focus. Sections are lettered M1–M9 so a
+authentication, watching a popup take focus. Sections are lettered M1–M10 so a
 bare "§6" always means the automated suite.</p>
 
 <h2 id="before">Before you start</h2>
@@ -172,6 +173,21 @@ await browser.storage.local.set({ [K]: f });</code></pre>
 <tr><td>M8.3</td><td>create / modify / delete plus a full folder sync on beta</td><td>exercises the <code>wrappedJSObject</code>-on-objects paths</td></tr>
 </table>
 <p>M8.1 and M8.3 have been run on 153.0.1. Nothing has been run on 154.</p>
+
+<h2 id="m10">M10. Attendee availability (free/busy)</h2>
+<p>Driven entirely by Thunderbird's attendee dialog, which the bridge
+cannot open - the same reason the GAL has no automated section. The
+digit-to-interval arithmetic underneath is covered by
+<code>test/unit/free-busy.test.mjs</code>, against strings captured from
+both server families; what is left is whether the grid actually fills.</p>
+<table>
+<tr><th>#</th><th>Step</th><th>Expect</th></tr>
+<tr><td>M10.1</td><td>new event on an EAS calendar &rarr; Invite Attendees &rarr; add a colleague on the same domain</td><td>the grid shows their busy blocks; the Event Log shows one <code>ResolveRecipients</code></td></tr>
+<tr><td>M10.2</td><td>drag the event to another time in the same dialog</td><td>the grid still shows the same busy blocks, and no new request goes out within a minute (the cache)</td></tr>
+<tr><td>M10.3</td><td>add an attendee on an unrelated domain (e.g. a gmail address)</td><td>no request is sent for them at all - their address is never handed to the Exchange server</td></tr>
+<tr><td>M10.4</td><td>uncheck "Show attendee availability" in the account config, reopen the dialog</td><td>no requests, grid stays blank</td></tr>
+</table>
+<p>Nothing here has been run yet.</p>
 
 <h2 id="m9">M9. Cannot be forced — watch for it instead</h2>
 <p><strong>Rotated refresh tokens.</strong> The server decides when to hand

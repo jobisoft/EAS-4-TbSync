@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "서버가 Search 명령을 알리지 않기 때문에 이 계정에서는 전체 주소 목록을 사용할 수 없습니다."
   },
+  "config.freebusy.enabled": {
+    "message": "참석자 일정 여유 표시"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "참석자를 초대할 때 서버에 해당 참석자의 여유/바쁨 시간을 요청합니다."
+  },
+  "config.freebusy.notSupported": {
+    "message": "서버가 참석자 일정 정보를 제공하지 않아 표시할 수 없습니다."
+  },
   "config.error.invalidAsVersion": {
     "message": "잘못된 ActiveSync 버전 선택입니다."
   },

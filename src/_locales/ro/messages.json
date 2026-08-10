@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Serverul dvs. nu anunță comanda Search, așa că lista globală de adrese nu este disponibilă pentru acest cont."
   },
+  "config.freebusy.enabled": {
+    "message": "Afișează disponibilitatea participanților"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Solicită serverului intervalele libere/ocupate ale unui participant la invitare."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Serverul dvs. nu oferă disponibilitatea participanților, deci nu poate fi afișată."
+  },
   "config.error.invalidAsVersion": {
     "message": "Selecție de versiune ActiveSync nevalidă."
   },

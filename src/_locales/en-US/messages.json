@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Your server does not advertise the Search command, so the Global Address List is not available for this account."
   },
+  "config.freebusy.enabled": {
+    "message": "Show attendee availability"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Asks the server for an attendee's free/busy times when you invite them to an event."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Your server does not offer attendee availability, so free/busy times cannot be shown."
+  },
   "config.error.invalidAsVersion": {
     "message": "Invalid ActiveSync version selection."
   },

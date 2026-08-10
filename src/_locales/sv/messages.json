@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Din server tillkännager inte Search-kommandot, så den globala adresslistan är inte tillgänglig för det här kontot."
   },
+  "config.freebusy.enabled": {
+    "message": "Visa deltagares tillgänglighet"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Frågar servern om en deltagares ledig/upptagen-tider när du bjuder in."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Din server erbjuder inte deltagartillgänglighet, så den kan inte visas."
+  },
   "config.error.invalidAsVersion": {
     "message": "Ogiltigt val av ActiveSync-version."
   },

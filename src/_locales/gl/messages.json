@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "O seu servidor non admite o comando Search, polo que a lista global de enderezos non está dispoñible para esta conta."
   },
+  "config.freebusy.enabled": {
+    "message": "Amosar a dispoñibilidade dos asistentes"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Consulta ao servidor as horas libres/ocupadas dun asistente ao convidalo."
+  },
+  "config.freebusy.notSupported": {
+    "message": "O seu servidor non ofrece dispoñibilidade dos asistentes, polo que non se pode amosar."
+  },
   "config.error.invalidAsVersion": {
     "message": "Selección de versión de ActiveSync non válida."
   },

@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Váš server neoznamuje příkaz Search, takže globální seznam adres není pro tento účet k dispozici."
   },
+  "config.freebusy.enabled": {
+    "message": "Zobrazovat dostupnost účastníků"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Při zvaní účastníka se serveru dotáže na jeho obsazenost."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Váš server neposkytuje dostupnost účastníků, proto ji nelze zobrazit."
+  },
   "config.error.invalidAsVersion": {
     "message": "Neplatný výběr verze ActiveSync."
   },

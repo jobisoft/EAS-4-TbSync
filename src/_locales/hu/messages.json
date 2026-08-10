@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "A kiszolgálója nem hirdeti a Search parancsot, így a globális címlista nem érhető el ehhez a fiókhoz."
   },
+  "config.freebusy.enabled": {
+    "message": "Résztvevők elérhetőségének megjelenítése"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Meghíváskor lekérdezi a kiszolgálótól a résztvevő szabad/foglalt idejét."
+  },
+  "config.freebusy.notSupported": {
+    "message": "A kiszolgáló nem kínál résztvevő-elérhetőséget, ezért az nem jeleníthető meg."
+  },
   "config.error.invalidAsVersion": {
     "message": "Érvénytelen ActiveSync-verzió kiválasztva."
   },

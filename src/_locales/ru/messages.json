@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Ваш сервер не объявляет команду Search, поэтому глобальный список адресов недоступен для этой учётной записи."
   },
+  "config.freebusy.enabled": {
+    "message": "Показывать занятость участников"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Запрашивает у сервера сведения о занятости участника при приглашении."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Ваш сервер не предоставляет сведения о занятости участников, поэтому их нельзя показать."
+  },
   "config.error.invalidAsVersion": {
     "message": "Выбрана недопустимая версия ActiveSync."
   },

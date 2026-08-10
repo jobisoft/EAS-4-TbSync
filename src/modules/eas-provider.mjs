@@ -98,6 +98,7 @@ import {
   enableGalForAllAccounts,
   installRenameWatcher as installGalRenameWatcher,
 } from "./gal.mjs";
+import { forgetFreeBusyCache, refreshFreeBusyListener } from "./free-busy.mjs";
 import { easCommandAdvertised } from "./eas/allowed-commands.mjs";
 import { setEventLogSink } from "./eas-event-log.mjs";
 // Cyclic: upgrades.mjs imports `easTypeToFolderType`,
@@ -277,6 +278,10 @@ export class EasProvider extends TbSyncProviderImplementation {
     // on extension boot, so the listener registrations would otherwise
     // be lost across restarts.
     await enableGalForAllAccounts(this);
+    // Attendee availability. One listener for the add-on rather than one
+    // per account - it joins a global service - so it is re-evaluated
+    // rather than added.
+    await refreshFreeBusyListener(this);
     // Now that the host is answering, reconcile our own per-folder state
     // with the bindings it names: learn where each calendar belongs, and
     // drop the queues of bindings that have ended.
@@ -388,6 +393,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     // whether the server supports the GAL Search command.
     const rv = await this.getAccount(accountId);
     if (rv?.account) await enableGal({ provider: this, account: rv.account });
+    await refreshFreeBusyListener(this);
     return null;
   }
 
@@ -397,6 +403,8 @@ export class EasProvider extends TbSyncProviderImplementation {
     // `custom`, so nothing here is needed to come back.
     forgetAuth(accountId);
     await disableGal({ provider: this, accountId });
+    forgetFreeBusyCache(accountId);
+    await refreshFreeBusyListener(this);
     const ctx = await this.#loadContext(accountId);
     if (!ctx) return null;
     // No target deletion here: the host owns resource deletion in every
@@ -441,6 +449,8 @@ export class EasProvider extends TbSyncProviderImplementation {
     // and then forgets the account entirely.
     forgetAuth(accountId);
     await disableGal({ provider: this, accountId });
+    forgetFreeBusyCache(accountId);
+    await refreshFreeBusyListener(this);
     return null;
   }
 
@@ -1283,8 +1293,22 @@ export class EasProvider extends TbSyncProviderImplementation {
         }
         // Calendars made before the account knew its own address carry no
         // owner; declaring it here reaches them without a recreate.
+        const owner = calendarOwner(ctx.account);
         await calendarStore
-          .setCalendarOwner(folder.targetID, calendarOwner(ctx.account))
+          .setCalendarOwner(folder.targetID, owner)
+          .then((written) => {
+            // Only on a change - `setCalendarOwner` compares first, so a
+            // line here means the calendar just learned something, not
+            // that it is asked every sync.
+            if (written) {
+              this.reportEventLog({
+                level: "info",
+                accountId,
+                folderId,
+                message: `[eas] this calendar now belongs to ${owner.organizer}`,
+              });
+            }
+          })
           .catch((err) =>
             this.reportEventLog({
               level: "debug",
@@ -1470,6 +1494,12 @@ export class EasProvider extends TbSyncProviderImplementation {
       // tells the dialog whether to enable the checkbox at all.
       galEnabled: c.galenabled !== false,
       galSupported: easCommandAdvertised(ctx.account, "Search"),
+      // Attendee availability, same defaulting. Unsupported on 2.5,
+      // which has no Availability element in ResolveRecipients.
+      freeBusyEnabled: c.freebusyenabled !== false,
+      freeBusySupported:
+        c.asversion !== "2.5" &&
+        easCommandAdvertised(ctx.account, "ResolveRecipients"),
     };
   }
 
@@ -1550,6 +1580,9 @@ export class EasProvider extends TbSyncProviderImplementation {
     if ("galEnabled" in patch) {
       customPatch.galenabled = !!patch.galEnabled;
     }
+    if ("freeBusyEnabled" in patch) {
+      customPatch.freebusyenabled = !!patch.freeBusyEnabled;
+    }
 
     const outgoing = { ...topLevelPatch };
     if (Object.keys(customPatch).length) outgoing.custom = customPatch;
@@ -1567,6 +1600,12 @@ export class EasProvider extends TbSyncProviderImplementation {
       } else {
         await disableGal({ provider: this, accountId });
       }
+    }
+
+    // Answers gathered under the old setting must not survive it.
+    if ("freeBusyEnabled" in patch) {
+      forgetFreeBusyCache(accountId);
+      await refreshFreeBusyListener(this);
     }
 
     // Recorded only once the save has actually gone through, so a failed

@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Вашият сървър не поддържа командата Search, така че Глобалният адресен списък не е наличен за този акаунт."
   },
+  "config.freebusy.enabled": {
+    "message": "Показвай заетостта на участниците"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Изисква от сървъра заетостта на участник, когато го каните на събитие."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Вашият сървър не предоставя заетост на участници, затова тя не може да се показва."
+  },
   "config.error.invalidAsVersion": {
     "message": "Невалиден избор на версия на ActiveSync."
   },

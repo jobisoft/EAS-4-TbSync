@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "サーバーが Search コマンドを通知していないため、このアカウントではグローバル アドレス一覧を利用できません。"
   },
+  "config.freebusy.enabled": {
+    "message": "参加者の空き時間を表示"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "イベントに招待する際、サーバーに参加者の空き/予定ありの時間を問い合わせます。"
+  },
+  "config.freebusy.notSupported": {
+    "message": "お使いのサーバーは参加者の空き時間を提供していないため、表示できません。"
+  },
   "config.error.invalidAsVersion": {
     "message": "ActiveSync バージョンの選択が無効です。"
   },

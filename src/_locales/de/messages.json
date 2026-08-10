@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Ihr Server unterstützt den Search-Befehl nicht, daher ist die Globale Adressliste für dieses Konto nicht verfügbar."
   },
+  "config.freebusy.enabled": {
+    "message": "Verfügbarkeit von Teilnehmern anzeigen"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Fragt beim Einladen eines Teilnehmers dessen Frei/Belegt-Zeiten vom Server ab."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Ihr Server bietet keine Teilnehmerverfügbarkeit an, daher können keine Frei/Belegt-Zeiten angezeigt werden."
+  },
   "config.error.invalidAsVersion": {
     "message": "Ungültige ActiveSync-Version ausgewählt."
   },

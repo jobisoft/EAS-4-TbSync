@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Twój serwer nie ogłasza polecenia Search, więc globalna lista adresów nie jest dostępna dla tego konta."
   },
+  "config.freebusy.enabled": {
+    "message": "Pokazuj dostępność uczestników"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Podczas zapraszania pyta serwer o czas wolny/zajęty uczestnika."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Twój serwer nie udostępnia dostępności uczestników, więc nie można jej pokazać."
+  },
   "config.error.invalidAsVersion": {
     "message": "Nieprawidłowy wybór wersji ActiveSync."
   },

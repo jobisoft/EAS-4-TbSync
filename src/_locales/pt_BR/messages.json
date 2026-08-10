@@ -287,6 +287,15 @@
   "config.gal.notSupported": {
     "message": "Seu servidor não anuncia o comando Search, portanto a lista de endereços global não está disponível para esta conta."
   },
+  "config.freebusy.enabled": {
+    "message": "Mostrar disponibilidade dos participantes"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Consulta ao servidor os horários livres/ocupados de um participante ao convidá-lo."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Seu servidor não oferece disponibilidade de participantes, portanto não pode ser exibida."
+  },
   "config.error.invalidAsVersion": {
     "message": "Seleção de versão do ActiveSync inválida."
   },

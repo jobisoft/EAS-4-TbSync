@@ -170,6 +170,8 @@ async function load() {
   // didn't advertise the Search command. The hint flips to a "not
   // supported by your server" line so the user understands why.
   $("gal-enabled").checked = account.galSupported && !!account.galEnabled;
+  $("freebusy-enabled").checked =
+    account.freeBusySupported && !!account.freeBusyEnabled;
 
   applyReadOnly();
 
@@ -180,6 +182,13 @@ async function load() {
     $("gal-enabled-hint").textContent = i18n(
       "config.gal.notSupported",
       "Your server does not advertise the Search command, so the Global Address List is not available.",
+    );
+  }
+  if (!account.freeBusySupported) {
+    $("freebusy-enabled").disabled = true;
+    $("freebusy-enabled-hint").textContent = i18n(
+      "config.freebusy.notSupported",
+      "Your server does not offer attendee availability, so free/busy times cannot be shown.",
     );
   }
 }
@@ -282,6 +291,9 @@ async function onSave() {
   // would clobber the per-account preference if support is restored.
   if (!$("gal-enabled").disabled) {
     patch.galEnabled = $("gal-enabled").checked;
+  }
+  if (!$("freebusy-enabled").disabled) {
+    patch.freeBusyEnabled = $("freebusy-enabled").checked;
   }
 
   // Connection fields only flow through when the section is visible. For
