@@ -173,3 +173,48 @@ def t_2_6(s):
     ok("items.remove", id=item["id"])
     s.sync()
     harness.eq(s.changelog("events"), [], "changelog drained after cleanup")
+
+
+@test("2.7", "a pushed item survives a deselect/reselect - it comes back from the server")
+def t_2_7(s):
+    """The only test that proves an Add reached the server rather than
+    merely leaving the queue.
+
+    `rebind` deletes the local calendar and pulls a fresh one, so anything
+    still visible afterwards came from the server. Everything else in this
+    section could pass on a purely local copy: the changelog drains when the
+    push is *sent*, and a server that quietly dropped the item would look
+    identical until the next clean pull.
+    """
+    slug = f"{SLUG}-teardown"
+    s.mark()
+    ok(
+        "items.create",
+        type="event",
+        ical=probes.event(
+            slug,
+            lines=[
+                "DTSTART:20261201T090000Z",
+                "DTEND:20261201T100000Z",
+                "LOCATION:Room 7",
+            ],
+        ),
+    )
+    s.sync()
+    harness.contains(s.wire(), "SEND Add", "the create must reach the server")
+    harness.eq(s.changelog("events"), [], "changelog drained")
+
+    # Throw the local copy away and pull it back down.
+    s.rebind("events")
+
+    item = s.find("events", f"{probes.MARKER} {slug}", "event")
+    harness.true(
+        item is not None,
+        "the item did not come back after the local calendar was rebuilt - "
+        "it never actually reached the server",
+    )
+    harness.contains(item["item"], "Room 7", "the item came back incomplete")
+    # Cleanup.
+    ok("items.remove", id=item["id"])
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained after cleanup")
