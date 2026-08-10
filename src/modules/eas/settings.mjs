@@ -26,7 +26,12 @@ import {
   getDeviceOs,
   getUserAgent,
 } from "../network.mjs";
-import { readPath } from "./wbxml-helpers.mjs";
+import {
+  childByTag,
+  readChildTexts,
+  readPath,
+  readPathFrom,
+} from "./wbxml-helpers.mjs";
 
 const PROVISION_REQUIRED_STATUSES = new Set(["141", "142", "143", "144"]);
 
@@ -69,6 +74,95 @@ async function buildBody(account) {
   await appendDeviceInformationSet(w, account);
   w.ctag();
   return w.getBytes();
+}
+
+function buildUserInformationBody() {
+  const w = createWBXML();
+  w.switchpage("Settings");
+  w.otag("Settings");
+  w.otag("UserInformation");
+  w.atag("Get");
+  w.ctag();
+  w.ctag();
+  return w.getBytes();
+}
+
+/** The address this account *is*, as learned from the server and stored
+ *  by `#maybeLearnUserAddress`. Falls back to the login, which is right
+ *  whenever the login happens to be an address and no worse than the
+ *  old behaviour when it is not. Lives here, beside the request that
+ *  produces the value, so the storage key has one reader and one
+ *  writer. */
+export function accountUserAddress(account) {
+  return account?.custom?.userSmtpAddress || account?.custom?.user;
+}
+
+/** Pull the mailbox's own SMTP address out of a `UserInformation/Get`
+ *  reply. Two shapes: 14.1 and later wrap the addresses in
+ *  `Accounts/Account` and name the primary one; 12.1/14.0 list bare
+ *  `SMTPAddress` elements with no primary marker, so the first is the
+ *  best available answer. `UserDisplayName` accompanies the 14.1 shape.
+ *  Returns null when the reply carries neither - callers treat that as
+ *  "not learned", never as an error. */
+export function readUserInformation(doc) {
+  const root = doc?.documentElement;
+  if (!root) return null;
+  const get = childByTag(childByTag(root, "UserInformation"), "Get");
+  if (!get) return null;
+
+  // `Accounts` may list more than one, and an entry carrying no address
+  // is no use here - take the first that names one, and fall back to the
+  // pre-14.1 shape, where the addresses hang off `Get` directly.
+  // `Array.from`, because a parsed document's `children` is a live DOM
+  // collection: iterable, but with none of Array's methods on it.
+  const accounts = childByTag(get, "Accounts");
+  const scopes = Array.from(accounts?.children ?? [])
+    .filter((c) => c.tagName === "Account")
+    .concat(get);
+  for (const scope of scopes) {
+    const emails = childByTag(scope, "EmailAddresses");
+    const address =
+      readPathFrom(emails, ["PrimarySmtpAddress"]) ||
+      readChildTexts(emails, "SMTPAddress")[0];
+    if (!address) continue;
+    return {
+      address,
+      displayName: readPathFrom(scope, ["UserDisplayName"]) || null,
+    };
+  }
+  return null;
+}
+
+/** Ask the server which mailbox this account is. Same gate as
+ *  `sendDeviceInformation` - `Settings` advertised in the OPTIONS probe
+ *  and `asVersion != "2.5"`, where the command does not exist.
+ *
+ *  Sent as its own request rather than beside DeviceInformation: that
+ *  one heals accounts a server would otherwise refuse to talk to, and a
+ *  server that dislikes a combined body would take it down with this.
+ *
+ *  Returns `{address, displayName}`, or null when the server answered
+ *  but named no address - a settled "no", which the caller records so
+ *  the question is not asked again. A transient condition throws
+ *  instead, so the next sync retries: transport failures propagate, and
+ *  a Status demanding Provision is raised in the shape the recovery
+ *  loops already know. */
+export async function fetchUserInformation({ account, asVersion }) {
+  const { doc } = await easRequest({
+    account,
+    command: "Settings",
+    body: buildUserInformationBody(),
+    asVersion,
+  });
+  if (!doc) return null;
+  const status = readPath(doc, ["Status"]);
+  if (PROVISION_REQUIRED_STATUSES.has(status)) {
+    throw new EasHttpError(NET_ERR.PROVISION_REQUIRED, 0, {
+      message: `Settings/UserInformation rejected (Status=${status}); server demands re-Provision`,
+    });
+  }
+  if (status !== null && status !== "1") return null;
+  return readUserInformation(doc);
 }
 
 /** Send DeviceInformation/Set. Throws on a non-1 Settings.Status; the

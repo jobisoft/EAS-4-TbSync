@@ -857,12 +857,11 @@ export function appendApplicationDataFromIcal({
       const cancelled = status === "CANCELLED";
       const orgProp = vevent.getFirstProperty("organizer");
       // R bit (received-from-another-organizer): the local user is NOT
-      // the organizer iff the ORGANIZER email differs from
-      // `account.custom.user`. The previous code's
-      // `ownerMatchesOrganizer` was a hardcoded `false`, which made
-      // every attendee'd event look "received" — so events the user
-      // organized were emitted as MeetingStatus=3 (received) instead of
-      // 1 (organizer). Mirrors legacy calendarsync.js:447-450.
+      // the organizer iff the ORGANIZER email differs from this
+      // account's own address. `userEmail` is that address as the
+      // server named it, so an account whose login is not an email
+      // still labels its own meetings correctly; with no address at all
+      // every attendee'd event reads as received.
       const orgEmail = orgProp
         ? stripMailto(orgProp.getFirstValue()).toLowerCase()
         : "";

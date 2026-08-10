@@ -74,7 +74,10 @@ function decodeText(text) {
   }
 }
 
-function childByTag(node, tag) {
+/** The first child element with this tag, or null. Takes a missing node
+ *  so callers can walk a path without a guard at every step. */
+export function childByTag(node, tag) {
+  if (!node?.children) return null;
   for (const c of node.children) {
     if (c.tagName === tag) return c;
   }

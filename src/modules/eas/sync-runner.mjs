@@ -44,6 +44,7 @@ import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
 import { fetchServerItem } from "./item-operations.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
+import { accountUserAddress } from "./settings.mjs";
 import {
   localQueue,
   rememberBindings,
@@ -729,7 +730,7 @@ async function revertLocalChanges(ctx) {
       syncRecurrence: ctx.syncRecurrence,
       msTodoCompat: ctx.msTodoCompat,
       uid: e.itemId,
-      userEmail: ctx.account?.custom?.user,
+      userEmail: accountUserAddress(ctx.account),
       eventLog: ctx.eventLog,
     });
 
@@ -965,7 +966,7 @@ async function pushPhase(ctx, userEdits) {
           codec: ctx.itemKind.codec,
           defaultTimezone: ctx.defaultTimezone,
           syncRecurrence: ctx.syncRecurrence,
-          userEmail: ctx.account?.custom?.user,
+          userEmail: accountUserAddress(ctx.account),
           fallbackOrganizerName:
             ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
           eventLog: ctx.eventLog,
@@ -1148,7 +1149,7 @@ async function instancePhase(ctx, masters) {
       asVersion: ctx.asVersion,
       defaultTimezone: ctx.defaultTimezone,
       syncRecurrence: ctx.syncRecurrence,
-      userEmail: ctx.account?.custom?.user,
+      userEmail: accountUserAddress(ctx.account),
       fallbackOrganizerName:
         ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
       eventLog: ctx.eventLog,
@@ -1197,7 +1198,7 @@ async function followUpPhase(ctx, masters) {
           separator: ctx.separator,
           defaultTimezone: ctx.defaultTimezone,
           syncRecurrence: ctx.syncRecurrence,
-          userEmail: ctx.account?.custom?.user,
+          userEmail: accountUserAddress(ctx.account),
           fallbackOrganizerName:
             ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
           eventLog: ctx.eventLog,
@@ -1655,7 +1656,7 @@ async function applyAdd(ctx, addNode) {
     syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: newId,
-    userEmail: ctx.account?.custom?.user,
+    userEmail: accountUserAddress(ctx.account),
     eventLog: ctx.eventLog,
   });
   await ctx.queue.markServerWrite({
@@ -1721,7 +1722,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
       instanceUtc,
       asVersion: ctx.asVersion,
       defaultTimezone: ctx.defaultTimezone,
-      userEmail: ctx.account?.custom?.user,
+      userEmail: accountUserAddress(ctx.account),
     });
   }
   if (!nextBlob || nextBlob === existing.blob) {
@@ -1841,7 +1842,7 @@ async function applyChangeFromAd(ctx, ad, existing, serverID = null) {
     syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: existing.itemId,
-    userEmail: ctx.account?.custom?.user,
+    userEmail: accountUserAddress(ctx.account),
     eventLog: ctx.eventLog,
   });
   await ctx.queue.markServerWrite({

@@ -86,7 +86,10 @@ import {
 import { runFolderSync } from "./eas/folder-sync.mjs";
 import { syncContactFolder } from "./eas/contact-sync.mjs";
 import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
-import { sendDeviceInformation } from "./eas/settings.mjs";
+import {
+  fetchUserInformation,
+  sendDeviceInformation,
+} from "./eas/settings.mjs";
 import { runGalSearch as runGalSearchRequest } from "./eas/gal-search.mjs";
 import { NET_ERR, setSyncSignalResolver } from "./network.mjs";
 import {
@@ -409,9 +412,20 @@ export class EasProvider extends TbSyncProviderImplementation {
     // backfill path for users on 5.0.1 whose `allowedEasCommands` was
     // never persisted (or has otherwise diverged from the server's
     // current capability list). Existing-enabled accounts are left alone.
+    // The mailbox address goes too: an account re-pointed at a different
+    // login or server would otherwise keep naming the old mailbox as its
+    // calendars' owner, and a wrong owner is worse than none.
     await this.updateAccount({
       accountId,
-      patch: { custom: { foldersynckey: "0", lastEasOptionsUpdate: 0 } },
+      patch: {
+        custom: {
+          foldersynckey: "0",
+          lastEasOptionsUpdate: 0,
+          userSmtpAddress: "",
+          userDisplayName: "",
+          noUserInformation: false,
+        },
+      },
     }).catch((err) =>
       console.debug(
         `[eas] updateAccount(disable-reset) for ${accountId} failed:`,
@@ -891,6 +905,17 @@ export class EasProvider extends TbSyncProviderImplementation {
       accountId,
       patch: { custom: { foldersynckey: syncResult.synckey } },
     });
+
+    // 7) Settings/UserInformation, once per account. After FolderSync,
+    // not before: on 14.1 and later nothing above sends a Settings
+    // request at all - DeviceInformation rides inside Provision there -
+    // so this would otherwise be the first request a fresh account
+    // makes, and a server that demands Provision first would refuse it.
+    // FolderSync has the recovery loop that gets us provisioned, so by
+    // here the question can actually be answered. It swallows its own
+    // failures, which is why it sits outside that loop rather than in
+    // it.
+    await this.#maybeLearnUserAddress(accountId, ctx.account, asVersion);
   }
 
   /** Run `op(ctx)` with one provision-then-retry on PROVISION_REQUIRED.
@@ -978,6 +1003,70 @@ export class EasProvider extends TbSyncProviderImplementation {
     if (PROVISION_EMBEDS_DEVICE_INFO.has(asVersion)) return;
     if (!easCommandAdvertised(account, "Settings")) return;
     await sendDeviceInformation({ account, asVersion });
+  }
+
+  /** Learn which mailbox this account is, once, and remember it.
+   *
+   *  The address is what tells a calendar whose it is (see
+   *  `calendarOwner`) and what decides organizer-vs-attendee on the
+   *  wire; the EAS login cannot be trusted for either, since it may be
+   *  `DOMAIN\user` or any other non-address. Only the version gate
+   *  applies here - unlike DeviceInformation, `UserInformation` stays a
+   *  Settings sub-command on every version that has the command.
+   *
+   *  Asked once. A server that answers with no address is recorded as
+   *  such, because asking it again every sync would spend a request and
+   *  a log line forever on an answer that will not change; a transient
+   *  failure throws instead and is retried on the next sync. Both keys
+   *  are cleared when the account is disabled, so re-pointing it at
+   *  another mailbox asks again.
+   *
+   *  Nothing here may fail a sync: a calendar's owner is not worth an
+   *  account going red over. */
+  async #maybeLearnUserAddress(accountId, account, asVersion) {
+    if (account.custom?.userSmtpAddress) return false;
+    if (account.custom?.noUserInformation) return false;
+    if (asVersion === "2.5") return false;
+    if (!easCommandAdvertised(account, "Settings")) return false;
+
+    let info;
+    try {
+      info = await fetchUserInformation({ account, asVersion });
+    } catch (err) {
+      this.reportEventLog({
+        level: "debug",
+        accountId,
+        message: `[eas] could not read UserInformation, will retry: ${err?.message ?? String(err)}`,
+      });
+      return false;
+    }
+
+    const patch = info?.address
+      ? {
+          userSmtpAddress: info.address,
+          userDisplayName: info.displayName ?? "",
+        }
+      : { noUserInformation: true };
+    try {
+      await this.updateAccount({ accountId, patch: { custom: patch } });
+    } catch (err) {
+      this.reportEventLog({
+        level: "debug",
+        accountId,
+        message: `[eas] could not store the mailbox address: ${err?.message ?? String(err)}`,
+      });
+      return false;
+    }
+
+    this.reportEventLog({
+      level: info?.address ? "info" : "debug",
+      accountId,
+      message: info?.address
+        ? `[eas] this account syncs the mailbox ${info.address}`
+        : "[eas] the server names no address for this account; its " +
+          "calendars keep Thunderbird's default owner",
+    });
+    return !!info?.address;
   }
 
   /** GAL contact lookup with provision-then-retry recovery. Loaded by
@@ -1128,6 +1217,7 @@ export class EasProvider extends TbSyncProviderImplementation {
             color,
             type: CALENDAR_TYPE,
             url: CALENDAR_URL,
+            ...calendarOwner(ctx.account),
           });
           const items = await calendarStore.listItems(oldId);
           let copied = 0;
@@ -1177,6 +1267,7 @@ export class EasProvider extends TbSyncProviderImplementation {
             color,
             type: CALENDAR_TYPE,
             url: CALENDAR_URL,
+            ...calendarOwner(ctx.account),
           });
           await this.updateFolder({
             accountId,
@@ -1190,6 +1281,18 @@ export class EasProvider extends TbSyncProviderImplementation {
             targetColor: color,
           };
         }
+        // Calendars made before the account knew its own address carry no
+        // owner; declaring it here reaches them without a recreate.
+        await calendarStore
+          .setCalendarOwner(folder.targetID, calendarOwner(ctx.account))
+          .catch((err) =>
+            this.reportEventLog({
+              level: "debug",
+              accountId,
+              folderId,
+              message: `[eas] could not declare the calendar owner: ${err?.message ?? String(err)}`,
+            }),
+          );
       }
 
       this.reportSyncState({ accountId, folderId, syncState: "sync" });
@@ -1490,6 +1593,22 @@ export class EasProvider extends TbSyncProviderImplementation {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
+
+/** Who owns this account's calendars, in the `mailto:` form Thunderbird
+ *  wants for `organizerId`. Empty while the mailbox address is unknown -
+ *  on AS 2.5, or before the server has answered - and the calendar then
+ *  keeps Thunderbird's own default. The login is deliberately not used
+ *  as a stand-in: it may be `DOMAIN\user` or any other non-address, and
+ *  a wrong owner is worse than none. */
+function calendarOwner(account) {
+  const address = account?.custom?.userSmtpAddress;
+  if (!address) return {};
+  const name = account?.custom?.userDisplayName;
+  return {
+    organizer: `mailto:${address}`,
+    ...(name ? { organizerName: name } : {}),
+  };
+}
 
 /** Resolve the local TB address-book / calendar name for a folder.
  *  Reuses whatever the user (or a previous bind) put in
