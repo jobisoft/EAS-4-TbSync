@@ -1,0 +1,462 @@
+{
+  "extensionName": {
+    "message": "EAS-4-TbSync"
+  },
+  "extensionDescription": {
+    "message": "Teenusepakkuja lisamoodul TbSync jaoks, mis sünkroonib kontakte, kalendreid ja ülesandeid Exchange ActiveSynci serveriga."
+  },
+  "folder.trashPrefix": {
+    "message": "Prügikast"
+  },
+  "gal.addressBookSuffix": {
+    "message": "Globaalne aadressiraamat"
+  },
+  "setup.title": {
+    "message": "Lisa Exchange ActiveSynci konto (EAS)"
+  },
+  "setup.intro": {
+    "message": "Vali, millist tüüpi Exchange ActiveSynci kontot soovid lisada."
+  },
+  "setup.accountType": {
+    "message": "Konto tüüp"
+  },
+  "setup.accountType.office365": {
+    "message": "Office 365 Business"
+  },
+  "setup.accountType.office365.hint": {
+    "message": "Microsoft 365 ettevõtte- ja töökontod."
+  },
+  "setup.accountType.personalMs": {
+    "message": "Isiklik Microsofti konto"
+  },
+  "setup.accountType.personalMs.hint": {
+    "message": "outlook.com, hotmail.com, live.com ja muud Microsofti tavakasutajate kontod."
+  },
+  "setup.accountType.auto": {
+    "message": "Automaatne tuvastus"
+  },
+  "setup.accountType.auto.hint": {
+    "message": "Otsi EAS-serveri URL sinu e-posti aadressi järgi. Töötab enamiku Exchange'i ja EAS-iga ühilduvate teenusepakkujatega."
+  },
+  "setup.accountType.custom": {
+    "message": "Kohandatud EAS-server"
+  },
+  "setup.accountType.custom.hint": {
+    "message": "Mis tahes EAS-iga ühilduv server. Autentimine kasutajanime ja parooliga."
+  },
+  "setup.auto.email": {
+    "message": "E-posti aadress"
+  },
+  "setup.auto.discoverButton": {
+    "message": "Otsi"
+  },
+  "setup.auto.status.searching": {
+    "message": "Serveri sätete otsimine…"
+  },
+  "setup.auto.error.title": {
+    "message": "EAS-serverit ei leitud"
+  },
+  "setup.auto.error.auth": {
+    "message": "Kasutajanimi või parool lükati tagasi. Kontrolli õigekirja või kasuta valikut „Kohandatud EAS-server“."
+  },
+  "setup.auto.error.network": {
+    "message": "Tuvastuse lõpp-punktidega ei õnnestunud ühendust luua. Kontrolli oma internetiühendust."
+  },
+  "setup.auto.error.noServer": {
+    "message": "Tuvastus lõpetati, kuid ühtegi EAS-serverit ei pakutud. Server ei pruugi automaatset tuvastust toetada."
+  },
+  "setup.auto.error.tried": {
+    "message": "Proovitud lõpp-punktid:"
+  },
+  "setup.auto.error.fallback": {
+    "message": "Kui sinu teenusepakkuja nõuab käsitsi seadistamist, vali „Kohandatud EAS-server“."
+  },
+  "setup.oauth.email": {
+    "message": "Microsofti konto e-posti aadress"
+  },
+  "setup.oauth.signIn": {
+    "message": "Logi sisse Microsoftiga"
+  },
+  "setup.oauth.error.emailRequired": {
+    "message": "Palun sisesta oma Microsofti konto e-posti aadress."
+  },
+  "setup.oauth.error.cancelled": {
+    "message": "Sisselogimine katkestati."
+  },
+  "setup.oauth.error.signInFailed": {
+    "message": "Sisselogimine ebaõnnestus"
+  },
+  "setup.oauth.error.signInFailedDetail": {
+    "message": "Sisselogimine ebaõnnestus: $DETAIL$",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "invalid_grant"
+      }
+    }
+  },
+  "setup.accountName": {
+    "message": "Kontosilt"
+  },
+  "setup.server": {
+    "message": "Serveri URL"
+  },
+  "setup.serverHint": {
+    "message": "Näide: https://mail.example.com/Microsoft-Server-ActiveSync"
+  },
+  "setup.user": {
+    "message": "Kasutajanimi"
+  },
+  "setup.password": {
+    "message": "Parool"
+  },
+  "setup.authButton": {
+    "message": "Loo konto"
+  },
+  "setup.cancelButton": {
+    "message": "Loobu"
+  },
+  "setup.error.labelRequired": {
+    "message": "Palun sisesta kontosilt."
+  },
+  "setup.error.serverRequired": {
+    "message": "Palun sisesta serveri URL."
+  },
+  "setup.error.serverInvalid": {
+    "message": "Kasutuskõlbmatu serveri URL: $URL$. See peab algama https:// või http:// (või olema lihtsalt hostinimi) ega tohi sisaldada kasutajanime, parooli, päringustringi ega fragmenti. Näide: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
+  "setup.error.userRequired": {
+    "message": "Palun sisesta kasutajanimi."
+  },
+  "setup.error.passwordRequired": {
+    "message": "Palun sisesta parool."
+  },
+  "setup.error.missingToken": {
+    "message": "Seadistusluba puudub. Ava see aken TbSynci kaudu."
+  },
+  "setup.error.createFailed": {
+    "message": "Kontot ei õnnestunud luua"
+  },
+  "config.title": {
+    "message": "Exchange'i konto sätted"
+  },
+  "config.label": {
+    "message": "Kontosilt"
+  },
+  "config.server": {
+    "message": "Serveri URL"
+  },
+  "config.user": {
+    "message": "Kasutajanimi"
+  },
+  "config.password": {
+    "message": "Parool (jäta tühjaks, et säilitada praegune)"
+  },
+  "config.readOnlyBanner": {
+    "message": "Sünkroonimisvigade vältimiseks ei saa sätteid muuta, kui konto on sisse lülitatud."
+  },
+  "config.save": {
+    "message": "Salvesta"
+  },
+  "config.cancel": {
+    "message": "Loobu"
+  },
+  "config.close": {
+    "message": "Sulge"
+  },
+  "config.error.missingAccountId": {
+    "message": "Konto identifikaator puudub."
+  },
+  "config.error.loadFailed": {
+    "message": "Konto laadimine ebaõnnestus."
+  },
+  "config.error.accountNameRequired": {
+    "message": "Konto nimi on kohustuslik."
+  },
+  "config.error.saveFailed": {
+    "message": "Salvestamine ebaõnnestus"
+  },
+  "config.section.account": {
+    "message": "Konto"
+  },
+  "config.section.connection": {
+    "message": "Ühendus"
+  },
+  "config.section.protocol": {
+    "message": "Protokoll"
+  },
+  "config.section.contacts": {
+    "message": "Kontaktid"
+  },
+  "config.section.calendar": {
+    "message": "Kalender"
+  },
+  "config.account.accountType": {
+    "message": "Konto tüüp"
+  },
+  "config.account.signedInAs": {
+    "message": "Sisse logitud kasutajana"
+  },
+  "config.protocol.asVersion": {
+    "message": "ActiveSynci versioon"
+  },
+  "config.protocol.asVersion.auto": {
+    "message": "Automaatne (kasuta serveri eelistatud versiooni)"
+  },
+  "config.protocol.asVersion.negotiatedHint": {
+    "message": "Praegu kokku lepitud: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.deviceId": {
+    "message": "Seadme ID"
+  },
+  "config.protocol.provision": {
+    "message": "Nõua provisioningut"
+  },
+  "config.protocol.provision.hint": {
+    "message": "Mõned serverid (nt Kerio) nõuavad, et provisioning saadetaks enne kõiki teisi käske. Enamik servereid, sealhulgas Microsoft Exchange ja Microsoft 365, küsivad seda vajaduse korral automaatselt. Nende puhul ei ole vaja seda käsitsi sisse lülitada."
+  },
+  "config.protocol.conflict": {
+    "message": "Vastuolulised muudatused"
+  },
+  "config.protocol.conflict.hint": {
+    "message": "Kui kirjet muudeti nii siin kui ka serveris, otsustab server, kumb koopia jääb peale. Kaotanud muudatus asendatakse sünkroonimise käigus."
+  },
+  "config.protocol.conflict.serverWins": {
+    "message": "Server jääb peale (soovitatav)"
+  },
+  "config.protocol.conflict.deviceWins": {
+    "message": "See seade jääb peale"
+  },
+  "config.contacts.displayOverride": {
+    "message": "Asenda kuvatav nimi vormiga „Eesnimi“ + „Perekonnanimi“"
+  },
+  "config.contacts.nameSeparator": {
+    "message": "Mitmerealise nime eraldaja"
+  },
+  "config.contacts.nameSeparator.linebreak": {
+    "message": "Reavahetus"
+  },
+  "config.contacts.nameSeparator.comma": {
+    "message": "Koma"
+  },
+  "config.calendar.syncLimit": {
+    "message": "Sünkroonimisaken"
+  },
+  "config.calendar.syncLimit.all": {
+    "message": "Kõik sündmused"
+  },
+  "config.calendar.syncLimit.2weeks": {
+    "message": "Viimased 2 nädalat"
+  },
+  "config.calendar.syncLimit.1month": {
+    "message": "Viimane kuu"
+  },
+  "config.calendar.syncLimit.3months": {
+    "message": "Viimased 3 kuud"
+  },
+  "config.calendar.syncLimit.6months": {
+    "message": "Viimased 6 kuud"
+  },
+  "config.calendar.syncRecurrence": {
+    "message": "Sünkrooni korduvad sündmused ja ülesanded ning erandid"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Kui see on sisse lülitatud, käivad kordumisreeglid ja üksikjuhtude erandid serveriga edasi-tagasi."
+  },
+  "config.section.gal": {
+    "message": "Globaalne aadressiraamat"
+  },
+  "config.gal.enabled": {
+    "message": "Näita serveri globaalset aadressiraamatut kirjutuskaitstud aadressiraamatuna"
+  },
+  "config.gal.enabled.hint": {
+    "message": "Lisab kontopõhise kataloogi, mis täidetakse lennult, kui sisestad päringu Thunderbirdi aadressiraamatu otsingusse. Midagi ei laadita alla ega salvestata kohapeal - iga otsing pöördub serveri poole."
+  },
+  "config.gal.notSupported": {
+    "message": "Sinu server ei paku Search-käsku, seega globaalne aadressiraamat ei ole selle konto jaoks saadaval."
+  },
+  "config.freebusy.enabled": {
+    "message": "Näita osalejate saadavust"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Küsib serverilt osaleja vaba ja hõivatud aegu, kui kutsud ta sündmusele."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Sinu server ei paku osalejate saadavust, seega vaba ja hõivatud aegu ei saa näidata."
+  },
+  "config.error.invalidAsVersion": {
+    "message": "Sobimatu ActiveSynci versiooni valik."
+  },
+  "options.title": {
+    "message": "EAS-4-TbSync - täpsemad sätted"
+  },
+  "options.intro": {
+    "message": "Need sätted mõjutavad kõiki selle profiili EAS-kontosid. Vaikeväärtused sobivad peaaegu kõigile, muuda väärtust ainult siis, kui selleks on kindel põhjus. Jäta väli tühjaks, et kasutada kaasasolevat vaikeväärtust."
+  },
+  "options.section.network": {
+    "message": "Võrk"
+  },
+  "options.section.sync": {
+    "message": "Sünkroonimine"
+  },
+  "options.section.oauth": {
+    "message": "Microsoft OAuth"
+  },
+  "options.timeout": {
+    "message": "Ühenduse ajalõpp (ms)"
+  },
+  "options.timeout.hint": {
+    "message": "Maksimaalne aeg, mille jooksul oodatakse EAS-serveri vastust, enne kui loobutakse. Suurenda seda, kui sünkroonid aeglase või ebausaldusväärse ühenduse kaudu ja näed sageli ajalõppe. Vaikimisi: 90000 ms (90 sekundit)."
+  },
+  "options.useragent": {
+    "message": "User-Agent päis"
+  },
+  "options.useragent.hint": {
+    "message": "HTTP User-Agent string, mis saadetakse iga EAS-päringuga. Mõned serverid ei aktsepteeri vaikeväärtust ja nõuavad ühenduse lubamiseks kindlat väärtust. Vaikimisi: Thunderbird ActiveSync."
+  },
+  "options.devicetype": {
+    "message": "Seadme tüüp"
+  },
+  "options.devicetype.hint": {
+    "message": "EAS-i DeviceType väärtus, mis saadetakse päringu URL-is. Mõned serverid lükkavad tundmatud seadmetüübid tagasi. Vaikimisi: TbSync."
+  },
+  "options.deviceos": {
+    "message": "Seadme operatsioonisüsteem"
+  },
+  "options.deviceos.hint": {
+    "message": "Operatsioonisüsteemi tunnus, mis saadetakse EAS-i DeviceInformation/Set päringus. Mõned serverid lükkavad tundmatud väärtused tagasi. Jäta tühjaks, et kasutada platvormist tuletatud vaikeväärtust."
+  },
+  "options.maxitems": {
+    "message": "Kirjeid ühes sünkroonimispartiis"
+  },
+  "options.maxitems.hint": {
+    "message": "Suurim kirjete arv, mille server võib ühe sünkroonimispäringuga tagastada. Suuremad väärtused sünkroonivad korralikus ühenduses kiiremini, väiksemad on ebastabiilses ühenduses töökindlamad, kasutavad vähem mälu ja annavad liideses paremat tagasisidet. Vaikimisi: 25."
+  },
+  "options.mstodo": {
+    "message": "Microsoft To Do ühilduvusrežiim"
+  },
+  "options.mstodo.hint": {
+    "message": "Microsoft To Do avaldab ülesanded ainult kuupäevaga tähtajaga ja ilma alguskuupäevata, mistõttu meeldetuletused kuvatakse keskööl. Kui see on sisse lülitatud, kirjutatakse saabuv meeldetuletusega ülesanne ümber nii, et selle algus- ja tähtaeg võrduvad meeldetuletuse ajaga ning meeldetuletus käivitub täpselt ülesande tähtajal. Lülita see sisse ainult siis, kui esineb probleeme ja soovid vaikekäitumisele alternatiivi proovida."
+  },
+  "options.showItemsInTrash": {
+    "message": "Näita kirjeid prügikasti kaustades"
+  },
+  "options.showItemsInTrash.hint": {
+    "message": "Mõned serverid hoiavad kustutatud kalendreid, aadressiraamatuid ja ülesandeloendeid prügikasti kaustas, selle asemel et need lõplikult eemaldada. Vaikimisi on need kaustaloendist peidetud. Lülita see sisse, et muuta need nähtavaks - need kuvatakse tõlgitud eesliitega „Prügikast | “, nii et saad neid eristada ja valida, kas neid sünkroonida. Rakendub järgmisel kaustaloendi värskendamisel."
+  },
+  "options.clientid": {
+    "message": "Kohandatud OAuthi kliendi ID"
+  },
+  "options.clientid.hint": {
+    "message": "Microsoft Entra kliendi ID, mida kasutatakse Microsofti kontodesse sisselogimisel. Jäta tühjaks, et kasutada vaikimisi kliendi ID-d, mille on registreerinud John Bieling (EAS-i teenusepakkuja autor)."
+  },
+  "eas.sync.warning.serverRejectedSomeItems": {
+    "message": "EAS-server ei aktsepteerinud $COUNT$ elementi.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "eas.sync.error.protocolFault": {
+    "message": "Server lükkas sünkroonimispäringu sobimatuna tagasi (kood $STATUS$)",
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "101"
+      }
+    }
+  },
+  "eas.sync.error.accessDenied": {
+    "message": "Server keelas sünkroonimisõiguse: $REASON$ (kood $STATUS$)",
+    "placeholders": {
+      "reason": {
+        "content": "$1",
+        "example": "device type missing or invalid"
+      },
+      "status": {
+        "content": "$2",
+        "example": "109"
+      }
+    }
+  },
+  "eas.sync.error.accessDenied.109": {
+    "message": "seadme tüüp puudub või on sobimatu"
+  },
+  "eas.sync.error.accessDenied.112": {
+    "message": "Active Directory juurdepääs keelati"
+  },
+  "eas.sync.error.accessDenied.126": {
+    "message": "kasutajal on sünkroonimine keelatud"
+  },
+  "eas.sync.error.accessDenied.127": {
+    "message": "kasutaja on uues postkastis ega saa sünkroonida"
+  },
+  "eas.sync.error.accessDenied.128": {
+    "message": "kasutaja on vanas postkastis ega saa sünkroonida"
+  },
+  "eas.sync.error.accessDenied.129": {
+    "message": "seade on selle kasutaja jaoks blokeeritud"
+  },
+  "eas.sync.error.accessDenied.130": {
+    "message": "juurdepääs keelatud"
+  },
+  "eas.sync.error.accessDenied.131": {
+    "message": "konto on välja lülitatud"
+  },
+  "eas.sync.error.missingField": {
+    "message": "ActiveSynci protokolli rikkumine: kohustuslik väli $FIELD$ puudub serveri vastusest.",
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Sync.Collections.Collection.SyncKey"
+      }
+    }
+  },
+  "eas.network.error.transport": {
+    "message": "EAS-i transpordiviga (HTTP $STATUS$)",
+    "placeholders": {
+      "status": {
+        "content": "$1",
+        "example": "500"
+      }
+    }
+  },
+  "eas.network.info.effectiveServerUrl": {
+    "message": "Ühendumine aadressiga $URL$",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "https://mail.example.com/Microsoft-Server-ActiveSync"
+      }
+    }
+  },
+  "eas.network.error.responseNotWbxml": {
+    "message": "Vastus ei ole WBXML (esimesed baidid: $BYTES$)",
+    "placeholders": {
+      "bytes": {
+        "content": "$1",
+        "example": "48 54 4d 4c"
+      }
+    }
+  },
+  "eas.network.error.retriesExhausted": {
+    "message": "Võrgu korduskatsed said otsa - server ei vastanud"
+  },
+  "eas.network.error.redirectMissingLocation": {
+    "message": "Server tagastas 451 ilma X-MS-Location päiseta"
+  }
+}
