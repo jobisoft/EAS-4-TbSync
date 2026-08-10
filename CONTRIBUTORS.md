@@ -3,6 +3,8 @@
 
 ## Contributors
 * Chris Allan (recurring events)
+* CoolingRabbit (Tencent Exmail provisioning tolerance, #337)
+* Thom Cuddihy (push-rejection diagnostics, #319/#322)
 * John Bieling
 * Emil Ljungdahl
 * Mark Nethersole (initial implementation of contact sync)
