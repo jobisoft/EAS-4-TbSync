@@ -27,16 +27,11 @@ import {
   exceptionFingerprint,
   listInstanceCommands,
 } from "../../src/modules/eas/calendar-codec.mjs";
+import { el } from "./support/ad-node.mjs";
 
 // ── Fabricated ApplicationData nodes ─────────────────────────────────────
 // The shape the WBXML decoder hands the codec: {tagName, textContent,
 // children}. `el(tag, "text")` is a leaf, `el(tag, [children])` a wrapper.
-
-function el(tagName, value) {
-  return Array.isArray(value)
-    ? { tagName, children: value }
-    : { tagName, textContent: value, children: [] };
-}
 
 function allDayAdNode({ exceptions = [] } = {}) {
   return el("ApplicationData", [

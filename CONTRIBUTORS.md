@@ -5,6 +5,7 @@
 * Chris Allan (recurring events)
 * CoolingRabbit (Tencent Exmail provisioning tolerance, #337)
 * Thom Cuddihy (push-rejection diagnostics, #319/#322)
+* Tomas Kovacik (unit-test layer: codec/wbxml/blob coverage and live-capture fixtures, PR #345; MeetingResponse contribution, PR #339)
 * John Bieling
 * Emil Ljungdahl
 * Mark Nethersole (initial implementation of contact sync)

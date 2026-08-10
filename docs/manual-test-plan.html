@@ -31,7 +31,10 @@
 
 <h1>Manual test plan</h1>
 <p class="lede">What a person still has to check before a release. Everything
-scriptable lives in <code>test/</code> and runs with <code>npm test</code>;
+scriptable lives in <code>test/</code>: pure logic runs as unit tests with
+<code>npm run test:unit</code> (no Thunderbird needed — see
+<code>test/unit/README.md</code>), everything behavioral runs against live
+servers with <code>npm test</code>;
 what is left here needs a human at the UI — installing, breaking
 authentication, watching a popup take focus. Sections are lettered M1–M9 so a
 bare "§6" always means the automated suite.</p>
