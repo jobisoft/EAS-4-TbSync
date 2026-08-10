@@ -161,7 +161,16 @@ export async function fetchUserInformation({ account, asVersion }) {
       message: `Settings/UserInformation rejected (Status=${status}); server demands re-Provision`,
     });
   }
-  if (status !== null && status !== "1") return null;
+  if (status !== null && status !== "1") {
+    // A refusal, not an answer. The caller records a null as "this server
+    // names nobody" and stops asking for the lifetime of the account, so a
+    // server having a bad minute would cost the mailbox address
+    // permanently. Throw and let the next sync ask again.
+    throw withCode(
+      new Error(`Settings/UserInformation rejected (Status=${status})`),
+      ERR.UNKNOWN_COMMAND,
+    );
+  }
   return readUserInformation(doc);
 }
 

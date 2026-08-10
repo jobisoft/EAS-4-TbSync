@@ -682,8 +682,20 @@ async function revertLocalChanges(ctx) {
       }
     }
     if (!serverID) {
-      // Nothing to fetch — drop the entry and let the regular sync
-      // settle the local state.
+      // Nothing to fetch, so the server's copy cannot be re-read and the
+      // user's edit stands locally while the folder is read-only - the
+      // two have diverged and only the next full pull settles it. Said
+      // out loud, because dropping a queue entry in silence is how a
+      // folder quietly stops matching the server.
+      ctx.provider.reportEventLog({
+        level: "warning",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message:
+          `[${ctx.itemKind.changelogKind}-sync] cannot revert local item ` +
+          `${e.itemId}: it has no ServerId, so the server's copy cannot be ` +
+          `fetched; the local edit stays until the next full pull`,
+      });
       await ctx.queue.remove({
         parentId: e.parentId,
         itemId: e.itemId,
@@ -1639,7 +1651,18 @@ async function applyServerCommands(ctx, commands) {
 
 async function applyAdd(ctx, addNode) {
   const serverID = readPathFrom(addNode, ["ServerId"]);
-  if (!serverID) return;
+  if (!serverID) {
+    // Skipped, and the sync key still advances - the server will not
+    // offer this item again, so it is simply missing locally from here
+    // on. Nothing can be done about it, but it must not be invisible.
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message: `[${ctx.itemKind.changelogKind}-sync] server <Add> without a ServerId, skipped - the item will be missing locally`,
+    });
+    return;
+  }
   const ad = childByTag(addNode, "ApplicationData");
   if (!ad) return;
   await maybeRecordFallbackOrganizerName(ctx, ad);
@@ -1682,7 +1705,15 @@ async function applyAdd(ctx, addNode) {
 
 async function applyChange(ctx, changeNode) {
   const serverID = readPathFrom(changeNode, ["ServerId"]);
-  if (!serverID) return;
+  if (!serverID) {
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message: `[${ctx.itemKind.changelogKind}-sync] server <Change> without a ServerId, skipped - the local copy stays as it is`,
+    });
+    return;
+  }
   const ad = childByTag(changeNode, "ApplicationData");
   if (!ad) return;
   await maybeRecordFallbackOrganizerName(ctx, ad);
