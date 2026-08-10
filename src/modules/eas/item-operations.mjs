@@ -37,7 +37,7 @@ import { easRequest } from "../network.mjs";
 import { ERR } from "../../vendor/tbsync/provider.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 
-function buildBody({ collectionId, serverID }) {
+function buildBody({ collectionId, serverID, bodyType }) {
   const w = createWBXML();
   w.switchpage("ItemOperations");
   w.otag("ItemOperations");
@@ -50,7 +50,10 @@ function buildBody({ collectionId, serverID }) {
   w.otag("Options");
   w.switchpage("AirSyncBase");
   w.otag("BodyPreference");
-  w.atag("Type", "1");
+  // Match the Sync path: HTML for note-bearing classes so a refetched
+  // body carries its formatting into the ALTREP (body-codec). The caller
+  // passes "1" for contacts, "2" for calendar/tasks.
+  w.atag("Type", bodyType ?? "1");
   w.ctag();
   w.switchpage("ItemOperations");
   w.ctag();
@@ -69,6 +72,7 @@ export async function fetchServerItem({
   asVersion,
   collectionId,
   serverID,
+  bodyType,
 }) {
   if (!collectionId || !serverID) return null;
   let resp;
@@ -76,7 +80,7 @@ export async function fetchServerItem({
     resp = await easRequest({
       account,
       command: "ItemOperations",
-      body: buildBody({ collectionId, serverID }),
+      body: buildBody({ collectionId, serverID, bodyType }),
       asVersion,
     });
   } catch (err) {

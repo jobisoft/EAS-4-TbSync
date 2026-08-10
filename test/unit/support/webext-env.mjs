@@ -54,6 +54,26 @@ export function installWebextEnv() {
         const m = /<([^>]+)>/.exec(raw);
         return [{ email: m ? m[1] : String(raw).trim() }];
       },
+      // Stand-in for TB's HTML→text: strips tags, turns block breaks into
+      // newlines, decodes the handful of entities the fixtures use, trims.
+      // The real converter is Thunderbird's; the codec only needs *a*
+      // deterministic plaintext so the DESCRIPTION value assertion means
+      // something. Named limits, not a general HTML parser.
+      async convertToPlainText(body) {
+        return String(body ?? "")
+          .replace(/<\s*br\s*\/?>/gi, "\n")
+          .replace(/<\/\s*(p|div|li|h[1-6])\s*>/gi, "\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&amp;/g, "&")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+      },
     },
   };
 

@@ -62,9 +62,9 @@ function masterVevent(icalString) {
     .find((v) => !v.getFirstProperty("recurrence-id"));
 }
 
-test("applicationDataToIcal: fresh Add maps Subject/Organizer/Attendee/times", () => {
+test("applicationDataToIcal: fresh Add maps Subject/Organizer/Attendee/times", async () => {
   const adNode = parseAdNode(ADD_TEST24);
-  const icalString = applicationDataToIcal({
+  const icalString = await applicationDataToIcal({
     adNode,
     existingIcal: null,
     serverID: "server-id-1",
@@ -97,8 +97,8 @@ test("applicationDataToIcal: fresh Add maps Subject/Organizer/Attendee/times", (
   );
 });
 
-test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fields untouched", () => {
-  const first = applicationDataToIcal({
+test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fields untouched", async () => {
+  const first = await applicationDataToIcal({
     adNode: parseAdNode(ADD_TEST24),
     existingIcal: null,
     serverID: "server-id-1",
@@ -112,7 +112,7 @@ test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fie
   const deltaOnly = parseAdNode(
     `<ApplicationData><DtStamp xmlns='Calendar'>20260731T170000Z</DtStamp></ApplicationData>`,
   );
-  const second = applicationDataToIcal({
+  const second = await applicationDataToIcal({
     adNode: deltaOnly,
     existingIcal: first,
     serverID: "server-id-1",

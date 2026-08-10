@@ -12,6 +12,10 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
+import {
+  readBodyIntoDescription,
+  appendBodyFromDescription,
+} from "./body-codec.mjs";
 import { rruleToEas, easToRrule } from "./recurrence.mjs";
 import {
   guessTimezoneByCurrentOffset,
@@ -33,7 +37,7 @@ const CLASS_TO_SENSITIVITY = { PUBLIC: "0", PRIVATE: "2", CONFIDENTIAL: "3" };
 
 /* ── Reader: ApplicationData → iCal VTODO ──────────────────────────── */
 
-export function applicationDataToIcal({
+export async function applicationDataToIcal({
   adNode,
   existingIcal,
   serverID,
@@ -64,13 +68,9 @@ export function applicationDataToIcal({
   if (subject) vtodo.updatePropertyWithValue("summary", subject);
 
   // Body (codepage-aware).
-  if (asVersion === "2.5") {
-    const data = readPathFrom(adNode, ["Body"]);
-    if (data) vtodo.updatePropertyWithValue("description", data);
-  } else {
-    const data = readPathFrom(adNode, ["Body", "Data"]);
-    if (data) vtodo.updatePropertyWithValue("description", data);
-  }
+  await readBodyIntoDescription(vtodo, adNode, {
+    useAirSyncBase: asVersion !== "2.5",
+  });
 
   // Reminder is read up-front so the MS To-Do compatibility hack can pin
   // DTSTART/DUE to the reminder time before they are written.
@@ -231,7 +231,7 @@ export function appendApplicationDataFromIcal({
   builder.atag("Subject", stringOf(vtodo.getFirstPropertyValue("summary")));
 
   // Body.
-  appendBody(builder, vtodo, asVersion);
+  appendBodyFromDescription(builder, vtodo, asVersion, "Tasks");
 
   // Importance.
   const priority = stringOf(vtodo.getFirstPropertyValue("priority"));
@@ -492,23 +492,6 @@ function absoluteReminderTime(alarm, anchorProp) {
 }
 
 /* ── Body ──────────────────────────────────────────────────────────── */
-
-function appendBody(builder, vtodo, asVersion) {
-  const desc = stringOf(vtodo.getFirstPropertyValue("description"));
-  if (asVersion === "16.1" && !desc) return;
-  if (asVersion === "2.5") {
-    builder.atag("Body", desc ?? "");
-    return;
-  }
-  builder.switchpage("AirSyncBase");
-  builder.otag("Body");
-  builder.atag("Type", "1");
-  if (asVersion !== "16.1")
-    builder.atag("EstimatedDataSize", String((desc ?? "").length));
-  builder.atag("Data", desc ?? "");
-  builder.ctag();
-  builder.switchpage("Tasks");
-}
 
 /* ── Recurrence (RRULE only; tasks have no exceptions) ────────────── */
 

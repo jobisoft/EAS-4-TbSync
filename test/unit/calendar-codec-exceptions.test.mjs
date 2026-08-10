@@ -66,8 +66,8 @@ function readerArgs(adNode) {
 const propLines = (ical, name) =>
   ical.split(/\r?\n/).filter((l) => l.startsWith(name));
 
-test("14.x embedded exceptions on an all-day master come out as DATEs", () => {
-  const ical = applicationDataToIcal(
+test("14.x embedded exceptions on an all-day master come out as DATEs", async () => {
+  const ical = await applicationDataToIcal(
     readerArgs(
       allDayAdNode({
         exceptions: [
@@ -99,7 +99,7 @@ test("14.x embedded exceptions on an all-day master come out as DATEs", () => {
   );
 });
 
-test("a timed master keeps DATE-TIME exceptions", () => {
+test("a timed master keeps DATE-TIME exceptions", async () => {
   const node = allDayAdNode({
     exceptions: [
       el("Exception", [
@@ -114,7 +114,7 @@ test("a timed master keeps DATE-TIME exceptions", () => {
     if (c.tagName === "StartTime") c.textContent = "20261012T090000Z";
     if (c.tagName === "EndTime") c.textContent = "20261012T100000Z";
   }
-  const ical = applicationDataToIcal(readerArgs(node));
+  const ical = await applicationDataToIcal(readerArgs(node));
   assert.deepEqual(
     propLines(ical, "EXDATE"),
     ["EXDATE:20261013T090000Z"],
@@ -140,7 +140,7 @@ const ALLDAY_MASTER = [
   "",
 ].join("\r\n");
 
-test("an instance delete on an all-day master writes a DATE EXDATE", () => {
+test("an instance delete on an all-day master writes a DATE EXDATE", async () => {
   const out = applyInstanceDelete({
     ical: ALLDAY_MASTER,
     instanceUtc: new Date("2026-10-14T00:00:00Z"),
@@ -148,7 +148,7 @@ test("an instance delete on an all-day master writes a DATE EXDATE", () => {
   assert.deepEqual(propLines(out, "EXDATE"), ["EXDATE;VALUE=DATE:20261014"]);
 });
 
-test("a legacy DATE-TIME row still matches - no duplicate, old override replaced", () => {
+test("a legacy DATE-TIME row still matches - no duplicate, old override replaced", async () => {
   // A blob written before the DATE form: all-day master carrying a
   // DATE-TIME EXDATE and a DATE-TIME-anchored override for the same days.
   const legacy = ALLDAY_MASTER.replace(
@@ -182,7 +182,7 @@ test("a legacy DATE-TIME row still matches - no duplicate, old override replaced
 
   // Re-delivered change for the occurrence the old-form override anchors:
   // it must replace that override, not sit beside it.
-  const afterChange = applyInstanceChange({
+  const afterChange = await applyInstanceChange({
     ical: legacy,
     adNode: el("ApplicationData", [
       el("Subject", "new-form override"),
@@ -202,7 +202,7 @@ test("a legacy DATE-TIME row still matches - no duplicate, old override replaced
   );
 });
 
-test("fingerprint and instance commands agree on DATE rows", () => {
+test("fingerprint and instance commands agree on DATE rows", async () => {
   const withExc = applyInstanceDelete({
     ical: ALLDAY_MASTER,
     instanceUtc: new Date("2026-10-14T00:00:00Z"),
@@ -228,7 +228,7 @@ test("fingerprint and instance commands agree on DATE rows", () => {
   );
 });
 
-test("an unknown DATE exdate becomes a 16.1 delete with a fake-local InstanceId", () => {
+test("an unknown DATE exdate becomes a 16.1 delete with a fake-local InstanceId", async () => {
   const withExc = applyInstanceDelete({
     ical: ALLDAY_MASTER,
     instanceUtc: new Date("2026-10-14T00:00:00Z"),
@@ -256,6 +256,8 @@ test("an unknown DATE exdate becomes a 16.1 delete with a fake-local InstanceId"
 // suite covers timed events against real servers.
 
 import { appendApplicationDataFromIcal } from "../../src/modules/eas/calendar-codec.mjs";
+import { installWebextEnv } from "./support/webext-env.mjs";
+installWebextEnv();
 
 /** Records every element the writer emits; enough builder for the codec. */
 function mockBuilder() {
@@ -310,7 +312,7 @@ function writeArgs(builder, asVersion) {
   };
 }
 
-test("14.1 all-day: date-shaped boundaries, UTC blob, exceptions on the grid", () => {
+test("14.1 all-day: date-shaped boundaries, UTC blob, exceptions on the grid", async () => {
   const b = mockBuilder();
   appendApplicationDataFromIcal(writeArgs(b, "14.1"));
   const byTag = (t) => b.atags.filter(([tag]) => tag === t).map(([, v]) => v);
@@ -329,7 +331,7 @@ test("14.1 all-day: date-shaped boundaries, UTC blob, exceptions on the grid", (
   );
 });
 
-test("14.1 all-day: suppressExceptions leaves the wrapper out", () => {
+test("14.1 all-day: suppressExceptions leaves the wrapper out", async () => {
   const b = mockBuilder();
   appendApplicationDataFromIcal({
     ...writeArgs(b, "14.1"),
@@ -345,7 +347,7 @@ test("14.1 all-day: suppressExceptions leaves the wrapper out", () => {
   );
 });
 
-test("16.1 all-day: no blob, same date-shaped boundaries", () => {
+test("16.1 all-day: no blob, same date-shaped boundaries", async () => {
   const b = mockBuilder();
   appendApplicationDataFromIcal(writeArgs(b, "16.1"));
   const byTag = (t) => b.atags.filter(([tag]) => tag === t).map(([, v]) => v);
@@ -357,11 +359,11 @@ test("16.1 all-day: no blob, same date-shaped boundaries", () => {
   );
 });
 
-test("an Exception without its own AllDayEvent inherits the master's", () => {
+test("an Exception without its own AllDayEvent inherits the master's", async () => {
   // [MS-ASCAL] §2.2.2.1: absent means "same as top-level". Exchange 16.1
   // omits it on embedded exceptions; reading absence as 0 turned an
   // all-day override timed, and its midnight-UTC DTSTART bound nothing.
-  const ical = applicationDataToIcal(
+  const ical = await applicationDataToIcal(
     readerArgs(
       allDayAdNode({
         exceptions: [
@@ -394,12 +396,12 @@ const TIMED_MASTER = ALLDAY_MASTER.replace(
   "DTSTART:20261012T090000Z",
 ).replace("DTEND;VALUE=DATE:20261013", "DTEND:20261012T100000Z");
 
-test("#342: a status-only instance Change keeps the override's own fields", () => {
+test("#342: a status-only instance Change keeps the override's own fields", async () => {
   // The reporter's trace: after a series-level operation Exchange re-sends
   // the exception with Subject/Start/End omitted - a delta meaning
   // "unchanged". Rebuilding from an empty component blanked the title and
   // times; the rebuild now seeds from the existing override.
-  const withOverride = applyInstanceChange({
+  const withOverride = await applyInstanceChange({
     ical: TIMED_MASTER,
     adNode: el("ApplicationData", [
       el("Subject", "kept title"),
@@ -411,7 +413,7 @@ test("#342: a status-only instance Change keeps the override's own fields", () =
     defaultTimezone: "UTC",
     userEmail: null,
   });
-  const afterDelta = applyInstanceChange({
+  const afterDelta = await applyInstanceChange({
     ical: withOverride,
     adNode: el("ApplicationData", [el("BusyStatus", "0")]),
     instanceUtc: new Date("2026-10-13T09:00:00Z"),
@@ -430,8 +432,8 @@ test("#342: a status-only instance Change keeps the override's own fields", () =
   );
 });
 
-test("#342: with no prior override, omitted fields inherit from the master", () => {
-  const out = applyInstanceChange({
+test("#342: with no prior override, omitted fields inherit from the master", async () => {
+  const out = await applyInstanceChange({
     ical: TIMED_MASTER,
     adNode: el("ApplicationData", [el("BusyStatus", "0")]),
     instanceUtc: new Date("2026-10-13T09:00:00Z"),
@@ -458,10 +460,10 @@ test("#342: with no prior override, omitted fields inherit from the master", () 
   );
 });
 
-test("#342: a sparse embedded 14.x exception inherits the master's fields", () => {
+test("#342: a sparse embedded 14.x exception inherits the master's fields", async () => {
   // §2.2.2.21: an absent child element is "the same as the top-level
   // element". All-day master, so the derived boundaries stay DATEs.
-  const ical = applicationDataToIcal(
+  const ical = await applicationDataToIcal(
     readerArgs(
       allDayAdNode({
         exceptions: [

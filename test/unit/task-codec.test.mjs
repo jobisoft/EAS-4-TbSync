@@ -50,8 +50,8 @@ function firstVtodo(icalString) {
   );
 }
 
-test("applicationDataToIcal: maps Subject/Body/Importance/Sensitivity/Start/Due/Categories", () => {
-  const ical = applicationDataToIcal({
+test("applicationDataToIcal: maps Subject/Body/Importance/Sensitivity/Start/Due/Categories", async () => {
+  const ical = await applicationDataToIcal({
     adNode: parseAdNode(ADD_TASK),
     existingIcal: null,
     serverID: "server-id-task-1",
@@ -79,12 +79,12 @@ test("applicationDataToIcal: maps Subject/Body/Importance/Sensitivity/Start/Due/
   assert.equal(readEasServerIdFromIcal(ical), "server-id-task-1");
 });
 
-test("applicationDataToIcal: Complete=1 sets STATUS/PERCENT-COMPLETE/COMPLETED", () => {
+test("applicationDataToIcal: Complete=1 sets STATUS/PERCENT-COMPLETE/COMPLETED", async () => {
   const completedAd = ADD_TASK.replace(
     "<Complete xmlns='Tasks'>0</Complete>",
     "<Complete xmlns='Tasks'>1</Complete><DateCompleted xmlns='Tasks'>2026-08-02T10:00:00.000Z</DateCompleted>",
   );
-  const ical = applicationDataToIcal({
+  const ical = await applicationDataToIcal({
     adNode: parseAdNode(completedAd),
     existingIcal: null,
     serverID: "server-id-task-1",
@@ -103,7 +103,7 @@ test("applicationDataToIcal: Complete=1 sets STATUS/PERCENT-COMPLETE/COMPLETED",
   );
 });
 
-test("applicationDataToIcal: Complete is merge-aware - clears a prior COMPLETED state when a later delta says Complete=0", () => {
+test("applicationDataToIcal: Complete is merge-aware - clears a prior COMPLETED state when a later delta says Complete=0", async () => {
   const commonArgs = {
     serverID: "server-id-task-1",
     asVersion: "16.1",
@@ -116,13 +116,13 @@ test("applicationDataToIcal: Complete is merge-aware - clears a prior COMPLETED 
     "<Complete xmlns='Tasks'>0</Complete>",
     "<Complete xmlns='Tasks'>1</Complete><DateCompleted xmlns='Tasks'>2026-08-02T10:00:00.000Z</DateCompleted>",
   );
-  const afterComplete = applicationDataToIcal({
+  const afterComplete = await applicationDataToIcal({
     adNode: parseAdNode(completedAd),
     existingIcal: null,
     ...commonArgs,
   });
 
-  const reopened = applicationDataToIcal({
+  const reopened = await applicationDataToIcal({
     adNode: parseAdNode(
       `<ApplicationData><Complete xmlns='Tasks'>0</Complete></ApplicationData>`,
     ),
@@ -135,7 +135,7 @@ test("applicationDataToIcal: Complete is merge-aware - clears a prior COMPLETED 
   assert.equal(vtodo.getFirstPropertyValue("completed"), null);
 });
 
-test("applicationDataToIcal: a delta without <Complete> leaves an existing completion state untouched", () => {
+test("applicationDataToIcal: a delta without <Complete> leaves an existing completion state untouched", async () => {
   const commonArgs = {
     serverID: "server-id-task-1",
     asVersion: "16.1",
@@ -148,13 +148,13 @@ test("applicationDataToIcal: a delta without <Complete> leaves an existing compl
     "<Complete xmlns='Tasks'>0</Complete>",
     "<Complete xmlns='Tasks'>1</Complete>",
   );
-  const afterComplete = applicationDataToIcal({
+  const afterComplete = await applicationDataToIcal({
     adNode: parseAdNode(completedAd),
     existingIcal: null,
     ...commonArgs,
   });
 
-  const afterSubjectEdit = applicationDataToIcal({
+  const afterSubjectEdit = await applicationDataToIcal({
     adNode: parseAdNode(
       `<ApplicationData><Subject xmlns='Tasks'>renamed</Subject></ApplicationData>`,
     ),
@@ -166,8 +166,8 @@ test("applicationDataToIcal: a delta without <Complete> leaves an existing compl
   assert.equal(vtodo.getFirstPropertyValue("status"), "COMPLETED");
 });
 
-test("stampEasServerId / readEasServerIdFromIcal round-trip", () => {
-  const ical = applicationDataToIcal({
+test("stampEasServerId / readEasServerIdFromIcal round-trip", async () => {
+  const ical = await applicationDataToIcal({
     adNode: parseAdNode(ADD_TASK),
     existingIcal: null,
     serverID: "original-id",
@@ -181,7 +181,7 @@ test("stampEasServerId / readEasServerIdFromIcal round-trip", () => {
   assert.equal(readEasServerIdFromIcal(restamped), "new-id");
 });
 
-test("appendApplicationDataFromIcal: outbound round-trip via the real WBXML encoder/decoder", () => {
+test("appendApplicationDataFromIcal: outbound round-trip via the real WBXML encoder/decoder", async () => {
   const ical = `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VTODO

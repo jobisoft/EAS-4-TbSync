@@ -696,6 +696,9 @@ async function revertLocalChanges(ctx) {
       asVersion: ctx.asVersion,
       collectionId: ctx.collectionId,
       serverID,
+      // HTML for note-bearing classes, plain for contacts - as the Sync
+      // Options BodyPreference does.
+      bodyType: ctx.itemKind.className === "Contacts" ? "1" : "2",
     });
 
     if (!properties) {
@@ -1712,7 +1715,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
       instanceUtc,
     });
   } else {
-    nextBlob = codec.applyInstanceChange?.({
+    nextBlob = await codec.applyInstanceChange?.({
       ical: existing.blob,
       adNode: ad,
       instanceUtc,
@@ -1919,7 +1922,10 @@ function buildSyncBody({
       if (sendConflict) w.atag("Conflict", conflict);
       w.switchpage("AirSyncBase");
       w.otag("BodyPreference");
-      w.atag("Type", "1");
+      // HTML for the note-bearing calendar/task classes, so the server's
+      // formatting survives into the DESCRIPTION's ALTREP (body-codec).
+      // Contacts stay plain text - a vCard NOTE has no HTML form.
+      w.atag("Type", className === "Contacts" ? "1" : "2");
       w.ctag();
       w.switchpage("AirSync");
       w.ctag();

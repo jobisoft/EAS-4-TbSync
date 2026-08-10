@@ -26,6 +26,10 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom } from "./wbxml-helpers.mjs";
+import {
+  readBodyIntoDescription,
+  appendBodyFromDescription,
+} from "./body-codec.mjs";
 import { rruleToEas, easToRrule } from "./recurrence.mjs";
 import { TimeZoneBlob, isAllZero } from "./timezone-blob.mjs";
 import {
@@ -69,7 +73,7 @@ const ATTENDEESTATUS_TO_PARTSTAT = {
 
 /* ── Reader: ApplicationData → iCal VEVENT ─────────────────────────── */
 
-export function applicationDataToIcal({
+export async function applicationDataToIcal({
   adNode,
   existingIcal,
   serverID,
@@ -116,7 +120,7 @@ export function applicationDataToIcal({
     );
   }
 
-  populateVeventFromAd({
+  await populateVeventFromAd({
     adNode,
     vevent,
     asVersion,
@@ -155,7 +159,7 @@ export function applicationDataToIcal({
         }
       }
       vevent.removeAllProperties("exdate");
-      appendInboundExceptions({
+      await appendInboundExceptions({
         adNode,
         vcal,
         vevent,
@@ -172,7 +176,7 @@ export function applicationDataToIcal({
  *  or <Exception> node. The set of fields is the same on both - legacy
  *  reuses `setThunderbirdItemFromWbxml` for both paths.
  *  Returns nothing; mutates `vevent`. */
-function populateVeventFromAd({
+async function populateVeventFromAd({
   adNode,
   vevent,
   asVersion,
@@ -196,13 +200,9 @@ function populateVeventFromAd({
   if (locDisplay) vevent.updatePropertyWithValue("location", locDisplay);
 
   // Body (codepage-aware; AirSyncBase ≥14.x).
-  if (useAirSyncBaseBody(asVersion)) {
-    const data = readPathFrom(adNode, ["Body", "Data"]);
-    if (data) vevent.updatePropertyWithValue("description", data);
-  } else {
-    const data = readPathFrom(adNode, ["Body"]);
-    if (data) vevent.updatePropertyWithValue("description", data);
-  }
+  await readBodyIntoDescription(vevent, adNode, {
+    useAirSyncBase: useAirSyncBaseBody(asVersion),
+  });
 
   // Resolve effective timezone: from the TimeZone blob when the item
   // carried a real one, otherwise the host's default zone (servers that
@@ -357,7 +357,7 @@ function populateVeventFromAd({
  *  Locates or creates the override VEVENT keyed by RECURRENCE-ID, then
  *  populates it from `adNode`. For deletions, the runner adds an EXDATE
  *  via `addExdateToMaster` instead. */
-export function applyInstanceChange({
+export async function applyInstanceChange({
   ical,
   adNode,
   instanceUtc,
@@ -405,7 +405,7 @@ export function applyInstanceChange({
   const ridProp = new ICAL.Property("recurrence-id", override);
   ridProp.setValue(ridTime);
   override.addProperty(ridProp);
-  populateVeventFromAd({
+  await populateVeventFromAd({
     adNode: adNode,
     vevent: override,
     asVersion,
@@ -726,7 +726,7 @@ export function appendApplicationDataFromIcal({
   builder.atag("AllDayEvent", allDay ? "1" : "0");
 
   // Body.
-  appendBody(builder, vevent, asVersion);
+  appendBodyFromDescription(builder, vevent, asVersion, "Calendar");
 
   // BusyStatus from TRANSP (or TENTATIVE STATUS).
   const status = stringOf(vevent.getFirstPropertyValue("status"));
@@ -1321,7 +1321,7 @@ function isAllDayProp(prop) {
  *  the master (`Deleted=1`) or build an override VEVENT keyed by
  *  RECURRENCE-ID. Mirrors legacy `setItemRecurrence` at
  *  sync.js:1344-1372. */
-function appendInboundExceptions({
+async function appendInboundExceptions({
   adNode,
   vcal,
   vevent,
@@ -1368,7 +1368,7 @@ function appendInboundExceptions({
     const ridProp = new ICAL.Property("recurrence-id", override);
     ridProp.setValue(ridTime);
     override.addProperty(ridProp);
-    populateVeventFromAd({
+    await populateVeventFromAd({
       adNode: exc,
       vevent: override,
       asVersion,
@@ -1713,23 +1713,6 @@ function appendRecurrence(builder, rruleProp, dtstartProp) {
 }
 
 /* ── Helpers: body codepage ───────────────────────────────────────── */
-
-function appendBody(builder, vevent, asVersion) {
-  const desc = stringOf(vevent.getFirstPropertyValue("description"));
-  if (asVersion === "16.1" && !desc) return;
-  if (asVersion === "2.5") {
-    builder.atag("Body", desc ?? "");
-    return;
-  }
-  builder.switchpage("AirSyncBase");
-  builder.otag("Body");
-  builder.atag("Type", "1");
-  if (asVersion !== "16.1")
-    builder.atag("EstimatedDataSize", String((desc ?? "").length));
-  builder.atag("Data", desc ?? "");
-  builder.ctag();
-  builder.switchpage("Calendar");
-}
 
 function useAirSyncBaseBody(asVersion) {
   return asVersion !== "2.5";

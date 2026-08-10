@@ -53,8 +53,8 @@ function masterVevent(icalString) {
     .find((v) => !v.getFirstProperty("recurrence-id"));
 }
 
-test("single event: a Change reschedules Start/End and edits Subject", () => {
-  const afterAdd = applicationDataToIcal({
+test("single event: a Change reschedules Start/End and edits Subject", async () => {
+  const afterAdd = await applicationDataToIcal({
     adNode: parseAdNode(ADD_SINGLE_EVENT),
     existingIcal: null,
     ...COMMON,
@@ -66,7 +66,7 @@ test("single event: a Change reschedules Start/End and edits Subject", () => {
     <Subject xmlns='Calendar'>test-single (moved)</Subject>
   </ApplicationData>`);
 
-  const afterReschedule = applicationDataToIcal({
+  const afterReschedule = await applicationDataToIcal({
     adNode: reschedule,
     existingIcal: afterAdd,
     ...COMMON,
@@ -103,8 +103,8 @@ const ADD_RECURRING_SERIES = `<ApplicationData>
   <MeetingStatus xmlns='Calendar'>0</MeetingStatus>
 </ApplicationData>`;
 
-test("whole series: a Change with a new Recurrence.Until shortens the RRULE", () => {
-  const afterAdd = applicationDataToIcal({
+test("whole series: a Change with a new Recurrence.Until shortens the RRULE", async () => {
+  const afterAdd = await applicationDataToIcal({
     adNode: parseAdNode(ADD_RECURRING_SERIES),
     existingIcal: null,
     ...COMMON,
@@ -120,7 +120,7 @@ test("whole series: a Change with a new Recurrence.Until shortens the RRULE", ()
     </Recurrence>
   </ApplicationData>`);
 
-  const afterChange = applicationDataToIcal({
+  const afterChange = await applicationDataToIcal({
     adNode: shortened,
     existingIcal: afterAdd,
     ...COMMON,
@@ -141,8 +141,8 @@ function overrideByRecurrenceId(icalString, isoDate) {
     );
 }
 
-test("single occurrence (16.1 standalone Change): applyInstanceChange reschedules just that instance", () => {
-  const afterAdd = applicationDataToIcal({
+test("single occurrence (16.1 standalone Change): applyInstanceChange reschedules just that instance", async () => {
+  const afterAdd = await applicationDataToIcal({
     adNode: parseAdNode(ADD_RECURRING_SERIES),
     existingIcal: null,
     ...COMMON,
@@ -156,7 +156,7 @@ test("single occurrence (16.1 standalone Change): applyInstanceChange reschedule
     <Subject xmlns='Calendar'>test-series (one occurrence moved)</Subject>
   </ApplicationData>`);
 
-  const afterInstanceChange = applyInstanceChange({
+  const afterInstanceChange = await applyInstanceChange({
     ical: afterAdd,
     adNode: occurrenceEdit,
     instanceUtc,
@@ -187,8 +187,8 @@ test("single occurrence (16.1 standalone Change): applyInstanceChange reschedule
   );
 });
 
-test("single occurrence (16.1 standalone Change): applyInstanceDelete adds an EXDATE and drops any override", () => {
-  const afterAdd = applicationDataToIcal({
+test("single occurrence (16.1 standalone Change): applyInstanceDelete adds an EXDATE and drops any override", async () => {
+  const afterAdd = await applicationDataToIcal({
     adNode: parseAdNode(ADD_RECURRING_SERIES),
     existingIcal: null,
     ...COMMON,
