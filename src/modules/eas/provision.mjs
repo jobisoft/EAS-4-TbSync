@@ -109,10 +109,17 @@ export async function acquirePolicyKey({ account, asVersion }) {
   if (!initial.doc)
     throw withCode(new Error("Empty Provision response"), ERR.UNKNOWN_COMMAND);
 
+  // A missing top-level Status is tolerated, a present non-1 is not.
+  // [MS-ASPROV] requires the element, but Tencent Exmail omits it
+  // entirely and puts the verdict only in Policies/Policy/Status - which
+  // is validated in full right below, including the no-policy case. v4
+  // never read the top-level element, which is why it worked against
+  // that server for years (#337; response captured there, fix verified
+  // against the live server by the reporter).
   const provisionStatus = readPath(initial.doc, ["Status"]);
-  if (provisionStatus !== "1") {
+  if (provisionStatus !== null && provisionStatus !== "1") {
     throw withCode(
-      new Error(`Provision rejected (Status=${provisionStatus ?? "missing"})`),
+      new Error(`Provision rejected (Status=${provisionStatus})`),
       ERR.UNKNOWN_COMMAND,
     );
   }
@@ -153,10 +160,12 @@ export async function acquirePolicyKey({ account, asVersion }) {
       ERR.UNKNOWN_COMMAND,
     );
 
+  // Same tolerance as the initial response: the ACK's PolicyKey below is
+  // the part that cannot be absent.
   const ackStatus = readPath(ack.doc, ["Status"]);
-  if (ackStatus !== "1") {
+  if (ackStatus !== null && ackStatus !== "1") {
     throw withCode(
-      new Error(`Provision ACK rejected (Status=${ackStatus ?? "missing"})`),
+      new Error(`Provision ACK rejected (Status=${ackStatus})`),
       ERR.UNKNOWN_COMMAND,
     );
   }
