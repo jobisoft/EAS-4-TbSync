@@ -81,3 +81,42 @@ test("accented text survives the real WBXML wire round-trip", () => {
   const doc = docFromXml(decodeWBXML(w.getBytes()));
   assert.equal(readPath(doc, ["ServerId"]), original);
 });
+
+test("a builder started on a non-default codepage announces it on the wire", () => {
+  // `createWBXML(ns)` tracks the codepage for token lookup; the bytes
+  // have to say so too, or the reader stays on AirSync and every tag
+  // decodes as whatever shares its number there. A ResolveRecipients
+  // request built this way reached a live server as `<Sync><Class>`,
+  // which Exchange answered with Status 5 - so both construction forms
+  // must produce identical bytes.
+  const viaArgument = createWBXML("ResolveRecipients");
+  viaArgument.otag("ResolveRecipients");
+  viaArgument.atag("To", "someone@example.org");
+  viaArgument.ctag();
+
+  const viaSwitch = createWBXML();
+  viaSwitch.switchpage("ResolveRecipients");
+  viaSwitch.otag("ResolveRecipients");
+  viaSwitch.atag("To", "someone@example.org");
+  viaSwitch.ctag();
+
+  assert.deepEqual(
+    Array.from(viaArgument.getBytes()),
+    Array.from(viaSwitch.getBytes()),
+    "the two ways of starting on a codepage must encode identically",
+  );
+  assert.match(decodeWBXML(viaArgument.getBytes()), /<ResolveRecipients/);
+});
+
+test("starting on AirSync emits no page switch - it is already page 0", () => {
+  const explicit = createWBXML("AirSync");
+  explicit.otag("Add");
+  explicit.ctag();
+  const implicit = createWBXML();
+  implicit.otag("Add");
+  implicit.ctag();
+  assert.deepEqual(
+    Array.from(explicit.getBytes()),
+    Array.from(implicit.getBytes()),
+  );
+});

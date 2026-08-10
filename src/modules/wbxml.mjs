@@ -168,6 +168,11 @@ export function createWBXML(initialNamespace = "") {
     if (idx === undefined)
       throw new Error(`wbxml: unknown namespace '${initialNamespace}'`);
     codepage = idx;
+    // A document starts on page 0, so anything else has to be announced
+    // in the bytes as well as tracked here - otherwise the tokens come
+    // from this page while the reader is still on AirSync, and every tag
+    // decodes as whatever shares its number there.
+    if (idx !== 0) bytes.push(0x00, idx);
   }
 
   const tokenFor = (name) => {
