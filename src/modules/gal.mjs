@@ -114,7 +114,14 @@ export async function enableGal({ provider, account }) {
   const callback = async (_node, searchString) => {
     const query = String(searchString ?? "").trim();
     if (query.length < MIN_QUERY_LENGTH) {
-      return { results: [], isCompleteResult: true };
+      // `isCompleteResult: false`, deliberately: `true` tells Thunderbird
+      // the empty answer is final for this prefix, and its autocomplete
+      // then narrows the cached result locally instead of asking again on
+      // the next keystroke - which is why the GAL appeared to need one
+      // more character than MIN_QUERY_LENGTH (#344: gate 3, observed 4).
+      // "Incomplete" keeps it querying, so the search genuinely fires the
+      // moment the query is long enough.
+      return { results: [], isCompleteResult: false };
     }
     try {
       // Reload the account each time so we pick up token / server-URL
