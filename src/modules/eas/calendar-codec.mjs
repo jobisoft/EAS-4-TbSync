@@ -83,6 +83,7 @@ export async function applicationDataToIcal({
   uid,
   userEmail,
   eventLog,
+  nativePlainText = null,
 }) {
   // Merge mode: parse the existing iCal and overlay only fields the AD
   // mentions. Fall through to a fresh build when there's no existing
@@ -126,6 +127,7 @@ export async function applicationDataToIcal({
     asVersion,
     defaultTimezone,
     userEmail,
+    nativePlainText,
   });
 
   // Recurrence + 2.5/14.x exceptions. Gated on the account-level
@@ -189,6 +191,7 @@ async function populateVeventFromAd({
   // midnight-UTC DTSTART then failed to match anything.
   inheritedAllDay = false,
   userEmail,
+  nativePlainText = null,
 }) {
   // Subject / Location.
   const subject = readPathFrom(adNode, ["Subject"]);
@@ -202,6 +205,7 @@ async function populateVeventFromAd({
   // Body (codepage-aware; AirSyncBase ≥14.x).
   await readBodyIntoDescription(vevent, adNode, {
     useAirSyncBase: useAirSyncBaseBody(asVersion),
+    nativePlainText,
   });
 
   // Resolve effective timezone: from the TimeZone blob when the item

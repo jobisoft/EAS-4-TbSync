@@ -20,6 +20,11 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { readPathFrom, readChildTexts } from "./wbxml-helpers.mjs";
+import {
+  asNoteText,
+  rememberNoteLineEndings,
+  restoreNoteLineEndings,
+} from "./note-text.mjs";
 
 /** vCard property name we use to track the EAS server-side serverId so
  *  pull-update / pull-delete can find the right local card without a
@@ -153,8 +158,7 @@ export function appendApplicationDataFromVCard({
   // 16.x Changes are full replacements - omitting an element is what
   // deletes it. So the clear-capable writers emit their empty form only
   // for a pre-16 Change; everywhere else absence speaks for itself.
-  const emitClears =
-    op !== "add" && !String(asVersion ?? "").startsWith("16");
+  const emitClears = op !== "add" && !String(asVersion ?? "").startsWith("16");
 
   // Phone bucketing happens once: standard types go to the Contacts
   // page below and CompanyMainPhone goes to the Contacts2 page at the
@@ -201,7 +205,7 @@ export function appendApplicationDataFromVCard({
   // Contacts page; for AS >= 12.0 writeNote switches to AirSyncBase
   // and leaves the builder there.
   writeNote(builder, comp, asVersion);
-  
+
   builder.switchpage("Contacts2");
   // Empty clears on a Change, omitted on an Add - same reasoning as
   // writeDates.
@@ -234,11 +238,7 @@ export function appendApplicationDataFromVCard({
   // (contactsync.js:141, 549-554). Trying to atag it on the Contacts
   // page would throw because the Contacts codepage table doesn't
   // carry CompanyMainPhone.
-  emitIf(
-    builder,
-    "CompanyMainPhone",
-    phoneBuckets.prefixed.CompanyMainPhone,
-  );
+  emitIf(builder, "CompanyMainPhone", phoneBuckets.prefixed.CompanyMainPhone);
   // ManagerName / MMS also live on Contacts2 per MS-ASCNTC. Legacy's
   // `unused_EAS_properties` loop emitted them on the Contacts page
   // where `wbxmltools.atag` would throw for any populated value, so
@@ -692,13 +692,17 @@ function readNote(adNode, comp, asVersion) {
   const bodyNode = childByTag(adNode, "Body");
   if (!bodyNode) return;
   comp.removeAllProperties("note");
-  if (useAirSyncBaseBody(asVersion)) {
-    const data = readPathFrom(bodyNode, ["Data"]);
-    if (data) comp.updatePropertyWithValue("note", data);
-  } else {
-    const data = readPathFrom(adNode, ["Body"]);
-    if (data) comp.updatePropertyWithValue("note", data);
-  }
+  const data = useAirSyncBaseBody(asVersion)
+    ? readPathFrom(bodyNode, ["Data"])
+    : readPathFrom(adNode, ["Body"]);
+  if (!data) return;
+  // A vCard NOTE is TEXT and cannot hold a carriage return any more than an
+  // iCalendar one can, so the server's line endings are normalised here and
+  // remembered, and `writeNote` puts them back. Without that the note is
+  // stored in a shape that does not serialise, and every push of a
+  // multi-line note would send bytes the server never gave us.
+  rememberNoteLineEndings(comp, data);
+  comp.updatePropertyWithValue("note", asNoteText(data));
 }
 
 /** Emit the contact note. For AS 2.5 the body emits as a bare `<Body>`
@@ -720,7 +724,10 @@ function readNote(adNode, comp, asVersion) {
  *  servers fail the sync when it's present
  *  ([contactsync.js:538-541](legacy/EAS4/content/includes/contactsync.js#L538-L541)). */
 function writeNote(b, comp, asVersion) {
-  const note = stringOf(comp.getFirstPropertyValue("note"));
+  const note = restoreNoteLineEndings(
+    comp,
+    stringOf(comp.getFirstPropertyValue("note")),
+  );
   if (useAirSyncBaseBody(asVersion)) {
     b.switchpage("AirSyncBase");
     b.otag("Body");
@@ -788,9 +795,7 @@ function writeCategories(b, comp, emitClears) {
   // it"); the writer just never held up its half, so removed categories
   // were resurrected by the next pull. Omitted on an Add (16.1: Status 6).
   const prop = comp.getFirstProperty("categories");
-  const values = prop
-    ? prop.getValues().map(stringOf).filter(Boolean)
-    : [];
+  const values = prop ? prop.getValues().map(stringOf).filter(Boolean) : [];
   if (!values.length) {
     if (emitClears) b.atag("Categories", "");
     return;
@@ -977,4 +982,3 @@ function childByTag(node, tag) {
   for (const c of node.children) if (c.tagName === tag) return c;
   return null;
 }
-

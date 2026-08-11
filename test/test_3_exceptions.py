@@ -28,8 +28,6 @@ from harness import test
 # sections need - binding one is a full download, and the suite has no
 # reason to pull an address book it never reads.
 NEEDS = ("events",)
-# Needs the account to sync recurrence - recurrence overrides are the whole subject.
-NEEDS_RECURRENCE = True
 
 # Matched on the SUMMARY, never the UID: 3.5's clean pull mints fresh UIDs,
 # so a UID-keyed lookup reports an intact series as missing.
@@ -111,6 +109,18 @@ def t_3_4(s):
     hour = int(dt.group(2)) + 1
     moved_block = block.replace(
         dt.group(0), f"DTSTART;TZID={dt.group(1)}:20260909T{hour:02d}{dt.group(3)}"
+    )
+    # The end moves with the start. Moving only DTSTART walked the start
+    # onto the untouched end and made the occurrence zero-length, which is
+    # not what "move an occurrence" means anywhere - Thunderbird shifts
+    # both - and which section 12's timing gate now (correctly) refuses to
+    # push. The old fixture passed only because a degenerate event used to
+    # go out unquestioned.
+    de = re.search(r"DTEND;TZID=([^:;\r\n]+):20260909T(\d{2})(\d{4})", block)
+    harness.true(de is not None, "the override carries no TZID DTEND to move")
+    end_hour = int(de.group(2)) + 1
+    moved_block = moved_block.replace(
+        de.group(0), f"DTEND;TZID={de.group(1)}:20260909T{end_hour:02d}{de.group(3)}"
     )
     s.mark()
     ok("items.update", id=item["id"], ical=body.replace(block, moved_block))

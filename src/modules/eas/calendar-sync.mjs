@@ -24,6 +24,7 @@ function makeCodec(modCodec) {
       uid,
       userEmail,
       eventLog,
+      nativePlainText,
     }) {
       return modCodec.applicationDataToIcal({
         adNode,
@@ -36,6 +37,7 @@ function makeCodec(modCodec) {
         uid,
         userEmail,
         eventLog,
+        nativePlainText,
       });
     },
     appendApplicationDataFromBlob({

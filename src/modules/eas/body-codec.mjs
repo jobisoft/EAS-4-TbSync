@@ -10,14 +10,24 @@
  * rewritten or cleared, or the editor keeps rendering a stale note while
  * the tooltip shows the new one (issue #347).
  *
- * We request HTML from the server (`BodyPreference Type=2` for calendar
- * and tasks), so a Type-2 payload carries the server's real formatting; we
- * store it in the ALTREP and derive the plain value with Thunderbird's own
- * converter. A Type-1 payload is authoritative plain text and clears any
- * ALTREP. Outbound mirrors it: a note with an ALTREP goes back as Type 2.
+ * The Body reaching this module is one the sync runner has already judged:
+ * it reads NativeBodyType, which says what the server actually stores, and
+ * re-fetches an item held as HTML before decoding it. So a Type-1 payload
+ * here means the note really is plain text - it becomes the value and any
+ * ALTREP goes - and a Type-2 payload really is the note's own markup, which
+ * becomes the ALTREP beside a plain-text rendering for the tooltip.
+ *
+ * Outbound is where formatting travels: a DESCRIPTION carrying an ALTREP
+ * goes out as Type 2 with that HTML, so what the user authored in
+ * Thunderbird reaches the server; a note without one goes out as Type 1.
  */
 
 import { readPathFrom } from "./wbxml-helpers.mjs";
+import {
+  asNoteText,
+  rememberNoteLineEndings,
+  restoreNoteLineEndings,
+} from "./note-text.mjs";
 
 const HTML_ALTREP_PREFIX = "data:text/html,";
 
@@ -38,7 +48,7 @@ const asText = (v) => (v == null ? "" : String(v));
 export async function readBodyIntoDescription(
   comp,
   adNode,
-  { useAirSyncBase },
+  { useAirSyncBase, nativePlainText = null },
 ) {
   const data = useAirSyncBase
     ? readPathFrom(adNode, ["Body", "Data"])
@@ -51,22 +61,44 @@ export async function readBodyIntoDescription(
   // (4) forms we never request and a conformant server therefore never
   // sends - is treated as plain text: value verbatim, ALTREP cleared.
   if (type === "2") {
-    // HTML: the value is a plain-text rendering (the tooltip's source),
-    // the HTML rides along as the ALTREP (the editor's source).
-    const text = await messenger.messengerUtilities.convertToPlainText(
-      data,
-      {},
+    // HTML: the value is a plain-text rendering (the tooltip's source), the
+    // HTML rides along as the ALTREP (the editor's source). The rendering is
+    // the server's own when the sync runner was given one - text we were
+    // handed rather than computed, and what other clients show. Converting
+    // locally is the fallback for HTML that arrived with no plain
+    // counterpart.
+    const text =
+      nativePlainText ??
+      (await messenger.messengerUtilities.convertToPlainText(data, {}));
+    // The server's line endings are recorded here as well as on the plain
+    // branch. The ALTREP is what travels while it exists, so this changes
+    // nothing today - but the moment a user clears the formatting, the value
+    // becomes what goes back, and it has to go back in the server's shape
+    // like any other note. Read from whichever payload the server sent.
+    rememberNoteLineEndings(comp, nativePlainText ?? data);
+    // Trailing whitespace comes off, and only here: this value is what the
+    // tooltip shows while the ALTREP beside it is what travels, so trimming
+    // it edits nothing the server compares against. The plain branch below
+    // leaves its value alone - there it IS the note.
+    comp.updatePropertyWithValue(
+      "description",
+      asNoteText(text).replace(/\s+$/, ""),
     );
-    comp.updatePropertyWithValue("description", asText(text));
     comp
       .getFirstProperty("description")
       ?.setParameter(ALTREP, HTML_ALTREP_PREFIX + encodeURIComponent(data));
     return;
   }
 
-  // Plain text is the whole truth - clear any ALTREP a prior in-Thunderbird
-  // edit left behind, or the editor would keep showing that stale HTML.
-  comp.updatePropertyWithValue("description", data);
+  // Plain text. The sync runner re-fetches an item whose NativeBodyType says
+  // HTML, so this is normally the note itself rather than a flattening of
+  // one. Normally, not always: an embedded exception carries no
+  // NativeBodyType of its own, and the revert path asks for plain text
+  // deliberately. Both readers get it - the value for the tooltip, and
+  // no ALTREP so the editor falls back to that same text. Leaving a stale
+  // ALTREP here is what made the editor and the tooltip disagree (#347).
+  rememberNoteLineEndings(comp, data);
+  comp.updatePropertyWithValue("description", asNoteText(data));
   comp.getFirstProperty("description")?.removeParameter(ALTREP);
 }
 
@@ -92,15 +124,23 @@ export function appendBodyFromDescription(builder, comp, asVersion, homePage) {
     }
   }
 
+  // A plain note goes back in the line endings the server uses. The two
+  // steps are one operation: collapse whatever the value holds to bare
+  // newlines - including CRLFs a user just typed, which would otherwise be
+  // doubled - then expand every newline once. Idempotent, so a value that is
+  // already CRLF survives unchanged. The HTML branch needs none of this: its
+  // ALTREP is stored exactly as received and travels the same way.
+  const plain = restoreNoteLineEndings(comp, value);
+
   // 16.1 omits an empty Body rather than sending a blank one.
   if (asVersion === "16.1" && !value && !html) return;
   if (asVersion === "2.5") {
     // 2.5 has no AirSyncBase Body / HTML - plain text only.
-    builder.atag("Body", value);
+    builder.atag("Body", plain);
     return;
   }
 
-  const [type, out] = html ? ["2", html] : ["1", value];
+  const [type, out] = html ? ["2", html] : ["1", plain];
   builder.switchpage("AirSyncBase");
   builder.otag("Body");
   builder.atag("Type", type);

@@ -49,9 +49,11 @@ function buildBody({ collectionId, serverID, bodyType }) {
   w.otag("Options");
   w.switchpage("AirSyncBase");
   w.otag("BodyPreference");
-  // Match the Sync path: HTML for note-bearing classes so a refetched
-  // body carries its formatting into the ALTREP (body-codec). The caller
-  // passes "1" for contacts, "2" for calendar/tasks.
+  // The caller names the format it needs, because the two callers need
+  // different ones: a revert wants the note as plain text, and the pull's
+  // note resolver asks for HTML when NativeBodyType says the server holds a
+  // rich note that the Sync response flattened. Sync itself always asks for
+  // plain, whatever the class.
   w.atag("Type", bodyType ?? "1");
   w.ctag();
   w.switchpage("ItemOperations");

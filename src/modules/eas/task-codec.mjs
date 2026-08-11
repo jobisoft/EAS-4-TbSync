@@ -46,6 +46,7 @@ export async function applicationDataToIcal({
   syncRecurrence,
   msTodoCompat,
   uid,
+  nativePlainText = null,
 }) {
   // Merge mode: parse the existing iCal and overlay only fields the AD
   // mentions. Fall through to a fresh build for server-pushed Adds or
@@ -70,6 +71,7 @@ export async function applicationDataToIcal({
   // Body (codepage-aware).
   await readBodyIntoDescription(vtodo, adNode, {
     useAirSyncBase: asVersion !== "2.5",
+    nativePlainText,
   });
 
   // Reminder is read up-front so the MS To-Do compatibility hack can pin

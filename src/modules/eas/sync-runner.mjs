@@ -709,9 +709,9 @@ async function revertLocalChanges(ctx) {
       asVersion: ctx.asVersion,
       collectionId: ctx.collectionId,
       serverID,
-      // HTML for note-bearing classes, plain for contacts - as the Sync
-      // Options BodyPreference does.
-      bodyType: ctx.itemKind.className === "Contacts" ? "1" : "2",
+      // Plain text, matching the Sync Options BodyPreference - see there
+      // for why asking Exchange for HTML makes it rewrite the note.
+      bodyType: "1",
     });
 
     if (!properties) {
@@ -733,8 +733,14 @@ async function revertLocalChanges(ctx) {
       continue;
     }
 
+    // The same judgement the pull makes: this response was asked for plain
+    // text, so an item the server holds as HTML arrived flattened here too.
+    // Reverting to a flattening would drop the editor's copy of a note the
+    // user never touched.
+    const reverted = await resolveBody(ctx, properties, serverID);
+
     const blob = await codec.applicationDataToBlob({
-      adNode: properties,
+      adNode: reverted.adNode,
       serverID,
       asVersion: ctx.asVersion,
       separator: ctx.separator,
@@ -744,6 +750,7 @@ async function revertLocalChanges(ctx) {
       uid: e.itemId,
       userEmail: accountUserAddress(ctx.account),
       eventLog: ctx.eventLog,
+      nativePlainText: reverted.nativePlainText,
     });
 
     await ctx.queue.markServerWrite({
@@ -1663,11 +1670,13 @@ async function applyAdd(ctx, addNode) {
     });
     return;
   }
-  const ad = childByTag(addNode, "ApplicationData");
+  let ad = childByTag(addNode, "ApplicationData");
   if (!ad) return;
+  const resolved = await resolveBody(ctx, ad, serverID);
+  ad = resolved.adNode;
   await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = await findExistingByServerId(ctx, serverID);
-  if (existing) return applyChangeFromAd(ctx, ad, existing, serverID);
+  if (existing) return applyChangeFromAd(ctx, ad, existing, serverID, resolved);
 
   const newId = crypto.randomUUID();
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
@@ -1681,6 +1690,7 @@ async function applyAdd(ctx, addNode) {
     uid: newId,
     userEmail: accountUserAddress(ctx.account),
     eventLog: ctx.eventLog,
+    nativePlainText: resolved.nativePlainText,
   });
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
@@ -1831,7 +1841,114 @@ function parseEasInstanceId(s) {
   return new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +se));
 }
 
-async function applyChangeFromAd(ctx, ad, existing, serverID = null) {
+/** The note in the form the server actually holds it.
+ *
+ *  A server answers in the `Type` the request asked for whatever it stores,
+ *  and reports what it really has separately, in `NativeBodyType`
+ *  ([MS-ASAIRS] 2.2.2.32). The two only disagree when the server converted
+ *  the body to satisfy us - so `Type` says how the note arrived and
+ *  `NativeBodyType` says what it is.
+ *
+ *  Returns the ApplicationData to decode from, plus the server's own
+ *  flattening of a rich note when we were given one: it is text we were
+ *  handed rather than text we computed, so it beats a local conversion for
+ *  the tooltip, and it costs nothing because the first response carried it.
+ */
+async function resolveBody(
+  ctx,
+  ad,
+  serverID,
+  refetched = false,
+  plainSoFar = null,
+) {
+  // Only the note-bearing calendar classes can hold HTML. A vCard NOTE is
+  // text and nothing else - `readNote` stores whatever Data arrives without
+  // reading Type, and the contact writer always emits Type 1 - so fetching
+  // HTML for a contact would put markup in the note and push it back as the
+  // server's plain-text note, destroying the real one.
+  if (ctx.itemKind.className === "Contacts") {
+    return { adNode: ad, nativePlainText: null };
+  }
+
+  const rawType = readPathFrom(ad, ["Body", "Type"]);
+  const rawNative = readPathFrom(ad, ["NativeBodyType"]);
+
+  // Normalised before the switch, so it only ever sees four combinations.
+  // A missing Type is 2.5, where Body is plain and has no Type at all. A
+  // server that reports no NativeBodyType makes no claim, so the payload is
+  // taken at face value. RTF folds to plain: we cannot decompress it, and
+  // storing a conversion we would later push back is how notes get rewritten.
+  const type = rawType === "2" ? 2 : 1;
+  const native = rawNative == null ? type : rawNative === "2" ? 2 : 1;
+
+  switch ((native << 4) | type) {
+    // Holds plain, gave plain - and holds HTML, gave HTML. Either way the
+    // payload is the native form.
+    case 0x11:
+      return { adNode: ad, nativePlainText: null };
+    case 0x22:
+      return { adNode: ad, nativePlainText: plainSoFar };
+
+    // Holds HTML, gave us a flattening. Ask for the real thing, once.
+    case 0x21: {
+      if (refetched || !serverID) return { adNode: ad, nativePlainText: null };
+      const flattened = readPathFrom(ad, ["Body", "Data"]);
+      let properties = null;
+      let failure = null;
+      try {
+        properties = await fetchServerItem({
+          account: ctx.account,
+          asVersion: ctx.asVersion,
+          collectionId: ctx.collectionId,
+          serverID,
+          bodyType: "2",
+        });
+      } catch (err) {
+        failure = err;
+      }
+      // Could not ask, or the item is gone. The payload in hand is the
+      // server's flattening of a note it holds as HTML, and storing it would
+      // clear the ALTREP - so the next push would replace the server's rich
+      // note with its own flattening, and one throttling window would strip
+      // the formatting from every rich note in the batch. Drop the Body and
+      // leave the note alone: an absent Body means "this response says
+      // nothing about the note", which is exactly the truth here.
+      if (!properties) {
+        const body = childByTag(ad, "Body");
+        if (body) ad.removeChild(body);
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message:
+            `[${ctx.itemKind.changelogKind}-sync] could not fetch the HTML note for ` +
+            `${serverID}; leaving the note untouched rather than replacing it ` +
+            `with the server's plain-text rendering`,
+          details: failure
+            ? String(failure?.message ?? failure)
+            : "no item returned",
+        });
+        return { adNode: ad, nativePlainText: null };
+      }
+      return resolveBody(ctx, properties, serverID, true, flattened);
+    }
+
+    // Holds plain, gave us HTML anyway. Honour what arrived: it is what the
+    // server chose to hand us, and it is what we hand back unchanged.
+    default:
+      return { adNode: ad, nativePlainText: null };
+  }
+}
+
+async function applyChangeFromAd(
+  ctx,
+  ad,
+  existing,
+  serverID = null,
+  resolved = null,
+) {
+  if (!resolved) resolved = await resolveBody(ctx, ad, serverID);
+  ad = resolved.adNode;
   // The caller's ServerId wins over the blob's. It comes from the command
   // we are applying, so it is what the server calls this item right now;
   // the stamp in the blob is a cache of the same value, kept so a rebind
@@ -1875,6 +1992,7 @@ async function applyChangeFromAd(ctx, ad, existing, serverID = null) {
     uid: existing.itemId,
     userEmail: accountUserAddress(ctx.account),
     eventLog: ctx.eventLog,
+    nativePlainText: resolved.nativePlainText,
   });
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
@@ -1954,10 +2072,23 @@ function buildSyncBody({
       if (sendConflict) w.atag("Conflict", conflict);
       w.switchpage("AirSyncBase");
       w.otag("BodyPreference");
-      // HTML for the note-bearing calendar/task classes, so the server's
-      // formatting survives into the DESCRIPTION's ALTREP (body-codec).
-      // Contacts stay plain text - a vCard NOTE has no HTML form.
-      w.atag("Type", className === "Contacts" ? "1" : "2");
+      // Plain text, for every class.
+      //
+      // Asking for HTML looks harmless and is not. Exchange answers a
+      // plain-text note by generating an HTML document around it - its own
+      // wrapper, its own styles - which we would store in the ALTREP and,
+      // on the next push of that item, send straight back as the note. The
+      // server takes that as a real edit to the body and bumps the item's
+      // version, so an event nobody touched churns on every sync, and an
+      // instance command travelling behind its master's <Change> in the
+      // same sync is answered with Status 7 (conflict) against our own
+      // write. Section 3.4 is where that surfaced.
+      //
+      // A note the user formats in Thunderbird still goes out as Type 2 -
+      // `appendBodyFromDescription` sends the HTML whenever a DESCRIPTION
+      // carries an ALTREP - so authored formatting reaches the server. Only
+      // formatting the server invented for itself stays out of the ALTREP.
+      w.atag("Type", "1");
       w.ctag();
       w.switchpage("AirSync");
       w.ctag();
@@ -1982,6 +2113,15 @@ function buildSyncBody({
   if (!withChanges && withCommands && sendConflict) {
     w.otag("Options");
     w.atag("Conflict", conflict);
+    // An Options block REPLACES the one the server kept from the previous
+    // request ([MS-ASCMD] "sticky options"), so a block that names only the
+    // conflict policy would discard the body preference for every request
+    // after it. State it wherever an Options block is written.
+    w.switchpage("AirSyncBase");
+    w.otag("BodyPreference");
+    w.atag("Type", "1");
+    w.ctag();
+    w.switchpage("AirSync");
     w.ctag();
   }
   if (withCommands) appendCommands(w, withCommands);
