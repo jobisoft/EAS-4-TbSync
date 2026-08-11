@@ -123,7 +123,7 @@
     "message": "Adja meg a kiszolgáló webcímét."
   },
   "setup.error.serverInvalid": {
-    "message": "Not a usable server URL: $URL$. It must start with https:// or http:// (or be a plain host name) and must not contain a user name, password, query string or fragment. Example: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Nem használható kiszolgálócím: $URL$. https:// vagy http:// szöveggel kell kezdődnie (vagy egyszerű gépnévnek kell lennie), és nem tartalmazhat felhasználónevet, jelszót lekérdezési szöveget vagy töredéket. Például: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,19 +225,19 @@
     "message": "Kiépítés betartatása"
   },
   "config.protocol.provision.hint": {
-    "message": "Some servers (e.g. Kerio) require provisioning to be sent before any other command. Most servers - including Microsoft Exchange and Microsoft 365 - request it automatically when needed. You do not need to enable this manually for them."
+    "message": "Egyes kiszolgálók (például a Kerio) megkövetelik, hogy a kiépítés minden egyéb parancs előtt legyen kiadva. A legtöbb kiszolgáló – köztük a Microsoft Exchange és a Microsoft 365 is – ezt szükség szerint automatikusan kéri. Ezt nem kell kézileg engedélyeznie."
   },
   "config.protocol.conflict": {
-    "message": "Conflicting changes"
+    "message": "Ütköző változások"
   },
   "config.protocol.conflict.hint": {
-    "message": "If an item was changed both here and on the server, the server decides which copy wins; the losing change is replaced during the synchronization."
+    "message": "Ha egy elem megváltozott itt is, és a kiszolgálón is, akkor a kiszolgáló dönti el, hogy melyik másolat nyer; a vesztes változás a szinkronizálás során elvész."
   },
   "config.protocol.conflict.serverWins": {
-    "message": "Server wins (recommended)"
+    "message": "A kiszolgáló nyer (javasolt)"
   },
   "config.protocol.conflict.deviceWins": {
-    "message": "This device wins"
+    "message": "Az eszköz nyer"
   },
   "config.contacts.displayOverride": {
     "message": "Megjelenítési név felülbírálása ezzel: „utónév” + „második utónév\""
@@ -273,7 +273,7 @@
     "message": "Ismétlődő események / feladatok és kivételek szinkronizálása"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
+    "message": "Ha bekapcsolja, az ismétlési szabályok és a példányonkénti kivételek eljutnak a kiszolgálóra."
   },
   "config.section.gal": {
     "message": "Globális címlista"
@@ -288,13 +288,13 @@
     "message": "A kiszolgáló nem hirdet Keresés parancsot, így a Globális címjegyzék nem érhető el ehhez a fiókhoz."
   },
   "config.freebusy.enabled": {
-    "message": "Show attendee availability"
+    "message": "Résztvevők elérhetőségének megjelenítése"
   },
   "config.freebusy.enabled.hint": {
-    "message": "Asks the server for an attendee's free/busy times when you invite them to an event."
+    "message": "Elkéri a kiszolgálótól a résztvevő elérhetőségi/foglaltsági idejét, amikor meghívja egy eseményre."
   },
   "config.freebusy.notSupported": {
-    "message": "Your server does not offer attendee availability, so free/busy times cannot be shown."
+    "message": "A kiszolgáló nem biztosít résztvevő-elérhetőségi adatokat, így az elérhetőségi/foglaltsági idők nem jeleníthetők meg."
   },
   "config.error.invalidAsVersion": {
     "message": "Érvénytelen ActiveSync verzió kiválasztva."
