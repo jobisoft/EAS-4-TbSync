@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
-  "config.section.gal": {
-    "message": "Global Address List"
+  "config.section.lookups": {
+    "message": "Server lookups"
   },
   "config.gal.enabled": {
     "message": "Show the server's Global Address List as a read-only address book"
