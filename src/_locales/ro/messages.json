@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
   },
-  "config.section.gal": {
-    "message": "Listă globală de adrese"
+  "config.section.lookups": {
+    "message": "Interogări la server"
   },
   "config.gal.enabled": {
     "message": "Afișează lista globală de adrese a serverului ca agendă numai pentru citire"

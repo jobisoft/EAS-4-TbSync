@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
   },
-  "config.section.gal": {
-    "message": "Globální seznam adres"
+  "config.section.lookups": {
+    "message": "Dotazy na server"
   },
   "config.gal.enabled": {
     "message": "Zobrazovat globální seznam adres serveru jako adresář jen pro čtení"

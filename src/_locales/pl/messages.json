@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
   },
-  "config.section.gal": {
-    "message": "Globalna lista adresów"
+  "config.section.lookups": {
+    "message": "Zapytania do serwera"
   },
   "config.gal.enabled": {
     "message": "Pokaż globalną listę adresów serwera jako książkę adresową tylko do odczytu"

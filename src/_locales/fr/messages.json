@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Lorsqu’il est activé, les règles de récurrence et les exceptions par instance circulent dans les deux sens avec le serveur."
   },
-  "config.section.gal": {
-    "message": "Liste d’adresses globale"
+  "config.section.lookups": {
+    "message": "Requêtes au serveur"
   },
   "config.gal.enabled": {
     "message": "Afficher la liste d’adresses globale du serveur comme un carnet d’adresses en lecture seule"

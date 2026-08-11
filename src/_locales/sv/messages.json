@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
   },
-  "config.section.gal": {
-    "message": "Global adresslista"
+  "config.section.lookups": {
+    "message": "Serverförfrågningar"
   },
   "config.gal.enabled": {
     "message": "Visa serverns globala adresslista som en skrivskyddad adressbok"

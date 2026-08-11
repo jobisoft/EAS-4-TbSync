@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Cuando está activado, las reglas de recurrencia y las excepciones por instancia se sincronizan en ambos sentidos con el servidor."
   },
-  "config.section.gal": {
-    "message": "Lista global de direcciones"
+  "config.section.lookups": {
+    "message": "Consultas al servidor"
   },
   "config.gal.enabled": {
     "message": "Mostrar la lista global de direcciones del servidor como una libreta de direcciones de solo lectura"

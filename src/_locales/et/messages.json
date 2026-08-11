@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Kui see on sisse lülitatud, käivad kordumisreeglid ja üksikjuhtude erandid serveriga edasi-tagasi."
   },
-  "config.section.gal": {
-    "message": "Globaalne aadressiraamat"
+  "config.section.lookups": {
+    "message": "Serveripäringud"
   },
   "config.gal.enabled": {
     "message": "Näita serveri globaalset aadressiraamatut kirjutuskaitstud aadressiraamatuna"

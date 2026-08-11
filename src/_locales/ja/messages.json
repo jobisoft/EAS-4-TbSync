@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "有効にすると、繰り返しルールとインスタンスごとの例外がサーバーと双方向で同期されます。"
   },
-  "config.section.gal": {
-    "message": "グローバル アドレス一覧"
+  "config.section.lookups": {
+    "message": "サーバーへの問い合わせ"
   },
   "config.gal.enabled": {
     "message": "サーバーのグローバル アドレス一覧を読み取り専用のアドレス帳として表示する"

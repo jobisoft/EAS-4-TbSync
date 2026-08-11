@@ -275,8 +275,8 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "활성화하면 반복 규칙과 인스턴스별 예외가 서버와 양방향으로 동기화됩니다."
   },
-  "config.section.gal": {
-    "message": "전체 주소 목록"
+  "config.section.lookups": {
+    "message": "서버 조회"
   },
   "config.gal.enabled": {
     "message": "서버의 전체 주소 목록을 읽기 전용 주소록으로 표시"

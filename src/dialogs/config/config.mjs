@@ -57,6 +57,7 @@ const FIELD_IDS = [
   "calendar-sync-limit",
   "sync-recurrence",
   "gal-enabled",
+  "freebusy-enabled",
 ];
 
 function $(id) {
@@ -165,10 +166,11 @@ async function load() {
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
   $("sync-recurrence").checked = !!account.syncRecurrence;
 
-  // ── GAL section ────────────────────────────────────────────────────────
-  // Checkbox is forced off + disabled when the server's OPTIONS probe
-  // didn't advertise the Search command. The hint flips to a "not
-  // supported by your server" line so the user understands why.
+  // ── Server lookups ─────────────────────────────────────────────────────
+  // Each checkbox is forced off + disabled when the server's OPTIONS probe
+  // didn't advertise what it needs - the Search command for the address
+  // list, availability for free/busy. The hint flips to a "not supported by
+  // your server" line so the user understands why.
   $("gal-enabled").checked = account.galSupported && !!account.galEnabled;
   $("freebusy-enabled").checked =
     account.freeBusySupported && !!account.freeBusyEnabled;
