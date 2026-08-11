@@ -6,8 +6,17 @@
  * `account.custom` verbatim, so an imported account still carries whatever
  * shape the legacy add-on wrote: `host` + `https` where the current code
  * wants `server`, credentials still in `nsILoginManager`,
- * `allowedEasCommands` as a comma-separated string, EAS ServerIds stored as
- * Thunderbird item ids. Converting all of that is this module's job.
+ * `allowedEasCommands` as a comma-separated string. Converting the account's
+ * settings is this module's job.
+ *
+ * What it deliberately does NOT convert is the account's data: the cards and
+ * items in the bound address book and calendars, and any edit the legacy
+ * add-on had queued for them. Those were written by code that identified
+ * them differently, and an imported account does not sync at all until the
+ * user reconnects it - which deletes the local copies and rebuilds them from
+ * the server. Converting them first would be work done on copies about to be
+ * replaced, and every attempt to do it had to guess at data it could not
+ * read back.
  *
  * The trigger is the host's `legacyMigrationPending` flag, not anything
  * about this add-on's own install history. The importer's only guard is
@@ -27,9 +36,8 @@
  * Two triggers, one per kind of data, on the principle that the record of
  * a conversion belongs with the data it converted:
  *
- *   - Account `custom` and the Thunderbird resources bound to it live in
- *     the host and in the address book / calendar. Their trigger is the
- *     host's flag, which the host re-sets every time it re-imports.
+ *   - Account `custom` lives in the host. Its trigger is the host's flag,
+ *     which the host re-sets every time it re-imports.
  *   - This add-on's own global settings live in `storage.local`. Their
  *     trigger is `schemaVersion` in that same storage, so marker and data
  *     are wiped together and can never disagree.
@@ -40,24 +48,6 @@ import {
   finalizeFolderListForPush,
   iconForServerType,
 } from "./eas-provider.mjs";
-import * as calendarStore from "../vendor/tbsync/calendar.mjs";
-import * as eventCodec from "./eas/calendar-codec.mjs";
-import * as taskCodec from "./eas/task-codec.mjs";
-import { localQueue } from "../vendor/tbsync/change-queue.mjs";
-import {
-  CHANGELOG_KINDS,
-  isUserEntry,
-  SERVER_TAG_STATUSES,
-} from "../vendor/tbsync/changelog-core.mjs";
-
-/** Coerce the legacy `Map<uid, serverId>` JSON shape into the new array
- *  of `{uid, serverId}` records. Returns a fresh array — caller is free
- *  to mutate. */
-function buildIndexMap(value) {
-  if (Array.isArray(value)) return value.slice();
-  if (!value || typeof value !== "object") return [];
-  return Object.entries(value).map(([uid, serverId]) => ({ uid, serverId }));
-}
 
 /** Legacy prefs to lift into `browser.storage.local`. Global rather than
  *  per-account, and driven by the schema ladder rather than by any
@@ -111,7 +101,11 @@ const SCHEMA_VERSION = 4;
 const MIGRATIONS = {
   2: { name: "lift-legacy-prefs", run: liftLegacyPrefs },
   3: { name: "repair-unconverted-accounts", run: repairUnconvertedAccounts },
-  4: { name: "adopt-host-changelogs", run: adoptHostChangelogs },
+  // Rung 4 ran when this version still adopted the host's imported change
+  // queues. It no longer does - an imported account does not sync until it
+  // is reconnected, which replaces its resources - but the number stays
+  // spent: installations that reached 4 must not be walked over it again.
+  4: { name: "adopt-host-changelogs" },
 };
 
 let inFlight = null;
@@ -254,107 +248,6 @@ async function repairUnconvertedAccounts(provider) {
   }
 }
 
-/** Rung 4. Take over any edits the host is still holding for us, into the
- *  local queue keyed by the folder's binding.
- *
- *  A host folder row can carry queued edits for any resource - unsynced work
- *  of the user's, which has to end up somewhere we will read it.
- *
- *  Import first, remove second. A crash in between leaves an entry in both
- *  places, and the next run re-imports it onto a queue that already folds
- *  duplicates by identity, so the repeat is a no-op rather than a second
- *  copy. The other order would lose entries outright. */
-async function adoptHostChangelogs(provider) {
-  for (const { accountId } of await provider.listAccounts()) {
-    const { folders = [] } = (await provider.getAccount(accountId)) ?? {};
-    for (const folder of folders) {
-      const entries = Array.isArray(folder.changelog) ? folder.changelog : [];
-      if (!entries.length) continue;
-      if (!folder.sessionId) {
-        // No session, but edits to adopt: the host has not (yet) minted
-        // session ids for its rows. Continuing here and letting the ladder
-        // stamp the schema would strand these rows forever - the ladder
-        // never looks back. Throw instead: the rung stays unstamped and
-        // the whole adoption retries on the next start, when the host has
-        // caught up. Observed for real on 10 Aug 2026 during migration
-        // testing - "unreachable in practice" was wrong.
-        throw new Error(
-          `cannot adopt ${entries.length} queued edit(s) of folder ` +
-            `${folder.folderId}: the folder has no session id yet`,
-        );
-      }
-
-      const queue = localQueue({
-        accountId,
-        folderId: folder.folderId,
-        sessionId: folder.sessionId,
-        observed: folder.targetType === "contacts",
-      });
-      // A single-kind folder names its rows' kind itself. 5.0.13 was seen
-      // stamping a task DELETION as kind "event" in the wild (the gold
-      // migration baseline, 10 Aug 2026); adopted verbatim, such a row
-      // survives adoption only to be dropped at push as "not this
-      // folder's kind" - and the pull then resurrects the item the user
-      // deleted. Contacts folders hold several kinds and cannot be
-      // healed this way; calendars and tasks hold exactly one.
-      const folderKind = { calendars: "event", tasks: "task" }[
-        folder.targetType
-      ];
-      let adopted = 0;
-      let refused = 0;
-      let healed = 0;
-      for (const e of entries) {
-        if (!isUserEntry(e?.status)) continue;
-        if (folderKind && e.kind !== folderKind) {
-          e.kind = folderKind;
-          healed++;
-        }
-        // `record` throws on a kind outside CHANGELOG_KINDS. The inbox is
-        // whatever the v4 importer wrote, and one malformed row must not
-        // abort the whole migration - skip it, count it, and let the
-        // summary line below name the loss.
-        if (!CHANGELOG_KINDS.includes(e.kind)) {
-          refused++;
-          continue;
-        }
-        await queue.record({
-          parentId: e.parentId,
-          itemId: e.itemId,
-          kind: e.kind,
-          op: OP_FOR_STATUS[e.status],
-          detail: e.detail,
-        });
-        adopted++;
-      }
-      await provider.updateFolder({
-        accountId,
-        folderId: folder.folderId,
-        patch: { changelog: [] },
-      });
-      provider.reportEventLog({
-        level: refused ? "warning" : "info",
-        accountId,
-        folderId: folder.folderId,
-        message:
-          `[upgrade] adopted ${adopted} queued edit(s) from the host` +
-          (healed ? `; healed ${healed} kind(s) to the folder's own` : "") +
-          (refused
-            ? `; refused ${refused} with an unknown changelog kind`
-            : ""),
-      });
-    }
-  }
-}
-
-/** The op that produced each user status - `record` speaks ops, a stored
- *  row states the status it reached. Replaying the op onto an empty queue
- *  reproduces the row, which is what makes the import idempotent. */
-const OP_FOR_STATUS = {
-  added_by_user: "created",
-  modified_by_user: "updated",
-  deleted_by_user: "deleted",
-};
-
 /* ── Host-flag driven account conversion ────────────────────────────── */
 
 /** Convert every account the host flagged, clearing each flag as it
@@ -407,28 +300,6 @@ async function convertAccountData(provider, acc) {
   await normalizeAllowedEasCommands(provider, acc);
   await fixFolders(provider, acc);
   await liftAccountIcon(provider, acc);
-
-  // Legacy EAS4 stored each contact's EAS ServerId as the TB card's
-  // UID (`card.primaryKey === serverId`) and several extra fields in
-  // the property bag via `setProperty()`. The new code expects the
-  // ServerId in an `X-EAS-SERVERID` vCard property and the extras in
-  // matching `X-EAS-*` properties. Without this migration, an
-  // upgraded user would see duplicates after the first delta sync
-  // and silent edit/delete failures on legacy cards. See Phase 3
-  // audit row 3.11 for the full rationale.
-  await migrateContactsForAccount(provider, acc);
-
-  // Legacy EAS4 stored each event/task's EAS ServerId as the
-  // calendar item's id (`item.primaryKey === serverId`, see legacy
-  // sync.js:1042). The new code expects the ServerId in an
-  // `X-EAS-SERVERID` iCal property and a matching
-  // `folder.custom.indexMap` entry. Without this migration, an
-  // upgraded user would see duplicates after the first delta sync
-  // and silent edit/delete failures on legacy events/tasks. Same
-  // shape as the contact migration above; simpler because Lightning
-  // already stores X-EAS-* properties in the iCal blob (no XPCOM
-  // experiment needed).
-  await migrateCalendarItemsForAccount(provider, acc);
 }
 
 // ── Upgrade helpers for legacy migrations─────────────────────────────────────
@@ -622,376 +493,4 @@ async function liftCredentials(provider, acc) {
     accountId: acc.accountId,
     message: `[upgrade] lifted legacy basic-auth password from nsILoginManager`,
   });
-}
-
-/* ── Contact vCard migration (5.0.3) ─────────────────────────────────── */
-
-/** Walk every selected contacts folder on the account and re-shape each
- *  legacy card into the new vCard layout. Idempotent: cards that already
- *  carry an `X-EAS-SERVERID` property are skipped. */
-/** Every contacts folder is attempted, but one failing fails the account.
- *  The caller uses that to decide whether the legacy flag may clear or the
- *  schema rung may stamp - and neither may happen over a folder whose
- *  cards still carry their ServerId as the card UID, because the sync path
- *  has no fallback to the legacy property bag and would duplicate them. */
-async function migrateContactsForAccount(provider, acc) {
-  const rv = await provider.getAccount(acc.accountId);
-  const folders = rv?.folders ?? [];
-  let failed = 0;
-  for (const folder of folders) {
-    if (folder.targetType !== "contacts") continue;
-    if (!folder.targetID) continue;
-    try {
-      await migrateContactsForFolder(provider, acc.accountId, folder);
-    } catch (err) {
-      failed++;
-      provider.reportEventLog({
-        level: "warning",
-        accountId: acc.accountId,
-        folderId: folder.folderId,
-        message: `[upgrade] folder migration failed: ${err?.message ?? String(err)}`,
-      });
-    }
-  }
-  if (failed) {
-    throw new Error(`${failed} contact folder(s) could not be migrated`);
-  }
-}
-
-async function migrateContactsForFolder(provider, accountId, folder) {
-  // Read every non-list card via the LegacyAbProperties experiment, which
-  // also surfaces any property-bag stamps (Spouse, Yomi*, Children, …)
-  // that legacy wrote via setProperty() and that don't appear in the
-  // WebExtension-visible vCard.
-  let stamps;
-  try {
-    stamps = await browser.LegacyAbProperties.readEasStamps(folder.targetID);
-  } catch (err) {
-    // Not knowing whether this folder holds legacy cards is not the same
-    // as knowing it doesn't. Rethrow so the account stays blocked: the
-    // sync path never reads the property bag, so proceeding would sync
-    // cards whose identity we failed to look at and duplicate every one.
-    // This is also how the eventual removal of the Experiment surfaces -
-    // as a blocked account with a reason, not silent duplication.
-    throw new Error(
-      `LegacyAbProperties.readEasStamps failed: ${err?.message ?? String(err)}`,
-    );
-  }
-  if (!Array.isArray(stamps) || stamps.length === 0) return;
-
-  // indexMap is an array of {uid, serverId}. Coerce older installs'
-  // object shape on read, then operate on the array.
-  const indexMap = buildIndexMap(folder.custom?.indexMap);
-  const hasContactMapping = (uid) => indexMap.some((e) => e.uid === uid);
-  const upsertContactMapping = (uid, serverId) => {
-    const ex = indexMap.find((e) => e.uid === uid);
-    if (ex) {
-      ex.serverId = serverId;
-    } else {
-      indexMap.push({ uid, serverId });
-    }
-  };
-  let migratedCount = 0;
-  let alreadyMigratedCount = 0;
-
-  for (const { contactId, stamps: legacyStamps } of stamps) {
-    try {
-      const card = await messenger.contacts.get(contactId);
-      const oldVCard =
-        typeof card?.vCard === "string" && card.vCard.trim() ? card.vCard : "";
-      if (!oldVCard) continue;
-
-      // Idempotency guard: if X-EAS-SERVERID is already present we've
-      // already migrated this card on a previous run.
-      if (hasVCardProperty(oldVCard, "X-EAS-SERVERID")) {
-        // Even if the vCard is migrated, the indexMap might be stale -
-        // make sure the entry is present so the deleted_by_user path can
-        // resolve the ServerId.
-        if (!hasContactMapping(contactId)) {
-          upsertContactMapping(contactId, contactId);
-          migratedCount++;
-        } else {
-          alreadyMigratedCount++;
-        }
-        continue;
-      }
-
-      const newVCard = buildMigratedVCard(oldVCard, contactId, legacyStamps);
-      if (newVCard === oldVCard) continue;
-
-      // Pre-tag the changelog so the address-book observer treats the
-      // upcoming `messenger.contacts.update` as self-inflicted and does
-      // NOT produce a `modified_by_user` entry. NB: this also replaces
-      // any existing entry for the card - any unsynced pre-upgrade user
-      // edit's *push intent* is dropped (the data itself is preserved
-      // because the migration read-modify-writes the vCard).
-      await localQueue({
-        accountId,
-        folderId: folder.folderId,
-        sessionId: folder.sessionId,
-        observed: true,
-      }).markServerWrite({
-        parentId: folder.targetID,
-        itemId: contactId,
-        status: SERVER_TAG_STATUSES[1],
-        kind: "contact",
-      });
-
-      await messenger.contacts.update(contactId, { vCard: newVCard });
-
-      // Legacy convention: card.UID === EAS ServerId. The indexMap
-      // entry is needed by `buildPushBatch`'s `deleted_by_user` path,
-      // which only consults the idIndex (the codec's vCard-blob
-      // fallback doesn't help for deletes - the local card is gone
-      // by then).
-      upsertContactMapping(contactId, contactId);
-      migratedCount++;
-    } catch (err) {
-      provider.reportEventLog({
-        level: "warning",
-        accountId,
-        folderId: folder.folderId,
-        message: `[upgrade] contact ${contactId}: ${err?.message ?? String(err)}`,
-      });
-    }
-  }
-
-  if (migratedCount > 0) {
-    await provider.updateFolder({
-      accountId,
-      folderId: folder.folderId,
-      patch: { custom: { indexMap } },
-    });
-    provider.reportEventLog({
-      level: "debug",
-      accountId,
-      folderId: folder.folderId,
-      message: `[upgrade] migrated ${migratedCount} contact card(s) to new vCard shape (${alreadyMigratedCount} already migrated)`,
-    });
-  } else if (alreadyMigratedCount > 0) {
-    provider.reportEventLog({
-      level: "debug",
-      accountId,
-      folderId: folder.folderId,
-      message: `[upgrade] all ${alreadyMigratedCount} contact card(s) already migrated`,
-    });
-  }
-}
-
-/** Map a legacy property-bag key to its `X-EAS-*` vCard counterpart.
- *  Most keys carry the `EAS-` prefix in legacy storage and just need
- *  `X-` prepended; `Children` is the odd one - legacy stored it without
- *  any prefix at all. */
-function legacyKeyToVCardKey(legacyKey) {
-  if (legacyKey === "Children") return "X-EAS-CHILDREN";
-  if (legacyKey.startsWith("EAS-")) {
-    return "X-EAS-" + legacyKey.slice("EAS-".length).toUpperCase();
-  }
-  // Fallback: shouldn't happen for fields in LEGACY_PROPERTY_BAG_FIELDS,
-  // but be defensive.
-  return "X-EAS-" + legacyKey.toUpperCase();
-}
-
-/** Insert `X-EAS-SERVERID` and any `X-EAS-*` properties derived from the
- *  legacy property bag, just before `END:VCARD`. Line-based (rather than
- *  parsing through ICAL.js) so the rest of the vCard's existing
- *  formatting / line-folding is preserved untouched. */
-function buildMigratedVCard(vCardString, serverId, legacyStamps) {
-  const lines = vCardString.split(/\r?\n/);
-  const endIdx = lines.findIndex((l) => /^END:VCARD\s*$/i.test(l));
-  if (endIdx === -1) return vCardString; // malformed; skip
-
-  const inserts = [];
-  if (!hasVCardProperty(vCardString, "X-EAS-SERVERID")) {
-    inserts.push(`X-EAS-SERVERID:${escapeVCardValue(serverId)}`);
-  }
-  for (const [legacyKey, value] of Object.entries(legacyStamps ?? {})) {
-    const vCardKey = legacyKeyToVCardKey(legacyKey);
-    // Skip if the new key is already on the card (partial migration).
-    if (hasVCardProperty(vCardString, vCardKey)) continue;
-    inserts.push(`${vCardKey}:${escapeVCardValue(value)}`);
-  }
-  if (inserts.length === 0) return vCardString;
-
-  // RFC 6350 §3.2 line termination is CRLF; preserve.
-  return [...lines.slice(0, endIdx), ...inserts, ...lines.slice(endIdx)].join(
-    "\r\n",
-  );
-}
-
-function hasVCardProperty(vCardString, key) {
-  // Match `KEY:` or `KEY;params:` at line start, case-insensitive.
-  const re = new RegExp(
-    `^${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[:;]`,
-    "im",
-  );
-  return re.test(vCardString);
-}
-
-function escapeVCardValue(s) {
-  // RFC 6350 §3.4: escape backslash, comma, newline. Single-value text
-  // properties don't need to escape semicolons (those are compound-value
-  // delimiters).
-  return String(s)
-    .replace(/\\/g, "\\\\")
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "")
-    .replace(/,/g, "\\,");
-}
-
-/* ── Calendar / Task item migration ──────────────────────────────────── */
-
-/** Walk every events/tasks folder on the account and re-shape each
- *  legacy item by stamping `X-EAS-SERVERID` onto its iCal and adding
- *  a matching `folder.custom.indexMap` entry. Idempotent: items that
- *  already carry `X-EAS-SERVERID` are skipped. */
-/** Attempts every calendar/task folder, then fails the account if any of
- *  them failed - see `migrateContactsForAccount` for why partial success
- *  must not be reported as success. */
-async function migrateCalendarItemsForAccount(provider, acc) {
-  const rv = await provider.getAccount(acc.accountId);
-  const folders = rv?.folders ?? [];
-  let failed = 0;
-  for (const folder of folders) {
-    const itemKind = itemKindForFolder(folder);
-    if (!itemKind || !folder.targetID) continue;
-    try {
-      await migrateCalendarItemsForFolder(
-        provider,
-        acc.accountId,
-        folder,
-        itemKind,
-      );
-    } catch (err) {
-      failed++;
-      provider.reportEventLog({
-        level: "warning",
-        accountId: acc.accountId,
-        folderId: folder.folderId,
-        message: `[upgrade] calendar/task folder migration failed: ${err?.message ?? String(err)}`,
-      });
-    }
-  }
-  if (failed) {
-    throw new Error(`${failed} calendar/task folder(s) could not be migrated`);
-  }
-}
-
-/** Map a folder's targetType to the codec / store-type / changelog-kind
- *  triple used by the per-item migration. Returns null for non-calendar
- *  folders. */
-function itemKindForFolder(folder) {
-  if (folder.targetType === "calendars") {
-    return { storeType: "event", codec: eventCodec, changelogKind: "event" };
-  }
-  if (folder.targetType === "tasks") {
-    return { storeType: "task", codec: taskCodec, changelogKind: "task" };
-  }
-  return null;
-}
-
-async function migrateCalendarItemsForFolder(
-  provider,
-  accountId,
-  folder,
-  itemKind,
-) {
-  let items;
-  try {
-    items = await calendarStore.listItems(folder.targetID, itemKind.storeType);
-  } catch (err) {
-    // Same reasoning as the contact stamps above: an unreadable folder is
-    // not an empty one, and letting it pass would clear the flag over
-    // items whose ServerId is still stored as the item id.
-    throw new Error(
-      `calendar items.list failed: ${err?.message ?? String(err)}`,
-    );
-  }
-  if (!Array.isArray(items) || items.length === 0) return;
-
-  // indexMap is an array of {uid, serverId}. Coerce older installs'
-  // object shape on read.
-  const indexMap = buildIndexMap(folder.custom?.indexMap);
-  const hasItemMapping = (uid) => indexMap.some((e) => e.uid === uid);
-  const upsertItemMapping = (uid, serverId) => {
-    const ex = indexMap.find((e) => e.uid === uid);
-    if (ex) {
-      ex.serverId = serverId;
-    } else {
-      indexMap.push({ uid, serverId });
-    }
-  };
-  let migratedCount = 0;
-  let alreadyMigratedCount = 0;
-
-  for (const node of items) {
-    const id = node?.id;
-    const ical =
-      typeof node?.item === "string" && node.item.trim() ? node.item : "";
-    if (!id || !ical) continue;
-    try {
-      // Idempotency guard: skip if X-EAS-SERVERID is already on the
-      // master VEVENT/VTODO.
-      if (itemKind.codec.readEasServerIdFromIcal(ical)) {
-        if (!hasItemMapping(id)) {
-          upsertItemMapping(id, id);
-          migratedCount++;
-        } else {
-          alreadyMigratedCount++;
-        }
-        continue;
-      }
-
-      const stamped = itemKind.codec.stampEasServerId(ical, id);
-      if (stamped === ical) continue; // codec couldn't parse the iCal; skip.
-
-      // Through the cache, so the write fires no item hook and cannot be
-      // mistaken for the user editing every item in the folder. A pre-tag
-      // would not do here: our own calendars are not observed, so nothing
-      // would ever consume one - the suppression has to be structural,
-      // exactly as it is for a sync write.
-      await calendarStore.updateItem(
-        calendarStore.cacheId(folder.targetID),
-        id,
-        {
-          ical: stamped,
-        },
-      );
-
-      // Legacy convention: item.id === EAS ServerId. Populate the
-      // indexMap so `buildPushBatch`'s deleted_by_user path (which only
-      // consults the idIndex, not the iCal blob - the local item is
-      // gone by then) can resolve the ServerId.
-      upsertItemMapping(id, id);
-      migratedCount++;
-    } catch (err) {
-      provider.reportEventLog({
-        level: "warning",
-        accountId,
-        folderId: folder.folderId,
-        message: `[upgrade] ${itemKind.changelogKind} item ${id}: ${err?.message ?? String(err)}`,
-      });
-    }
-  }
-
-  if (migratedCount > 0) {
-    await provider.updateFolder({
-      accountId,
-      folderId: folder.folderId,
-      patch: { custom: { indexMap } },
-    });
-    provider.reportEventLog({
-      level: "debug",
-      accountId,
-      folderId: folder.folderId,
-      message: `[upgrade] migrated ${migratedCount} ${itemKind.changelogKind} item(s) to new iCal shape (${alreadyMigratedCount} already migrated)`,
-    });
-  } else if (alreadyMigratedCount > 0) {
-    provider.reportEventLog({
-      level: "debug",
-      accountId,
-      folderId: folder.folderId,
-      message: `[upgrade] all ${alreadyMigratedCount} ${itemKind.changelogKind} item(s) already migrated`,
-    });
-  }
 }
