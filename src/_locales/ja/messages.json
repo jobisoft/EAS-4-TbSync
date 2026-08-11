@@ -123,7 +123,7 @@
     "message": "Please enter the server URL."
   },
   "setup.error.serverInvalid": {
-    "message": "Not a usable server URL: $URL$ — it must start with https:// or http:// (or be a plain host name) and must not contain a user name, password, query string or fragment. Example: https://mail.example.com/Microsoft-Server-ActiveSync",
+    "message": "Not a usable server URL: $URL$. It must start with https:// or http:// (or be a plain host name) and must not contain a user name, password, query string or fragment. Example: https://mail.example.com/Microsoft-Server-ActiveSync",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -225,7 +225,19 @@
     "message": "Enforce provisioning"
   },
   "config.protocol.provision.hint": {
-    "message": "Some servers (e.g. Kerio) require provisioning to be sent before any other command. Most servers - including Microsoft Exchange and Microsoft 365 - request it automatically when needed; you do not need to enable this manually for them."
+    "message": "Some servers (e.g. Kerio) require provisioning to be sent before any other command. Most servers - including Microsoft Exchange and Microsoft 365 - request it automatically when needed. You do not need to enable this manually for them."
+  },
+  "config.protocol.conflict": {
+    "message": "Conflicting changes"
+  },
+  "config.protocol.conflict.hint": {
+    "message": "If an item was changed both here and on the server, the server decides which copy wins; the losing change is replaced during the synchronization."
+  },
+  "config.protocol.conflict.serverWins": {
+    "message": "Server wins (recommended)"
+  },
+  "config.protocol.conflict.deviceWins": {
+    "message": "This device wins"
   },
   "config.contacts.displayOverride": {
     "message": "Override Display Name with \"First Name\" + \"Second Name\""
@@ -261,7 +273,7 @@
     "message": "Sync recurring events / tasks and exceptions"
   },
   "config.calendar.syncRecurrence.hint": {
-    "message": "Experimental - off by default. When enabled, recurrence rules and per-instance exceptions round-trip with the server."
+    "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
   "config.section.gal": {
     "message": "Global Address List"
@@ -274,6 +286,15 @@
   },
   "config.gal.notSupported": {
     "message": "Your server does not advertise the Search command, so the Global Address List is not available for this account."
+  },
+  "config.freebusy.enabled": {
+    "message": "Show attendee availability"
+  },
+  "config.freebusy.enabled.hint": {
+    "message": "Asks the server for an attendee's free/busy times when you invite them to an event."
+  },
+  "config.freebusy.notSupported": {
+    "message": "Your server does not offer attendee availability, so free/busy times cannot be shown."
   },
   "config.error.invalidAsVersion": {
     "message": "Invalid ActiveSync version selection."
@@ -334,12 +355,6 @@
   },
   "options.showItemsInTrash.hint": {
     "message": "Some servers keep deleted calendars, address books, and task lists inside a Trash folder rather than removing them outright. By default these are hidden from the folder list. Enable this to make them visible - they appear with a localized \"Trash | \" prefix so you can tell them apart and choose whether to sync them. Takes effect on the next folder-list refresh."
-  },
-  "options.postPushSettle": {
-    "message": "Wait for the server to echo back uploaded changes"
-  },
-  "options.postPushSettle.hint": {
-    "message": "Some Exchange servers send a change back as if it were their own moments after accepting it. Without this option that echo arrives during the next synchronization, where it can overwrite edits made in the meantime. Enabling it waits about two seconds after every synchronization that uploaded something, and pulls once more to take the echo immediately. Only enable this if local changes go missing."
   },
   "options.clientid": {
     "message": "Custom OAuth client ID"
