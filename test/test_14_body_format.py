@@ -8,9 +8,9 @@ The protocol fact everything here rests on: a server answers in the `Type`
 the client asked for, and reports what it ACTUALLY holds separately, in
 `NativeBodyType` ([MS-ASAIRS] 2.2.2.32 - 1 plain, 2 HTML, 3 RTF; the two
 agree unless the server converted the body to satisfy the request). So we
-ask for plain text everywhere and read the truth off NativeBodyType: an
-item that says 2 is re-fetched as HTML, one item at a time, and only then
-does an ALTREP get stored.
+ask for plain text everywhere and read the truth off NativeBodyType: items
+that say 2 are re-fetched as HTML - one request per window, a <Fetch> per
+item - and only then does an ALTREP get stored.
 
 Asking for HTML instead is what caused #347's regression: Exchange answers
 a plain note by generating an HTML document around it, we stored that, and
@@ -210,13 +210,22 @@ def _preferences(s):
 
 
 def _fetches(s):
-    """(count, [Type asked]) for the standalone ItemOperations fetches."""
+    """(requests, fetch_blocks, [Type asked]) for the ItemOperations traffic.
+
+    Requests and Fetch blocks are counted separately because the whole point
+    of the batching is that they differ: N rich notes in one window must cost
+    one request carrying N <Fetch> elements, not N requests.
+    """
     types = []
+    requests = 0
+    fetch_blocks = 0
     for doc in _docs(s, "send", "ItemOperations"):
+        requests += 1
+        fetch_blocks += len(_descendants(doc, "Fetch"))
         for preference in _descendants(doc, "BodyPreference"):
             type_el = _child(preference, "Type")
             types.append(type_el.text if type_el is not None else None)
-    return len(_docs(s, "send", "ItemOperations")), types
+    return requests, fetch_blocks, types
 
 
 def _pushed_body(s, marker):
@@ -313,8 +322,9 @@ def t_14_2(s):
     # One item said NativeBodyType 2, so exactly one standalone fetch - the
     # cost is bounded by how many notes are genuinely rich, not by how many
     # items the folder holds.
-    count, types = _fetches(s)
-    harness.eq(count, 1, "exactly one ItemOperations fetch, for the rich item alone")
+    requests, blocks, types = _fetches(s)
+    harness.eq(requests, 1, "exactly one ItemOperations request")
+    harness.eq(blocks, 1, "carrying one Fetch, for the rich item alone")
     harness.eq(types, ["2"], "and it asked for HTML")
 
 
@@ -392,7 +402,7 @@ def t_14_4(s):
         )
 
     # And the rich item is still the only one worth a second request.
-    harness.eq(_fetches(s)[0], 1, "one fetch, for the rich item alone")
+    harness.eq(_fetches(s)[:2], (1, 1), "one request, one Fetch - the rich item alone")
 
     # Idempotence, which is what makes storing a server-normalised body safe
     # at all. Exchange rewrites HTML it is handed into a complete document,
@@ -455,7 +465,7 @@ def t_14_5(s):
         ["1"],
         "the server now holds it as plain text",
     )
-    harness.eq(_fetches(s)[0], 0, "nothing is rich any more, so nothing is re-fetched")
+    harness.eq(_fetches(s)[:2], (0, 0), "nothing is rich any more, so nothing is re-fetched")
     after = _find(s, SLUGS[1])
     harness.eq(_description(after), PLAIN_ONE, "the demoted note is the plain text")
     harness.true(_altrep(after) is None, "and the old HTML is gone from the editor field")
@@ -491,7 +501,7 @@ def t_14_6(s):
         ["2"],
         "the server holds it as HTML again",
     )
-    harness.eq(_fetches(s)[0], 1, "so the item is fetched as HTML once more")
+    harness.eq(_fetches(s)[:2], (1, 1), "so the item is fetched as HTML once more")
     after = _find(s, SLUGS[1])
     harness.eq(_description(after), PROMOTED_TEXT, "the tooltip field is the plain text")
     # Containment, for the reason 14.3 gives: Exchange returns the markup
@@ -501,8 +511,40 @@ def t_14_6(s):
     )
 
 
-@test("14.7", "clean up - the section leaves the calendar as it found it")
+@test("14.7", "several rich notes cost one request, not one each")
 def t_14_7(s):
+    # The reason the fetch is batched at all: everything authored in
+    # OWA/Outlook is natively HTML even when its text is plain, so a first
+    # pull of a real calendar could otherwise approach one request per item
+    # - against servers that answer bursts with 503.
+    extra = ("body-rich-x", "body-rich-y")
+    for i, slug in enumerate(extra):
+        ok("items.create", ical=_rich_ical(
+            slug, slug, f"<b>batch {i}</b>", f"batch {i}", f"092{4 + i}"))
+    s.sync()
+
+    s.mark()
+    s.rebind("events")
+    s.settle("events")
+
+    requests, blocks, types = _fetches(s)
+    harness.eq(requests, 1, "one ItemOperations request for the whole window")
+    harness.eq(blocks, 3, "carrying a Fetch per rich note - the two new and 14.6's promotion")
+    harness.true(set(types) == {"2"}, "all asking for HTML")
+
+    for i, slug in enumerate(extra):
+        item = _find(s, slug)
+        harness.eq(_description(item), f"batch {i}", f"{slug}: tooltip text")
+        harness.contains(_altrep(item) or "", f"<b>batch {i}</b>", f"{slug}: editor copy")
+
+    for slug in extra:
+        ok("items.remove", id=_find(s, slug)["id"])
+    s.sync()
+    s.settle("events")
+
+
+@test("14.8", "clean up - the section leaves the calendar as it found it")
+def t_14_8(s):
     # Sections chain, and a leftover fixture is worse than a failure: the
     # next run matches whichever copy it finds first. Removing them through
     # a sync also proves the deletions reached the server, not just the

@@ -42,7 +42,7 @@ import { easRequest } from "../network.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
-import { fetchServerItem } from "./item-operations.mjs";
+import { fetchServerItem, fetchServerItems } from "./item-operations.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 import { accountUserAddress } from "./settings.mjs";
 import {
@@ -1637,26 +1637,128 @@ async function applyServerCommands(ctx, commands) {
   // between two of those writes would leave the batch half-applied for no
   // benefit - the server will re-send what we did not acknowledge.
   throwIfCancelled(ctx);
+
+  // Items whose NativeBodyType says the server holds an HTML note the Sync
+  // payload flattened. They are applied like everything else - the
+  // flattening becomes the note, so nothing is held back - and their rich
+  // form is fetched afterwards, for the whole window in one request instead
+  // of one request per item mid-loop. Keyed by ServerId so an add followed
+  // by a change in the same window records once; local to this call so the
+  // early returns in the phases above us can never drop it silently.
+  const noteBacklog = new Map();
+
   for (const node of commands.adds) {
-    await applyAdd(ctx, node);
+    await applyAdd(ctx, node, noteBacklog);
     processed++;
   }
   for (const node of commands.changes) {
-    await applyChange(ctx, node);
+    await applyChange(ctx, node, noteBacklog);
     processed++;
   }
   for (const node of commands.deletes) {
-    await applyDelete(ctx, node);
+    await applyDelete(ctx, node, noteBacklog);
     processed++;
   }
   for (const node of commands.softDeletes) {
-    await applyDelete(ctx, node);
+    await applyDelete(ctx, node, noteBacklog);
     processed++;
   }
+  await upgradeNoteBacklog(ctx, noteBacklog);
   return processed;
 }
 
-async function applyAdd(ctx, addNode) {
+/** Fetch the rich form of every backlogged note in one request per chunk and
+ *  re-apply those items as ordinary changes. Every item already exists with
+ *  the server's own flattening as its note, so failure at any point - the
+ *  gate, a transport error, a missing result - costs formatting freshness
+ *  only, never data: the remainder simply keeps the plain text, with one
+ *  warning naming the count rather than one per item. */
+async function upgradeNoteBacklog(ctx, noteBacklog) {
+  if (noteBacklog.size === 0) return;
+
+  const entries = [...noteBacklog.values()];
+  if (!easCommandLikelyAvailable(ctx.account, "ItemOperations")) {
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[${ctx.itemKind.changelogKind}-sync] server does not offer ` +
+        `ItemOperations; ${entries.length} HTML note(s) stay as plain text`,
+    });
+    return;
+  }
+
+  // A window is normally at most maxItems anyway; the cap is for a
+  // user-raised maxItems, where 25 HTML bodies is already a sizeable
+  // response. No shrink ladder: the request carries only ids, so there is
+  // no poisonous item to bisect for, and shrinking would re-create the very
+  // burst this batching exists to prevent.
+  const chunkSize = Math.min(ctx.maxItems, 25);
+  for (let at = 0; at < entries.length; at += chunkSize) {
+    throwIfCancelled(ctx);
+    const chunk = entries.slice(at, at + chunkSize);
+    let result = null;
+    let failure = null;
+    try {
+      result = await fetchServerItems({
+        account: ctx.account,
+        asVersion: ctx.asVersion,
+        collectionId: ctx.collectionId,
+        serverIDs: chunk.map((e) => e.serverID),
+        bodyType: "2",
+      });
+    } catch (err) {
+      failure = err;
+    }
+
+    // A failed request - thrown, or answered with a non-1 Status - ends the
+    // upgrade for everything still waiting. The notes are already stored as
+    // the server's own plain text, so there is nothing to repair and nothing
+    // to retry; asking again is how the burst this exists to prevent comes
+    // back.
+    if (!result || (result.status && result.status !== "1")) {
+      const remaining = entries.length - at;
+      ctx.provider.reportEventLog({
+        level: "warning",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message:
+          `[${ctx.itemKind.changelogKind}-sync] could not fetch the HTML form ` +
+          `of ${remaining} note(s); they keep the server's plain-text rendering`,
+        details: failure
+          ? String(failure?.message ?? failure)
+          : `ItemOperations Status ${result?.status}`,
+      });
+      return;
+    }
+
+    for (const entry of chunk) {
+      const properties = result.items.get(entry.serverID);
+      if (!properties) {
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message:
+            `[${ctx.itemKind.changelogKind}-sync] could not fetch the HTML note ` +
+            `for ${entry.serverID}; it keeps the server's plain-text rendering`,
+        });
+        continue;
+      }
+      // Resolved now, not when the entry was recorded: pass 1 wrote this
+      // item moments ago, and for an add the row did not exist then.
+      const existing = await findExistingByServerId(ctx, entry.serverID);
+      if (!existing) continue;
+      await applyChangeFromAd(ctx, properties, existing, entry.serverID, {
+        adNode: properties,
+        nativePlainText: entry.flattened,
+      });
+    }
+  }
+}
+
+async function applyAdd(ctx, addNode, noteBacklog = null) {
   const serverID = readPathFrom(addNode, ["ServerId"]);
   if (!serverID) {
     // Skipped, and the sync key still advances - the server will not
@@ -1672,7 +1774,16 @@ async function applyAdd(ctx, addNode) {
   }
   let ad = childByTag(addNode, "ApplicationData");
   if (!ad) return;
-  const resolved = await resolveBody(ctx, ad, serverID);
+  // A note the server holds as HTML is applied with the flattening in hand
+  // and upgraded after the loop, one request for the whole window; the
+  // resolver's inline fetch is for callers with no window to batch over.
+  let resolved;
+  if (noteBacklog && needsHtmlRefetch(ctx, ad)) {
+    recordNoteForUpgrade(noteBacklog, ad, serverID);
+    resolved = { adNode: ad, nativePlainText: null };
+  } else {
+    resolved = await resolveBody(ctx, ad, serverID);
+  }
   ad = resolved.adNode;
   await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = await findExistingByServerId(ctx, serverID);
@@ -1713,7 +1824,7 @@ async function applyAdd(ctx, addNode) {
   }
 }
 
-async function applyChange(ctx, changeNode) {
+async function applyChange(ctx, changeNode, noteBacklog = null) {
   const serverID = readPathFrom(changeNode, ["ServerId"]);
   if (!serverID) {
     ctx.provider.reportEventLog({
@@ -1741,7 +1852,7 @@ async function applyChange(ctx, changeNode) {
   ) {
     return applyExceptionChange(ctx, ad, existing, instanceId, serverID);
   }
-  return applyChangeFromAd(ctx, ad, existing, serverID);
+  return applyChangeFromAd(ctx, ad, existing, serverID, null, noteBacklog);
 }
 
 async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
@@ -1841,6 +1952,42 @@ function parseEasInstanceId(s) {
   return new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +se));
 }
 
+/** The (NativeBodyType << 4 | Type) pair, normalised to the four cases the
+ *  note logic distinguishes. A missing Type is 2.5, where Body is plain and
+ *  has no Type at all; a server that reports no NativeBodyType makes no
+ *  claim, so the payload is taken at face value; RTF folds to plain, because
+ *  we cannot decompress it and a conversion we stored would be pushed back
+ *  as the note. */
+function bodyCase(ad) {
+  const rawType = readPathFrom(ad, ["Body", "Type"]);
+  const rawNative = readPathFrom(ad, ["NativeBodyType"]);
+  const type = rawType === "2" ? 2 : 1;
+  const native = rawNative == null ? type : rawNative === "2" ? 2 : 1;
+  return (native << 4) | type;
+}
+
+/** True when the server holds this item's note as HTML but the payload in
+ *  hand is a flattening - the one case worth a second request. Contacts are
+ *  excluded outright: a vCard NOTE is text and nothing else, so fetching
+ *  HTML for one would put markup in the note and push it back as the
+ *  server's plain-text note, destroying the real one. */
+function needsHtmlRefetch(ctx, ad) {
+  if (ctx.itemKind.className === "Contacts") return false;
+  return bodyCase(ad) === 0x21;
+}
+
+/** Remember an item for the post-loop note upgrade. The flattening is
+ *  captured now, from this payload, so the tooltip can keep the server's own
+ *  rendering whatever the fetch later returns. Last write wins - an add
+ *  followed by a change in one window records once, with the newer text. */
+function recordNoteForUpgrade(noteBacklog, ad, serverID) {
+  if (!serverID) return;
+  noteBacklog.set(serverID, {
+    serverID,
+    flattened: readPathFrom(ad, ["Body", "Data"]),
+  });
+}
+
 /** The note in the form the server actually holds it.
  *
  *  A server answers in the `Type` the request asked for whatever it stores,
@@ -1870,18 +2017,7 @@ async function resolveBody(
     return { adNode: ad, nativePlainText: null };
   }
 
-  const rawType = readPathFrom(ad, ["Body", "Type"]);
-  const rawNative = readPathFrom(ad, ["NativeBodyType"]);
-
-  // Normalised before the switch, so it only ever sees four combinations.
-  // A missing Type is 2.5, where Body is plain and has no Type at all. A
-  // server that reports no NativeBodyType makes no claim, so the payload is
-  // taken at face value. RTF folds to plain: we cannot decompress it, and
-  // storing a conversion we would later push back is how notes get rewritten.
-  const type = rawType === "2" ? 2 : 1;
-  const native = rawNative == null ? type : rawNative === "2" ? 2 : 1;
-
-  switch ((native << 4) | type) {
+  switch (bodyCase(ad)) {
     // Holds plain, gave plain - and holds HTML, gave HTML. Either way the
     // payload is the native form.
     case 0x11:
@@ -1946,8 +2082,16 @@ async function applyChangeFromAd(
   existing,
   serverID = null,
   resolved = null,
+  noteBacklog = null,
 ) {
-  if (!resolved) resolved = await resolveBody(ctx, ad, serverID);
+  if (!resolved) {
+    if (noteBacklog && needsHtmlRefetch(ctx, ad)) {
+      recordNoteForUpgrade(noteBacklog, ad, serverID);
+      resolved = { adNode: ad, nativePlainText: null };
+    } else {
+      resolved = await resolveBody(ctx, ad, serverID);
+    }
+  }
   ad = resolved.adNode;
   // The caller's ServerId wins over the blob's. It comes from the command
   // we are applying, so it is what the server calls this item right now;
@@ -2016,9 +2160,12 @@ async function applyChangeFromAd(
   }
 }
 
-async function applyDelete(ctx, delNode) {
+async function applyDelete(ctx, delNode, noteBacklog = null) {
   const serverID = readPathFrom(delNode, ["ServerId"]);
   if (!serverID) return;
+  // A deletion outranks a pending note upgrade - fetching the rich note of
+  // an item this same window removed would resurrect it as a change.
+  noteBacklog?.delete(serverID);
   const existing = await findExistingByServerId(ctx, serverID);
   if (!existing) return;
   await ctx.queue.markServerWrite({
