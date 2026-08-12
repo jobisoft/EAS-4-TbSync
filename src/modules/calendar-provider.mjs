@@ -183,7 +183,7 @@ async function record(calendarId, itemId, op, { type, oldIcal, flags } = {}) {
     ?.updateFolder({
       accountId: binding.accountId,
       folderId: binding.folderId,
-      patch: { custom: { pendingUserChanges: pending } },
+      patch: { localChanges: pending },
     })
     .catch((err) =>
       report?.({

@@ -796,18 +796,17 @@ async function finishWith(ctx, result) {
       /* a count we cannot read is a badge we do not update */
     }
   }
-  const patch = {};
-  if (ctx.syncKeyDirty) patch.synckey = ctx.synckey;
-  if (ctx.indexMapDirty) patch.indexMap = ctx.indexMap;
-  if (ctx.pendingCount !== undefined) {
-    patch.pendingUserChanges = ctx.pendingCount;
-  }
+  const custom = {};
+  if (ctx.syncKeyDirty) custom.synckey = ctx.synckey;
+  if (ctx.indexMapDirty) custom.indexMap = ctx.indexMap;
+  const patch = Object.keys(custom).length ? { custom } : {};
+  if (ctx.pendingCount !== undefined) patch.localChanges = ctx.pendingCount;
   if (!Object.keys(patch).length) return result;
   try {
     await ctx.provider.updateFolder({
       accountId: ctx.accountId,
       folderId: ctx.folderId,
-      patch: { custom: patch },
+      patch,
     });
   } catch (err) {
     ctx.provider.reportEventLog({

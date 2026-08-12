@@ -54,8 +54,8 @@ when the connection is down. They queue; the scheduled sync pushes.</p>
 <code>folder.sessionId</code>. The record has to be durable before the hook
 answers and must not depend on the host being alive — our calendars keep
 working when it is not. Address books are the other way round: Thunderbird
-offers no provider API for them, so the host observes those and owns their
-entries in <code>folder.changelog</code>.</p>
+offers no provider API for them, so we watch those instead, and the
+observer files what it sees in the same queue.</p>
 
 <ul>
   <li><code>*_by_server</code> pre-tags are meaningless for our calendars —
