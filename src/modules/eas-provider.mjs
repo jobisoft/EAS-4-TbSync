@@ -459,9 +459,8 @@ export class EasProvider extends TbSyncProviderImplementation {
     // server-advertised EAS version and command list (notably Search/GAL)
     // before the user clicks Connect. The host broadcasts accounts-changed
     // before this hook resolves, so the new (still-disabled) row is already
-    // visible; we hold the provider-wide lock for the duration so the user
-    // can't race us by clicking Connect.
-    await this.setProviderUpgradeLock(true);
+    // visible - and holds this account "being prepared" for as long as we
+    // are in here, so the user cannot race us by clicking Connect.
     try {
       const ctx = await this.#loadContext(accountId);
       if (!ctx) return null;
@@ -484,8 +483,6 @@ export class EasProvider extends TbSyncProviderImplementation {
         message: `Initial OPTIONS probe failed for account ${accountId}; will retry on first Connect`,
         details: err?.message ?? null,
       });
-    } finally {
-      await this.setProviderUpgradeLock(false);
     }
     return null;
   }
