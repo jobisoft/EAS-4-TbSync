@@ -208,6 +208,7 @@ export async function applicationDataToIcal({
         prop.setValue(ICAL.Recur.fromString(rrule));
         vtodo.addProperty(prop);
       }
+      keepUnmappedRecurrence(vtodo, recNode);
     }
   }
 
@@ -292,6 +293,7 @@ export function appendApplicationDataFromIcal({
         anchorLocal,
         anchorUtc,
         asVersion,
+        unmappedRecurrenceOf(vtodo),
       );
     }
   }
@@ -497,6 +499,67 @@ function absoluteReminderTime(alarm, anchorProp) {
 
 /* ── Recurrence (RRULE only; tasks have no exceptions) ────────────── */
 
+/**
+ * Recurrence elements this codec does not model, and the property each is
+ * parked in so a push can hand it straight back.
+ *
+ * `Regenerate` schedules the next occurrence from the *completion* of the
+ * last one rather than from the pattern - Outlook's "regenerating task".
+ * `DeadOccur` marks an item as a spent occurrence rather than the live
+ * series, which is how Exchange records history for a task series that has
+ * no exceptions. `CalendarType` states which calendar system the rule is
+ * computed in, and `IsLeapMonth` qualifies a monthly rule inside one.
+ *
+ * None of them is representable here. iCalendar has no completion-relative
+ * recurrence at all; a spent occurrence would be a RECURRENCE-ID override,
+ * which is a different shape from the separate item with its own ServerId
+ * that Exchange actually sends; and the non-Gregorian pair does have a
+ * standard form in RFC 7529 `RSCALE`, which neither ical.js nor Thunderbird
+ * implements. All four are invisible in the task UI.
+ *
+ * They are kept anyway, because a push rebuilds `<Recurrence>` from the
+ * RRULE and the server replaces the block wholesale - measured on both
+ * 14.1 and 16.1 by sending a weekly rule, changing it to daily, and
+ * finding the omitted `DayOfWeek` gone from the server's own copy. So
+ * without this, renaming a regenerating task in Thunderbird converts it to
+ * a fixed schedule, and editing a spent occurrence stops it being marked
+ * as spent. 16.1 states `Regenerate` and `DeadOccur` on every task
+ * recurrence it sends, which is how we know they are part of what we
+ * overwrite.
+ *
+ * `FirstDayOfWeek` is deliberately NOT here, though the server sends it on
+ * ordinary weekly tasks and we drop it today. It is the one element of the
+ * set with a real iCalendar form - `WKST` - and mapping it changes how a
+ * weekly rule with an interval above 1 expands, so it is recurrence
+ * semantics rather than data preservation and is handled on its own.
+ */
+const UNMAPPED_RECURRENCE = Object.freeze({
+  Regenerate: "x-eas-regenerate",
+  DeadOccur: "x-eas-deadoccur",
+  CalendarType: "x-eas-calendartype",
+  IsLeapMonth: "x-eas-isleapmonth",
+});
+
+/** Park the elements above on the item, and clear the ones the server has
+ *  stopped sending - a stale stamp would be re-asserted forever. */
+function keepUnmappedRecurrence(vtodo, recNode) {
+  for (const [tag, prop] of Object.entries(UNMAPPED_RECURRENCE)) {
+    vtodo.removeAllProperties(prop);
+    const value = stringOf(readPathFrom(recNode, [tag]));
+    if (value !== "") vtodo.addPropertyWithValue(prop, value);
+  }
+}
+
+/** What `keepUnmappedRecurrence` parked, for the push to hand back. */
+function unmappedRecurrenceOf(vtodo) {
+  const out = [];
+  for (const [tag, prop] of Object.entries(UNMAPPED_RECURRENCE)) {
+    const value = stringOf(vtodo.getFirstPropertyValue(prop));
+    if (value !== "") out.push([tag, value]);
+  }
+  return out;
+}
+
 /** `[MS-ASTASK]` 2.2.2.31. Every element qualifying the type has to be here:
  *  without them the server rejects the whole Add with Status 6, and only
  *  daily needs none. A rejected entry is re-staged and retried on every
@@ -533,6 +596,7 @@ function appendRecurrence(
   localStart,
   utcStart,
   asVersion,
+  unmapped = [],
 ) {
   const rec = rruleToEas(rruleProp, startProp);
   if (!rec) return;
@@ -540,6 +604,12 @@ function appendRecurrence(
   const legacy = !String(asVersion ?? "").startsWith("16.");
 
   builder.otag("Recurrence");
+  // Ahead of <Type>, which is where 16.1 puts them in the block it sends
+  // us. The Tasks codepage assigns their tokens after the qualifying
+  // elements instead, so the two disagree - and the server is the half that
+  // was observed. Section 15.3 holds the order, against two different 16.1
+  // servers: get it wrong and the push comes back Status 6.
+  for (const [tag, value] of unmapped) builder.atag(tag, value);
   builder.atag("Type", String(rec.type));
   builder.atag("Start", legacy && utcStart ? utcStart : localStart);
   if (rec.dayOfMonth !== null) {
