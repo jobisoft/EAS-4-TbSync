@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Kui see on sisse lülitatud, käivad kordumisreeglid ja üksikjuhtude erandid serveriga edasi-tagasi."
   },
+  "config.calendar.syncOnChange": {
+    "message": "Sünkrooni kalender pärast muudatust"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync sünkroonib seda kontot kontohalduris määratud ajakava järgi. Lisaks saab kalendrit sünkroonida veidi pärast seda, kui selles midagi muudate, nii et kohalikud muudatused jõuavad serverisse ilma järgmist ajastatud käivitust ootamata. Kõige olulisem on see koosolekute puhul, sest server kutsub osalejad, saadab uuendused ja edastab teie vastuse alles siis, kui on teie muudatusi näinud."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Väljas"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "5 sekundi pärast"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "15 sekundi pärast"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "30 sekundi pärast"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "60 sekundi pärast"
+  },
   "config.section.lookups": {
     "message": "Serveripäringud"
   },

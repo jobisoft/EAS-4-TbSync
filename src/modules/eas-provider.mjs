@@ -150,6 +150,12 @@ const ALLOWED_CALENDAR_SYNC_LIMITS = ["0", "4", "5", "6", "7"];
  *  wins. */
 const ALLOWED_CONFLICT_VALUES = ["0", "1"];
 
+/** How long a calendar must stay quiet before an edit in it is synced, in
+ *  seconds. "0" is off, and then an edit waits for the scheduled sync.
+ *  Read by the calendar provider's item hooks - see `armSyncAfterChange`. */
+const ALLOWED_SYNC_ON_CHANGE_VALUES = ["0", "5", "15", "30", "60"];
+const DEFAULT_SYNC_ON_CHANGE = "15";
+
 /** Setup-type → fixed EAS host. Only the OAuth setup types appear here. */
 const HOST_BY_SERVERTYPE = {
   office365: "outlook.office365.com",
@@ -1359,6 +1365,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           provision: false,
           conflict: "1",
           syncrecurrence: true,
+          syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
     }
@@ -1386,6 +1393,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           provision: false,
           conflict: "1",
           syncrecurrence: true,
+          syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
     }
@@ -1416,6 +1424,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         provision: false,
         conflict: "1",
         syncrecurrence: true,
+        syncOnChange: DEFAULT_SYNC_ON_CHANGE,
       },
     };
   }
@@ -1456,6 +1465,12 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Calendar section.
       calendarSyncLimit: c.synclimit || "7",
       syncRecurrence: !!c.syncrecurrence,
+      // Anything unrecognised, including the absent value of an account
+      // that predates the setting, reads as the default - the popup must
+      // never render a select with no option selected.
+      syncOnChange: ALLOWED_SYNC_ON_CHANGE_VALUES.includes(c.syncOnChange)
+        ? c.syncOnChange
+        : DEFAULT_SYNC_ON_CHANGE,
       // GAL section. `galEnabled` defaults to true so accounts that
       // pre-date the toggle keep their auto-on behavior; only an
       // explicit false (set via this dialog) disables it. `galSupported`
@@ -1541,6 +1556,16 @@ export class EasProvider extends TbSyncProviderImplementation {
         );
       }
       customPatch.synclimit = v;
+    }
+    if ("syncOnChange" in patch) {
+      const v = String(patch.syncOnChange ?? "");
+      if (!ALLOWED_SYNC_ON_CHANGE_VALUES.includes(v)) {
+        throw withCode(
+          new Error("Invalid sync-after-change selection"),
+          ERR.UNKNOWN_COMMAND,
+        );
+      }
+      customPatch.syncOnChange = v;
     }
     if ("syncRecurrence" in patch) {
       customPatch.syncrecurrence = !!patch.syncRecurrence;

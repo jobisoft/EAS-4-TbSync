@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
   },
+  "config.calendar.syncOnChange": {
+    "message": "Synchronizovat kalendář po změně"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync synchronizuje tento účet podle plánu nastaveného ve správci účtů. Kalendář lze navíc synchronizovat krátce poté, co v něm něco změníte, aby se místní změny dostaly na server bez čekání na další plánované spuštění. Nejdůležitější je to u schůzek, protože server pozve účastníky, rozešle aktualizace a předá vaši odpověď až poté, co vaše změny uvidí."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Vypnuto"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "Po 5 sekundách"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "Po 15 sekundách"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "Po 30 sekundách"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "Po 60 sekundách"
+  },
   "config.section.lookups": {
     "message": "Dotazy na server"
   },

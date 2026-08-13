@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "При включении правила повторения и исключения для отдельных экземпляров синхронизируются с сервером в обе стороны."
   },
+  "config.calendar.syncOnChange": {
+    "message": "Синхронизировать календарь после изменения"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync синхронизирует эту учётную запись по расписанию, заданному в менеджере учётных записей. Кроме того, календарь можно синхронизировать вскоре после того, как вы в нём что-то измените, чтобы локальные изменения попали на сервер, не дожидаясь следующего запланированного запуска. Больше всего это важно для встреч, потому что сервер приглашает участников, рассылает обновления и передаёт ваш ответ только после того, как увидит ваши изменения."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Выключено"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "Через 5 секунд"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "Через 15 секунд"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "Через 30 секунд"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "Через 60 секунд"
+  },
   "config.section.lookups": {
     "message": "Запросы к серверу"
   },

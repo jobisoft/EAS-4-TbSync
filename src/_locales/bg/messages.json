@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Когато е включено, правилата за повторение и изключенията за отделни случаи се синхронизират в двете посоки със сървъра."
   },
+  "config.calendar.syncOnChange": {
+    "message": "Синхронизиране на календара след промяна"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync синхронизира този акаунт според графика, зададен в мениджъра на акаунти. Освен това календарът може да се синхронизира скоро след като промените нещо в него, така че локалните промени да стигнат до сървъра, без да се чака следващото планирано изпълнение. Това е най-важно за срещите, защото сървърът кани участниците, изпраща промените и предава вашия отговор едва след като е видял промените ви."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Изключено"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "След 5 секунди"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "След 15 секунди"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "След 30 секунди"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "След 60 секунди"
+  },
   "config.section.lookups": {
     "message": "Заявки към сървъра"
   },

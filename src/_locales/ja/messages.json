@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "有効にすると、繰り返しルールとインスタンスごとの例外がサーバーと双方向で同期されます。"
   },
+  "config.calendar.syncOnChange": {
+    "message": "変更後にカレンダーを同期する"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync はアカウントマネージャーで設定したスケジュールに従って、このアカウントを同期します。さらに、カレンダーで何かを変更した少し後にそのカレンダーを同期し、次の定期実行を待たずにローカルの変更をサーバーへ届けることもできます。これが最も重要なのは会議です。サーバーは変更を見てはじめて出席者を招待し、更新を送り、あなたの返答を伝えるからです。"
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "オフ"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "5 秒後"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "15 秒後"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "30 秒後"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "60 秒後"
+  },
   "config.section.lookups": {
     "message": "サーバーへの問い合わせ"
   },

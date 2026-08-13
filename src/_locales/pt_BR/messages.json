@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Quando ativado, as regras de recorrência e as exceções por instância são sincronizadas nos dois sentidos com o servidor."
   },
+  "config.calendar.syncOnChange": {
+    "message": "Sincronizar uma agenda após uma alteração"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "O TbSync sincroniza esta conta conforme a programação definida no gerenciador de contas. Uma agenda também pode ser sincronizada logo depois que você altera algo nela, para que as alterações locais cheguem ao servidor sem esperar a próxima execução programada. Isso importa principalmente para as reuniões, porque o servidor só convida os participantes, envia as atualizações e repassa sua resposta depois de ver suas alterações."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Desativado"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "Após 5 segundos"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "Após 15 segundos"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "Após 30 segundos"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "Após 60 segundos"
+  },
   "config.section.lookups": {
     "message": "Consultas ao servidor"
   },

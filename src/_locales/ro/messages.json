@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
   },
+  "config.calendar.syncOnChange": {
+    "message": "Sincronizează calendarul după o modificare"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync sincronizează acest cont conform programului stabilit în managerul de conturi. În plus, un calendar poate fi sincronizat la scurt timp după ce modificați ceva în el, astfel încât modificările locale să ajungă la server fără a aștepta următoarea rulare programată. Acest lucru contează cel mai mult pentru întâlniri, deoarece serverul invită participanții, trimite actualizările și transmite răspunsul dumneavoastră abia după ce v-a văzut modificările."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Dezactivat"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "După 5 secunde"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "După 15 secunde"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "După 30 de secunde"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "După 60 de secunde"
+  },
   "config.section.lookups": {
     "message": "Interogări la server"
   },

@@ -165,6 +165,7 @@ async function load() {
   // ── Calendar section ───────────────────────────────────────────────────
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
   $("sync-recurrence").checked = !!account.syncRecurrence;
+  $("sync-on-change").value = String(account.syncOnChange ?? "15");
 
   // ── Server lookups ─────────────────────────────────────────────────────
   // Each checkbox is forced off + disabled when the server's OPTIONS probe
@@ -286,6 +287,7 @@ async function onSave() {
     contactsNameSeparator: $("contacts-name-separator").value,
     calendarSyncLimit: $("calendar-sync-limit").value,
     syncRecurrence: $("sync-recurrence").checked,
+    syncOnChange: $("sync-on-change").value,
   };
 
   // Only thread `galEnabled` through when the field is actually

@@ -275,6 +275,27 @@
   "config.calendar.syncRecurrence.hint": {
     "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
+  "config.calendar.syncOnChange": {
+    "message": "Synchronize a calendar after a change"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync synchronizes this account on the schedule set in the account manager. A calendar can additionally be synchronized shortly after you change anything in it, so local changes reach the server without waiting for the next scheduled run. That matters most for meetings, because the server only invites attendees, sends updates and passes on your response once it has seen your changes."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Off"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "After 5 seconds"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "After 15 seconds"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "After 30 seconds"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "After 60 seconds"
+  },
   "config.section.lookups": {
     "message": "Server lookups"
   },
