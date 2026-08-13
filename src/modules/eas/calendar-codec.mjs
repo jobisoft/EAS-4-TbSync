@@ -1605,6 +1605,138 @@ function removeExdate(vevent, jsDate, tzId = null) {
  * caller with no baseline falls back to sending the full set, which is what
  * happens today anyway.
  */
+/* ── Invitations ───────────────────────────────────────────────────────
+ *
+ * A meeting somebody else organised cannot be changed through this
+ * protocol. On 16.0/16.1 the client is forbidden from sending either half
+ * of what such a change would have to say - [MS-ASCAL] 2.2.2.35 "the client
+ * MUST NOT include the OrganizerEmail element", 2.2.2.5 the same for
+ * AttendeeStatus - and the server substitutes the current user for both, so
+ * an Add or a Change we sent would not read as "their meeting, changed" but
+ * as "my meeting", re-inviting everyone on it. The one thing we may say
+ * about such a meeting is the user's answer, and that goes as a
+ * MeetingResponse.
+ */
+
+/** How the user's answer maps onto MeetingResponse's UserResponse. Anything
+ *  absent from this table is not an answer: NEEDS-ACTION means the user has
+ *  not replied, and there is no UserResponse value for "no reply". */
+const PARTSTAT_TO_USERRESPONSE = {
+  ACCEPTED: 1,
+  TENTATIVE: 2,
+  DECLINED: 3,
+};
+
+/** Which attendee is us, on an item we may not have an address for.
+ *
+ *  `X-MOZ-INVITED-ATTENDEE` is Thunderbird's own answer, set when its iTIP
+ *  processing matched an attendee to a local identity ("so we know who
+ *  accepted the event") and deleted again before it sends anything, so no
+ *  server can echo it back. It is the only answer available on an item
+ *  Thunderbird filed from an emailed invitation, which carries none of our
+ *  own properties at all. The account's address is the fallback for
+ *  everything else. */
+function selfAddress(vevent, userEmail) {
+  const marked = stripMailto(
+    stringOf(vevent.getFirstPropertyValue("x-moz-invited-attendee")),
+  );
+  return (marked || stringOf(userEmail)).toLowerCase();
+}
+
+/** Is this a meeting somebody else organised?
+ *
+ *  Two signals, because neither sees every item.
+ *
+ *  `X-EAS-MEETINGSTATUS` is the server's own statement, recorded inbound on
+ *  everything we pull: 0x1 says the item is a meeting rather than an
+ *  appointment, and 0x2 - the R bit - says it came from another organizer.
+ *  Authoritative, and blind to anything that has not been through that path.
+ *
+ *  An invitation Thunderbird filed from an emailed iTIP has not been: it is
+ *  built from the message and carries no `X-EAS-*` at all. There the
+ *  organizer is compared with `X-MOZ-INVITED-ATTENDEE`, which is the same
+ *  test the platform itself uses to decide an item is an invitation
+ *  (`calProviderBase.isInvitation`).
+ *
+ *  False whenever neither signal is conclusive: an item nobody has said
+ *  anything about is ours. */
+export function isReceivedMeeting(ical, userEmail = null) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return false;
+  const master = pickMasterVevent(vcal);
+  if (!master) return false;
+
+  // When the server has spoken it is the answer, both ways. A clear R bit
+  // is not silence: it says this meeting is the user's own, and it outranks
+  // anything we could infer from addresses - which is what protects an
+  // account whose organizer address is an alias of itself.
+  const ms = parseInt(
+    master.getFirstPropertyValue(X_EAS_MEETINGSTATUS.toLowerCase()),
+    10,
+  );
+  if (Number.isFinite(ms)) return (ms & 0x1) === 0x1 && (ms & 0x2) === 0x2;
+
+  const orgProp = master.getFirstProperty("organizer");
+  if (!orgProp) return false; // names nobody, which is not the same as us
+  const self = selfAddress(master, userEmail);
+  if (!self) return false;
+  return stripMailto(stringOf(orgProp.getFirstValue())).toLowerCase() !== self;
+}
+
+/** The user's answer to this invitation, as a MeetingResponse UserResponse,
+ *  or null when they have not answered one way or the other. */
+export function selfUserResponse(ical, userEmail = null) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return null;
+  const master = pickMasterVevent(vcal);
+  if (!master) return null;
+  const self = selfAddress(master, userEmail);
+  if (!self) return null;
+  const attendee = master
+    .getAllProperties("attendee")
+    .find((a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self);
+  const partstat = attendee?.getParameter("partstat");
+  return PARTSTAT_TO_USERRESPONSE[String(partstat).toUpperCase()] ?? null;
+}
+
+/** Carry the user's own answer across an adoption of the server's copy.
+ *
+ *  The response phase runs after the pull, so without this the pull would
+ *  overwrite the answer with the server's - which does not know about it
+ *  yet - and we would then read that back and send it. The user accepts,
+ *  the calendar looks right, and the organizer never hears. It fails
+ *  silently, which is why it is a rule and not a nicety.
+ *
+ *  Only a real answer wins: NEEDS-ACTION is the absence of one, and letting
+ *  it win would erase an answer the server already knows about.
+ *
+ *  Contributed by Tomas Kovacik <kovacik@dgtfactory.com> in PR #339; the
+ *  self-attendee lookup is widened here to Thunderbird's marker, so it also
+ *  works on an item we hold no address for. */
+export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
+  const prior = parseFirstVevent(priorIcal);
+  if (!prior) return builtIcal;
+  const self = selfAddress(prior, userEmail);
+  if (!self) return builtIcal;
+  const priorPartstat = prior
+    .getAllProperties("attendee")
+    .find((a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self)
+    ?.getParameter("partstat");
+  if (!priorPartstat || String(priorPartstat).toUpperCase() === "NEEDS-ACTION") {
+    return builtIcal;
+  }
+
+  const vcal = parseVCalendar(builtIcal);
+  const vevent = vcal ? pickMasterVevent(vcal) : null;
+  if (!vevent) return builtIcal;
+  const builtSelf = vevent
+    .getAllProperties("attendee")
+    .find((a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self);
+  if (!builtSelf) return builtIcal;
+  builtSelf.setParameter("partstat", priorPartstat);
+  return vcal.toString();
+}
+
 export function exceptionFingerprint(ical) {
   const vcal = parseVCalendar(ical);
   if (!vcal) return null;

@@ -46,6 +46,12 @@ import { fetchServerItem, fetchServerItems } from "./item-operations.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 import { accountUserAddress } from "./settings.mjs";
 import {
+  isReceivedMeeting,
+  preserveSelfPartstat,
+  selfUserResponse,
+} from "./calendar-codec.mjs";
+import { sendMeetingResponse } from "./meeting-response.mjs";
+import {
   localQueue,
   rememberBindings,
 } from "../../vendor/tbsync/change-queue.mjs";
@@ -497,6 +503,11 @@ async function runOneSync({
   // between the revert above and this point will be re-reverted on the
   // next sync; the runner is the single authority for upsync gating.
   let pushed = {};
+  // Queued edits to meetings somebody else organised. Held back from the
+  // push - there is no truthful way to send one - and answered after the
+  // pull instead, which is where their ServerId comes from. See
+  // `invitationPhase`.
+  const invitationAnswers = [];
   if (!effectiveDownloadOnly) {
     const pending = await ctx.queue.pending();
     // ActiveSync has no mailing list: [MS-ASCNTC] describes a contact and
@@ -536,6 +547,29 @@ async function runOneSync({
         });
         continue;
       }
+      // A meeting somebody else organised cannot be sent as an Add or a
+      // Change: on 16.x the client may state neither the organizer nor an
+      // attendee's status, and the server fills both in with the current
+      // user, so what arrives is not their meeting changed but ours -
+      // re-invited to everyone on it. The user's answer is the one thing we
+      // may say about it, and it goes as a MeetingResponse after the pull.
+      //
+      // A delete is exempt: the user removed it from their calendar, which
+      // is a plain <Delete> and says nothing about the meeting itself.
+      // There is also nothing left to read - the item is already gone.
+      if (
+        ctx.itemKind.changelogKind === "event" &&
+        e.status !== "deleted_by_user"
+      ) {
+        const item = await ctx.store.get(e.itemId);
+        if (
+          item &&
+          isReceivedMeeting(item.blob, accountUserAddress(ctx.account))
+        ) {
+          invitationAnswers.push(e);
+          continue;
+        }
+      }
       userEdits.push(e);
     }
     if (userEdits.length) {
@@ -571,6 +605,13 @@ async function runOneSync({
   // dropped.
   const pull = await pullPhase(ctx);
   if (pull.code) return await finishWith(ctx, pull);
+
+  // 5) Answers to invitations, after the pull because that is what gives
+  // an item its ServerId - MeetingResponse addresses one by RequestId, and
+  // an invitation Thunderbird filed from the email has none until we have
+  // seen the server's copy. Nothing here waits for the answer to take
+  // effect: Exchange applies it asynchronously and the next sync reports it.
+  if (invitationAnswers.length) await invitationPhase(ctx, invitationAnswers);
 
   // Final status — `warning` if push rejected any items so the user sees
   // a count in the manager; `ok` otherwise. The warning's text comes
@@ -1157,6 +1198,144 @@ function blobHasInstanceOverrides(blob) {
  * none of its occurrences. An added item has no such baseline and sends
  * everything, which is correct: the server has just met it.
  */
+/** Answer the invitations the push phase held back.
+ *
+ *  Each entry is a queued edit to a meeting somebody else organises. The
+ *  only thing we may tell the server about one is the user's answer, and
+ *  MeetingResponse is how - [MS-ASCMD] 2.2.2.10. It addresses the item by
+ *  `RequestId`, which is its ServerId, so this runs after the pull: an
+ *  invitation Thunderbird filed from the email has no ServerId at all until
+ *  the server's own copy has come down and been adopted onto it.
+ *
+ *  Nothing here waits. Exchange acknowledges receipt and applies the answer
+ *  to the calendar afterwards - measured at absent after 24 s and present
+ *  after 34 s - so the item this sync just pulled will usually still show
+ *  the old state. The next sync reports it, and holding this one open to
+ *  watch for it is what makes a client freeze.
+ *
+ *  An entry is dropped when it can never be sent, and kept when it might be
+ *  sent later. The difference matters: a kept entry lights the needs-sync
+ *  badge until it goes, so keeping one that can never go leaves a badge
+ *  nobody can clear. */
+async function invitationPhase(ctx, answers) {
+  // Responding to an invitation from the calendar item is 14.0 and later.
+  // Below that the only way is the meeting request in the Inbox, and we do
+  // not sync mail - so these can never be sent, at all, ever.
+  if (parseFloat(ctx.asVersion) < 14) {
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[event-sync] dropping ${answers.length} invitation answer(s): ` +
+        `ActiveSync ${ctx.asVersion} can only answer from the meeting ` +
+        `request in the Inbox, which is not a folder we sync`,
+    });
+    for (const entry of answers) await dropEntry(ctx, entry);
+    return;
+  }
+  if (!easCommandLikelyAvailable(ctx.account, "MeetingResponse")) {
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[event-sync] dropping ${answers.length} invitation answer(s): ` +
+        `the server does not advertise MeetingResponse`,
+    });
+    for (const entry of answers) await dropEntry(ctx, entry);
+    return;
+  }
+
+  for (const entry of answers) {
+    throwIfCancelled(ctx);
+    // Re-read rather than trust the copy taken before the pull: the pull
+    // may have just adopted the server's version onto this item, which is
+    // how it gets a ServerId in the first place. `preserveSelfPartstat`
+    // is what keeps the user's answer across that.
+    const item = await ctx.store.get(entry.itemId);
+    if (!item) {
+      await dropEntry(ctx, entry);
+      continue;
+    }
+    const userResponse = selfUserResponse(
+      item.blob,
+      accountUserAddress(ctx.account),
+    );
+    if (!userResponse) {
+      // Not an answer: NEEDS-ACTION, or an edit to something else on a
+      // meeting we cannot push anyway. Nothing to send and nothing owed.
+      ctx.eventLog(
+        "debug",
+        `[event-sync] ${entry.itemId} carries no answer to send; dropping the queued edit`,
+      );
+      await dropEntry(ctx, entry);
+      continue;
+    }
+    const serverID = ctx.itemKind.codec.readEasServerIdFromBlob(item.blob);
+    if (!serverID) {
+      // The user answered before we had ever seen the server's copy. It
+      // will arrive, be adopted onto this item, and bring an id with it -
+      // so this stays queued and goes on the next sync.
+      ctx.eventLog(
+        "info",
+        `[event-sync] holding the answer to ${entry.itemId}: the server has not ` +
+          `named this meeting yet, so there is nothing to address a response to`,
+      );
+      continue;
+    }
+
+    const result = await sendMeetingResponse({
+      account: ctx.account,
+      asVersion: ctx.asVersion,
+      collectionId: ctx.collectionId,
+      serverID,
+      userResponse,
+    });
+    const status = result?.status ?? null;
+    if (status === "1") {
+      ctx.eventLog(
+        "info",
+        `[event-sync] answered the invitation ${entry.itemId} with UserResponse ${userResponse}`,
+      );
+      await dropEntry(ctx, entry);
+      continue;
+    }
+    // 2 is an invalid meeting request and 4 a meeting that cannot be
+    // responded to - a cancelled one, or somebody else's delegate. Neither
+    // improves by being retried, and a queue entry that can never go is a
+    // badge that can never clear. 3 is a server-side sync-state problem
+    // that does improve, so that one waits.
+    if (status === "2" || status === "4") {
+      ctx.provider.reportEventLog({
+        level: "warning",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message:
+          `[event-sync] the server refused the answer to ${entry.itemId} ` +
+          `(Status ${status}); it will not be retried`,
+      });
+      await dropEntry(ctx, entry);
+      continue;
+    }
+    ctx.eventLog(
+      "warning",
+      `[event-sync] could not answer the invitation ${entry.itemId} ` +
+        `(${status ? `Status ${status}` : "no response"}); leaving it queued`,
+    );
+  }
+}
+
+/** Take a queued edit out of the queue, having established that nothing
+ *  more can be done with it. */
+async function dropEntry(ctx, entry) {
+  await ctx.queue.remove({
+    parentId: entry.parentId,
+    itemId: entry.itemId,
+    kind: entry.kind,
+  });
+}
+
 async function instancePhase(ctx, masters) {
   const commands = [];
   for (const m of masters) {
@@ -1788,7 +1967,52 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
   const existing = await findExistingByServerId(ctx, serverID);
   if (existing) return applyChangeFromAd(ctx, ad, existing, serverID, resolved);
 
-  const newId = crypto.randomUUID();
+  // The UID the server gave this item. Every mailbox holding the same
+  // meeting names it the same way, and it is the one identifier that
+  // survives the server deleting and re-creating an item when somebody
+  // answers an invitation - the ServerId does not. So it is preferred to a
+  // minted one, and Thunderbird's item ids are iCal UIDs, which makes the
+  // next lookup possible at all.
+  const serverUid = readPathFrom(ad, ["UID"]);
+  const kind = ctx.itemKind.changelogKind;
+  let newId;
+  if (serverUid) {
+    newId = serverUid;
+    ctx.eventLog(
+      "debug",
+      `[${kind}-sync] pull add ${serverID}: the server named this item ` +
+        `${serverUid}, and that is the id it gets locally`,
+    );
+  } else {
+    newId = crypto.randomUUID();
+    ctx.eventLog(
+      "debug",
+      `[${kind}-sync] pull add ${serverID}: the server sent no UID, so the ` +
+        `item gets a minted id, ${newId}`,
+    );
+  }
+
+  // Thunderbird's own copy, filed from the invitation email before we ever
+  // synced this folder: same meeting, same UID, no ServerId. Adopting it is
+  // what stops the user ending up with the invitation they accepted and a
+  // second copy of it that we added beside it.
+  if (serverUid) {
+    const twin = await ctx.store.get(serverUid);
+    if (twin) {
+      ctx.eventLog(
+        "info",
+        `[${ctx.itemKind.changelogKind}-sync] adopting the local copy of ${serverUid} ` +
+          `instead of adding a second (server id ${serverID})`,
+      );
+      return applyChangeFromAd(
+        ctx,
+        ad,
+        { itemId: serverUid, blob: twin.blob },
+        serverID,
+        resolved,
+      );
+    }
+  }
   const blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
     serverID,
@@ -2123,7 +2347,7 @@ async function applyChangeFromAd(
   // current local blob instead of rebuilding from scratch. Exchange
   // routinely echoes Changes carrying only the modified fields (e.g.
   // just <DtStamp>); without merge, untouched fields would be lost.
-  const blob = await ctx.itemKind.codec.applicationDataToBlob({
+  let blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
     existingBlob: existing.blob,
     serverID: id,
@@ -2137,6 +2361,18 @@ async function applyChangeFromAd(
     eventLog: ctx.eventLog,
     nativePlainText: resolved.nativePlainText,
   });
+  // The user's own answer is not the server's to overwrite. Responses are
+  // sent after this pull, so without this the server's copy - which does
+  // not know about an answer just given - would replace it, and the phase
+  // below would then read that back and send it. The user accepts, the
+  // calendar looks right, and the organizer never hears.
+  if (ctx.itemKind.changelogKind === "event") {
+    blob = preserveSelfPartstat({
+      builtIcal: blob,
+      priorIcal: existing.blob,
+      userEmail: accountUserAddress(ctx.account),
+    });
+  }
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: existing.itemId,
