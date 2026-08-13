@@ -6,8 +6,13 @@ calendar/experiments/calendar, at commit
 
     b7f7cb3e76807903a785a03784d6e7df7b213f21
 
-as recorded in ../../VENDOR.md. It is NOT a pristine copy. Two files carry
+as recorded in ../../VENDOR.md. It is NOT a pristine copy. Five files carry
 local changes; every other file is byte-identical to that commit.
+
+The same folder is vendored into TbSync, and the two copies are kept
+byte-identical by hand - this file included. Verify with
+
+    diff -r TbSync/src/experiments/calendar EAS-4-TbSync/src/experiments/calendar
 
 Where to look
 -------------
@@ -25,11 +30,11 @@ is the complete and current set of deviations, however many commits have
 touched the folder since. If that diff is empty, this file is stale and
 should be deleted.
 
-The changes were made here first and copied to TbSync at the time, but that
-copy has since been reverted to pristine upstream: TbSync calls
-calendar.calendars.* and calendar.items.* and never touches
-calendar.timezones.*, so it had no reason to carry them. This add-on is now
-the only place they exist. They landed in c4283c4 ("be more verbose on
+The timezone changes were made here first and copied to TbSync, where they
+still are: TbSync calls calendar.calendars.* and calendar.items.* and never
+touches calendar.timezones.*, so it has no use for them, but carrying them
+keeps the two copies diffable, which is worth more than trimming files no
+caller reaches. They landed in c4283c4 ("be more verbose on
 errors", 2026-04-29), the commit
 that also added modules/eas/timezone-mapping.mjs and the Windows timezone
 tables - so they are the experiment-side half of getting Windows/IANA
@@ -44,7 +49,8 @@ What changed, and why
 ---------------------
 
 Items 0-4 are in child/ext-calendar-timezones.js, item 5 in
-parent/ext-calendar-timezones.js.
+parent/ext-calendar-timezones.js, item 6 in schema/calendar-calendars.json,
+ext-calendar-utils.sys.mjs and parent/ext-calendar-calendars.js.
 
 0. Priming the timezone service. This runs in the child process, where the
    service is a fresh instance Thunderbird's own startup never touched -
@@ -94,6 +100,61 @@ parent/ext-calendar-timezones.js.
    service observes the same two prefs and the same system-timezone topic
    this handler observes.
 
+6. calendar.calendars exposes refreshInterval, the minutes between
+   Thunderbird's own automatic refreshes of a calendar, 0 meaning "do not
+   refresh". Upstream reports and accepts neither, so a provider can see
+   neither how often the host will refresh its calendars nor stop it doing
+   so - which matters here, because the add-on runs its own sync schedule
+   and the host's timer duplicates it.
+
+   It needs no platform support. refreshInterval is an ordinary entry in
+   the calICalendar property bag, the same bag the experiment already uses
+   for color, disabled and suppressAlarms, and the same one Thunderbird's
+   calendar properties dialog writes (calendar-properties-dialog.js).
+   CalCalendarManager observes it: onPropertyChanged calls
+   setupRefreshTimer, so a write takes effect at once, and the property is
+   in propsToCopy, so it persists. Unset means Thunderbird's 30-minute
+   default (setupRefreshTimer), which is why convertCalendar omits the
+   property rather than reporting 30 - a stored 30 and no value at all are
+   different states, and only the former survives the user changing the
+   default. The bag can hand the value back as a string, so it is parsed.
+
+   Three files: the property on Calendar, CalendarChangeProps and both
+   create()'s createProperties and update()'s updateProperties in the
+   schema; the read in convertCalendar; the writes in create() and
+   update() plus the onUpdated case in parent/ext-calendar-calendars.js.
+
+   create() takes it because that is where it matters most. A provider
+   that runs its own sync schedule wants 0 from the outset: the host arms
+   the timer in registerCalendar, so setting the interval afterwards means
+   a timer exists, however briefly, and the first refresh can land before
+   the correction does. The create() write happens before that call.
+
+   Both entry points refuse the property on a calendar whose canRefresh is
+   false, throwing rather than ignoring it: an interval on a calendar that
+   cannot refresh is meaningless, and silently dropping it would let a
+   later get() disagree with what the caller believed it had set. 0 is
+   refused too - the point is that no such calendar carries an interval at
+   all, not that it carries a harmless one.
+
+   The check runs before either command touches the calendar: in create()
+   directly after the provider object is built and before its name is set,
+   in update() alongside the existing foreign-calendar preconditions and
+   before the first setProperty. A refused call therefore applies none of
+   its other properties either, instead of leaving the calendar half
+   updated.
+
+   The host is more permissive - setupRefreshTimer arms a timer for any
+   positive interval and timerCallback tests canRefresh only when it
+   fires - so this is stricter than Thunderbird itself. That is deliberate:
+   the API should not accept state the calendar cannot act on. Note that
+   canRefresh is true for everything this API is likely to touch, because
+   CalCachedCalendar hardcodes it to true to keep the reload button
+   working, and the provider in ext-calendar-provider.js sets it too. The
+   base implementation in calProviderUtils returns false, so storage and
+   memory calendars - which have nothing to refresh from - are what the
+   guard actually rejects.
+
 Verified against Thunderbird 153.0.2 (esr153), 154.0 (beta) and 155.0a1:
 every other member these files touch - defaultTimezone, timezoneIds and
 calITimezoneDatabase.getTimezoneDefinition - is present unchanged in all
@@ -107,7 +168,9 @@ None of these are upstream and never have been. Checked across the whole
 repository history: b7f7cb3e is the tip of main and the nearest revision to
 this copy by a wide margin, `master` is a stale branch 54 commits behind,
 there are no tags, and cloneInto/cloneScope appear nowhere in that
-directory's history on any branch, nor in any open pull request.
+directory's history on any branch, nor in any open pull request. Item 6 was
+written here rather than upstream for the same reason, and is meant to be
+offered there once it has run against real accounts.
 
 They are worth submitting upstream. Once accepted, re-vendor at the new
 commit, drop the local changes, and delete this file.
