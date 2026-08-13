@@ -31,6 +31,84 @@
 
 import { readPathFrom } from "./wbxml-helpers.mjs";
 
+/**
+ * Recurrence elements neither codec models, and the property each is parked
+ * in so a push can hand it straight back.
+ *
+ * `Regenerate` schedules the next occurrence from the *completion* of the
+ * last one rather than from the pattern - Outlook's "regenerating task".
+ * `DeadOccur` marks an item as a spent occurrence rather than the live
+ * series, which is how Exchange records history for a task series that has
+ * no exceptions. Both are `[MS-ASTASK]` only. `CalendarType` states which
+ * calendar system the rule is computed in and `IsLeapMonth` qualifies a
+ * monthly rule inside one, and those two exist in both namespaces.
+ *
+ * None is representable here. iCalendar has no completion-relative
+ * recurrence at all; a spent occurrence would be a RECURRENCE-ID override,
+ * which is a different shape from the separate item with its own ServerId
+ * that Exchange actually sends; and the non-Gregorian pair maps to RFC 7529
+ * `RSCALE`, which neither ical.js nor Thunderbird implements. All four are
+ * invisible in the UI.
+ *
+ * They are kept anyway, because a push rebuilds `<Recurrence>` from the
+ * RRULE and the server replaces the block wholesale - measured on both 14.1
+ * and 16.1 by sending a weekly rule, changing it to daily, and finding the
+ * omitted `DayOfWeek` gone from the server's own copy. So an edit that has
+ * nothing to do with recurrence used to destroy them.
+ *
+ * Here rather than in one codec for the reason in the module header: this
+ * started as a task-only fix, and the calendar codec had the identical hole.
+ *
+ * `FirstDayOfWeek` is not one of these. It is the one element of the set
+ * iCalendar can express, so carrying it is not enough - see
+ * `FIRST_DAY_OF_WEEK`.
+ */
+export const UNMAPPED_RECURRENCE = Object.freeze({
+  Regenerate: "x-eas-regenerate",
+  DeadOccur: "x-eas-deadoccur",
+  CalendarType: "x-eas-calendartype",
+  IsLeapMonth: "x-eas-isleapmonth",
+});
+
+/** `FirstDayOfWeek`, kept apart from the four above because it is handled
+ *  rather than merely carried: `easToRrule` renders it as `WKST` so the
+ *  rule expands correctly here, and `firstDayOfWeekOf` decides what goes
+ *  back. It is also written *last* in the block, where both servers put it,
+ *  while the four above come first - so it cannot ride the same emit loop.
+ *
+ *  The stamp is what lets the push tell "the mailbox said Sunday" apart
+ *  from "this rule was written here". */
+export const FIRST_DAY_OF_WEEK = Object.freeze({
+  tag: "FirstDayOfWeek",
+  prop: "x-eas-firstdayofweek",
+});
+
+/** Park the elements above on `comp` (a VEVENT or VTODO), and clear the ones
+ *  the server has stopped sending - a stale stamp would be re-asserted for
+ *  ever. Call it only when the AD actually carried a `<Recurrence>`: absence
+ *  means "unchanged", not "gone". */
+export function keepUnmappedRecurrence(comp, recNode) {
+  for (const [tag, prop] of [
+    ...Object.entries(UNMAPPED_RECURRENCE),
+    [FIRST_DAY_OF_WEEK.tag, FIRST_DAY_OF_WEEK.prop],
+  ]) {
+    comp.removeAllProperties(prop);
+    const value = readPathFrom(recNode, [tag]);
+    if (value != null && value !== "") comp.addPropertyWithValue(prop, value);
+  }
+}
+
+/** What `keepUnmappedRecurrence` parked for the head of the block, as
+ *  `[tag, value]` pairs. Empty for an item the server said nothing about. */
+export function unmappedRecurrenceOf(comp) {
+  const out = [];
+  for (const [tag, prop] of Object.entries(UNMAPPED_RECURRENCE)) {
+    const value = comp.getFirstPropertyValue(prop);
+    if (value != null && value !== "") out.push([tag, String(value)]);
+  }
+  return out;
+}
+
 /** Sunday-first, matching the EAS `DayOfWeek` bitmask: SU=1 … SA=64. */
 const ICAL_DAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
@@ -147,6 +225,20 @@ export function easToRrule(recNode) {
       parts.push("BYDAY=" + days.map((d) => prefix + d).join(","));
     }
   }
+  // The day the week starts on, which decides how an interval-above-1
+  // weekly rule groups its days. EAS numbers it 0=Sunday..6=Saturday,
+  // which is exactly `ICAL_DAYS` - and exactly Thunderbird's own
+  // `calIRecurrenceRule.weekStart`, so nothing has to be converted.
+  //
+  // Mapped so an interval-above-1 weekly rule expands here the way the
+  // mailbox shows it. What goes back out is not read from this rule -
+  // `firstDayOfWeekOf` decides that, because Thunderbird stamps `weekStart`
+  // from the `calendar.week.start` preference on any edit and offers no
+  // control for it (the dialog's `week-start` input is `type="hidden"`).
+  const fdow = readPathFrom(recNode, ["FirstDayOfWeek"]);
+  const wkst = ICAL_DAYS[parseInt(fdow, 10)];
+  if (wkst) parts.push(`WKST=${wkst}`);
+
   const dom = readPathFrom(recNode, ["DayOfMonth"]);
   if (dom) parts.push(`BYMONTHDAY=${dom}`);
   const moy = readPathFrom(recNode, ["MonthOfYear"]);
@@ -167,4 +259,24 @@ export function easToRrule(recNode) {
   if (until) parts.push(`UNTIL=${until.replace(/[-:]|\.\d+/g, "")}`);
 
   return parts.join(";");
+}
+
+/**
+ * The `FirstDayOfWeek` to send, for the *end* of the block, or null.
+ *
+ * An item the server gave us echoes back what the server last said, so a
+ * mailbox's own week start is never overwritten by ours - Thunderbird
+ * stamps `weekStart` from `calendar.week.start` on any edit of a rule and
+ * offers no control for it, so the local value is not the user's choice in
+ * any meaningful sense.
+ *
+ * An item authored here has no such stamp, and then the local rule *is* the
+ * only statement of intent there is, so it goes out. ical.js counts
+ * 1=Sunday..7=Saturday where EAS counts 0=Sunday, hence the offset.
+ */
+export function firstDayOfWeekOf(comp, rruleProp = null) {
+  const stamped = comp.getFirstPropertyValue(FIRST_DAY_OF_WEEK.prop);
+  if (stamped != null && stamped !== "") return String(stamped);
+  const wkst = rruleProp?.getFirstValue?.()?.wkst;
+  return wkst ? String(wkst - 1) : null;
 }

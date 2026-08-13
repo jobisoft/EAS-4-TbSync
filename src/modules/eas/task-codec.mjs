@@ -16,7 +16,13 @@ import {
   readBodyIntoDescription,
   appendBodyFromDescription,
 } from "./body-codec.mjs";
-import { rruleToEas, easToRrule } from "./recurrence.mjs";
+import {
+  rruleToEas,
+  easToRrule,
+  keepUnmappedRecurrence,
+  unmappedRecurrenceOf,
+  firstDayOfWeekOf,
+} from "./recurrence.mjs";
 import {
   guessTimezoneByCurrentOffset,
   getIcalTimezone,
@@ -294,6 +300,7 @@ export function appendApplicationDataFromIcal({
         anchorUtc,
         asVersion,
         unmappedRecurrenceOf(vtodo),
+        firstDayOfWeekOf(vtodo, rrule),
       );
     }
   }
@@ -499,67 +506,6 @@ function absoluteReminderTime(alarm, anchorProp) {
 
 /* ── Recurrence (RRULE only; tasks have no exceptions) ────────────── */
 
-/**
- * Recurrence elements this codec does not model, and the property each is
- * parked in so a push can hand it straight back.
- *
- * `Regenerate` schedules the next occurrence from the *completion* of the
- * last one rather than from the pattern - Outlook's "regenerating task".
- * `DeadOccur` marks an item as a spent occurrence rather than the live
- * series, which is how Exchange records history for a task series that has
- * no exceptions. `CalendarType` states which calendar system the rule is
- * computed in, and `IsLeapMonth` qualifies a monthly rule inside one.
- *
- * None of them is representable here. iCalendar has no completion-relative
- * recurrence at all; a spent occurrence would be a RECURRENCE-ID override,
- * which is a different shape from the separate item with its own ServerId
- * that Exchange actually sends; and the non-Gregorian pair does have a
- * standard form in RFC 7529 `RSCALE`, which neither ical.js nor Thunderbird
- * implements. All four are invisible in the task UI.
- *
- * They are kept anyway, because a push rebuilds `<Recurrence>` from the
- * RRULE and the server replaces the block wholesale - measured on both
- * 14.1 and 16.1 by sending a weekly rule, changing it to daily, and
- * finding the omitted `DayOfWeek` gone from the server's own copy. So
- * without this, renaming a regenerating task in Thunderbird converts it to
- * a fixed schedule, and editing a spent occurrence stops it being marked
- * as spent. 16.1 states `Regenerate` and `DeadOccur` on every task
- * recurrence it sends, which is how we know they are part of what we
- * overwrite.
- *
- * `FirstDayOfWeek` is deliberately NOT here, though the server sends it on
- * ordinary weekly tasks and we drop it today. It is the one element of the
- * set with a real iCalendar form - `WKST` - and mapping it changes how a
- * weekly rule with an interval above 1 expands, so it is recurrence
- * semantics rather than data preservation and is handled on its own.
- */
-const UNMAPPED_RECURRENCE = Object.freeze({
-  Regenerate: "x-eas-regenerate",
-  DeadOccur: "x-eas-deadoccur",
-  CalendarType: "x-eas-calendartype",
-  IsLeapMonth: "x-eas-isleapmonth",
-});
-
-/** Park the elements above on the item, and clear the ones the server has
- *  stopped sending - a stale stamp would be re-asserted forever. */
-function keepUnmappedRecurrence(vtodo, recNode) {
-  for (const [tag, prop] of Object.entries(UNMAPPED_RECURRENCE)) {
-    vtodo.removeAllProperties(prop);
-    const value = stringOf(readPathFrom(recNode, [tag]));
-    if (value !== "") vtodo.addPropertyWithValue(prop, value);
-  }
-}
-
-/** What `keepUnmappedRecurrence` parked, for the push to hand back. */
-function unmappedRecurrenceOf(vtodo) {
-  const out = [];
-  for (const [tag, prop] of Object.entries(UNMAPPED_RECURRENCE)) {
-    const value = stringOf(vtodo.getFirstPropertyValue(prop));
-    if (value !== "") out.push([tag, value]);
-  }
-  return out;
-}
-
 /** `[MS-ASTASK]` 2.2.2.31. Every element qualifying the type has to be here:
  *  without them the server rejects the whole Add with Status 6, and only
  *  daily needs none. A rejected entry is re-staged and retried on every
@@ -597,6 +543,7 @@ function appendRecurrence(
   utcStart,
   asVersion,
   unmapped = [],
+  firstDayOfWeek = null,
 ) {
   const rec = rruleToEas(rruleProp, startProp);
   if (!rec) return;
@@ -624,6 +571,13 @@ function appendRecurrence(
   else if (rec.until) builder.atag("Until", toExtendedIsoUtc(rec.until));
   if (rec.weekOfMonth !== null) {
     builder.atag("WeekOfMonth", String(rec.weekOfMonth));
+  }
+  // Last in the block, which is where both servers put it - unlike the
+  // elements above, which they send first. Taken from what the server last
+  // said rather than from the rule's own WKST: Thunderbird stamps that from
+  // a preference on any edit, and has no control for it.
+  if (firstDayOfWeek != null) {
+    builder.atag("FirstDayOfWeek", String(firstDayOfWeek));
   }
   builder.ctag();
 }

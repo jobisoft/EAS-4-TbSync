@@ -1,5 +1,5 @@
 /**
- * Unit tests for the recurrence elements the task codec does not model.
+ * Unit tests for the recurrence elements neither codec models.
  *
  * `Regenerate`, `DeadOccur` and `CalendarType` have no representation in a
  * VTODO and no control in Thunderbird's task UI. They are still the user's
@@ -25,6 +25,10 @@ import {
   applicationDataToIcal,
   appendApplicationDataFromIcal,
 } from "../../src/modules/eas/task-codec.mjs";
+import {
+  applicationDataToIcal as eventToIcal,
+  appendApplicationDataFromIcal as appendEvent,
+} from "../../src/modules/eas/calendar-codec.mjs";
 import { createWBXML, decodeWBXML } from "../../src/modules/wbxml.mjs";
 import { ensureLoaded } from "../../src/modules/eas/timezone-mapping.mjs";
 import { parseAdNode } from "./support/ad-node.mjs";
@@ -142,15 +146,99 @@ test("the non-Gregorian pair rides along on the same rails", async () => {
   assert.match(sent, /<IsLeapMonth>0<\/IsLeapMonth>/);
 });
 
-test("FirstDayOfWeek is deliberately not preserved yet", async () => {
-  // The server sends it on ordinary weekly tasks, so this is a known and
-  // deliberate loss: it maps to RRULE WKST, and mapping it changes how an
-  // interval-above-1 weekly rule expands. Recurrence semantics, handled
-  // separately - pinned here so the decision is visible rather than
-  // looking like an oversight.
+test("FirstDayOfWeek becomes WKST and goes back as the server sent it", async () => {
+  // The one element of the set iCalendar can express. It is mapped inbound
+  // so the rule expands correctly, and still carried verbatim outbound:
+  // Thunderbird stamps `weekStart` from the `calendar.week.start`
+  // preference whenever a rule is authored and offers no control for it, so
+  // deriving the push from the local WKST would overwrite the server's
+  // value with a profile setting the user never chose.
+  const ical = await inbound(
+    "<FirstDayOfWeek xmlns='Tasks'>0</FirstDayOfWeek>",
+  );
+  assert.match(ical, /WKST=SU/, "0 is Sunday, in both numbering schemes");
+  assert.match(ical, /X-EAS-FIRSTDAYOFWEEK:0/i);
+
+  const sent = pushedRecurrence(ical);
+  assert.match(sent, /<FirstDayOfWeek>0<\/FirstDayOfWeek>/);
+  assert.ok(
+    sent.indexOf("<FirstDayOfWeek>") > sent.indexOf("<Type>"),
+    `FirstDayOfWeek goes last, where both servers put it: ${sent}`,
+  );
+});
+
+test("a Monday week start survives even though the rule cannot show it", async () => {
+  // MO is RFC 5545's default, so ical.js parses `WKST=MO` and then leaves it
+  // out of the serialised rule - the semantics are right, the text just does
+  // not say so. The stamp is what carries it back to the server, which is
+  // the second reason the push does not read the local WKST.
   const ical = await inbound(
     "<FirstDayOfWeek xmlns='Tasks'>1</FirstDayOfWeek>",
   );
-  assert.doesNotMatch(ical, /X-EAS-FIRSTDAYOFWEEK/i);
-  assert.doesNotMatch(pushedRecurrence(ical), /FirstDayOfWeek/);
+  assert.doesNotMatch(ical, /WKST=/, "the default is not serialised");
+  assert.match(ical, /X-EAS-FIRSTDAYOFWEEK:1/i);
+  assert.match(pushedRecurrence(ical), /<FirstDayOfWeek>1<\/FirstDayOfWeek>/);
+});
+
+test("a rule authored here sends our own week start", async () => {
+  // No stamp means the server never stated one, so the local rule is the
+  // only statement of intent there is and it goes out. ical.js always has a
+  // `wkst` - Monday when the rule does not say - so something is always
+  // sent rather than leaving the server to guess.
+  const ical = await inbound("");
+  assert.doesNotMatch(ical, /X-EAS-FIRSTDAYOFWEEK/i, "nothing was stamped");
+  assert.match(pushedRecurrence(ical), /<FirstDayOfWeek>1<\/FirstDayOfWeek>/);
+});
+
+test("but the server's own value wins over ours", async () => {
+  // The asymmetry that matters: once the mailbox has said what its week
+  // starts on, an edit made here must not replace it with a Thunderbird
+  // preference the user was never shown.
+  const ical = await inbound(
+    "<FirstDayOfWeek xmlns='Tasks'>4</FirstDayOfWeek>",
+  );
+  assert.match(ical, /WKST=TH/);
+  assert.match(pushedRecurrence(ical), /<FirstDayOfWeek>4<\/FirstDayOfWeek>/);
+});
+
+test("an event round-trips them through the same shared helper", async () => {
+  // The calendar codec had the identical gap. In practice a 16.1 server
+  // sends only FirstDayOfWeek on an ordinary event recurrence - measured -
+  // and that one is deliberately not preserved, so this uses the
+  // non-Gregorian pair, which is what would arrive for a rule we cannot
+  // author from here.
+  const ad = `<ApplicationData>
+  <Subject xmlns='Calendar'>recurring</Subject>
+  <StartTime xmlns='Calendar'>20260901T080000Z</StartTime>
+  <EndTime xmlns='Calendar'>20260901T090000Z</EndTime>
+  <Recurrence xmlns='Calendar'><CalendarType xmlns='Calendar'>1</CalendarType><IsLeapMonth xmlns='Calendar'>0</IsLeapMonth><Type xmlns='Calendar'>1</Type><DayOfWeek xmlns='Calendar'>4</DayOfWeek><Interval xmlns='Calendar'>1</Interval><Occurrences xmlns='Calendar'>3</Occurrences></Recurrence>
+</ApplicationData>`;
+  const ical = await eventToIcal({
+    adNode: parseAdNode(ad),
+    serverID: "e:1",
+    asVersion: "16.1",
+    defaultTimezone: "UTC",
+    syncRecurrence: true,
+    uid: "recur@eas-test.invalid",
+  });
+  assert.match(ical, /X-EAS-CALENDARTYPE:1/i);
+  assert.match(ical, /X-EAS-ISLEAPMONTH:0/i);
+
+  const w = createWBXML("AirSync");
+  w.otag("ApplicationData");
+  appendEvent({
+    builder: w,
+    ical,
+    asVersion: "16.1",
+    defaultTimezone: "UTC",
+    syncRecurrence: true,
+  });
+  w.switchpage("AirSync");
+  w.ctag();
+  const sent = /<Recurrence.*?<\/Recurrence>/s
+    .exec(decodeWBXML(w.getBytes()))[0]
+    .replace(/ xmlns='[^']*'/g, "");
+  assert.match(sent, /<CalendarType>1<\/CalendarType>/);
+  assert.match(sent, /<IsLeapMonth>0<\/IsLeapMonth>/);
+  assert.ok(sent.indexOf("<CalendarType>") < sent.indexOf("<Type>"));
 });

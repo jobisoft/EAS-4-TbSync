@@ -30,7 +30,13 @@ import {
   readBodyIntoDescription,
   appendBodyFromDescription,
 } from "./body-codec.mjs";
-import { rruleToEas, easToRrule } from "./recurrence.mjs";
+import {
+  rruleToEas,
+  easToRrule,
+  keepUnmappedRecurrence,
+  unmappedRecurrenceOf,
+  firstDayOfWeekOf,
+} from "./recurrence.mjs";
 import { TimeZoneBlob, isAllZero } from "./timezone-blob.mjs";
 import {
   guessTimezoneByStdDstOffset,
@@ -158,6 +164,7 @@ export async function applicationDataToIcal({
         prop.setValue(ICAL.Recur.fromString(rrule));
         vevent.addProperty(prop);
       }
+      keepUnmappedRecurrence(vevent, recNode);
     }
     if (childByTag(adNode, "Exceptions")) {
       // Clear the whole existing exception set so the AD's replaces it: the
@@ -950,7 +957,15 @@ export function appendApplicationDataFromIcal({
   // carries an <Exceptions> wrapper on 16.1.
   if (syncRecurrence && !isException) {
     const rrule = vevent.getFirstProperty("rrule");
-    if (rrule) appendRecurrence(builder, rrule, dtstart);
+    if (rrule) {
+      appendRecurrence(
+        builder,
+        rrule,
+        dtstart,
+        unmappedRecurrenceOf(vevent),
+        firstDayOfWeekOf(vevent, rrule),
+      );
+    }
     if (asVersion !== "16.1" && !suppressExceptions) {
       appendOutboundExceptions({
         builder,
@@ -1705,7 +1720,9 @@ export function selfUserResponse(ical, userEmail = null) {
   if (!self) return null;
   const attendee = master
     .getAllProperties("attendee")
-    .find((a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self);
+    .find(
+      (a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self,
+    );
   const partstat = attendee?.getParameter("partstat");
   return PARTSTAT_TO_USERRESPONSE[String(partstat).toUpperCase()] ?? null;
 }
@@ -1794,9 +1811,14 @@ export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
   if (!self) return builtIcal;
   const priorPartstat = prior
     .getAllProperties("attendee")
-    .find((a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self)
+    .find(
+      (a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self,
+    )
     ?.getParameter("partstat");
-  if (!priorPartstat || String(priorPartstat).toUpperCase() === "NEEDS-ACTION") {
+  if (
+    !priorPartstat ||
+    String(priorPartstat).toUpperCase() === "NEEDS-ACTION"
+  ) {
     return builtIcal;
   }
 
@@ -1805,7 +1827,9 @@ export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
   if (!vevent) return builtIcal;
   const builtSelf = vevent
     .getAllProperties("attendee")
-    .find((a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self);
+    .find(
+      (a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self,
+    );
   if (!builtSelf) return builtIcal;
   builtSelf.setParameter("partstat", priorPartstat);
   return vcal.toString();
@@ -2009,11 +2033,21 @@ function stripMailto(s) {
 /** Element order is `[MS-ASCAL]`'s and is load-bearing - the server validates
  *  against a sequence - so it is kept exactly as it was when this derivation
  *  moved into `recurrence.mjs`. */
-function appendRecurrence(builder, rruleProp, dtstartProp) {
+function appendRecurrence(
+  builder,
+  rruleProp,
+  dtstartProp,
+  unmapped = [],
+  firstDayOfWeek = null,
+) {
   const rec = rruleToEas(rruleProp, dtstartProp);
   if (!rec) return;
 
   builder.otag("Recurrence");
+  // Ahead of <Type>, where a server-authored block puts them - see
+  // `UNMAPPED_RECURRENCE`. Empty unless the server stated something we do
+  // not model, which for an event means the non-Gregorian pair.
+  for (const [tag, value] of unmapped) builder.atag(tag, value);
   builder.atag("Type", String(rec.type));
   if (rec.dayOfMonth !== null) {
     builder.atag("DayOfMonth", String(rec.dayOfMonth));
@@ -2027,6 +2061,13 @@ function appendRecurrence(builder, rruleProp, dtstartProp) {
   else if (rec.until) builder.atag("Until", untilFor(rec.until));
   if (rec.weekOfMonth !== null) {
     builder.atag("WeekOfMonth", String(rec.weekOfMonth));
+  }
+  // Last in the block, which is where both servers put it - unlike the
+  // elements above, which they send first. Taken from what the server last
+  // said rather than from the rule's own WKST: Thunderbird stamps that from
+  // a preference on any edit, and has no control for it.
+  if (firstDayOfWeek != null) {
+    builder.atag("FirstDayOfWeek", String(firstDayOfWeek));
   }
   builder.ctag();
 }
