@@ -1234,6 +1234,31 @@ export class EasProvider extends TbSyncProviderImplementation {
         // set an interval in the calendar's properties dialog since.
         await calendarStore.suppressCalendarRefresh(folder.targetID);
 
+        // Exchange invites the attendees of a meeting we push, so Thunderbird
+        // must not mail them as well. New calendars say so from the start;
+        // this reaches the ones made before that.
+        await calendarStore
+          .deferSchedulingToServer(folder.targetID)
+          .then((written) => {
+            if (written) {
+              this.reportEventLog({
+                level: "info",
+                accountId,
+                folderId,
+                message:
+                  "[eas] invitations for this calendar are left to the server",
+              });
+            }
+          })
+          .catch((err) =>
+            this.reportEventLog({
+              level: "debug",
+              accountId,
+              folderId,
+              message: `[eas] could not defer scheduling to the server: ${err?.message ?? String(err)}`,
+            }),
+          );
+
         // Calendars made before the account knew its own address carry no
         // owner; declaring it here reaches them without a recreate.
         const owner = calendarOwner(ctx.account);
