@@ -62,13 +62,28 @@ const SENSITIVITY_TO_CLASS = {
 };
 const CLASS_TO_SENSITIVITY = { PUBLIC: "0", PRIVATE: "2", CONFIDENTIAL: "3" };
 
-// EAS AttendeeStatus → iCal PARTSTAT.
+// EAS AttendeeStatus → iCal PARTSTAT ([MS-ASCAL] 2.2.2.5). 1 is not a
+// value this element takes.
 const ATTENDEESTATUS_TO_PARTSTAT = {
-  0: "NEEDS-ACTION",
+  0: "NEEDS-ACTION", // response unknown
   2: "TENTATIVE",
   3: "ACCEPTED",
   4: "DECLINED",
-  5: "ACCEPTED",
+  5: "NEEDS-ACTION", // not responded
+};
+
+// EAS ResponseType → iCal PARTSTAT ([MS-ASCAL] 2.2.2.40). A separate table
+// on purpose: the two enums agree on 2, 3 and 4 and part company either
+// side of them, so sharing one made 5 - "the user has not yet responded" -
+// read as an acceptance, and wrote "you accepted" into the calendar for
+// every invitation nobody had answered.
+const RESPONSETYPE_TO_PARTSTAT = {
+  0: "NEEDS-ACTION", // the user's response has not yet been received
+  1: "ACCEPTED", // the user is the organizer; no reply is required
+  2: "TENTATIVE",
+  3: "ACCEPTED",
+  4: "DECLINED",
+  5: "NEEDS-ACTION", // not responded
 };
 
 /* ── Reader: ApplicationData → iCal VEVENT ─────────────────────────── */
@@ -1754,10 +1769,10 @@ function collectAttendees(adNode, userEmail, fallbackResponseType) {
       item.partstat = ATTENDEESTATUS_TO_PARTSTAT[status] ?? "NEEDS-ACTION";
     } else if (isSelf && fallbackResponseType) {
       // Legacy calendarsync.js:203-204: when AttendeeStatus is missing
-      // for the self-attendee, fall back to the event-level
-      // ResponseType.
+      // for the self-attendee, fall back to the event-level ResponseType -
+      // through that element's own table, which is not the one above.
       item.partstat =
-        ATTENDEESTATUS_TO_PARTSTAT[fallbackResponseType] ?? "NEEDS-ACTION";
+        RESPONSETYPE_TO_PARTSTAT[fallbackResponseType] ?? "NEEDS-ACTION";
     } else {
       // Legacy line 206: explicit default for missing status.
       item.partstat = "NEEDS-ACTION";
