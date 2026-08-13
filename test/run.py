@@ -53,6 +53,7 @@ MODULES = [
     "test_11_regressions",
     "test_12_capability",
     "test_14_body_format",
+    "test_15_task_identity",
     # After everything that reads the folder, because it re-pulls the whole
     # thing: a section running behind it pays for a full download it did not
     # ask for.
