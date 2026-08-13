@@ -141,3 +141,33 @@ test("a save is never failed over this", () => {
   assert.equal(pinEasStamps({ builtIcal: "not a calendar" }), "not a calendar");
   assert.equal(pinEasStamps({ builtIcal: "" }), "");
 });
+
+test("a task keeps its stamps too", () => {
+  // One calendar type serves events and tasks, so a VTODO reaches this the
+  // same way a VEVENT does. The strip half always covered both; the restore
+  // half looked for a VEVENT master and found none, so editing a task
+  // deleted its stamps outright - X-EAS-SERVERID included.
+  const todo = (stamps = []) =>
+    [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//eas-test//EN",
+      "BEGIN:VTODO",
+      "UID:t-1",
+      "DTSTAMP:20260801T120000Z",
+      "DTSTART:20260901T080000Z",
+      "SUMMARY:probe",
+      ...stamps,
+      "END:VTODO",
+      "END:VCALENDAR",
+    ].join("\r\n");
+
+  const out = pinEasStamps({
+    builtIcal: todo([]),
+    priorIcal: todo(["X-EAS-SERVERID:sid-1", "X-EAS-DEADOCCUR:1"]),
+  });
+  assert.deepEqual(stampsIn(out), [
+    "X-EAS-DEADOCCUR:1",
+    "X-EAS-SERVERID:sid-1",
+  ]);
+});

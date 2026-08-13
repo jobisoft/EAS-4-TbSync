@@ -650,6 +650,17 @@ function pickMasterVevent(vcal) {
   return all[0] ?? null;
 }
 
+/** The component our stamps belong on, for a blob that may hold either kind.
+ *
+ *  One calendar type serves events and tasks, so anything reached through
+ *  the item hooks can be a VTODO - and a VTODO has no overrides in EAS, so
+ *  the first one is the only one. Without this `pinEasStamps` stripped a
+ *  task's stamps and then found no component to restore them onto, which
+ *  deleted `X-EAS-SERVERID` from every task the user edited. */
+function pickMasterItem(vcal) {
+  return pickMasterVevent(vcal) ?? vcal.getFirstSubcomponent("vtodo");
+}
+
 /** Add an EXDATE to the master VEVENT (16.1 InstanceId-with-Deleted=1). */
 export function applyInstanceDelete({ ical, instanceUtc }) {
   const vcal = parseVCalendar(ical);
@@ -1765,9 +1776,9 @@ export function pinEasStamps({ builtIcal, priorIcal = null }) {
     for (const prop of easStampsOf(comp)) comp.removeProperty(prop);
   }
 
-  const master = pickMasterVevent(vcal);
+  const master = pickMasterItem(vcal);
   const prior = priorIcal ? parseVCalendar(priorIcal) : null;
-  const priorMaster = prior ? pickMasterVevent(prior) : null;
+  const priorMaster = prior ? pickMasterItem(prior) : null;
   if (master && priorMaster) {
     for (const prop of easStampsOf(priorMaster)) {
       master.updatePropertyWithValue(prop.name, prop.getFirstValue());
