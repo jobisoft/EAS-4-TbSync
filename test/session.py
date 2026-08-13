@@ -337,6 +337,7 @@ def preflight(provider="eas", require=KINDS, bind=None):
         )
 
     _require_debug_logging()
+    _require_no_sync_after_change(granted)
 
     session = Session(granted, folders, (granted.get("custom") or {}).get("asversion"))
     session.mark()
@@ -369,6 +370,40 @@ def require_recurrence(session, sections):
         f"  Switch 'Synchronize recurring events' on for this account - "
         f"without it no series reaches the wire, so these tests would "
         f"report a code fault that is not there."
+    )
+
+
+def _require_no_sync_after_change(account):
+    """Refuse to run while the account syncs itself after every change.
+
+    Unlike the two checks around it, this one is not about assertions going
+    vacuous - it is about the suite no longer being the only thing driving
+    the account. With the option on, every item this suite writes arms a
+    timer in the provider, and seconds later a sync it never asked for
+    starts: mid-section, between an edit and the assertion about the queue
+    that holds it, or on top of a sync already running.
+
+    Seen before it was checked for: preflight's own writes armed the timer,
+    preflight then rebound the calendar, and the timer fired at a target
+    that no longer existed.
+
+    Checked, not set - like the log level, and for the same reason. The
+    value is the account owner's choice, and it is the suite's job to say
+    what it needs rather than to hand back a profile configured differently
+    from how it was found. Absent counts as on, because that is what the
+    provider does with it.
+    """
+    value = (account.get("custom") or {}).get("syncOnChange")
+    if value == "0":
+        return
+    shown = "the default" if value is None else f"{value} seconds"
+    raise PreflightError(
+        f"{account['accountName']} syncs a calendar after every change "
+        f"({shown}), so this suite would not be the only thing syncing it.\n"
+        f"  Set 'Synchronize a calendar after a change' to Off for this "
+        f"account, in TbSync's account settings under Calendar - a sync "
+        f"arriving in the middle of a section fails tests that are about "
+        f"something else entirely."
     )
 
 
