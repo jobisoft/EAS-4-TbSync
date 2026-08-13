@@ -287,14 +287,14 @@ export async function runItemSync({
       // v4's `maxFolderReruns = 2` moved into the provider - so the second
       // line is the only trace that a folder gave up rather than settled.
       provider.reportEventLog({
-        level: "warning",
+        level: attempt === 0 ? "warning" : "error",
         accountId,
         folderId,
         message:
           `[${itemKind.changelogKind}-sync] the server refused our sync key` +
           (attempt === 0
             ? " - starting this folder over, so everything in it is downloaded again"
-            : " again, on the folder we had just started over - not trying once more this run"),
+            : " again, on the folder we had just started over - giving up on it this run"),
       });
       if (attempt === 0) {
         const reset = { synckey: "0", indexMap: [] };
@@ -309,8 +309,15 @@ export async function runItemSync({
         };
         continue;
       }
-      // The second one falls through to the ordinary result handling
-      // below, exactly as it did before this branch learned to speak.
+      // Twice refused, including once on a folder we had just started from
+      // scratch. Nothing synced and nothing here can recover it, so the
+      // loop ends at the error below rather than falling through to
+      // `result.status ?? ok()` - a RESYNC result carries no status, so
+      // that path reported success for a folder that never synced, and
+      // left the error meant for this case unreachable. v4 ended the same
+      // way, as `ERROR: "resync-loop"` once `maxFolderReruns` was spent
+      // (core.js:164-166).
+      break;
     }
     if (result.code === "HIERARCHY") {
       // Server signalled Sync Status 12: the FolderSync state we're
