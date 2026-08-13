@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Setări cont Exchange"
   },
+  "config.intro": {
+    "message": "Aceste setări sunt păstrate de TbSync, nu pe server, și pot fi modificate doar cât timp contul este deconectat. Ce modificați aici afectează doar acest Thunderbird."
+  },
   "config.label": {
     "message": "Etichetă cont"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Serverul a returnat 451 fără antetul X-MS-Location"
+  },
+  "services.title": {
+    "message": "Servicii ale serverului Exchange"
+  },
+  "services.intro": {
+    "message": "Aceste setări sunt păstrate pe server, nu de TbSync, și pot fi accesate doar cât timp contul este conectat. Ce modificați aici se aplică peste tot, nu doar în Thunderbird."
+  },
+  "services.loading": {
+    "message": "Se citesc setările actuale…"
+  },
+  "services.oof.section": {
+    "message": "În afara biroului"
+  },
+  "services.oof.intro": {
+    "message": "Un răspuns automat pentru cei care vă scriu cât timp sunteți plecat. Îl trimite serverul, indiferent dacă Thunderbird rulează sau nu."
+  },
+  "services.oof.state": {
+    "message": "Răspunsuri automate"
+  },
+  "services.oof.state.off": {
+    "message": "Dezactivat"
+  },
+  "services.oof.state.on": {
+    "message": "Activat"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Între două date"
+  },
+  "services.oof.from": {
+    "message": "De la"
+  },
+  "services.oof.until": {
+    "message": "Până la"
+  },
+  "services.oof.internal": {
+    "message": "Răspunde persoanelor din organizația mea"
+  },
+  "services.oof.externalOn": {
+    "message": "Răspunde și persoanelor din afara organizației mele"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Aceste răspunsuri sunt trimise oricui vă scrie, inclusiv listelor de discuții."
+  },
+  "services.oof.external": {
+    "message": "Răspunde persoanelor din afara organizației mele"
+  },
+  "services.cancel": {
+    "message": "Anulează"
+  },
+  "services.save": {
+    "message": "Salvează"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Acest mesaj este formatat pe server. Salvarea aici îl înlocuiește cu text simplu."
+  },
+  "services.oof.unsupported": {
+    "message": "Acest server nu oferă răspuns de absență."
+  },
+  "services.error.loadFailed": {
+    "message": "Setările nu au putut fi citite."
+  },
+  "services.error.saveFailed": {
+    "message": "Setările nu au putut fi salvate."
   }
 }

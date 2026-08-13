@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Configuración de la cuenta de Exchange"
   },
+  "config.intro": {
+    "message": "Estos ajustes los guarda TbSync, no el servidor, y solo se pueden cambiar mientras la cuenta está desconectada. Lo que cambie aquí afecta únicamente a este Thunderbird."
+  },
   "config.label": {
     "message": "Etiqueta de la cuenta"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "El servidor devolvió 451 sin la cabecera X-MS-Location"
+  },
+  "services.title": {
+    "message": "Servicios del servidor Exchange"
+  },
+  "services.intro": {
+    "message": "Estos ajustes se guardan en el servidor, no en TbSync, y solo se pueden consultar mientras la cuenta está conectada. Lo que cambie aquí se aplica en todas partes, no solo en Thunderbird."
+  },
+  "services.loading": {
+    "message": "Leyendo los ajustes actuales…"
+  },
+  "services.oof.section": {
+    "message": "Fuera de la oficina"
+  },
+  "services.oof.intro": {
+    "message": "Una respuesta automática para quienes le escriban mientras está ausente. La envía el servidor, esté Thunderbird abierto o no."
+  },
+  "services.oof.state": {
+    "message": "Respuestas automáticas"
+  },
+  "services.oof.state.off": {
+    "message": "Desactivado"
+  },
+  "services.oof.state.on": {
+    "message": "Activado"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Entre dos fechas"
+  },
+  "services.oof.from": {
+    "message": "Desde"
+  },
+  "services.oof.until": {
+    "message": "Hasta"
+  },
+  "services.oof.internal": {
+    "message": "Responder a las personas de mi organización"
+  },
+  "services.oof.externalOn": {
+    "message": "Responder también a personas ajenas a mi organización"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Esas respuestas se envían a cualquiera que le escriba, incluidas las listas de correo."
+  },
+  "services.oof.external": {
+    "message": "Responder a personas ajenas a mi organización"
+  },
+  "services.cancel": {
+    "message": "Cancelar"
+  },
+  "services.save": {
+    "message": "Guardar"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Este mensaje tiene formato en el servidor. Guardarlo aquí lo sustituye por texto sin formato."
+  },
+  "services.oof.unsupported": {
+    "message": "Este servidor no ofrece respuesta de ausencia."
+  },
+  "services.error.loadFailed": {
+    "message": "No se pudieron leer los ajustes."
+  },
+  "services.error.saveFailed": {
+    "message": "No se pudieron guardar los ajustes."
   }
 }

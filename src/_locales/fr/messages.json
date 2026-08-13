@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Paramètres du compte Exchange"
   },
+  "config.intro": {
+    "message": "Ces paramètres sont conservés par TbSync et non sur le serveur, et ne peuvent être modifiés que lorsque le compte est déconnecté. Ce que vous modifiez ici ne concerne que ce Thunderbird."
+  },
   "config.label": {
     "message": "Libellé du compte"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Le serveur a renvoyé 451 sans en-tête X-MS-Location"
+  },
+  "services.title": {
+    "message": "Services du serveur Exchange"
+  },
+  "services.intro": {
+    "message": "Ces paramètres sont conservés sur le serveur et non par TbSync, et ne sont accessibles que tant que le compte est connecté. Ce que vous modifiez ici s’applique partout, pas seulement dans Thunderbird."
+  },
+  "services.loading": {
+    "message": "Lecture des paramètres actuels…"
+  },
+  "services.oof.section": {
+    "message": "Absence du bureau"
+  },
+  "services.oof.intro": {
+    "message": "Une réponse automatique aux personnes qui vous écrivent pendant votre absence. C’est le serveur qui l’envoie, que Thunderbird soit ouvert ou non."
+  },
+  "services.oof.state": {
+    "message": "Réponses automatiques"
+  },
+  "services.oof.state.off": {
+    "message": "Désactivé"
+  },
+  "services.oof.state.on": {
+    "message": "Activé"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Entre deux dates"
+  },
+  "services.oof.from": {
+    "message": "Du"
+  },
+  "services.oof.until": {
+    "message": "Au"
+  },
+  "services.oof.internal": {
+    "message": "Répondre aux personnes de mon organisation"
+  },
+  "services.oof.externalOn": {
+    "message": "Répondre aussi aux personnes extérieures à mon organisation"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Ces réponses sont envoyées à quiconque vous écrit, y compris aux listes de diffusion."
+  },
+  "services.oof.external": {
+    "message": "Répondre aux personnes extérieures à mon organisation"
+  },
+  "services.cancel": {
+    "message": "Annuler"
+  },
+  "services.save": {
+    "message": "Enregistrer"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Ce message est mis en forme sur le serveur. L’enregistrer ici le remplacera par du texte brut."
+  },
+  "services.oof.unsupported": {
+    "message": "Ce serveur ne propose pas de réponse d’absence."
+  },
+  "services.error.loadFailed": {
+    "message": "Impossible de lire les paramètres."
+  },
+  "services.error.saveFailed": {
+    "message": "Impossible d’enregistrer les paramètres."
   }
 }

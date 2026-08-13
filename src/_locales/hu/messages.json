@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Exchange-fiók beállításai"
   },
+  "config.intro": {
+    "message": "Ezeket a beállításokat a TbSync tárolja, nem a kiszolgáló, és csak akkor módosíthatók, amíg a fiók le van választva. Amit itt módosít, csak erre a Thunderbirdre vonatkozik."
+  },
   "config.label": {
     "message": "Fiók neve"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "A kiszolgáló 451-et adott vissza X-MS-Location fejléc nélkül"
+  },
+  "services.title": {
+    "message": "Exchange-kiszolgáló szolgáltatásai"
+  },
+  "services.intro": {
+    "message": "Ezek a beállítások a kiszolgálón vannak, nem a TbSyncben, és csak akkor érhetők el, amíg a fiók csatlakoztatva van. Amit itt módosít, mindenütt érvényes, nem csak a Thunderbirdben."
+  },
+  "services.loading": {
+    "message": "Jelenlegi beállítások olvasása…"
+  },
+  "services.oof.section": {
+    "message": "Házon kívül"
+  },
+  "services.oof.intro": {
+    "message": "Automatikus válasz azoknak, akik a távolléte alatt írnak Önnek. A kiszolgáló küldi, függetlenül attól, hogy fut-e a Thunderbird."
+  },
+  "services.oof.state": {
+    "message": "Automatikus válaszok"
+  },
+  "services.oof.state.off": {
+    "message": "Ki"
+  },
+  "services.oof.state.on": {
+    "message": "Be"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Két időpont között"
+  },
+  "services.oof.from": {
+    "message": "Ettől"
+  },
+  "services.oof.until": {
+    "message": "Eddig"
+  },
+  "services.oof.internal": {
+    "message": "Válasz a szervezetemben lévőknek"
+  },
+  "services.oof.externalOn": {
+    "message": "Válasz a szervezetemen kívülieknek is"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Ezek a válaszok mindenkinek elmennek, aki ír Önnek, a levelezőlistáknak is."
+  },
+  "services.oof.external": {
+    "message": "Válasz a szervezetemen kívülieknek"
+  },
+  "services.cancel": {
+    "message": "Mégse"
+  },
+  "services.save": {
+    "message": "Mentés"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Ez az üzenet a kiszolgálón formázott. Az itteni mentés egyszerű szövegre cseréli."
+  },
+  "services.oof.unsupported": {
+    "message": "Ez a kiszolgáló nem kínál távolléti választ."
+  },
+  "services.error.loadFailed": {
+    "message": "A beállításokat nem sikerült beolvasni."
+  },
+  "services.error.saveFailed": {
+    "message": "A beállításokat nem sikerült menteni."
   }
 }

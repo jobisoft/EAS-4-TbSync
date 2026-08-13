@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Exchange account settings"
   },
+  "config.intro": {
+    "message": "These settings are stored by TbSync, not on the server, and can only be changed while the account is disconnected. What you change here affects this Thunderbird only."
+  },
   "config.label": {
     "message": "Account label"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Server returned 451 without an X-MS-Location header"
+  },
+  "services.title": {
+    "message": "Exchange Server Services"
+  },
+  "services.intro": {
+    "message": "These settings are stored on the server, not by TbSync, and can only be reached while the account is connected. What you change here applies everywhere, not only in Thunderbird."
+  },
+  "services.loading": {
+    "message": "Reading the current settings…"
+  },
+  "services.oof.section": {
+    "message": "Out of office"
+  },
+  "services.oof.intro": {
+    "message": "An automatic reply to people who write to you while you are away. The server sends it, so it does not matter whether Thunderbird is running."
+  },
+  "services.oof.state": {
+    "message": "Automatic replies"
+  },
+  "services.oof.state.off": {
+    "message": "Off"
+  },
+  "services.oof.state.on": {
+    "message": "On"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Between two dates"
+  },
+  "services.oof.from": {
+    "message": "From"
+  },
+  "services.oof.until": {
+    "message": "Until"
+  },
+  "services.oof.internal": {
+    "message": "Reply to people in my organisation"
+  },
+  "services.oof.externalOn": {
+    "message": "Also reply to people outside my organisation"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Their replies are sent to anyone who writes to you, including mailing lists."
+  },
+  "services.oof.external": {
+    "message": "Reply to people outside my organisation"
+  },
+  "services.cancel": {
+    "message": "Cancel"
+  },
+  "services.save": {
+    "message": "Save"
+  },
+  "services.oof.htmlWarning": {
+    "message": "This message is formatted on the server. Saving here replaces it with plain text."
+  },
+  "services.oof.unsupported": {
+    "message": "This server does not offer an out-of-office reply."
+  },
+  "services.error.loadFailed": {
+    "message": "Could not read the settings."
+  },
+  "services.error.saveFailed": {
+    "message": "Could not save the settings."
   }
 }

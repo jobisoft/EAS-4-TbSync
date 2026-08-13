@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Настройки учётной записи Exchange"
   },
+  "config.intro": {
+    "message": "Эти настройки хранит TbSync, а не сервер, и изменить их можно только пока учётная запись отключена. То, что вы измените здесь, касается только этого Thunderbird."
+  },
   "config.label": {
     "message": "Метка учётной записи"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Сервер вернул 451 без заголовка X-MS-Location"
+  },
+  "services.title": {
+    "message": "Службы сервера Exchange"
+  },
+  "services.intro": {
+    "message": "Эти настройки хранятся на сервере, а не в TbSync, и доступны только пока учётная запись подключена. То, что вы измените здесь, действует везде, а не только в Thunderbird."
+  },
+  "services.loading": {
+    "message": "Чтение текущих настроек…"
+  },
+  "services.oof.section": {
+    "message": "Нет на месте"
+  },
+  "services.oof.intro": {
+    "message": "Автоматический ответ тем, кто пишет вам во время вашего отсутствия. Его отправляет сервер, независимо от того, запущен ли Thunderbird."
+  },
+  "services.oof.state": {
+    "message": "Автоответы"
+  },
+  "services.oof.state.off": {
+    "message": "Выключено"
+  },
+  "services.oof.state.on": {
+    "message": "Включено"
+  },
+  "services.oof.state.scheduled": {
+    "message": "В заданный период"
+  },
+  "services.oof.from": {
+    "message": "С"
+  },
+  "services.oof.until": {
+    "message": "По"
+  },
+  "services.oof.internal": {
+    "message": "Отвечать людям в моей организации"
+  },
+  "services.oof.externalOn": {
+    "message": "Отвечать и людям вне моей организации"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Такие ответы отправляются всем, кто вам пишет, включая списки рассылки."
+  },
+  "services.oof.external": {
+    "message": "Отвечать людям вне моей организации"
+  },
+  "services.cancel": {
+    "message": "Отмена"
+  },
+  "services.save": {
+    "message": "Сохранить"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Это сообщение отформатировано на сервере. Сохранение здесь заменит его обычным текстом."
+  },
+  "services.oof.unsupported": {
+    "message": "Этот сервер не предлагает автоответ об отсутствии."
+  },
+  "services.error.loadFailed": {
+    "message": "Не удалось прочитать настройки."
+  },
+  "services.error.saveFailed": {
+    "message": "Не удалось сохранить настройки."
   }
 }

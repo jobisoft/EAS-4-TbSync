@@ -68,6 +68,7 @@ import {
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "../vendor/tbsync/address-book.mjs";
 import * as calendarStore from "../vendor/tbsync/calendar.mjs";
+import { readOof, writeOof } from "./eas/oof.mjs";
 import {
   primeAuth,
   primeAccessToken,
@@ -244,12 +245,19 @@ export class EasProvider extends TbSyncProviderImplementation {
       configPath: "dialogs/config/config.html",
       configWidth: 560,
       configHeight: 620,
+      servicesPath: "dialogs/services/services.html",
+      servicesWidth: 560,
+      servicesHeight: 640,
       capabilities: {
         folderTypes: ["contacts", "calendars", "tasks"],
         supportsReadOnly: true,
         multipleAccounts: true,
         hasSetupPopup: true,
         hasConfigPopup: true,
+        // Opts this provider into the host's Services button. What is
+        // behind it is ours; the button and its label are the host's, so
+        // it reads the same for every provider that has any.
+        hasServicesPopup: true,
       },
       maintainerEmail: "john.bieling@gmx.de",
       contributorsUrl: "https://github.com/jobisoft/EAS-4-TbSync",
@@ -1484,6 +1492,42 @@ export class EasProvider extends TbSyncProviderImplementation {
         c.asversion !== "2.5" &&
         easCommandAdvertised(ctx.account, "ResolveRecipients"),
     };
+  }
+
+  /**
+   * Services: the mailbox's out-of-office reply, read from the server.
+   *
+   * No caching and no stored copy - a service is the server's state, and a
+   * stale one shown in a dialog is worse than a slow one. The window asks
+   * on open and again after every save.
+   *
+   * Returns null when the server answers without an Oof block at all,
+   * which is how a mailbox that does not offer one reads.
+   */
+  async readOofForServices(accountId) {
+    const ctx = await this.#loadContext(accountId);
+    if (!ctx) throw withCode(new Error("Unknown account"), ERR.UNKNOWN_ACCOUNT);
+    // Every request path has to do this, not just the sync ones: without
+    // it the network layer refuses an OAuth account outright rather than
+    // refreshing its token.
+    if (isOAuthAccount(ctx.account.custom)) this.#primeAuth(ctx);
+    return readOof({
+      account: ctx.account,
+      asVersion: ctx.account.custom?.asversion ?? "14.1",
+    });
+  }
+
+  /** Services: write the out-of-office reply back. */
+  async writeOofFromServices({ accountId, settings }) {
+    const ctx = await this.#loadContext(accountId);
+    if (!ctx) throw withCode(new Error("Unknown account"), ERR.UNKNOWN_ACCOUNT);
+    if (isOAuthAccount(ctx.account.custom)) this.#primeAuth(ctx);
+    await writeOof({
+      account: ctx.account,
+      asVersion: ctx.account.custom?.asversion ?? "14.1",
+      ...settings,
+    });
+    return null;
   }
 
   /** Write allow-listed fields from config.html via UPDATE_ACCOUNT. Any

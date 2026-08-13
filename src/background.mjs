@@ -82,6 +82,16 @@ const MESSAGE_HANDLERS = {
       accountId: msg.accountId,
       patch: msg.patch ?? {},
     }),
+
+  // Services. Unlike the account settings above, these two go to the
+  // server on every call - there is nothing stored here to read back.
+  "eas.readOof": (msg) => provider.readOofForServices(msg.accountId),
+
+  "eas.writeOof": (msg) =>
+    provider.writeOofFromServices({
+      accountId: msg.accountId,
+      settings: msg.settings ?? {},
+    }),
 };
 
 /** Run a handler and shape the reply the dialogs expect. `details` rides

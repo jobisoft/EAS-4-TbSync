@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Exchange-Konto-Einstellungen"
   },
+  "config.intro": {
+    "message": "Diese Einstellungen werden von TbSync gespeichert und nicht auf dem Server, und können nur geändert werden, solange das Konto getrennt ist. Was Sie hier ändern, betrifft nur dieses Thunderbird."
+  },
   "config.label": {
     "message": "Kontobezeichnung"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Server hat 451 ohne X-MS-Location-Header zurückgegeben"
+  },
+  "services.title": {
+    "message": "Exchange-Server-Dienste"
+  },
+  "services.intro": {
+    "message": "Diese Einstellungen liegen auf dem Server und nicht bei TbSync, und sind nur erreichbar, solange das Konto verbunden ist. Was Sie hier ändern, gilt überall, nicht nur in Thunderbird."
+  },
+  "services.loading": {
+    "message": "Aktuelle Einstellungen werden gelesen…"
+  },
+  "services.oof.section": {
+    "message": "Abwesenheit"
+  },
+  "services.oof.intro": {
+    "message": "Eine automatische Antwort an alle, die Ihnen während Ihrer Abwesenheit schreiben. Sie wird vom Server verschickt, unabhängig davon, ob Thunderbird läuft."
+  },
+  "services.oof.state": {
+    "message": "Automatische Antworten"
+  },
+  "services.oof.state.off": {
+    "message": "Aus"
+  },
+  "services.oof.state.on": {
+    "message": "Ein"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Zwischen zwei Terminen"
+  },
+  "services.oof.from": {
+    "message": "Von"
+  },
+  "services.oof.until": {
+    "message": "Bis"
+  },
+  "services.oof.internal": {
+    "message": "Antwort an Personen in meiner Organisation"
+  },
+  "services.oof.externalOn": {
+    "message": "Auch an Personen außerhalb meiner Organisation antworten"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Diese Antworten gehen an alle, die Ihnen schreiben, auch an Mailinglisten."
+  },
+  "services.oof.external": {
+    "message": "Antwort an Personen außerhalb meiner Organisation"
+  },
+  "services.cancel": {
+    "message": "Abbrechen"
+  },
+  "services.save": {
+    "message": "Speichern"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Diese Nachricht ist auf dem Server formatiert. Beim Speichern hier wird sie durch reinen Text ersetzt."
+  },
+  "services.oof.unsupported": {
+    "message": "Dieser Server bietet keine Abwesenheitsnotiz an."
+  },
+  "services.error.loadFailed": {
+    "message": "Die Einstellungen konnten nicht gelesen werden."
+  },
+  "services.error.saveFailed": {
+    "message": "Die Einstellungen konnten nicht gespeichert werden."
   }
 }

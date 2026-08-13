@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Ustawienia konta Exchange"
   },
+  "config.intro": {
+    "message": "Te ustawienia przechowuje TbSync, a nie serwer, i można je zmienić tylko wtedy, gdy konto jest odłączone. To, co tu zmienisz, dotyczy wyłącznie tego Thunderbirda."
+  },
   "config.label": {
     "message": "Etykieta konta"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Serwer zwrócił 451 bez nagłówka X-MS-Location"
+  },
+  "services.title": {
+    "message": "Usługi serwera Exchange"
+  },
+  "services.intro": {
+    "message": "Te ustawienia są przechowywane na serwerze, a nie przez TbSync, i są dostępne tylko wtedy, gdy konto jest połączone. To, co tu zmienisz, obowiązuje wszędzie, nie tylko w Thunderbirdzie."
+  },
+  "services.loading": {
+    "message": "Odczytywanie bieżących ustawień…"
+  },
+  "services.oof.section": {
+    "message": "Poza biurem"
+  },
+  "services.oof.intro": {
+    "message": "Automatyczna odpowiedź do osób, które piszą do Ciebie podczas Twojej nieobecności. Wysyła ją serwer, niezależnie od tego, czy Thunderbird jest uruchomiony."
+  },
+  "services.oof.state": {
+    "message": "Odpowiedzi automatyczne"
+  },
+  "services.oof.state.off": {
+    "message": "Wyłączone"
+  },
+  "services.oof.state.on": {
+    "message": "Włączone"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Między dwiema datami"
+  },
+  "services.oof.from": {
+    "message": "Od"
+  },
+  "services.oof.until": {
+    "message": "Do"
+  },
+  "services.oof.internal": {
+    "message": "Odpowiadaj osobom w mojej organizacji"
+  },
+  "services.oof.externalOn": {
+    "message": "Odpowiadaj też osobom spoza mojej organizacji"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Te odpowiedzi trafiają do każdego, kto do Ciebie napisze, także na listy dyskusyjne."
+  },
+  "services.oof.external": {
+    "message": "Odpowiadaj osobom spoza mojej organizacji"
+  },
+  "services.cancel": {
+    "message": "Anuluj"
+  },
+  "services.save": {
+    "message": "Zapisz"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Ta wiadomość jest sformatowana na serwerze. Zapisanie jej tutaj zastąpi ją zwykłym tekstem."
+  },
+  "services.oof.unsupported": {
+    "message": "Ten serwer nie oferuje odpowiedzi o nieobecności."
+  },
+  "services.error.loadFailed": {
+    "message": "Nie udało się odczytać ustawień."
+  },
+  "services.error.saveFailed": {
+    "message": "Nie udało się zapisać ustawień."
   }
 }

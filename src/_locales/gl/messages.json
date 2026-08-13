@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Configuración da conta de Exchange"
   },
+  "config.intro": {
+    "message": "Estes axustes gárdaos TbSync e non o servidor, e só se poden cambiar mentres a conta está desconectada. O que cambies aquí afecta só a este Thunderbird."
+  },
   "config.label": {
     "message": "Etiqueta da conta"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "O servidor devolveu 451 sen a cabeceira X-MS-Location"
+  },
+  "services.title": {
+    "message": "Servizos do servidor Exchange"
+  },
+  "services.intro": {
+    "message": "Estes axustes gárdanse no servidor e non en TbSync, e só se poden consultar mentres a conta está conectada. O que cambies aquí aplícase en todas partes, non só en Thunderbird."
+  },
+  "services.loading": {
+    "message": "Lendo os axustes actuais…"
+  },
+  "services.oof.section": {
+    "message": "Fóra da oficina"
+  },
+  "services.oof.intro": {
+    "message": "Unha resposta automática para quen che escriba mentres estás ausente. Envíaa o servidor, estea o Thunderbird aberto ou non."
+  },
+  "services.oof.state": {
+    "message": "Respostas automáticas"
+  },
+  "services.oof.state.off": {
+    "message": "Desactivado"
+  },
+  "services.oof.state.on": {
+    "message": "Activado"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Entre dúas datas"
+  },
+  "services.oof.from": {
+    "message": "Desde"
+  },
+  "services.oof.until": {
+    "message": "Ata"
+  },
+  "services.oof.internal": {
+    "message": "Responder ás persoas da miña organización"
+  },
+  "services.oof.externalOn": {
+    "message": "Responder tamén a persoas de fóra da miña organización"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Esas respostas envíanse a calquera que che escriba, incluídas as listas de correo."
+  },
+  "services.oof.external": {
+    "message": "Responder a persoas de fóra da miña organización"
+  },
+  "services.cancel": {
+    "message": "Cancelar"
+  },
+  "services.save": {
+    "message": "Gardar"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Esta mensaxe ten formato no servidor. Gardala aquí substitúea por texto simple."
+  },
+  "services.oof.unsupported": {
+    "message": "Este servidor non ofrece resposta de ausencia."
+  },
+  "services.error.loadFailed": {
+    "message": "Non se puideron ler os axustes."
+  },
+  "services.error.saveFailed": {
+    "message": "Non se puideron gardar os axustes."
   }
 }

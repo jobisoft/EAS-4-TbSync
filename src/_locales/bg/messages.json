@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Настройки на Exchange акаунт"
   },
+  "config.intro": {
+    "message": "Тези настройки се съхраняват от TbSync, а не на сървъра, и могат да се променят само докато акаунтът е прекъснат. Промените тук засягат само този Thunderbird."
+  },
   "config.label": {
     "message": "Етикет на акаунта"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Сървърът върна 451 без заглавна част X-MS-Location"
+  },
+  "services.title": {
+    "message": "Услуги на Exchange сървъра"
+  },
+  "services.intro": {
+    "message": "Тези настройки се съхраняват на сървъра, а не от TbSync, и са достъпни само докато акаунтът е свързан. Промените тук важат навсякъде, не само в Thunderbird."
+  },
+  "services.loading": {
+    "message": "Четене на текущите настройки…"
+  },
+  "services.oof.section": {
+    "message": "Извън офиса"
+  },
+  "services.oof.intro": {
+    "message": "Автоматичен отговор до всички, които ви пишат, докато отсъствате. Изпраща го сървърът, независимо дали Thunderbird работи."
+  },
+  "services.oof.state": {
+    "message": "Автоматични отговори"
+  },
+  "services.oof.state.off": {
+    "message": "Изключено"
+  },
+  "services.oof.state.on": {
+    "message": "Включено"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Между две дати"
+  },
+  "services.oof.from": {
+    "message": "От"
+  },
+  "services.oof.until": {
+    "message": "До"
+  },
+  "services.oof.internal": {
+    "message": "Отговор до хора в моята организация"
+  },
+  "services.oof.externalOn": {
+    "message": "Отговор и до хора извън моята организация"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Тези отговори се изпращат до всеки, който ви пише, включително до пощенски списъци."
+  },
+  "services.oof.external": {
+    "message": "Отговор до хора извън моята организация"
+  },
+  "services.cancel": {
+    "message": "Отказ"
+  },
+  "services.save": {
+    "message": "Запазване"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Това съобщение е форматирано на сървъра. Запазването тук го заменя с обикновен текст."
+  },
+  "services.oof.unsupported": {
+    "message": "Този сървър не предлага отговор при отсъствие."
+  },
+  "services.error.loadFailed": {
+    "message": "Настройките не можаха да бъдат прочетени."
+  },
+  "services.error.saveFailed": {
+    "message": "Настройките не можаха да бъдат запазени."
   }
 }

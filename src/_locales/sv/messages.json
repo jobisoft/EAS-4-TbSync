@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Inställningar för Exchange-konto"
   },
+  "config.intro": {
+    "message": "De här inställningarna lagras av TbSync och inte på servern, och går bara att ändra medan kontot är frånkopplat. Det du ändrar här påverkar bara den här Thunderbird."
+  },
   "config.label": {
     "message": "Kontoetikett"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Servern returnerade 451 utan X-MS-Location-rubrik"
+  },
+  "services.title": {
+    "message": "Exchange-serverns tjänster"
+  },
+  "services.intro": {
+    "message": "De här inställningarna ligger på servern och inte hos TbSync, och går bara att nå medan kontot är anslutet. Det du ändrar här gäller överallt, inte bara i Thunderbird."
+  },
+  "services.loading": {
+    "message": "Läser nuvarande inställningar…"
+  },
+  "services.oof.section": {
+    "message": "Frånvaro"
+  },
+  "services.oof.intro": {
+    "message": "Ett automatiskt svar till dem som skriver till dig medan du är borta. Det skickas av servern, oavsett om Thunderbird körs eller inte."
+  },
+  "services.oof.state": {
+    "message": "Automatiska svar"
+  },
+  "services.oof.state.off": {
+    "message": "Av"
+  },
+  "services.oof.state.on": {
+    "message": "På"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Mellan två datum"
+  },
+  "services.oof.from": {
+    "message": "Från"
+  },
+  "services.oof.until": {
+    "message": "Till"
+  },
+  "services.oof.internal": {
+    "message": "Svara till personer i min organisation"
+  },
+  "services.oof.externalOn": {
+    "message": "Svara även till personer utanför min organisation"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Dessa svar skickas till alla som skriver till dig, även sändlistor."
+  },
+  "services.oof.external": {
+    "message": "Svara till personer utanför min organisation"
+  },
+  "services.cancel": {
+    "message": "Avbryt"
+  },
+  "services.save": {
+    "message": "Spara"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Det här meddelandet är formaterat på servern. Att spara här ersätter det med oformaterad text."
+  },
+  "services.oof.unsupported": {
+    "message": "Den här servern erbjuder inget frånvarosvar."
+  },
+  "services.error.loadFailed": {
+    "message": "Det gick inte att läsa inställningarna."
+  },
+  "services.error.saveFailed": {
+    "message": "Det gick inte att spara inställningarna."
   }
 }

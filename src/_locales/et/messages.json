@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Exchange'i konto sätted"
   },
+  "config.intro": {
+    "message": "Neid seadeid hoiab TbSync, mitte server, ja neid saab muuta ainult siis, kui konto on lahti ühendatud. See, mida siin muudate, puudutab ainult seda Thunderbirdi."
+  },
   "config.label": {
     "message": "Kontosilt"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Server tagastas 451 ilma X-MS-Location päiseta"
+  },
+  "services.title": {
+    "message": "Exchange'i serveri teenused"
+  },
+  "services.intro": {
+    "message": "Need seaded on serveris, mitte TbSyncis, ja on kättesaadavad ainult siis, kui konto on ühendatud. See, mida siin muudate, kehtib kõikjal, mitte ainult Thunderbirdis."
+  },
+  "services.loading": {
+    "message": "Praeguste seadete lugemine…"
+  },
+  "services.oof.section": {
+    "message": "Kontorist väljas"
+  },
+  "services.oof.intro": {
+    "message": "Automaatvastus neile, kes teile teie äraoleku ajal kirjutavad. Selle saadab server, sõltumata sellest, kas Thunderbird töötab."
+  },
+  "services.oof.state": {
+    "message": "Automaatvastused"
+  },
+  "services.oof.state.off": {
+    "message": "Väljas"
+  },
+  "services.oof.state.on": {
+    "message": "Sees"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Kahe kuupäeva vahel"
+  },
+  "services.oof.from": {
+    "message": "Alates"
+  },
+  "services.oof.until": {
+    "message": "Kuni"
+  },
+  "services.oof.internal": {
+    "message": "Vasta minu organisatsiooni inimestele"
+  },
+  "services.oof.externalOn": {
+    "message": "Vasta ka minu organisatsioonist väljaspool olijatele"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Need vastused saadetakse kõigile, kes teile kirjutavad, ka postiloenditele."
+  },
+  "services.oof.external": {
+    "message": "Vasta minu organisatsioonist väljaspool olijatele"
+  },
+  "services.cancel": {
+    "message": "Loobu"
+  },
+  "services.save": {
+    "message": "Salvesta"
+  },
+  "services.oof.htmlWarning": {
+    "message": "See sõnum on serveris vormindatud. Siin salvestamine asendab selle lihttekstiga."
+  },
+  "services.oof.unsupported": {
+    "message": "See server ei paku puhkuseteadet."
+  },
+  "services.error.loadFailed": {
+    "message": "Seadeid ei õnnestunud lugeda."
+  },
+  "services.error.saveFailed": {
+    "message": "Seadeid ei õnnestunud salvestada."
   }
 }

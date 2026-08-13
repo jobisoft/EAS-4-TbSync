@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Exchange アカウントの設定"
   },
+  "config.intro": {
+    "message": "これらの設定はサーバーではなく TbSync が保存し、アカウントの接続を解除している間だけ変更できます。ここでの変更はこの Thunderbird にのみ影響します。"
+  },
   "config.label": {
     "message": "アカウントのラベル"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "サーバーが X-MS-Location ヘッダーなしで 451 を返しました"
+  },
+  "services.title": {
+    "message": "Exchange サーバーのサービス"
+  },
+  "services.intro": {
+    "message": "これらの設定は TbSync ではなくサーバーに保存されており、アカウントが接続されている間だけ参照できます。ここでの変更は Thunderbird だけでなく、どこでも適用されます。"
+  },
+  "services.loading": {
+    "message": "現在の設定を読み込んでいます…"
+  },
+  "services.oof.section": {
+    "message": "不在時"
+  },
+  "services.oof.intro": {
+    "message": "不在の間にメールを送ってきた相手へ自動的に返信します。送信するのはサーバーなので、Thunderbird が起動しているかどうかは関係ありません。"
+  },
+  "services.oof.state": {
+    "message": "自動応答"
+  },
+  "services.oof.state.off": {
+    "message": "オフ"
+  },
+  "services.oof.state.on": {
+    "message": "オン"
+  },
+  "services.oof.state.scheduled": {
+    "message": "期間を指定"
+  },
+  "services.oof.from": {
+    "message": "開始"
+  },
+  "services.oof.until": {
+    "message": "終了"
+  },
+  "services.oof.internal": {
+    "message": "組織内の人に返信する"
+  },
+  "services.oof.externalOn": {
+    "message": "組織外の人にも返信する"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "この返信は、メーリングリストを含め、あなたに送信したすべての相手に送られます。"
+  },
+  "services.oof.external": {
+    "message": "組織外の人への返信"
+  },
+  "services.cancel": {
+    "message": "キャンセル"
+  },
+  "services.save": {
+    "message": "保存"
+  },
+  "services.oof.htmlWarning": {
+    "message": "このメッセージはサーバー側で書式設定されています。ここで保存すると書式なしのテキストに置き換わります。"
+  },
+  "services.oof.unsupported": {
+    "message": "このサーバーは不在時の自動応答に対応していません。"
+  },
+  "services.error.loadFailed": {
+    "message": "設定を読み込めませんでした。"
+  },
+  "services.error.saveFailed": {
+    "message": "設定を保存できませんでした。"
   }
 }

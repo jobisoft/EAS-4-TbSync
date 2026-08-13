@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Impostazioni dell’account Exchange"
   },
+  "config.intro": {
+    "message": "Queste impostazioni sono conservate da TbSync e non sul server, e possono essere modificate solo mentre l’account è disconnesso. Ciò che modifica qui riguarda solo questo Thunderbird."
+  },
   "config.label": {
     "message": "Etichetta dell’account"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Il server ha restituito 451 senza intestazione X-MS-Location"
+  },
+  "services.title": {
+    "message": "Servizi del server Exchange"
+  },
+  "services.intro": {
+    "message": "Queste impostazioni sono conservate sul server e non da TbSync, e sono raggiungibili solo mentre l’account è connesso. Ciò che modifica qui vale ovunque, non solo in Thunderbird."
+  },
+  "services.loading": {
+    "message": "Lettura delle impostazioni attuali…"
+  },
+  "services.oof.section": {
+    "message": "Fuori sede"
+  },
+  "services.oof.intro": {
+    "message": "Una risposta automatica a chi le scrive mentre è assente. La invia il server, che Thunderbird sia in esecuzione o no."
+  },
+  "services.oof.state": {
+    "message": "Risposte automatiche"
+  },
+  "services.oof.state.off": {
+    "message": "Disattivato"
+  },
+  "services.oof.state.on": {
+    "message": "Attivo"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Tra due date"
+  },
+  "services.oof.from": {
+    "message": "Dal"
+  },
+  "services.oof.until": {
+    "message": "Al"
+  },
+  "services.oof.internal": {
+    "message": "Rispondi alle persone della mia organizzazione"
+  },
+  "services.oof.externalOn": {
+    "message": "Rispondi anche a persone esterne alla mia organizzazione"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Queste risposte vengono inviate a chiunque le scriva, comprese le mailing list."
+  },
+  "services.oof.external": {
+    "message": "Rispondi a persone esterne alla mia organizzazione"
+  },
+  "services.cancel": {
+    "message": "Annulla"
+  },
+  "services.save": {
+    "message": "Salva"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Questo messaggio è formattato sul server. Salvandolo qui verrà sostituito da testo semplice."
+  },
+  "services.oof.unsupported": {
+    "message": "Questo server non offre una risposta di assenza."
+  },
+  "services.error.loadFailed": {
+    "message": "Impossibile leggere le impostazioni."
+  },
+  "services.error.saveFailed": {
+    "message": "Impossibile salvare le impostazioni."
   }
 }

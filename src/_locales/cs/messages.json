@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Nastavení účtu Exchange"
   },
+  "config.intro": {
+    "message": "Tato nastavení ukládá TbSync, nikoli server, a lze je změnit jen tehdy, když je účet odpojen. Co zde změníte, se týká pouze tohoto Thunderbirdu."
+  },
   "config.label": {
     "message": "Štítek účtu"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Server vrátil 451 bez hlavičky X-MS-Location"
+  },
+  "services.title": {
+    "message": "Služby serveru Exchange"
+  },
+  "services.intro": {
+    "message": "Tato nastavení jsou uložena na serveru, nikoli v TbSyncu, a jsou dostupná jen tehdy, když je účet připojen. Co zde změníte, platí všude, nejen v Thunderbirdu."
+  },
+  "services.loading": {
+    "message": "Načítání aktuálního nastavení…"
+  },
+  "services.oof.section": {
+    "message": "Mimo kancelář"
+  },
+  "services.oof.intro": {
+    "message": "Automatická odpověď lidem, kteří vám píší během vaší nepřítomnosti. Odesílá ji server, ať už Thunderbird běží, nebo ne."
+  },
+  "services.oof.state": {
+    "message": "Automatické odpovědi"
+  },
+  "services.oof.state.off": {
+    "message": "Vypnuto"
+  },
+  "services.oof.state.on": {
+    "message": "Zapnuto"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Mezi dvěma daty"
+  },
+  "services.oof.from": {
+    "message": "Od"
+  },
+  "services.oof.until": {
+    "message": "Do"
+  },
+  "services.oof.internal": {
+    "message": "Odpovídat lidem v mé organizaci"
+  },
+  "services.oof.externalOn": {
+    "message": "Odpovídat i lidem mimo mou organizaci"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Tyto odpovědi se odesílají každému, kdo vám napíše, včetně e-mailových konferencí."
+  },
+  "services.oof.external": {
+    "message": "Odpovídat lidem mimo mou organizaci"
+  },
+  "services.cancel": {
+    "message": "Zrušit"
+  },
+  "services.save": {
+    "message": "Uložit"
+  },
+  "services.oof.htmlWarning": {
+    "message": "Tato zpráva je formátovaná na serveru. Uložením zde ji nahradíte prostým textem."
+  },
+  "services.oof.unsupported": {
+    "message": "Tento server odpověď v nepřítomnosti nenabízí."
+  },
+  "services.error.loadFailed": {
+    "message": "Nastavení se nepodařilo načíst."
+  },
+  "services.error.saveFailed": {
+    "message": "Nastavení se nepodařilo uložit."
   }
 }

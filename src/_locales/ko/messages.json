@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Exchange 계정 설정"
   },
+  "config.intro": {
+    "message": "이 설정은 서버가 아니라 TbSync가 저장하며, 계정 연결이 끊긴 동안에만 변경할 수 있습니다. 여기서 변경한 내용은 이 Thunderbird에만 적용됩니다."
+  },
   "config.label": {
     "message": "계정 라벨"
   },
@@ -482,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "서버가 X-MS-Location 헤더 없이 451을 반환했습니다"
+  },
+  "services.title": {
+    "message": "Exchange 서버 서비스"
+  },
+  "services.intro": {
+    "message": "이 설정은 TbSync가 아니라 서버에 저장되며, 계정이 연결되어 있는 동안에만 접근할 수 있습니다. 여기서 변경한 내용은 Thunderbird뿐 아니라 어디에나 적용됩니다."
+  },
+  "services.loading": {
+    "message": "현재 설정을 읽는 중…"
+  },
+  "services.oof.section": {
+    "message": "부재 중"
+  },
+  "services.oof.intro": {
+    "message": "자리를 비운 동안 메일을 보낸 사람에게 자동으로 회신합니다. 서버가 보내므로 Thunderbird 실행 여부와 무관합니다."
+  },
+  "services.oof.state": {
+    "message": "자동 회신"
+  },
+  "services.oof.state.off": {
+    "message": "끄기"
+  },
+  "services.oof.state.on": {
+    "message": "켜기"
+  },
+  "services.oof.state.scheduled": {
+    "message": "기간 지정"
+  },
+  "services.oof.from": {
+    "message": "시작"
+  },
+  "services.oof.until": {
+    "message": "종료"
+  },
+  "services.oof.internal": {
+    "message": "조직 내 사용자에게 회신"
+  },
+  "services.oof.externalOn": {
+    "message": "조직 외부 사용자에게도 회신"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "이 회신은 메일링 리스트를 포함해 메일을 보낸 모든 사람에게 전송됩니다."
+  },
+  "services.oof.external": {
+    "message": "조직 외부 사용자에게 회신"
+  },
+  "services.cancel": {
+    "message": "취소"
+  },
+  "services.save": {
+    "message": "저장"
+  },
+  "services.oof.htmlWarning": {
+    "message": "이 메시지는 서버에서 서식이 지정되어 있습니다. 여기서 저장하면 일반 텍스트로 대체됩니다."
+  },
+  "services.oof.unsupported": {
+    "message": "이 서버는 부재 중 회신을 제공하지 않습니다."
+  },
+  "services.error.loadFailed": {
+    "message": "설정을 읽을 수 없습니다."
+  },
+  "services.error.saveFailed": {
+    "message": "설정을 저장할 수 없습니다."
   }
 }
