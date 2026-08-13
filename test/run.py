@@ -13,7 +13,7 @@ contacts, events and tasks. Anything else stops at preflight with a message
 saying what to change.
 
 The steps that need a person instead - install lockstep, authentication
-failure, setup flow - stayed behind in `docs/manual-test-plan.html`.
+failure, setup flow - are not covered here and are still done by hand.
 """
 
 import os
@@ -35,7 +35,7 @@ from harness import REGISTRY, run, select
 # within a section chain on purpose - re-establishing the fixture per step
 # would mean several more full syncs against a server that throttles.
 # Run order, which is not section order. Section numbers are shared
-# vocabulary - cited in code comments and in docs/manual-test-plan.html - so
+# vocabulary - cited in code comments across the suite - so
 # a new section takes the next free number rather than renumbering the rest.
 # Where it *runs* is a separate question: 8 is cheap and version-independent,
 # and the heavy sections (5 onwards) have twice drawn a 503 out of a
