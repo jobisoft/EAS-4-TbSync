@@ -146,6 +146,9 @@
   "config.title": {
     "message": "Ustawienia konta Exchange"
   },
+  "config.intro": {
+    "message": "These settings are stored by TbSync, not on the server, and can only be changed while the account is disconnected. What you change here affects this Thunderbird only."
+  },
   "config.label": {
     "message": "Etykieta konta"
   },
@@ -231,7 +234,7 @@
     "message": "Conflicting changes"
   },
   "config.protocol.conflict.hint": {
-    "message": "If an item was changed both here and on the server, the server decides which copy wins; the losing change is replaced during the synchronization."
+    "message": "If an item was changed both here and on the server, the server decides which copy wins. The losing change is replaced during the synchronization."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Server wins (recommended)"
@@ -274,6 +277,27 @@
   },
   "config.calendar.syncRecurrence.hint": {
     "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
+  },
+  "config.calendar.syncOnChange": {
+    "message": "Synchronize a calendar after a change"
+  },
+  "config.calendar.syncOnChange.hint": {
+    "message": "TbSync synchronizes this account on the schedule set in the account manager. A calendar can additionally be synchronized shortly after you change anything in it, so local changes reach the server without waiting for the next scheduled run. That matters most for meetings, because the server only invites attendees, sends updates and passes on your response once it has seen your changes."
+  },
+  "config.calendar.syncOnChange.off": {
+    "message": "Off"
+  },
+  "config.calendar.syncOnChange.5seconds": {
+    "message": "After 5 seconds"
+  },
+  "config.calendar.syncOnChange.15seconds": {
+    "message": "After 15 seconds"
+  },
+  "config.calendar.syncOnChange.30seconds": {
+    "message": "After 30 seconds"
+  },
+  "config.calendar.syncOnChange.60seconds": {
+    "message": "After 60 seconds"
   },
   "config.section.lookups": {
     "message": "Server lookups"
@@ -371,6 +395,9 @@
       }
     }
   },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Recurrence sync is disabled. That was a precaution in early beta versions and is no longer needed. Switching it on in the account settings is now recommended."
+  },
   "eas.sync.error.protocolFault": {
     "message": "Server rejected the sync request as invalid (code $STATUS$)",
     "placeholders": {
@@ -458,5 +485,68 @@
   },
   "eas.network.error.redirectMissingLocation": {
     "message": "Server returned 451 without an X-MS-Location header"
+  },
+  "services.title": {
+    "message": "Exchange Server Services"
+  },
+  "services.intro": {
+    "message": "These settings are stored on the server, not by TbSync, and can only be reached while the account is connected. What you change here applies everywhere, not only in Thunderbird."
+  },
+  "services.loading": {
+    "message": "Reading the current settings…"
+  },
+  "services.oof.section": {
+    "message": "Out of office"
+  },
+  "services.oof.intro": {
+    "message": "An automatic reply to people who write to you while you are away. The server sends it, so it does not matter whether Thunderbird is running."
+  },
+  "services.oof.state": {
+    "message": "Automatic replies"
+  },
+  "services.oof.state.off": {
+    "message": "Off"
+  },
+  "services.oof.state.on": {
+    "message": "On"
+  },
+  "services.oof.state.scheduled": {
+    "message": "Between two dates"
+  },
+  "services.oof.from": {
+    "message": "From"
+  },
+  "services.oof.until": {
+    "message": "Until"
+  },
+  "services.oof.internal": {
+    "message": "Reply to people in my organisation"
+  },
+  "services.oof.externalOn": {
+    "message": "Also reply to people outside my organisation"
+  },
+  "services.oof.externalOn.hint": {
+    "message": "Their replies are sent to anyone who writes to you, including mailing lists."
+  },
+  "services.oof.external": {
+    "message": "Reply to people outside my organisation"
+  },
+  "services.cancel": {
+    "message": "Anuluj"
+  },
+  "services.save": {
+    "message": "Zapisz"
+  },
+  "services.oof.htmlWarning": {
+    "message": "This message is formatted on the server. Saving here replaces it with plain text."
+  },
+  "services.oof.unsupported": {
+    "message": "This server does not offer an out-of-office reply."
+  },
+  "services.error.loadFailed": {
+    "message": "Could not read the settings."
+  },
+  "services.error.saveFailed": {
+    "message": "Could not save the settings."
   }
 }
