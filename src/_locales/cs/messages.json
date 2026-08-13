@@ -231,7 +231,7 @@
     "message": "Konfliktní změny"
   },
   "config.protocol.conflict.hint": {
-    "message": "Pokud byla položka změněna zde i na serveru, server rozhodne, která verze zvítězí; prohrávající změna je při synchronizaci nahrazena."
+    "message": "Pokud byla položka změněna zde i na serveru, server rozhodne, která verze zvítězí. Prohrávající změna je při synchronizaci nahrazena."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Vyhrává server (doporučeno)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Synchronizace opakování je vypnutá. V raných beta verzích šlo o preventivní opatření, které už není potřeba. Doporučujeme ji v nastavení účtu zapnout."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server odmítl požadavek synchronizace jako vadný (kód $STATUS$)",

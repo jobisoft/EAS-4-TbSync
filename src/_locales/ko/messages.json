@@ -371,6 +371,9 @@
       }
     }
   },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "반복 동기화가 비활성화되어 있습니다. 이는 초기 베타 버전의 예방 조치였으며 이제는 필요하지 않습니다. 계정 설정에서 켜는 것을 권장합니다."
+  },
   "eas.sync.error.protocolFault": {
     "message": "서버가 동기화 요청을 잘못된 형식으로 거부했습니다 (코드 $STATUS$)",
     "placeholders": {

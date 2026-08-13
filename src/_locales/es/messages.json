@@ -231,7 +231,7 @@
     "message": "Cambios en conflicto"
   },
   "config.protocol.conflict.hint": {
-    "message": "Si un elemento se modificó aquí y también en el servidor, el servidor decide qué copia gana; el cambio perdedor se reemplaza durante la sincronización."
+    "message": "Si un elemento se modificó aquí y también en el servidor, el servidor decide qué copia gana. El cambio perdedor se reemplaza durante la sincronización."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Gana el servidor (recomendado)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "La sincronización de recurrencias está desactivada. Fue una precaución en las primeras versiones beta y ya no es necesaria. Se recomienda activarla en la configuración de la cuenta."
   },
   "eas.sync.error.protocolFault": {
     "message": "El servidor rechazó la solicitud de sincronización como malformada (código $STATUS$)",

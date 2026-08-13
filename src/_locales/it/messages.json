@@ -231,7 +231,7 @@
     "message": "Modifiche in conflitto"
   },
   "config.protocol.conflict.hint": {
-    "message": "Se un elemento è stato modificato sia qui sia sul server, il server decide quale copia vince; la modifica perdente viene sostituita durante la sincronizzazione."
+    "message": "Se un elemento è stato modificato sia qui sia sul server, il server decide quale copia vince. La modifica perdente viene sostituita durante la sincronizzazione."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Vince il server (consigliato)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "La sincronizzazione delle ricorrenze è disattivata. Era una precauzione nelle prime versioni beta e non è più necessaria. Si consiglia di attivarla nelle impostazioni dell’account."
   },
   "eas.sync.error.protocolFault": {
     "message": "Il server ha rifiutato la richiesta di sincronizzazione come non valida (codice $STATUS$)",

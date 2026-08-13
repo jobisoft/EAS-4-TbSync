@@ -231,7 +231,7 @@
     "message": "Motstridiga ändringar"
   },
   "config.protocol.conflict.hint": {
-    "message": "Om ett objekt har ändrats både här och på servern avgör servern vilken version som vinner; den förlorande ändringen ersätts vid synkroniseringen."
+    "message": "Om ett objekt har ändrats både här och på servern avgör servern vilken version som vinner. Den förlorande ändringen ersätts vid synkroniseringen."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Servern vinner (rekommenderas)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Synkronisering av upprepningar är avstängd. Det var en försiktighetsåtgärd i tidiga betaversioner och behövs inte längre. Det rekommenderas att slå på den i kontoinställningarna."
   },
   "eas.sync.error.protocolFault": {
     "message": "Servern avvisade synkroniseringsbegäran som ogiltig (kod $STATUS$)",

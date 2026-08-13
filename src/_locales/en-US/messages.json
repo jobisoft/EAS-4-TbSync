@@ -231,7 +231,7 @@
     "message": "Conflicting changes"
   },
   "config.protocol.conflict.hint": {
-    "message": "If an item was changed both here and on the server, the server decides which copy wins; the losing change is replaced during the synchronization."
+    "message": "If an item was changed both here and on the server, the server decides which copy wins. The losing change is replaced during the synchronization."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Server wins (recommended)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Recurrence sync is disabled. That was a precaution in early beta versions and is no longer needed. Switching it on in the account settings is now recommended."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server rejected the sync request as invalid (code $STATUS$)",

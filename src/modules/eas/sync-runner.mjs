@@ -629,6 +629,21 @@ async function runOneSync({
     );
     return await finishWith(ctx, { status: warningStatus(msg) });
   }
+  // Nothing failed, but the folder is not carrying everything it looks like
+  // it is: with the option off, an RRULE and its exceptions are ignored in
+  // both directions, so a series reads as a single entry on whichever side
+  // did not author it. The switch is off on these accounts because early
+  // betas advised it, which is a reason that has expired - so the message
+  // asks for it back rather than only describing the effect. Said on every
+  // sync because the state is permanent (a setting, not an incident), and
+  // the resource row is where someone looks when an occurrence is missing.
+  if (!ctx.syncRecurrence && ctx.itemKind.changelogKind !== "contact") {
+    return await finishWith(ctx, {
+      status: warningStatus(
+        browser.i18n.getMessage("eas.sync.warning.recurrenceDisabled"),
+      ),
+    });
+  }
   return await finishWith(ctx, { status: ok() });
 }
 

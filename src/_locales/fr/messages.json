@@ -231,7 +231,7 @@
     "message": "Modifications en conflit"
   },
   "config.protocol.conflict.hint": {
-    "message": "Si un élément a été modifié ici et sur le serveur, le serveur décide quelle version l'emporte ; la modification perdante est remplacée lors de la synchronisation."
+    "message": "Si un élément a été modifié ici et sur le serveur, le serveur décide quelle version l'emporte. La modification perdante est remplacée lors de la synchronisation."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Le serveur gagne (recommandé)"
@@ -294,7 +294,7 @@
     "message": "Demande au serveur les disponibilités d'un participant lors de son invitation."
   },
   "config.freebusy.notSupported": {
-    "message": "Votre serveur ne propose pas la disponibilité des participants ; elle ne peut donc pas être affichée."
+    "message": "Votre serveur ne propose pas la disponibilité des participants. Elle ne peut donc pas être affichée."
   },
   "config.error.invalidAsVersion": {
     "message": "Version ActiveSync sélectionnée non valide."
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "La synchronisation des récurrences est désactivée. C’était une précaution dans les premières versions bêta et ce n’est plus nécessaire. Il est recommandé de l’activer dans les paramètres du compte."
   },
   "eas.sync.error.protocolFault": {
     "message": "Le serveur a rejeté la requête de synchronisation comme malformée (code $STATUS$)",

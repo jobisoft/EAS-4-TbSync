@@ -371,6 +371,9 @@
       }
     }
   },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Korduste sünkroonimine on välja lülitatud. See oli ettevaatusabinõu varastes beetaversioonides ja pole enam vajalik. Soovitatav on see konto seadetes sisse lülitada."
+  },
   "eas.sync.error.protocolFault": {
     "message": "Server lükkas sünkroonimispäringu sobimatuna tagasi (kood $STATUS$)",
     "placeholders": {

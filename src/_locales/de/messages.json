@@ -231,7 +231,7 @@
     "message": "Widersprüchliche Änderungen"
   },
   "config.protocol.conflict.hint": {
-    "message": "Wurde ein Eintrag sowohl hier als auch auf dem Server geändert, entscheidet der Server, welche Fassung gewinnt; die unterlegene Änderung wird bei der Synchronisation ersetzt."
+    "message": "Wurde ein Eintrag sowohl hier als auch auf dem Server geändert, entscheidet der Server, welche Fassung gewinnt. Die unterlegene Änderung wird bei der Synchronisation ersetzt."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Server gewinnt (empfohlen)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Die Synchronisation von Wiederholungen ist deaktiviert. Das war eine Vorsichtsmaßnahme in frühen Beta-Versionen und ist nicht mehr nötig. Es wird empfohlen, sie in den Kontoeinstellungen zu aktivieren."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server hat die Synchronisationsanfrage als ungültig abgelehnt (Code $STATUS$)",

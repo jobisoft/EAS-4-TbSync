@@ -231,7 +231,7 @@
     "message": "Sprzeczne zmiany"
   },
   "config.protocol.conflict.hint": {
-    "message": "Jeśli element został zmieniony tutaj i na serwerze, serwer decyduje, która wersja wygrywa; przegrana zmiana zostaje zastąpiona podczas synchronizacji."
+    "message": "Jeśli element został zmieniony tutaj i na serwerze, serwer decyduje, która wersja wygrywa. Przegrana zmiana zostaje zastąpiona podczas synchronizacji."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Wygrywa serwer (zalecane)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Synchronizacja powtórzeń jest wyłączona. Było to zabezpieczenie we wczesnych wersjach beta i nie jest już potrzebne. Zalecane jest włączenie jej w ustawieniach konta."
   },
   "eas.sync.error.protocolFault": {
     "message": "Serwer odrzucił żądanie synchronizacji jako nieprawidłowe (kod $STATUS$)",

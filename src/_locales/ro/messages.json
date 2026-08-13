@@ -231,7 +231,7 @@
     "message": "Modificări în conflict"
   },
   "config.protocol.conflict.hint": {
-    "message": "Dacă un element a fost modificat atât aici, cât și pe server, serverul decide care versiune câștigă; modificarea pierzătoare este înlocuită la sincronizare."
+    "message": "Dacă un element a fost modificat atât aici, cât și pe server, serverul decide care versiune câștigă. Modificarea pierzătoare este înlocuită la sincronizare."
   },
   "config.protocol.conflict.serverWins": {
     "message": "Câștigă serverul (recomandat)"
@@ -370,6 +370,9 @@
         "example": "3"
       }
     }
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Sincronizarea recurențelor este dezactivată. A fost o măsură de precauție în versiunile beta timpurii și nu mai este necesară. Se recomandă activarea ei în setările contului."
   },
   "eas.sync.error.protocolFault": {
     "message": "Serverul a respins cererea de sincronizare ca fiind incorectă (cod $STATUS$)",
