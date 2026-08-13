@@ -274,18 +274,43 @@ export async function runItemSync({
       itemKind,
       defaultTimezone,
     });
-    if (result.code === "RESYNC" && attempt === 0) {
-      const reset = { synckey: "0", indexMap: [] };
-      await provider.updateFolder({
+    if (result.code === "RESYNC") {
+      // Status 3: the server does not recognise the sync key we sent, so
+      // our view of this collection is void. Starting over re-downloads
+      // every item in the folder, which is the most expensive thing a sync
+      // does and used to happen in silence - a flood of "pull add" lines
+      // with nothing to say why. Said out loud, because the alternative is
+      // reading it as data churn.
+      //
+      // Both attempts are announced, as v4 announced every FOLDER_RERUN
+      // (core.js:188). `attempt` exists for nothing but this bound - it is
+      // v4's `maxFolderReruns = 2` moved into the provider - so the second
+      // line is the only trace that a folder gave up rather than settled.
+      provider.reportEventLog({
+        level: "warning",
         accountId,
         folderId,
-        patch: { custom: reset },
+        message:
+          `[${itemKind.changelogKind}-sync] the server refused our sync key` +
+          (attempt === 0
+            ? " - starting this folder over, so everything in it is downloaded again"
+            : " again, on the folder we had just started over - not trying once more this run"),
       });
-      workingFolder = {
-        ...workingFolder,
-        custom: { ...(workingFolder.custom ?? {}), ...reset },
-      };
-      continue;
+      if (attempt === 0) {
+        const reset = { synckey: "0", indexMap: [] };
+        await provider.updateFolder({
+          accountId,
+          folderId,
+          patch: { custom: reset },
+        });
+        workingFolder = {
+          ...workingFolder,
+          custom: { ...(workingFolder.custom ?? {}), ...reset },
+        };
+        continue;
+      }
+      // The second one falls through to the ordinary result handling
+      // below, exactly as it did before this branch learned to speak.
     }
     if (result.code === "HIERARCHY") {
       // Server signalled Sync Status 12: the FolderSync state we're
