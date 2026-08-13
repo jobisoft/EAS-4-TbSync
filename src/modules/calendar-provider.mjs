@@ -34,7 +34,10 @@
  */
 
 import ICAL from "../vendor/ical.min.js";
-import { exceptionFingerprint } from "./eas/calendar-codec.mjs";
+import {
+  exceptionFingerprint,
+  pinEasStamps,
+} from "./eas/calendar-codec.mjs";
 import {
   localQueue,
   lookupBinding,
@@ -253,6 +256,47 @@ export function identify(item) {
   }
 }
 
+/** The version of this item the calendar already holds, as iCal, or null.
+ *
+ *  An item's id is its iCal UID, so this is the UID lookup - one local
+ *  read, no network, and no item hook fires for it. Called while the
+ *  platform holds the user's save, which is why it stays a single get.
+ *
+ *  Best-effort: a lookup we cannot do leaves `prior` null, and the caller
+ *  then treats the item as new. That errs towards stripping an identity
+ *  rather than inventing one, which is the safer of the two. */
+async function priorIcalOf(calendarId, item) {
+  if (!calendarId || !item?.id) return null;
+  try {
+    const existing = await messenger.calendar.items.get(calendarId, item.id, {
+      returnFormat: "ical",
+    });
+    return existing?.item ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Hold our own stamps to what the calendar already had - see
+ *  `pinEasStamps`. Returns the item the platform should store: the same
+ *  object when nothing needed doing, so the common path allocates nothing.
+ *
+ *  Logged when it bites, at info: something outside this add-on wrote to a
+ *  field only we should write, and this line is the only trace of it. */
+async function guardStamps(item, priorIcal) {
+  const ical = item?.item;
+  if (typeof ical !== "string") return item;
+  const guarded = pinEasStamps({ builtIcal: ical, priorIcal });
+  if (guarded === ical) return item;
+  report?.({
+    level: "info",
+    message:
+      `[event-sync] restored the EAS stamps on ${item.id}: the incoming ` +
+      `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}`,
+  });
+  return { ...item, item: guarded };
+}
+
 /** Register the item hooks. Safe to call more than once.
  *
  *  Each hook must return the item, or the platform treats the edit as
@@ -273,22 +317,32 @@ export function registerCalendarProvider() {
     // An item created in Thunderbird's dialog has no id yet; give it one
     // and hand the props back, so the platform adopts our id instead of
     // minting its own after we have already filed the queue entry.
-    const identified = identify(item);
-    await record(calendar?.id, identified?.id ?? item?.id, "created", {
+    const base = identify(item) ?? item;
+    // An id is a UID here, so "is this already in the calendar?" is one
+    // read. It usually is not - but an import of an item we already sync
+    // arrives as a create, and the platform's own importer expects the
+    // calendar to refuse a duplicate id, which ours does not. Without this
+    // the item would be overwritten by a copy that has no identity, and a
+    // synced event would quietly detach from the server.
+    const prior = await priorIcalOf(calendar?.id, base);
+    const guarded = await guardStamps(base, prior);
+    await record(calendar?.id, guarded?.id ?? item?.id, "created", {
       type: item?.type,
       flags: flagsOf(hookOptions),
     });
-    return identified ?? { item };
+    return guarded === item ? { item } : guarded;
   }, options);
 
   provider.onItemUpdated.addListener(
     async (calendar, item, oldItem, hookOptions) => {
+      const oldIcal = oldItem?.item ?? null;
+      const guarded = await guardStamps(item, oldIcal);
       await record(calendar?.id, item?.id, "updated", {
         type: item?.type,
-        oldIcal: oldItem?.item ?? null,
+        oldIcal,
         flags: flagsOf(hookOptions),
       });
-      return { item };
+      return guarded === item ? { item } : guarded;
     },
     options,
   );

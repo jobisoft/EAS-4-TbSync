@@ -1713,6 +1713,69 @@ export function selfUserResponse(ical, userEmail = null) {
  *  Contributed by Tomas Kovacik <kovacik@dgtfactory.com> in PR #339; the
  *  self-attendee lookup is widened here to Thunderbird's marker, so it also
  *  works on an item we hold no address for. */
+/** Every `X-EAS-*` property on a component, whatever it is called. Matched
+ *  by prefix rather than by a list, so a stamp added later is covered
+ *  without anyone remembering to come back here. */
+function easStampsOf(comp) {
+  return comp
+    .getAllProperties()
+    .filter((p) => p.name.toLowerCase().startsWith("x-eas-"));
+}
+
+/** Hold our own stamps to what they were, on an item somebody else wrote.
+ *
+ *  `X-EAS-SERVERID` and its siblings are the item's identity on the server
+ *  and our record of what the server said about it. Nothing outside this
+ *  add-on has any business writing them - and nothing outside it ever
+ *  legitimately does, because our own sync writes go to `<id>#cache`, which
+ *  fires no item hooks at all. So every write that reaches a hook is
+ *  somebody else's, and any difference in these properties is damage:
+ *  Thunderbird rebuilding an item from an emailed invitation, a copied
+ *  event carrying the identity of the one it was copied from, an import
+ *  overwriting an item that is already synced.
+ *
+ *  One rule covers all of it. A local item never invents a server identity,
+ *  and never loses one it already had:
+ *
+ *    - with a previous version, its stamps are restored exactly - one that
+ *      was removed comes back, one that was altered reverts, one that was
+ *      introduced is dropped;
+ *    - with none, every stamp is stripped, because a genuinely new item has
+ *      no identity to carry.
+ *
+ *  `priorIcal` is that previous version: the platform hands it to an update
+ *  hook, and a create hook finds it by looking the incoming UID up - an
+ *  import of an already-synced item arrives as a create, and stripping it
+ *  would detach the item from the server rather than update it.
+ *
+ *  Stamps belong on the master; `stampEasServerId` puts them there and the
+ *  reader skips overrides. So an override never keeps one, whoever wrote it.
+ *
+ *  Returns the input untouched when it cannot be parsed: a save must never
+ *  fail over this. */
+export function pinEasStamps({ builtIcal, priorIcal = null }) {
+  const vcal = parseVCalendar(builtIcal);
+  if (!vcal) return builtIcal;
+  const comps = vcal
+    .getAllSubcomponents()
+    .filter((c) => c.name === "vevent" || c.name === "vtodo");
+  if (!comps.length) return builtIcal;
+
+  for (const comp of comps) {
+    for (const prop of easStampsOf(comp)) comp.removeProperty(prop);
+  }
+
+  const master = pickMasterVevent(vcal);
+  const prior = priorIcal ? parseVCalendar(priorIcal) : null;
+  const priorMaster = prior ? pickMasterVevent(prior) : null;
+  if (master && priorMaster) {
+    for (const prop of easStampsOf(priorMaster)) {
+      master.updatePropertyWithValue(prop.name, prop.getFirstValue());
+    }
+  }
+  return vcal.toString();
+}
+
 export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
   const prior = parseFirstVevent(priorIcal);
   if (!prior) return builtIcal;
