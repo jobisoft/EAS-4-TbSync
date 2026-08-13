@@ -1228,6 +1228,12 @@ export class EasProvider extends TbSyncProviderImplementation {
             targetColor: color,
           };
         }
+        // Thunderbird's own refresh timer duplicates the schedule this
+        // add-on already runs. New calendars are created with it off; this
+        // reaches the ones that are not, including any where the user has
+        // set an interval in the calendar's properties dialog since.
+        await calendarStore.suppressCalendarRefresh(folder.targetID);
+
         // Calendars made before the account knew its own address carry no
         // owner; declaring it here reaches them without a recreate.
         const owner = calendarOwner(ctx.account);
