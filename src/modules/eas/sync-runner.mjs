@@ -1266,7 +1266,7 @@ function blobHasInstanceOverrides(blob) {
  *  sent later. The difference matters: a kept entry lights the needs-sync
  *  badge until it goes, so keeping one that can never go leaves a badge
  *  nobody can clear. */
-async function invitationPhase(ctx, answers) {
+async function invitationPhase(ctx, entries) {
   // Responding to an invitation from the calendar item is 14.0 and later.
   // Below that the only way is the meeting request in the Inbox, and we do
   // not sync mail - so these can never be sent, at all, ever.
@@ -1276,11 +1276,11 @@ async function invitationPhase(ctx, answers) {
       accountId: ctx.accountId,
       folderId: ctx.folderId,
       message:
-        `[event-sync] dropping ${answers.length} invitation answer(s): ` +
+        `[event-sync] dropping ${entries.length} invitation answer(s): ` +
         `ActiveSync ${ctx.asVersion} can only answer from the meeting ` +
         `request in the Inbox, which is not a folder we sync`,
     });
-    for (const entry of answers) await dropEntry(ctx, entry);
+    for (const entry of entries) await dropEntry(ctx, entry);
     return;
   }
   if (!easCommandLikelyAvailable(ctx.account, "MeetingResponse")) {
@@ -1289,14 +1289,14 @@ async function invitationPhase(ctx, answers) {
       accountId: ctx.accountId,
       folderId: ctx.folderId,
       message:
-        `[event-sync] dropping ${answers.length} invitation answer(s): ` +
+        `[event-sync] dropping ${entries.length} invitation answer(s): ` +
         `the server does not advertise MeetingResponse`,
     });
-    for (const entry of answers) await dropEntry(ctx, entry);
+    for (const entry of entries) await dropEntry(ctx, entry);
     return;
   }
 
-  for (const entry of answers) {
+  for (const entry of entries) {
     throwIfCancelled(ctx);
     // Re-read rather than trust the copy taken before the pull: the pull
     // may have just adopted the server's version onto this item, which is
@@ -1349,22 +1349,30 @@ async function invitationPhase(ctx, answers) {
     }
 
     // Answering one occurrence needs InstanceId, which is 14.1 and later.
-    // On 14.0 the series can still be answered, so only the occurrences
-    // are held back, and they are held rather than dropped: the account
-    // may be pinned to 14.0 today and not tomorrow.
+    // Below that there is no way to name an occurrence at all, so such an
+    // answer can never be sent - and a queue entry that can never go is a
+    // needs-sync badge that can never clear. It is dropped, out loud,
+    // exactly as the two version and command checks above do it. The user
+    // is told what to do instead, because the answer really is gone.
     let sendable = answers;
     if (parseFloat(ctx.asVersion) < 14.1) {
       const perOccurrence = answers.filter((a) => a.instanceId);
       if (perOccurrence.length) {
-        ctx.eventLog(
-          "warning",
-          `[event-sync] holding ${perOccurrence.length} per-occurrence answer(s) ` +
-            `on ${entry.itemId}: ActiveSync ${ctx.asVersion} has no InstanceId, ` +
-            `which names the occurrence being answered`,
-        );
+        ctx.provider.reportEventLog({
+          level: "warning",
+          accountId: ctx.accountId,
+          folderId: ctx.folderId,
+          message:
+            `[event-sync] dropping ${perOccurrence.length} answer(s) to single ` +
+            `occurrences of ${entry.itemId}: ActiveSync ${ctx.asVersion} cannot ` +
+            `name an occurrence, so answer the whole series instead`,
+        });
       }
       sendable = answers.filter((a) => !a.instanceId);
-      if (!sendable.length) continue;
+      if (!sendable.length) {
+        await dropEntry(ctx, entry);
+        continue;
+      }
     }
 
     let allLanded = true;
