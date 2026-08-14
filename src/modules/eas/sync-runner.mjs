@@ -47,7 +47,10 @@ import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 import { accountUserAddress } from "./settings.mjs";
 import {
   USERRESPONSE_TO_PARTSTAT,
+  announceableOf,
+  droppedAttendees,
   isReceivedMeeting,
+  sameAnnounceable,
   preserveSelfPartstat,
   repliedPartstatOf,
   stampRepliedPartstat,
@@ -56,9 +59,14 @@ import {
 } from "./calendar-codec.mjs";
 import { sendMeetingResponse } from "./meeting-response.mjs";
 import {
+  rememberClientScheduling,
+  versionNeedsClientScheduling,
+} from "./client-scheduling.mjs";
+import {
   buildMeetingResponseMime,
   sendMail,
 } from "./meeting-response-mail.mjs";
+import { buildMeetingRequestMime } from "./meeting-request-mail.mjs";
 import {
   localQueue,
   rememberBindings,
@@ -486,6 +494,18 @@ async function runOneSync({
   // needs to ask about it synchronously - see `hasPendingUserDelete`.
   ctx.pendingAtStart = await ctx.queue.pending();
 
+  // Bank whether this calendar's attendees are ours to notify. The item
+  // hooks need the answer and cannot ask the host for it, so the sync -
+  // which holds both the target and the negotiated version - leaves it
+  // where they can read it. See `client-scheduling.mjs`.
+  if (ctx.itemKind.changelogKind === "event") {
+    await rememberClientScheduling(
+      ctx.targetID,
+      versionNeedsClientScheduling(asVersion),
+      accountUserAddress(account),
+    );
+  }
+
   // Read-only revert pre-step. Drops local edits before the pull so the
   // local store ends up matching the server. ItemOperations.Fetch lets us
   // re-pull a single item by serverId; falls back to a synckey reset when
@@ -662,6 +682,11 @@ async function runOneSync({
   // seen the server's copy. Nothing here waits for the answer to take
   // effect: Exchange applies it asynchronously and the next sync reports it.
   if (invitationAnswers.length) await invitationPhase(ctx, invitationAnswers);
+
+  // 6) The messages we owe the attendees of meetings we organise, on the
+  // versions where the server sends none. Last, because it is the only
+  // phase that must see the item exactly as this sync left it.
+  await organizedMeetingPhase(ctx);
 
   // Final status — `warning` if push rejected any items so the user sees
   // a count in the manager; `ok` otherwise. The warning's text comes
@@ -1550,6 +1575,114 @@ async function mailAnsweredMeetings(ctx, sent, failedItems) {
       stampRepliedPartstat(fresh.blob, want),
     );
   }
+}
+
+/**
+ * Send what the organiser owes the attendees, for the notes this sync's
+ * edits left behind.
+ *
+ * **After the push and the pull**, which is the only correct point: the pull
+ * is where a push that lost a `Status 7` conflict is replaced by the
+ * server's winning copy, so a message built any earlier could announce a
+ * change the server threw away. Comparing the settled item against the note
+ * makes every no-op case disappear without anything having to recognise it.
+ *
+ * One attempt each. A message we could not send is a warning in the event
+ * log and nothing else - never a retry, never a failed folder - and the note
+ * is dropped either way, so nothing can accumulate that never clears. The
+ * cost is that a transport failure loses that notification for good; the
+ * user's recovery is to save the meeting again.
+ */
+async function organizedMeetingPhase(ctx) {
+  if (ctx.itemKind.changelogKind !== "event") return;
+  if (!versionNeedsClientScheduling(ctx.asVersion)) return;
+  const notes = await ctx.queue.sendMailPending();
+  if (!notes.length) return;
+  const userEmail = accountUserAddress(ctx.account);
+  if (!userEmail) return;
+
+  // A note whose edit is still queued belongs to a push that did not land,
+  // so the server does not have the change yet. Leaving it costs a sync;
+  // sending would announce something the server never accepted, and would
+  // spend the single attempt doing it.
+  const stillQueued = new Set(
+    (await ctx.queue.pending()).map((e) => e.itemId),
+  );
+
+  for (const note of notes) {
+    if (stillQueued.has(note.itemId)) continue;
+    try {
+      await sendOwedMessages(ctx, note, userEmail);
+    } catch (err) {
+      ctx.eventLog(
+        "warning",
+        `[event-sync] could not tell the attendees of ${note.itemId}: ` +
+          `${err?.message ?? String(err)}`,
+      );
+    }
+    await ctx.queue.removeSendMail({
+      parentId: note.parentId,
+      itemId: note.itemId,
+      kind: note.kind,
+    });
+  }
+}
+
+/** The messages one note turns into, and their sending. */
+async function sendOwedMessages(ctx, note, userEmail) {
+  const item = await ctx.store.get(note.itemId);
+  // Gone during the pull: the server deleted it, so there is no meeting to
+  // announce and a cancellation is not ours to invent.
+  if (!item?.blob) return;
+  if (isReceivedMeeting(item.blob, userEmail)) return;
+
+  const now = announceableOf(item.blob);
+  if (!now) return;
+  const from = note.detail?.from ?? null;
+  const isInvitation = note.status === "added_for_sendMail";
+
+  if (!isInvitation && from && sameAnnounceable(from, now)) {
+    ctx.eventLog(
+      "debug",
+      `[event-sync] ${note.itemId} settled back to what the attendees ` +
+        `already hold; nothing sent`,
+    );
+    return;
+  }
+
+  const dropped = droppedAttendees(from, now);
+  const send = async (method, recipients) => {
+    if (!recipients.length) return;
+    const mime = buildMeetingRequestMime({
+      blob: item.blob,
+      method,
+      recipients,
+      userEmail,
+      userName: ctx.account.custom?.userDisplayName ?? "",
+      now: new Date(),
+    });
+    if (!mime) return;
+    await sendMail({
+      account: ctx.account,
+      asVersion: ctx.asVersion,
+      mime,
+      clientId: `eas-${method.toLowerCase()}-${Date.now().toString(36)}`,
+    });
+    ctx.eventLog(
+      "info",
+      `[event-sync] told ${recipients.length} attendee(s) of ` +
+        `${note.itemId}: ${method}`,
+    );
+  };
+
+  // A cancelled meeting is cancelled for everyone who was ever told about
+  // it, including anyone dropped in the same edit.
+  if (now.status === "CANCELLED") {
+    await send("CANCEL", [...new Set([...now.attendees, ...dropped])]);
+    return;
+  }
+  await send("CANCEL", dropped);
+  await send("REQUEST", now.attendees);
 }
 
 /** Tell the organiser, on the versions where that is the client's job.

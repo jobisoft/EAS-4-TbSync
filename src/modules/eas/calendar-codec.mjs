@@ -1701,6 +1701,142 @@ function selfAddress(vevent, userEmail) {
   return (marked || stringOf(userEmail)).toLowerCase();
 }
 
+/** The address of one ATTENDEE or ORGANIZER property, lower-cased and
+ *  without its scheme, or "" when it carries none. */
+function addressOfProperty(prop) {
+  return stringOf(prop?.getFirstValue())
+    .replace(/^mailto:/i, "")
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * The fields whose change is worth telling the attendees about, as a plain
+ * JSON-able bag, or null when the item carries no event at all.
+ *
+ * This is the whole definition of "worth announcing" and both sides of the
+ * comparison use it: the hook records one of these as the item stood before
+ * the user's edit, and the phase that sends the message builds another from
+ * the item once the sync has settled. Equal means say nothing.
+ *
+ * Every value is normalised so that two spellings of one fact compare
+ * equal, because anything that survives here becomes a message somebody
+ * receives:
+ *
+ * - times as the UTC instant. The same moment written in two zones is not a
+ *   reschedule, and a `TZID` respelled by a round trip must not mail
+ *   anybody. All-day boundaries carry no zone at all and are compared as
+ *   the calendar date, which is the only thing they mean.
+ * - attendees as a sorted set of bare addresses. Thunderbird rewrites
+ *   `PARTSTAT`, `RSVP` and `CN` on the property as replies arrive and as the
+ *   dialog is used, and none of that is a change to who is invited.
+ *
+ * Deliberately absent: reminders, categories, colour, transparency, the
+ * body. A user who moves an alarm has not changed the meeting.
+ */
+export function announceableOf(ical) {
+  const vcal = parseVCalendar(ical);
+  const master = vcal ? pickMasterVevent(vcal) : null;
+  if (!master) return null;
+
+  // The master alone. An override is one occurrence's business, and this
+  // pass announces the series only - reading every component here would
+  // turn any occurrence edit into a message to the whole series.
+  //
+  // Through `eventTimingFor`, never a raw DTEND read: an event can carry
+  // DURATION instead, an all-day one can leave the end out entirely (§3.6.1
+  // gives it a day), and Outlook writes an all-day DTEND equal to its
+  // DTSTART meaning the same thing. All three are the same fact spelled
+  // three ways, and that function is where the codec already knows it.
+  const { dtstart, end, allDay } = eventTimingFor(master);
+  const boundary = (v) => {
+    const value = v?.getFirstValue ? v.getFirstValue() : v;
+    if (!(value instanceof ICAL.Time)) return null;
+    // An all-day boundary is a date, and `toJSDate` would give it a
+    // midnight in whatever zone happens to be current - a day out for
+    // anyone west of UTC, every time the item crossed the wire.
+    if (value.isDate) return { date: value.toString() };
+    const at = value.toJSDate?.();
+    return at && !Number.isNaN(at.getTime()) ? { at: at.toISOString() } : null;
+  };
+
+  // Our own address is not somebody we invite, and Exchange returns the
+  // organiser inside its own Attendees list - so the copy that comes back
+  // can carry an ATTENDEE the saved one never had.
+  const organizer = addressOfProperty(master.getFirstProperty("organizer"));
+  const status = stringOf(master.getFirstPropertyValue("status"))
+    .trim()
+    .toUpperCase();
+
+  return {
+    start: boundary(dtstart),
+    end: boundary(end),
+    allDay,
+    location: stringOf(master.getFirstPropertyValue("location")).trim(),
+    summary: stringOf(master.getFirstPropertyValue("summary")).trim(),
+    // The decode stamps CONFIRMED on everything the server calls a meeting,
+    // while a locally-authored one carries no STATUS at all. Same fact.
+    // Only TENTATIVE and CANCELLED say anything.
+    status: status === "CONFIRMED" ? "" : status,
+    // The schedule of a series is as announceable as its time. EXDATE is
+    // deliberately absent: one occurrence removed is a deletion, and a
+    // deletion is never announced.
+    rrule: stringOf(master.getFirstPropertyValue("rrule")?.toString()) || null,
+    attendees: [
+      ...new Set(
+        master
+          .getAllProperties("attendee")
+          .map(addressOfProperty)
+          .filter((a) => a && a !== organizer),
+      ),
+    ].sort(),
+  };
+}
+
+/** A stable string for one bag, whatever order its keys were built in and
+ *  however deeply they nest. */
+function canonicalBag(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalBag).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${canonicalBag(value[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+/**
+ * Do two bags describe the same meeting? This is the question that decides
+ * whether anybody is mailed, so both ways of being wrong cost something
+ * real: a false "different" mails every attendee about nothing, a false
+ * "same" leaves them holding the old time.
+ *
+ * A bag whose **shape** differs is not comparable - it came from a build
+ * that defined the fields differently. Answering "different" there would
+ * mail every attendee of every pending meeting the first time somebody
+ * updated the add-on, so an unreadable bag counts as no change. That is the
+ * one place where the usual "when in doubt, send" bias is the wrong way
+ * round: a missed notification is recoverable by saving the meeting again,
+ * a mailshot is not.
+ */
+export function sameAnnounceable(a, b) {
+  if (!a || !b) return false;
+  const ka = Object.keys(a).sort().join();
+  const kb = Object.keys(b).sort().join();
+  if (ka !== kb) return true;
+  return canonicalBag(a) === canonicalBag(b);
+}
+
+/** The attendees named in the earlier bag and gone from the later one.
+ *  They are owed their own cancellation while the meeting goes ahead for
+ *  everybody else, and their addresses exist nowhere but that earlier bag. */
+export function droppedAttendees(from, now) {
+  if (!from?.attendees) return [];
+  const current = new Set(now?.attendees ?? []);
+  return from.attendees.filter((a) => !current.has(a));
+}
+
 /** Is this a meeting somebody else organised?
  *
  *  Two signals, because neither sees every item.

@@ -34,7 +34,13 @@
  */
 
 import ICAL from "../vendor/ical.min.js";
-import { exceptionFingerprint, pinEasStamps } from "./eas/calendar-codec.mjs";
+import {
+  announceableOf,
+  exceptionFingerprint,
+  isReceivedMeeting,
+  pinEasStamps,
+} from "./eas/calendar-codec.mjs";
+import { clientSchedulingFor } from "./eas/client-scheduling.mjs";
 import {
   localQueue,
   lookupBinding,
@@ -89,6 +95,69 @@ async function ourTargets() {
   return out;
 }
 
+/**
+ * Note that this edit owes the attendees a message, on the accounts where
+ * sending it is our job.
+ *
+ * A separate row from the queued edit, in its own family, because it
+ * answers a different question and outlives the push that clears the edit -
+ * the message cannot go until the pull has settled what the server actually
+ * kept. See `changelog-core.mjs` for why the family is part of a row's
+ * identity.
+ *
+ * This is the only place the item's previous version exists, which is why
+ * the decision is made here rather than at send time. `from` is the meeting
+ * as the attendees currently hold it; the phase that sends compares the
+ * settled item against it and stays quiet if nothing they care about moved.
+ *
+ * A create records no `from` - nobody has been told the meeting exists, so
+ * there is nothing to have changed from, and the invitation carries whatever
+ * the item finally says. A delete records nothing at all: a deletion is
+ * never announced, and the shared updaters drop any note it had.
+ *
+ * Best-effort throughout. A note we fail to write costs one notification;
+ * failing the user's save over it would cost the edit.
+ */
+async function noteSendMail({ binding, calendarId, itemId, kind, op, oldIcal, ical }) {
+  if (kind !== "event" || op === "deleted") return;
+  try {
+    const scheduling = await clientSchedulingFor(calendarId);
+    if (!scheduling) return;
+
+    // Ours to send only if we are the organiser. An invitation somebody
+    // else sent us is answered, never re-announced - that is item 46's job
+    // and it runs from the item, not from a note.
+    if (isReceivedMeeting(ical, scheduling.user)) return;
+
+    const now = announceableOf(ical);
+    const from = op === "created" ? null : announceableOf(oldIcal);
+    // Nobody to tell. Both sides are asked because an edit that removes the
+    // last attendee still owes them a cancellation.
+    if (!now?.attendees?.length && !from?.attendees?.length) return;
+
+    await localQueue(binding).recordSendMail({
+      parentId: calendarId,
+      itemId,
+      kind,
+      status: op === "created" ? "added_for_sendMail" : "modified_for_sendMail",
+      ...(from ? { detail: { from } } : {}),
+    });
+    report?.({
+      level: "debug",
+      message:
+        `[event-sync] ${itemId} owes its attendees a message ` +
+        `(${op === "created" ? "invitation" : "update"})`,
+    });
+  } catch (err) {
+    report?.({
+      level: "warning",
+      message:
+        `[event-sync] could not note the message owed for ${itemId}: ` +
+        `${err?.message ?? String(err)}`,
+    });
+  }
+}
+
 /** Queue an edit the platform just handed us, in our own storage.
  *
  *  Awaited by the hooks: the platform is holding the user's save until we
@@ -100,7 +169,12 @@ async function ourTargets() {
  *  exception set as it was *before* the edit. Not the previous item itself -
  *  that is kilobytes per pending entry, to answer a question ("which
  *  exceptions differ?") that a fixed-size digest answers just as well. */
-async function record(calendarId, itemId, op, { type, oldIcal, flags } = {}) {
+async function record(
+  calendarId,
+  itemId,
+  op,
+  { type, oldIcal, ical, flags } = {},
+) {
   if (!calendarId || !itemId) {
     // Was a silent return, and that silence hid a data-loss bug: a
     // UI-created item arrives with no id, so every one of them was
@@ -175,6 +249,8 @@ async function record(calendarId, itemId, op, { type, oldIcal, flags } = {}) {
         ? ` (${before.exdates.length} cancelled, ${before.overrides.length} override(s) before the edit)`
         : ""),
   });
+
+  await noteSendMail({ binding, calendarId, itemId, kind, op, oldIcal, ical });
 
   // The host paints a needs-sync badge and cannot count a queue it does not
   // hold. Best-effort on purpose: the edit is already safe, and a badge
@@ -405,6 +481,7 @@ export function registerCalendarProvider() {
     const guarded = await guardStamps(base, prior);
     await record(calendar?.id, guarded?.id ?? item?.id, "created", {
       type: item?.type,
+      ical: guarded?.item ?? item?.item,
       flags: flagsOf(hookOptions),
     });
     return guarded === item ? { item } : guarded;
@@ -417,6 +494,7 @@ export function registerCalendarProvider() {
       await record(calendar?.id, item?.id, "updated", {
         type: item?.type,
         oldIcal,
+        ical: guarded?.item ?? item?.item,
         flags: flagsOf(hookOptions),
       });
       return guarded === item ? { item } : guarded;
