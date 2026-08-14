@@ -24,8 +24,16 @@
  *       <airsync:CollectionId>…</airsync:CollectionId>
  *       <airsync:RequestId>…</airsync:RequestId>
  *       [<InstanceId>…</InstanceId>]
+ *       [<SendResponse/>]        (16.0+ only)
  *     </Request>
  *   </MeetingResponse>
+ *
+ * Telling the organiser is the client's job either way, but the protocol
+ * moves who does the sending. Up to 14.1 the client follows the response
+ * with its own `SendMail` (`sync-runner.mjs::mailTheOrganizer`); from 16.0
+ * that step "applies only to protocol versions 2.5, 12.0, 12.1, 14.0, and
+ * 14.1" and the server generates the reply instead - but only when asked,
+ * with `SendResponse`.
  *
  * Response: `<MeetingResponse><Result><RequestId/><Status/>
  * [<CalendarId/>]</Result></MeetingResponse>`. `CalendarId` is only present
@@ -38,7 +46,13 @@ import { createWBXML } from "../wbxml.mjs";
 import { easRequest } from "../network.mjs";
 import { readPathFrom } from "./wbxml-helpers.mjs";
 
-function buildBody({ collectionId, serverID, userResponse, instanceId }) {
+export function buildMeetingResponseBody({
+  collectionId,
+  serverID,
+  userResponse,
+  instanceId,
+  asVersion,
+}) {
   const w = createWBXML();
   w.switchpage("MeetingResponse");
   w.otag("MeetingResponse");
@@ -54,6 +68,18 @@ function buildBody({ collectionId, serverID, userResponse, instanceId }) {
   // occurrence names that instance rather than addressing a different item.
   // InstanceId follows RequestId in the schema and is valid from 14.1 on.
   if (instanceId) w.atag("InstanceId", instanceId);
+  // Ask the server to tell the organiser. [MS-ASCMD]: "If the SendResponse
+  // element is not present, no email will be sent" - so without it a Status
+  // 1 means the user's own calendar was updated and nobody was told. Inside
+  // one tenant that is invisible, because the organiser's tracking is
+  // updated through the shared store; an organiser on another system hears
+  // nothing at all.
+  //
+  // Empty, which the spec defines as an email with no body - the same bare
+  // reply `mailTheOrganizer` sends on the versions where that job is the
+  // client's. The element exists only from 16.0, which is exactly where
+  // that client-side path stops.
+  if (parseFloat(asVersion) >= 16) w.atag("SendResponse");
   w.ctag();
   w.ctag();
   return w.getBytes();
@@ -84,7 +110,13 @@ export async function sendMeetingResponse({
     resp = await easRequest({
       account,
       command: "MeetingResponse",
-      body: buildBody({ collectionId, serverID, userResponse, instanceId }),
+      body: buildMeetingResponseBody({
+        collectionId,
+        serverID,
+        userResponse,
+        instanceId,
+        asVersion,
+      }),
       asVersion,
     });
   } catch {
