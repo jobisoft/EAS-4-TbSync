@@ -1377,6 +1377,12 @@ async function invitationPhase(ctx, entries) {
 
     let allLanded = true;
     let lastStatus = null;
+    // The id the server moves the item to. [MS-ASCMD] 3.1.5.6: on an accept
+    // or a tentative accept the server "will add or update the corresponding
+    // calendar item and return its server ID in the CalendarId element", and
+    // the client "updates that item with the returned server ID". A decline
+    // carries none, because there the server deletes the calendar item.
+    let calendarId = null;
     for (const answer of sendable) {
       throwIfCancelled(ctx);
       const result = await sendMeetingResponse({
@@ -1388,6 +1394,9 @@ async function invitationPhase(ctx, entries) {
         instanceId: answer.instanceId,
       });
       const answerStatus = result?.status ?? null;
+      if (answerStatus === "1" && result?.calendarId) {
+        calendarId = result.calendarId;
+      }
       const what = answer.instanceId
         ? `the occurrence on ${answer.rid}`
         : "the series";
@@ -1407,6 +1416,37 @@ async function invitationPhase(ctx, entries) {
         );
       }
     }
+    // Take the server at its word about where the item now lives, rather
+    // than waiting for the pull to say the same thing. It arrives as an
+    // <Add> under the new id plus a <Delete> for the old one, and until
+    // this item carries the new stamp the two caches point the superseded
+    // id at it - which is how answering an invitation used to delete the
+    // meeting. Doing it here also means the item is addressable again
+    // straight away, without a round trip.
+    if (calendarId && calendarId !== serverID) {
+      const fresh = await ctx.store.get(entry.itemId);
+      if (fresh) {
+        const restamped = ctx.itemKind.codec.stampEasServerId(
+          fresh.blob,
+          calendarId,
+        );
+        await ctx.queue.markServerWrite({
+          parentId: ctx.targetID,
+          itemId: entry.itemId,
+          status: SERVER_TAG_STATUSES[1],
+          kind: ctx.itemKind.changelogKind,
+        });
+        await ctx.store.update(entry.itemId, restamped);
+        restampScan(ctx, entry.itemId, serverID, calendarId);
+        upsertIndexMap(ctx, entry.itemId, calendarId);
+        ctx.eventLog(
+          "info",
+          `[event-sync] the answer moved ${entry.itemId} to ${calendarId}; ` +
+            `re-stamped it rather than waiting for the pull to say so`,
+        );
+      }
+    }
+
     // The queued edit stands for every answer on the item, so it is only
     // spent once they have all gone. One refusal keeps it, and the ones
     // that did land are not sent again: the server's own ResponseType
