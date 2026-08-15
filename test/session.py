@@ -16,6 +16,7 @@ import re
 import time
 
 import bridge
+import harness
 from bridge import rpc, ok
 
 # The three resource kinds an EAS account must grant, as (label, targetType,
@@ -277,6 +278,89 @@ class Session:
                     out.append((m.group(1), iid.group(1)))
         return out
 
+    def server_won(self):
+        """True when the server overruled a pushed edit in this window.
+
+        Every push declares `<Conflict>1</Conflict>`, so the server is
+        entitled to answer Status 7: it refuses the edit and keeps its own
+        copy, which the pull at the end of the same sync brings down over
+        whatever the test wrote. Read from the wire rather than from a log
+        line, because the status is the fact and the wording around it is
+        not.
+
+        Scoped to `<Responses>`, which is where a verdict on something *we*
+        sent appears. A 7 elsewhere in the reply is not about our push.
+        """
+        for entry in self.log():
+            if "receive" not in (entry.get("message") or "").lower():
+                continue
+            details = re.sub(r"\s+", " ", entry.get("details") or "")
+            for block in re.findall(r"<Responses>(.*?)</Responses>", details):
+                if re.search(r"<Status[^>]*>7</Status>", block):
+                    return True
+        return False
+
+    def edit(self, find, mutate, resource=None, after_write=None,
+             missing="the item to edit is not there"):
+        """Change a synced item and push it, absorbing a server-wins answer.
+
+        The guarded form of "read an item, change its body, sync" - which is
+        most of what this suite does to an item the server already holds, and
+        every one of those is a place the server may answer Status 7. The
+        provider then does the right thing and drops the edit, which leaves
+        the test without the state its later assertions need.
+
+        So the whole cycle is the unit that repeats: `find()` is called again
+        each time, because after a rejection the body it returned no longer
+        exists, and `mutate(body)` is applied to whatever the server imposed.
+        `mutate` MUST therefore be idempotent - written so that applying it
+        to its own output changes nothing further.
+
+        `after_write` runs between the write and the sync, for the few tests
+        that assert on what the local write did before anything is pushed.
+
+        `resource` is the one `items.update` takes - "tasks", or omitted for
+        a calendar. Not the resource name `find` uses, which is the suite's
+        own ("events"); passing that through is refused by the bridge.
+        """
+        def attempt():
+            item = find()
+            harness.true(item is not None, missing)
+            args = {"resource": resource} if resource else {}
+            self.mark()
+            ok("items.update", id=item["id"], ical=mutate(item["item"]), **args)
+            if after_write:
+                after_write()
+            self.sync()
+
+        self.conflict_retry(attempt)
+
+    def conflict_retry(self, attempt, tries=3):
+        """Run `attempt` until the server stops overruling it.
+
+        A Status 7 is not a failure - it is the declared policy working -
+        but it leaves the change the test needs undone and the server's own
+        copy in its place. So the test makes the change again, against the
+        state the server has just imposed.
+
+        `attempt` performs one whole try: mark the wire, read the item as it
+        now stands, edit it, sync. It is re-run from the top rather than
+        resumed, because the body it edited no longer exists. Marking inside
+        it also means the assertions after this call see only the attempt
+        that stuck, not the discarded ones.
+
+        No sleep of its own: `sync()` already waits out the run's pace, so a
+        retry arrives no sooner than any other sync would.
+        """
+        for _ in range(tries):
+            attempt()
+            if not self.server_won():
+                return
+        raise AssertionError(
+            f"the server overruled this edit {tries} times running "
+            f"(Status 7, server-wins); it never took the change under test"
+        )
+
     def warnings(self, needle=""):
         return [
             e["message"]
@@ -347,6 +431,7 @@ def preflight(provider="eas", require=KINDS, sync_gap=None):
 
     _require_debug_logging()
     _require_no_sync_after_change(granted)
+    _require_server_wins(granted)
     _widen_and_clear_event_log()
 
     # Nothing is bound here. Every section now disconnects and re-binds what
@@ -416,6 +501,33 @@ def require_recurrence(session, sections):
         f"  Switch 'Synchronize recurring events' on for this account - "
         f"without it no series reaches the wire, so these tests would "
         f"report a code fault that is not there."
+    )
+
+
+def _require_server_wins(account):
+    """Refuse to run unless the account declares the server-wins policy.
+
+    Every push states `<Conflict>` from this setting. On server-wins a
+    rejected push is answered with Status 7, the server's own copy is taken
+    and the edit is dropped - which `conflict_retry` is written to absorb.
+    On device-wins the server accepts the push instead, so that answer never
+    arrives and a test written around it would pass without ever exercising
+    what it names.
+
+    Checked, not set, like the two beside it: the value is the account
+    owner's choice. Absent counts as server-wins, because that is what the
+    provider does with it.
+    """
+    value = (account.get("custom") or {}).get("conflict")
+    if value != "0":
+        return
+    raise PreflightError(
+        f"{account['accountName']} is set to device-wins, and these tests "
+        f"expect server-wins.\n"
+        f"  Set 'Conflict resolution' to the server's copy winning, in this "
+        f"account's TbSync configuration - on device-wins the server accepts "
+        f"every push, so the conflict handling these tests cover is never "
+        f"reached."
     )
 
 
