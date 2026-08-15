@@ -27,8 +27,7 @@ no longer share state.
 """
 
 import re
-from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 
 import harness
 import probes
@@ -47,38 +46,21 @@ VERSIONS = ("16",)
 MOVED = datetime(2026, 9, 9, 13, 0, tzinfo=timezone.utc)
 
 
-def _rid_instant(line):
-    """The UTC instant a RECURRENCE-ID line denotes, or None.
-
-    Matched by instant rather than by text on purpose. The same occurrence
-    is written `TZID=America/New_York:20260909T090000` or
-    `20260909T130000Z` depending on which side last rendered it, and this
-    test used to search for the UTC spelling alone - so an override that was
-    present and correct read as missing, which is how a test bug spent a day
-    wearing item 47's clothes.
-    """
-    m = re.match(r"RECURRENCE-ID(?:;TZID=([^:;\r\n]+))?[^:]*:(\d{8})T?(\d{6})?Z?", line)
-    if not m:
-        return None
-    tzid, day, hms = m.group(1), m.group(2), m.group(3) or "000000"
-    naive = datetime.strptime(day + hms, "%Y%m%d%H%M%S")
-    if line.rstrip().endswith("Z") or not tzid:
-        return naive.replace(tzinfo=timezone.utc)
-    try:
-        return naive.replace(tzinfo=ZoneInfo(tzid)).astimezone(timezone.utc)
-    except Exception:
-        return None
-
-
 def _override_block(body, instant=MOVED):
-    """The override VEVENT for `instant`, in whatever zone it is written."""
+    """The override VEVENT for `instant`, in whatever zone it is written.
+
+    Matched by instant rather than by text: the same occurrence is written
+    `TZID=America/New_York:20260909T090000` or `20260909T130000Z` depending
+    on which side rendered it last, and searching for one spelling reports
+    an override that is present and correct as missing.
+    """
     for block in re.findall(
         r"BEGIN:VEVENT(?:(?!BEGIN:VEVENT)[\s\S])*?END:VEVENT", body
     ):
         for line in block.splitlines():
             if not line.startswith("RECURRENCE-ID"):
                 continue
-            if _rid_instant(line) == instant:
+            if probes.line_instant(line) == instant:
                 return block
     return None
 

@@ -225,6 +225,41 @@ def vevent_lines(body, prefix):
     return out
 
 
+def line_instant(line):
+    """The UTC instant a RECURRENCE-ID or EXDATE line denotes, or None.
+
+    The same occurrence is written `TZID=America/New_York:20260909T090000`
+    or `20260909T130000Z` depending on which side rendered it last, and the
+    two wire forms disagree on which they use - 16.x sends an InstanceId in
+    UTC, <=14.x embeds the exception with the zone it was authored in. A
+    test that compares the text therefore reports an occurrence that is
+    present and correct as missing, which is how a test bug once spent a day
+    wearing a product bug's clothes.
+
+    A date-only value stays a date: all-day occurrences are floating by
+    definition, and pushing one through a zone is the bug an all-day
+    assertion is looking for.
+    """
+    import re
+    from datetime import datetime, timezone as _tz
+
+    m = re.match(r"[A-Z-]+(?:;[^:]*)?:(\d{8})(?:T(\d{6}))?(Z)?", line.strip())
+    if not m:
+        return None
+    day, hms, zulu = m.group(1), m.group(2), m.group(3)
+    if "VALUE=DATE" in line or not hms:
+        return ("date", day)
+    naive = datetime.strptime(day + "T" + hms, "%Y%m%dT%H%M%S")
+    tzid = re.search(r"TZID=([^:;]+)", line)
+    if zulu or not tzid:
+        return naive.replace(tzinfo=_tz.utc)
+    try:
+        from zoneinfo import ZoneInfo
+        return naive.replace(tzinfo=ZoneInfo(tzid.group(1))).astimezone(_tz.utc)
+    except Exception:
+        return None
+
+
 def instants(body):
     """Every VEVENT DTSTART as a UTC instant, so two spellings of the same
     moment compare equal.
