@@ -24,12 +24,19 @@ from bridge import rpc, ok
 # selected tests need, which is never all three: no section reads contacts.
 KINDS = ("contacts", "events", "tasks")
 
-# Smallest gap between two syncs of the same account. A single test can sync
-# four or more times - a rebind is two, and `settle` retries up to three - so
-# pacing the syncs matters more than pacing the tests. Exchange answers 503
-# when pushed, and a 503 mid-resync has wiped a folder list before now.
-#   TBSYNC_TEST_SYNC_GAP=0 npm test
-MIN_SYNC_GAP_S = float(os.environ.get("TBSYNC_TEST_SYNC_GAP", "5"))
+# Smallest gap between two syncs of the same account, in seconds - the run's
+# pace, set once in preflight and carried on the Session so a run can be
+# slowed without editing anything.
+#
+# Pacing the syncs matters more than pacing the tests: one test can sync four
+# or more times, a rebind is two, and `settle` retries up to three. And the
+# throttle these servers apply is a rate over a short window rather than a
+# budget that refills - measured 15 Aug 2026, when an account rested for two
+# hours and one rested for 94 minutes each managed the same three or four
+# minutes of work before their first 503. Resting does not buy sections;
+# going slower is the only thing that can.
+#   TBSYNC_TEST_SYNC_GAP=5 npm test      # the old pace, for a quick local run
+DEFAULT_SYNC_GAP_S = float(os.environ.get("TBSYNC_TEST_SYNC_GAP", "20"))
 
 
 class PreflightError(Exception):
@@ -47,6 +54,8 @@ class Session:
         self.version = version
         self.family = version_family(version)
         self._last_sync = 0.0
+        # The run's pace. Preflight sets it; every sync waits it out.
+        self.sync_gap = DEFAULT_SYNC_GAP_S
         # Where the current section began in the event log. Errors are read
         # from here, not from the last sync, so one logged in a gap between
         # two syncs still fails the section it happened in.
@@ -139,12 +148,12 @@ class Session:
         `rpc` itself. This waits out the tail first: a sync resolves, and a
         moment later the last of what it logged arrives.
 
-        Waits out `MIN_SYNC_GAP_S` first, so back-to-back syncs inside one
-        test do not arrive as a burst.
+        Waits out the run's `sync_gap` first, so back-to-back syncs inside
+        one test do not arrive as a burst.
         """
         waited = time.time() - self._last_sync
-        if waited < MIN_SYNC_GAP_S:
-            time.sleep(MIN_SYNC_GAP_S - waited)
+        if waited < self.sync_gap:
+            time.sleep(self.sync_gap - waited)
         ok("syncAccount", accountId=self.account_id)
         self._last_sync = time.time()
         time.sleep(2)
@@ -288,7 +297,7 @@ def version_family(version):
     return v or "unknown"
 
 
-def preflight(provider="eas", require=KINDS, bind=None):
+def preflight(provider="eas", require=KINDS, sync_gap=None):
     """Find the granted account, bind what the run starts with, return a
     Session.
 
@@ -338,14 +347,51 @@ def preflight(provider="eas", require=KINDS, bind=None):
 
     _require_debug_logging()
     _require_no_sync_after_change(granted)
+    _widen_and_clear_event_log()
 
+    # Nothing is bound here. Every section now disconnects and re-binds what
+    # it needs, so binding a guess at start-up would only be torn down again
+    # - and it made a run of one section pay a full pull it never used.
+    #
+    # The cost is that a server this account cannot reach is no longer
+    # reported before the first test; it surfaces as that section's own
+    # setup failing, which names the same problem one line later.
     session = Session(granted, folders, (granted.get("custom") or {}).get("asversion"))
-    session.mark()
-    try:
-        _bind(session, tuple(bind) if bind else require)
-    except AssertionError as e:
-        raise PreflightError(f"the initial sync failed.\n  {e}") from None
+    session.sync_gap = sync_gap if sync_gap is not None else DEFAULT_SYNC_GAP_S
     return session
+
+
+EVENT_LOG_MAX_WANTED = 5000
+
+
+def _widen_and_clear_event_log():
+    """Give the run a buffer big enough to hold a whole section, and start it
+    empty.
+
+    The log is a ring buffer, 500 entries by default. Every wire assertion
+    reads it - `wire()` reconstructs what was sent from the logged requests -
+    so once it rolls mid-section, a command that *was* sent is simply no
+    longer there, and the assertion reports "the edit never reached the
+    server". That is indistinguishable from the defect it exists to catch.
+
+    Set, not checked, unlike the log level and sync-after-change: those are
+    the account owner's choices about their own data, while this is a debug
+    buffer size with no effect on what syncs. It is restored to the stored
+    default by the host on the next Thunderbird restart, since the buffer
+    itself is session-scoped.
+
+    Cleared as well, so a section's reads cannot reach entries from a
+    previous run - and so the whole buffer belongs to this one. The size is
+    chosen for headroom rather than measured need: the cheapest section uses
+    15 entries, the heaviest run for minutes, and the cost of guessing low is
+    an assertion that reports a command as never sent when it was only no
+    longer recorded.
+    """
+    snap = ok("storage.snapshot")
+    settings = dict(snap.get("tbsync.settings") or {})
+    settings["eventLogMax"] = EVENT_LOG_MAX_WANTED
+    ok("storage.restore", data={"tbsync.settings": settings})
+    ok("clearEventLog")
 
 
 def require_recurrence(session, sections):
@@ -539,6 +585,86 @@ def select_resources(session, kinds, indent="  "):
     return changed
 
 
+def isolate(session, kinds, indent="  "):
+    """Give the section a resource with no history: disconnect everything,
+    then bind back only what it needs.
+
+    A section is meant to be a complete statement. It was not: it inherited
+    whatever the last one left - fixtures, queued edits, a sync key, an
+    identity map - and every one of those has produced a failure that looked
+    like a defect in the add-on and was not. The 2.1 wire assertion reading
+    `SEND Add,Change`; section 3.4 passing or failing by history rather than
+    by code; a whole night's tally counted against the wrong cause.
+
+    Disconnecting is what makes it cheap to state: the provider clears
+    `{synckey: "0", indexMap: []}` when a resource is disabled and the local
+    store goes with it, so one action purges the queue, the map and the sync
+    position together. Re-binding then pulls the folder fresh from the
+    server, which is the only starting point the suite can describe.
+
+    The cost is real - a bind, a bootstrap and a full pull per resource per
+    section - and is the reason the runner rests on a 503 rather than
+    hurrying.
+    """
+    for kind, folder_id in session.folders.items():
+        row = session.folder(kind)
+        if row["selected"]:
+            ok(
+                "setFolderSelected",
+                accountId=session.account_id,
+                folderId=folder_id,
+                selected=False,
+            )
+    print(f"{indent}disconnected every resource")
+    time.sleep(2)
+    session.active = ()
+    select_resources(session, kinds, indent=indent)
+
+
+def drain_queues(session, kinds, tries=4, indent="  "):
+    """Start every section from a queue it can name, rather than one it
+    inherited.
+
+    A section states what it creates. It does not state what it *starts
+    from* - and the wire assertions depend on that silently, because
+    `wire()` names every verb in a request. One edit left owed by an earlier
+    section rides into the fixture's own push, the entry reads
+    "SEND Add,Change" where the test asked for "SEND Add", and the failure
+    reads as a regression in the code under test. It is not; it is state.
+
+    Draining here rather than loosening the assertion is deliberate. A
+    tolerant "some request mentioning Add" would also stop noticing a
+    `<Change>` nobody asked for, which is exactly what those assertions
+    exist to catch.
+
+    Measured before it was written, as section 16: with one unrelated edit
+    deliberately left queued the mixed request happens on every server and
+    every attempt, and draining first makes the strict assertion hold on
+    every server and every attempt.
+    """
+    for kind in kinds:
+        owed = []
+        for _ in range(tries):
+            try:
+                owed = session.changelog(kind)
+            except AssertionError:
+                # Not bound yet. The caller binds and syncs, which drains it.
+                return
+            if not owed:
+                break
+            print(f"{indent}draining {len(owed)} inherited {kind} edit(s)")
+            session.sync()
+        if owed:
+            # Not fatal here: the section's own assertions are what say what
+            # went wrong. But they will read as a defect in the add-on, so
+            # the real reason belongs above them in the log.
+            print(
+                f"{indent}WARNING: {kind} still owes {len(owed)} edit(s) after "
+                f"{tries} syncs - wire assertions below may see commands this "
+                f"section did not send"
+            )
+
+
 def ensure_bound(session, kinds):
     for kind in kinds:
         row = session.folder(kind)
@@ -549,8 +675,3 @@ def ensure_bound(session, kinds):
             )
 
 
-def _bind(session, kinds):
-    """Bring the account to the state this run needs, once at start-up."""
-    select_resources(session, kinds)
-    session.sync()
-    ensure_bound(session, kinds)

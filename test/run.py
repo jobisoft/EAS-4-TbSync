@@ -101,12 +101,7 @@ def main(argv):
         return 0
 
     try:
-        first_needs = getattr(
-            sys.modules[MODULE_BY_SECTION[tests[0]["section"]]], "NEEDS", ("events",)
-        )
-        s = session_mod.preflight(
-            require=tuple(sorted(needed)) or ("events",), bind=first_needs
-        )
+        s = session_mod.preflight(require=tuple(sorted(needed)) or ("events",))
         # Sections that test recurrence need the account to sync it. A
         # module says so with NEEDS_RECURRENCE; the check is here rather
         # than per-section so the run refuses before touching anything.
@@ -129,10 +124,11 @@ def main(argv):
         return 2
 
     print(f"\n  account  {s.account['accountName']}  (AS {s.version})")
-    # What is actually selected, not what is merely granted - the two used
-    # to be conflated here, which hid the fact that every sync was touching
-    # all three resources.
-    print("  syncing  " + ", ".join(f"{k}={s.folders[k]}" for k in s.active))
+    # Nothing is bound yet - each section binds what it needs and drops it
+    # again - so this names what the run will touch, not what is selected
+    # right now.
+    print("  will use " + ", ".join(f"{k}={s.folders[k]}" for k in sorted(needed)))
+    print(f"  pace     {s.sync_gap:.0f}s between syncs")
     print()
 
     def prepare(section):
@@ -150,10 +146,43 @@ def main(argv):
         needs = getattr(sys.modules[MODULE_BY_SECTION[section]], "NEEDS", ("events",))
         print(f"  -- section {section}")
         s.mark()
-        session_mod.select_resources(s, needs, indent="       ")
+        # Disconnect everything, then bind back only what this section needs.
+        # One action purges the queue, the identity map and the sync key,
+        # because the provider clears them when a resource is disabled - so
+        # the section starts from the server's version of the folder and
+        # inherits nothing from the last one.
+        session_mod.isolate(s, needs, indent="       ")
         probes.reset(s, needs)
+        # `reset` deletes leftovers, which queues deletes of its own; it syncs
+        # when it removed something, but a delete the server refuses stays
+        # owed and nothing there looks again.
+        session_mod.drain_queues(s, needs, indent="       ")
 
-    return run(tests, s, prepare=prepare)
+    def finish(section):
+        """The other half of `prepare`: a section says what it leaves behind.
+
+        The setup purges, so anything a section still owes at this point is
+        about to be discarded unseen - including an edit that never reached
+        the server, which is a real failure wearing the disguise of a clean
+        start. Draining first distinguishes the two: work that can still be
+        pushed is pushed, and only what refuses to leave fails the section.
+        """
+        needs = getattr(sys.modules[MODULE_BY_SECTION[section]], "NEEDS", ("events",))
+        session_mod.drain_queues(s, needs, indent="       ")
+        for kind in needs:
+            try:
+                owed = s.changelog(kind)
+            except AssertionError:
+                continue  # not bound, so nothing of ours can be owed
+            if owed:
+                statuses = sorted({e.get("status") for e in owed})
+                raise AssertionError(
+                    f"{len(owed)} {kind} edit(s) still owed after the section "
+                    f"finished and the queue was drained ({', '.join(statuses)})"
+                    f" - the section left work that will not push"
+                )
+
+    return run(tests, s, prepare=prepare, finish=finish)
 
 
 if __name__ == "__main__":
