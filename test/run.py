@@ -63,6 +63,10 @@ MODULES = [
     "test_16_exception_move",
     # Version-agnostic, and the only exception coverage a 14.x account gets.
     "test_17_allday_exceptions",
+    # Also version-agnostic, and for the same reason: sections 3, 5 and 16
+    # assert on a wire shape only 16.x produces, so the <=14.x path where
+    # exceptions ride embedded in the master had no coverage at all.
+    "test_18_exception_outcomes",
     # After everything that reads the folder, because it re-pulls the whole
     # thing: a section running behind it pays for a full download it did not
     # ask for.
