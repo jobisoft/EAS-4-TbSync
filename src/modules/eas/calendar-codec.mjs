@@ -563,7 +563,7 @@ export function listInstanceCommands({
     // there is nothing to say about this occurrence.
     if (
       previous &&
-      knownOverrides.get(instanceId) === digestOf(override.toString())
+      knownOverrides.get(instanceId) === digestOf(normalisedOverride(override))
     )
       continue;
     commands.push({
@@ -2120,6 +2120,60 @@ export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
   return touched ? vcal.toString() : builtIcal;
 }
 
+/** What an override *is*, with how it happens to be written taken out.
+ *
+ *  The digest decides whether an occurrence still matches what the server
+ *  was last told, and a mismatch re-sends it. Taken over the raw text, it
+ *  also fires when nothing about the occurrence changed and only its
+ *  spelling did - which is exactly what a round trip through the server
+ *  does: the same instant comes back rendered in the default zone, so an
+ *  override written `TZID=America/New_York:130000` returns as
+ *  `TZID=Europe/Berlin:190000` and compares unequal to itself. Section 3.3
+ *  then re-asserts an exception the server already holds, on every
+ *  subsequent edit to the master.
+ *
+ *  Normalised, not summarised: everything the occurrence carries still
+ *  contributes, because a digest that dropped a field would stop noticing a
+ *  real edit to it - a far worse failure than the extra command this fixes.
+ *  Only two kinds of noise are removed. Times become the instant they
+ *  denote rather than one rendering of it, and the bookkeeping that changes
+ *  on every write regardless (`DTSTAMP`, `LAST-MODIFIED`, `CREATED`,
+ *  `SEQUENCE`, and our own stamps) is dropped - none of it describes the
+ *  occurrence, and all of it moves when nothing has happened. */
+function normalisedOverride(sub) {
+  // Resolved *before* the clone. A TZID is resolved against the VTIMEZONE
+  // carried in the same VCALENDAR - ical.js does that without anything
+  // being registered - and a component lifted out of its parent can no
+  // longer see it, so the zone silently stops resolving and the conversion
+  // below becomes a no-op. Which is the whole point of this function.
+  const asUtc = new Map();
+  for (const name of ["dtstart", "dtend", "recurrence-id"]) {
+    const value = sub.getFirstPropertyValue(name);
+    if (value instanceof ICAL.Time && !value.isDate) {
+      asUtc.set(name, value.convertToZone(ICAL.Timezone.utcTimezone));
+    }
+  }
+  const clone = new ICAL.Component(JSON.parse(JSON.stringify(sub.toJSON())));
+  for (const name of ["dtstamp", "last-modified", "created", "sequence"]) {
+    clone.removeAllProperties(name);
+  }
+  // Snapshotted: ical.js hands back its live array, so removing while
+  // iterating steps over the element after each one taken.
+  for (const prop of [...clone.getAllProperties()]) {
+    if (/^x-(eas|moz)-/i.test(prop.name)) clone.removeProperty(prop);
+  }
+  // The instant, in one spelling. An all-day DATE never enters `asUtc` - it
+  // carries no zone to disagree about, and forcing it to UTC would move the
+  // day.
+  for (const [name, time] of asUtc) {
+    const prop = clone.getFirstProperty(name);
+    if (!prop) continue;
+    prop.removeParameter("tzid");
+    prop.setValue(time);
+  }
+  return clone.toString();
+}
+
 export function exceptionFingerprint(ical) {
   const vcal = parseVCalendar(ical);
   if (!vcal) return null;
@@ -2136,7 +2190,7 @@ export function exceptionFingerprint(ical) {
     if (!rid) continue;
     overrides.push({
       rid: instanceKey(sub.getFirstPropertyValue("recurrence-id")),
-      digest: digestOf(sub.toString()),
+      digest: digestOf(normalisedOverride(sub)),
     });
   }
   overrides.sort((a, b) => (a.rid < b.rid ? -1 : a.rid > b.rid ? 1 : 0));
