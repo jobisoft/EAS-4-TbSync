@@ -67,6 +67,7 @@ import {
   sendMail,
 } from "./meeting-response-mail.mjs";
 import { buildMeetingRequestMime } from "./meeting-request-mail.mjs";
+import { createServerIdIndex } from "./server-id-index.mjs";
 import {
   localQueue,
   rememberBindings,
@@ -313,7 +314,13 @@ export async function runItemSync({
             : " again, on the folder we had just started over - giving up on it this run"),
       });
       if (attempt === 0) {
-        const reset = { synckey: "0", indexMap: [] };
+        // Only the sync key. [MS-ASCMD] asks for two things on Status 3 -
+        // return to SyncKey 0, and either drop or re-push the items added
+        // since the last good sync (the changelog survives this patch, so
+        // they go out on the retry). Forgetting which local item each
+        // server id names is neither, and the whole folder is about to
+        // arrive as <Add> commands that have to match them.
+        const reset = { synckey: "0" };
         await provider.updateFolder({
           accountId,
           folderId,
@@ -468,19 +475,11 @@ async function runOneSync({
     // the closure.
     eventLog: (level, message) =>
       provider.reportEventLog({ level, accountId, folderId, message }),
-    // Single per-folder index of `{uid, serverId}` pairs. The
-    // upgrades.mjs drain runs before any sync RPC, so by the time we
-    // get here the persisted shape is guaranteed to be an array (or
-    // missing for a never-synced folder).
-    indexMap: Array.isArray(folder.custom?.indexMap)
-      ? folder.custom.indexMap.slice()
-      : [],
-    indexMapDirty: false,
-    // Lazily-built `serverId -> itemId` view of the stored blobs, standing
-    // behind the indexMap when it cannot answer. Null until something
-    // misses; see `serverIdScan`. Per-pass, so the RESYNC retry - which
-    // builds a fresh ctx - never reuses a stale one.
-    serverIdScan: null,
+    // The folder's uid <-> serverId map, both directions, over what was
+    // stored last time. It is the only answer to "which local item is
+    // this?" - see `server-id-index.mjs`, and item 50 for what happens
+    // when it is lost.
+    indexMap: createServerIdIndex(folder.custom?.indexMap),
     syncKeyDirty: false,
     maxItems,
     // Where this folder's pending edits live. A calendar we supply keeps
@@ -514,11 +513,13 @@ async function runOneSync({
   if (effectiveDownloadOnly) {
     const heavyResetNeeded = await revertLocalChanges(ctx);
     if (heavyResetNeeded) {
+      // The sync key goes, the map stays. Re-downloading the collection
+      // does not move a single local item, so which one each server id
+      // names is as true afterwards as before - and every re-sent <Add>
+      // has to find its item or it creates a second copy of it.
       ctx.synckey = "0";
       synckey = "0";
       ctx.syncKeyDirty = true;
-      ctx.indexMap = [];
-      ctx.indexMapDirty = true;
     }
   }
 
@@ -802,7 +803,7 @@ async function revertLocalChanges(ctx) {
       continue;
     }
 
-    let serverID = findServerIdByUid(ctx, e.itemId);
+    let serverID = ctx.indexMap.serverIdFor(e.itemId);
     if (!serverID && e.status === "modified_by_user") {
       // For modify, the local blob still has the server-stamped ID.
       try {
@@ -901,7 +902,7 @@ async function revertLocalChanges(ctx) {
           `revert: store.create id mismatch: expected ${e.itemId}, got ${createdId}`,
         );
       }
-      upsertIndexMap(ctx, e.itemId, serverID);
+      ctx.indexMap.set(e.itemId, serverID);
     }
 
     await ctx.queue.remove({
@@ -929,7 +930,7 @@ async function finishWith(ctx, result) {
   }
   const custom = {};
   if (ctx.syncKeyDirty) custom.synckey = ctx.synckey;
-  if (ctx.indexMapDirty) custom.indexMap = ctx.indexMap;
+  if (ctx.indexMap.dirty) custom.indexMap = ctx.indexMap.toArray();
   const patch = Object.keys(custom).length ? { custom } : {};
   if (ctx.pendingCount !== undefined) patch.localChanges = ctx.pendingCount;
   if (!Object.keys(patch).length) return result;
@@ -1461,11 +1462,11 @@ async function invitationPhase(ctx, entries) {
     }
     // Take the server at its word about where the item now lives, rather
     // than waiting for the pull to say the same thing. It arrives as an
-    // <Add> under the new id plus a <Delete> for the old one, and until
-    // this item carries the new stamp the two caches point the superseded
-    // id at it - which is how answering an invitation used to delete the
-    // meeting. Doing it here also means the item is addressable again
-    // straight away, without a round trip.
+    // <Add> under the new id plus a <Delete> for the old one, in that
+    // order and in one response, so until the map is re-pointed the delete
+    // resolves to the item the add has just landed on and takes it. Doing
+    // it here also means the item is addressable again straight away,
+    // without a round trip.
     if (calendarId && calendarId !== serverID) {
       const fresh = await ctx.store.get(entry.itemId);
       if (fresh) {
@@ -1480,8 +1481,7 @@ async function invitationPhase(ctx, entries) {
           kind: ctx.itemKind.changelogKind,
         });
         await ctx.store.update(entry.itemId, restamped);
-        restampScan(ctx, entry.itemId, serverID, calendarId);
-        upsertIndexMap(ctx, entry.itemId, calendarId);
+        ctx.indexMap.set(entry.itemId, calendarId);
         ctx.eventLog(
           "info",
           `[event-sync] the answer moved ${entry.itemId} to ${calendarId}; ` +
@@ -2021,7 +2021,7 @@ async function buildPushBatch(ctx, slice, failedItems) {
       }
       const serverID =
         ctx.itemKind.codec.readEasServerIdFromBlob(it.blob) ??
-        findServerIdByUid(ctx, entry.itemId);
+        ctx.indexMap.serverIdFor(entry.itemId);
       // The item is here, but neither its own stamp nor the indexMap can say
       // what the server calls it, so a Change has no address to carry. Not
       // something waiting to resolve itself: on an incremental sync the
@@ -2044,19 +2044,16 @@ async function buildPushBatch(ctx, slice, failedItems) {
       }
       mods.push({ entry, serverID, item: it });
     } else if (entry.status === "deleted_by_user") {
-      const serverID = findServerIdByUid(ctx, entry.itemId);
+      const serverID = ctx.indexMap.serverIdFor(entry.itemId);
       if (!serverID) {
-        // No serverID resolvable from the indexMap and the local item
-        // is already gone (so no blob X-EAS-SERVERID fallback). Drop
-        // the changelog entry; the server keeps its copy. The
-        // indexMap is event-driven only (no snapshot self-heal), so
-        // recovery requires the server to re-push the item as an Add
-        // (e.g. after a syncKey reset / RESYNC), which would re-run
-        // applyAdd → upsertIndexMap. Otherwise the item stays orphaned
-        // server-side. Common causes: item was created and deleted
-        // between syncs (never registered server-side anyway), or an
-        // earlier event hook failed to upsert (a real bug worth
-        // chasing if it recurs).
+        // The map cannot say what the server calls this item, and the
+        // local item is already gone, so its blob cannot either. Drop the
+        // changelog entry; the server keeps its copy. Nothing re-derives
+        // the mapping - recovery needs the server to offer the item as an
+        // Add again, which puts it back through `applyAdd`. Common causes:
+        // the item was created and deleted between syncs, so the server
+        // never heard of it at all, or the map has lost an entry it should
+        // have (item 50 - worth chasing if it recurs).
         ctx.provider.reportEventLog({
           level: "info",
           accountId: ctx.accountId,
@@ -2123,7 +2120,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     // server-pushed Change for this ServerID matches the existing
     // local item via applyChangeFromAd instead of falling through to
     // applyAdd and creating a duplicate.
-    upsertIndexMap(ctx, sentEntry.item.id, serverId);
+    ctx.indexMap.set(sentEntry.item.id, serverId);
     // On 16.1 an exception is not part of the master's payload - it is a
     // separate <Change> keyed on the master's ServerId, which only exists
     // once the server has acked this Add. Note the pair down for the
@@ -2183,7 +2180,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         itemId: sentEntry.entry.itemId,
         kind: sentEntry.entry.kind,
       });
-      removeFromIndexMap(ctx, sentEntry.entry.itemId);
+      ctx.indexMap.remove(sentEntry.entry.itemId);
     } else {
       // Still not tracked - legacy didn't either ("What can we do about
       // failed deletes? SyncLog" - sync.js:1073), and its soft-fail path
@@ -2220,7 +2217,7 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
         itemId: d.entry.itemId,
         kind: d.entry.kind,
       });
-      removeFromIndexMap(ctx, d.entry.itemId);
+      ctx.indexMap.remove(d.entry.itemId);
     }
   }
 }
@@ -2457,7 +2454,7 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
     );
   }
   await verifyRoundTrip(ctx, newId, blob, "create");
-  upsertIndexMap(ctx, newId, serverID);
+  ctx.indexMap.set(newId, serverID);
   if (blobHasRecurrence(blob)) {
     logRecurrence(ctx, `pull add: itemId=${newId}, serverID=${serverID}`, {
       ical: blob,
@@ -2575,7 +2572,7 @@ async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
     codec.readEasServerIdFromBlob(existing.blob) ??
     serverID;
   if (masterServerId) {
-    upsertIndexMap(ctx, existing.itemId, masterServerId);
+    ctx.indexMap.set(existing.itemId, masterServerId);
   }
 }
 
@@ -2803,7 +2800,7 @@ async function applyChangeFromAd(
     ctx.itemKind.codec.readEasServerIdFromBlob(blob) ??
     ctx.itemKind.codec.readEasServerIdFromBlob(existing.blob);
   if (masterServerId) {
-    upsertIndexMap(ctx, existing.itemId, masterServerId);
+    ctx.indexMap.set(existing.itemId, masterServerId);
   }
   if (blobHasRecurrence(blob) || blobHasRecurrence(existing.blob)) {
     logRecurrence(ctx, `pull update: itemId=${existing.itemId}`, {
@@ -2828,7 +2825,7 @@ async function applyDelete(ctx, delNode, noteBacklog = null) {
     kind: ctx.itemKind.changelogKind,
   });
   await ctx.store.delete(existing.itemId);
-  removeFromIndexMap(ctx, existing.itemId);
+  ctx.indexMap.remove(existing.itemId);
 }
 
 /* ── Sync request building ────────────────────────────────────────── */
@@ -3195,19 +3192,16 @@ function parseSyncResponse(doc) {
  *  the push could not get rid of the item (the server refused the delete,
  *  or the push itself failed) and the pull then hands us a `<Change>` for
  *  it. That mapping-plus-queued-entry pair is what makes the question
- *  answerable.
- *
- *  It does not survive a heavy reset, which empties the indexMap before
- *  re-pulling: in that window a queued delete is invisible here. */
+ *  answerable. */
 function hasPendingUserDelete(ctx, serverId) {
-  const entry = ctx.indexMap.find((e) => e.serverId === serverId);
-  if (!entry) return false;
+  const uid = ctx.indexMap.uidFor(serverId);
+  if (!uid) return false;
   // The queue as it stood when this sync began. Reading it live would need
   // this to be async for no gain: the indexMap check above has already
   // excluded every delete this sync managed to push, because acknowledging
   // one removes its mapping.
   return ctx.pendingAtStart.some(
-    (e) => e?.itemId === entry.uid && e?.status === "deleted_by_user",
+    (e) => e?.itemId === uid && e?.status === "deleted_by_user",
   );
 }
 
@@ -3238,94 +3232,50 @@ function declineChangeForUnknownItem(ctx, serverID) {
 /** Look up the local item by its EAS server-side id. Returns
  *  `{ itemId, blob }` or null.
  *
- *  The indexMap is a cache, not the authority: the server id is also
- *  stamped into every blob we store, which is what the push side already
- *  reads back (see `buildPushBatch`). So a miss here falls through to the
- *  blobs rather than concluding the item is new.
- *
- *  That distinction is the whole point. A resync empties the indexMap
- *  before re-pulling the collection, so without the fallback every item
- *  arrives as an <Add> that matches nothing and gets re-created beside the
- *  copy already in the address book or calendar - a full duplicate set. */
+ *  A miss means the item is new to us, and the pull acts on that by
+ *  creating it - so the map answering for everything we already hold is
+ *  what stands between a re-download and a duplicated folder. It is kept
+ *  across a sync key reset for exactly that reason. */
 async function findExistingByServerId(ctx, serverId) {
-  const entry = ctx.indexMap.find((e) => e.serverId === serverId);
-  if (entry) {
-    const item = await ctx.store.get(entry.uid);
-    if (item) return { itemId: entry.uid, blob: item.blob };
-    // Mapped to an item that is no longer there - fall through and let
-    // the blobs have the final say.
+  let itemId = ctx.indexMap.uidFor(serverId);
+  if (!itemId && ctx.indexMap.size === 0 && !ctx.indexRebuilt) {
+    // A miss against an *empty* index is the one shape that says the index
+    // was lost rather than that the item is new: anything the folder holds
+    // would be in it. Rebuild from the blobs, once, and only then.
+    //
+    // It has to be here. An EAS task or contact carries no `UID` on the
+    // wire, so the twin adopt below cannot recognise the item either, and a
+    // server re-sending the folder would mint a second copy of every one.
+    ctx.indexRebuilt = true;
+    let items = [];
+    try {
+      items = await ctx.store.list();
+    } catch (err) {
+      // Leaves us where we were without the rebuild; failing the folder
+      // over it would be worse.
+      console.warn(
+        "[eas-4-tbsync] could not read the store to rebuild the index:",
+        err?.message ?? err,
+      );
+    }
+    ctx.indexMap.fill(items, (blob) =>
+      ctx.itemKind.codec.readEasServerIdFromBlob(blob),
+    );
+    if (ctx.indexMap.size) {
+      ctx.eventLog(
+        "info",
+        `[${ctx.itemKind.changelogKind}-sync] the stored index was empty; ` +
+          `rebuilt ${ctx.indexMap.size} mapping(s) from the items themselves`,
+      );
+    }
+    itemId = ctx.indexMap.uidFor(serverId);
   }
-
-  const itemId = (await serverIdScan(ctx)).get(serverId);
   if (!itemId) return null;
   const item = await ctx.store.get(itemId);
-  if (!item) return null;
-  // Put the mapping back so the rest of this pass - and, once the pass
-  // flushes indexMapDirty, later ones - take the fast path again.
-  upsertIndexMap(ctx, itemId, serverId);
-  return { itemId, blob: item.blob };
-}
-
-/** `serverId -> itemId` built from the stamps in the stored blobs.
- *
- *  Built at most once per pass and only when something actually misses, so
- *  a healthy incremental sync never reads the store in bulk. Scanning per
- *  miss instead would be quadratic - a 5000-item resync misses 5000 times.
- */
-async function serverIdScan(ctx) {
-  if (ctx.serverIdScan) return ctx.serverIdScan;
-
-  const map = new Map();
-  try {
-    for (const it of await ctx.store.list()) {
-      if (!it?.blob) continue;
-      let stamped;
-      try {
-        stamped = ctx.itemKind.codec.readEasServerIdFromBlob(it.blob);
-      } catch {
-        continue; // unparsable blob - it just cannot answer
-      }
-      // Items with no stamp were created locally and never pushed, so they
-      // belong to no server id. First writer wins on a collision, which
-      // keeps the result stable for a store that already carries
-      // duplicates.
-      if (stamped && !map.has(stamped)) map.set(stamped, it.id);
-    }
-  } catch (err) {
-    // A store we cannot read leaves us exactly where we were without the
-    // fallback; failing the sync over it would be worse.
-    console.warn(
-      "[eas-4-tbsync] server-id scan failed; identity falls back to the indexMap alone:",
-      err?.message ?? err,
-    );
-  }
-
-  ctx.serverIdScan = map;
-  return map;
-}
-
-function findServerIdByUid(ctx, uid) {
-  return ctx.indexMap.find((e) => e.uid === uid)?.serverId ?? null;
-}
-
-function upsertIndexMap(ctx, uid, serverId) {
-  const existing = ctx.indexMap.find((e) => e.uid === uid);
-  if (existing) {
-    if (existing.serverId !== serverId) {
-      existing.serverId = serverId;
-      ctx.indexMapDirty = true;
-    }
-    return;
-  }
-  ctx.indexMap.push({ uid, serverId });
-  ctx.indexMapDirty = true;
-}
-
-function removeFromIndexMap(ctx, uid) {
-  const idx = ctx.indexMap.findIndex((e) => e.uid === uid);
-  if (idx === -1) return;
-  ctx.indexMap.splice(idx, 1);
-  ctx.indexMapDirty = true;
+  // Mapped to an item that is no longer there. The mapping stays: a delete
+  // the user has made and we have not yet pushed looks exactly like this,
+  // and `hasPendingUserDelete` reads it to tell that apart from drift.
+  return item ? { itemId, blob: item.blob } : null;
 }
 
 /** When an inbound calendar event tells us the local user IS the

@@ -1,4 +1,4 @@
-"""13. Server-initiated resync - the identity fallback.
+"""13. Server-initiated resync - the identity map.
 
 A folder's `synckey` is the server's record of what we have. When it decides
 ours is stale - its own state rebuilt, a mailbox moved, a long absence - it
@@ -11,18 +11,23 @@ value would create a second copy of everything in the folder, which is the
 failure this section exists to catch.
 
 What prevents it is `findExistingByServerId`: the incoming ServerId is
-looked up, and when it resolves to a local item the Add becomes an update.
-It has two layers - the `custom.indexMap` cache, and a scan of the ServerId
-stamped into each stored blob. A Status 3 empties the index (the runner
-resets `{synckey: "0", indexMap: []}` together), so the fast layer is gone
-by construction and the blob-stamp scan is the only thing standing between
-the resync and a duplicated folder.
+looked up in `custom.indexMap`, and when it resolves to a local item the Add
+becomes an update. Which is why a Status 3 resets the sync key **and
+nothing else** - our record of which local item each server id names is not
+what the server refused, and the entire folder is about to arrive needing
+exactly that answer.
 
-That scan is what this section tests. Nothing else did: section 1 checks for
-duplicates but never provokes a resync, and the deselect/reselect other
-sections use looks similar while testing the opposite thing - it deletes the
-local calendar first, so every Add really is new and nothing has to be
-matched.
+So this section is the proof that the map survives the reset and is what
+does the matching. Nothing else covers it: section 1 checks for duplicates
+but never provokes a resync, and the deselect/reselect other sections use
+looks similar while testing the opposite thing - it deletes the local
+calendar first, so every Add really is new and nothing has to be matched.
+
+Events have a second net underneath, and 13.4 exists to stop it hiding a
+broken map: an EAS calendar payload carries the item's `UID`, so `applyAdd`
+would find the local twin and adopt it even if the map answered nothing.
+Contacts have no UID on the wire and no such net, which is why "the map
+survived" has to be asserted rather than inferred from the item count.
 
 Kept in its own section because it is expensive - the server re-sends the
 whole folder - and because it is the only one that writes to host storage
@@ -128,8 +133,15 @@ def t_13_1(s):
         key not in ("", "0"),
         "the folder has no sync key to invalidate - it has never synced",
     )
+    index = _custom(s).get("indexMap") or []
+    harness.true(
+        len(index) >= len(uids),
+        f"index holds {len(index)} entries for {len(uids)} items before the "
+        f"resync - there is no map here to survive one",
+    )
     _before["uids"] = set(uids)
     _before["count"] = len(uids)
+    _before["index_uids"] = {e.get("uid") for e in index}
 
 
 @test("13.2", "an unrecognised sync key: the server refuses it and we start over")
@@ -191,9 +203,8 @@ def t_13_2(s):
 def t_13_3(s):
     _need_baseline()
 
-    # The point of the section. The server re-sent the folder as Adds with
-    # an empty index to match against, so whatever survived here was matched
-    # by the blob-stamp scan alone.
+    # The point of the section. The server re-sent the whole folder as Adds
+    # and every one of them had to resolve to the item it already named.
     uids = _uids(s)
     harness.eq(
         len(uids),
@@ -215,18 +226,40 @@ def t_13_3(s):
     )
 
 
-@test("13.4", "the index was rebuilt, so the next sync takes the fast path")
+@test("13.4", "and it was the map that matched them, not the UID fallback")
 def t_13_4(s):
     _need_baseline()
 
-    # The fallback repopulates `indexMap` as it matches. Without that the
-    # items would be right but every later sync would scan every blob again.
     index = _custom(s).get("indexMap") or []
     harness.true(
         len(index) >= _before["count"],
         f"index holds {len(index)} entries for {_before['count']} items - "
-        f"the fallback matched them without putting the mappings back",
+        f"the resync lost mappings instead of updating them",
     )
+    harness.true(
+        _before["index_uids"] <= {e.get("uid") for e in index},
+        "the index no longer covers the items it did before the resync - "
+        "entries were dropped and re-made rather than kept",
+    )
+
+    # 13.3 would pass on events even with the map gone entirely, because
+    # `applyAdd` adopts a local twin by UID before creating anything. That
+    # adopt logs, and here it must not have: a burst of it means the map
+    # answered nothing and only the calendar-only net saved the folder.
+    # Contacts have no such net.
+    adopted = [
+        e.get("message")
+        for e in s.log()
+        if "adopting the local copy" in (e.get("message") or "")
+    ]
+    harness.eq(
+        adopted,
+        [],
+        f"{len(adopted)} item(s) were matched by their UID instead of by the "
+        f"index - the map did not survive the resync, and an address book "
+        f"would have been duplicated here",
+    )
+
     harness.eq(s.changelog("events"), [], "the resync left entries queued")
 
 

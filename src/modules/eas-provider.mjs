@@ -39,10 +39,12 @@
  *   - parentID        - EAS parent folder serverID, for hierarchy
  *   - synckey         - per-folder Sync key ("0" before first Sync)
  *   - class           - EAS Class (e.g. "Contacts", "Calendar", "Tasks")
- *   - indexMap        - array of {uid, serverId} (any kind). A cache in
- *                       front of the server id stamped into each item's
- *                       blob, which is the authority - see
- *                       `sync-runner.mjs::findExistingByServerId`.
+ *   - indexMap        - array of {uid, serverId} (any kind). Which local
+ *                       item each server id names, and the only answer to
+ *                       that - a pulled command that cannot be matched
+ *                       creates a second copy of the item. Kept across a
+ *                       sync key reset, cleared only where the resource's
+ *                       contents go too. See `eas/server-id-index.mjs`.
  *   - displayNameRaw  - server-supplied folder name; the visible
  *                       `displayName` is recomputed from this on every
  *                       push (with optional "Trash | " prefix)
