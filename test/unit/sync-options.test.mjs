@@ -79,6 +79,20 @@ test("the push states the whole set too - not just the conflict policy", () => {
   assert.match(o, /<BodyPreference[^>]*>[\s\S]*<Type[^>]*>1</);
 });
 
+test("device-wins is stated, on the pull and the push alike", () => {
+  // The account setting reaches the wire here and nowhere else, and it is
+  // the only part of the conflict policy that is ours: what the server does
+  // when told it loses is the server's business. Asserted on both requests
+  // because the block is sticky per collection - stating it on one and not
+  // the other would leave the policy depending on which request came last.
+  const pull = optionBlocks(xml({ conflict: "0", withChanges: true }))[0];
+  const push = optionBlocks(
+    xml({ conflict: "0", withChanges: false, withCommands: EMPTY_COMMANDS }),
+  )[0];
+  assert.match(pull, /<Conflict>0<\/Conflict>/);
+  assert.equal(push, pull);
+});
+
 test("pull and push state the same options", () => {
   // The property that matters is not what the block contains but that the
   // two agree - a difference between them is a window that flaps.

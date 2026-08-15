@@ -145,15 +145,15 @@ const MAX_INSTANCE_RETRIES = 6;
 // not a transient condition" - asking again cannot make it true, and six
 // pointless round trips would only delay the report.
 //
-// The delays split on whether the reply told us anything. A 5 or a 16 carries
-// no usable body, so nothing on our side has changed and an instant resend is
-// the same request a moment later. A 7 arrives with the server's newer copy of
-// the master, which `applyServerCommands` has already applied by the time the
-// status is judged, so the next attempt is against different data and waiting
-// would add nothing.
+// Only statuses that carry no verdict are here. A 5 or a 16 says the server
+// hit a fault, not that it judged the command, so nothing on our side has
+// changed and the same request a moment later is the right answer.
+//
+// A 7 is a verdict and is handled where it is read, not here: we declare
+// server-wins in every Options block, so a conflict is that policy working
+// and re-sending would be asking the server to change its mind.
 const INSTANCE_RETRY_DELAY_MS = Object.freeze({
   [STATUS_TEMP_SERVER]: 1000,
-  [STATUS_CONFLICT]: 0,
   [STATUS_RETRY]: 1000,
 });
 
@@ -1836,14 +1836,10 @@ async function followUpPhase(ctx, masters) {
  *  Returns `{ code }` or `{ status }` for the conditions the caller must
  *  handle, else `{ failed }`.
  *
- *  One budget, spent by any retry whatever its cause. Counting per cause is
- *  what this replaces: a global 16 and an item-level 7 are independent, they
- *  arrive in sequence when Exchange is still settling a master, and a
- *  per-cause allowance let the first spend the second's - which reported a
- *  recoverable conflict as a failure. Nothing has to classify a retry in
- *  order to count it now. Which statuses are worth retrying at all, and how
- *  long to wait first, is `INSTANCE_RETRY_DELAY_MS`. */
-async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
+ *  One budget, spent by any retry whatever its cause, so nothing has to
+ *  classify a retry in order to count it. Which statuses are worth retrying
+ *  at all, and how long to wait first, is `INSTANCE_RETRY_DELAY_MS`. */
+export async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
   const label = `instance ${command.kind} ${command.instanceId}`;
   const reject = (status) => {
     // A rejection leaves the master synced but this exception absent.
@@ -1923,11 +1919,30 @@ async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
   const status = node ? readPathFrom(node, ["Status"]) : null;
   if (!status || status === STATUS_OK) return { failed: false };
 
-  // A Status 7 here is our own doing, not another client's: the master was
-  // pushed moments ago, and Exchange enriches an item after accepting it.
-  // The reply that rejects the command carries those very changes, and they
-  // were applied above, so the next attempt is judged against the state the
-  // server just handed us - which is why this one needs no delay.
+  // Server-wins conflict, the policy we declare in every Options block, so
+  // retiring the command here is what "the server wins" means. Not a
+  // failure: the sync did what it was told to do.
+  //
+  // The server's copy is not in this reply - the request asked for no
+  // changes - and does not need to be. The pull at the end of this same
+  // sync brings it, which is where every other server-side truth arrives.
+  // The user sees their edit undone, and making it again is a new edit the
+  // next push carries like any other.
+  if (status === STATUS_CONFLICT) {
+    // Warning, not info: [MS-ASCMD] 2.2.3.177.17 resolves a 7 with "inform
+    // the user that the change they made to the item has been overwritten
+    // by a server change", and the user's own edit has just been undone.
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[${ctx.itemKind.changelogKind}-sync] ${label}: the server's copy ` +
+        `won (Status 7); it has been taken and the command dropped`,
+    });
+    return { failed: false };
+  }
+
   return (await retry(status)) ?? reject(status);
 }
 

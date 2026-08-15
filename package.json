@@ -5,6 +5,6 @@
     "build": "node build.js",
     "version": "node build.js && git add src",
     "test": "python3 test/run.py",
-    "test:unit": "node --test \"test/unit/*.test.mjs\""
+    "test:unit": "node --test --experimental-test-module-mocks \"test/unit/*.test.mjs\""
   }
 }
