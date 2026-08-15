@@ -15,3 +15,8 @@ __pycache__
 !.npmrc
 !.prettierignore
 !.github/
+
+# Event-log captures from suite runs - the wire for a failing run is the
+# only evidence an intermittent bug leaves, so they are kept, but they are
+# large and local.
+test/wire/
