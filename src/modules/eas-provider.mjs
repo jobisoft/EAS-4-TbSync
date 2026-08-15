@@ -87,8 +87,14 @@ import {
   PROVISION_EMBEDS_DEVICE_INFO,
 } from "./eas/provision.mjs";
 import { runFolderSync } from "./eas/folder-sync.mjs";
-import { syncContactFolder } from "./eas/contact-sync.mjs";
-import { syncCalendarFolder, syncTaskFolder } from "./eas/calendar-sync.mjs";
+import { syncContactFolder, contactItemKind } from "./eas/contact-sync.mjs";
+import {
+  syncCalendarFolder,
+  syncTaskFolder,
+  calendarItemKind,
+  taskItemKind,
+} from "./eas/calendar-sync.mjs";
+import { healFolderIndex, healIsDue } from "./eas/index-heal.mjs";
 import {
   fetchUserInformation,
   sendDeviceInformation,
@@ -1174,6 +1180,69 @@ export class EasProvider extends TbSyncProviderImplementation {
       .slice()
       .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
     return await finalizeFolderListForPush(sorted);
+  }
+
+  /** The host's housekeeping slot - reconcile each bound folder's identity
+   *  map against the items themselves, at most once a day per folder.
+   *
+   *  Local only: it reads the folder's own items and rewrites one folder
+   *  property. Nothing is sent, so a server that is unreachable, throttled
+   *  or asleep makes no difference to it.
+   *
+   *  A folder that cannot be read is skipped rather than pruned, and the
+   *  stamp is only written when the reconcile actually ran - an unreadable
+   *  folder must come back tomorrow, not be recorded as done. */
+  async onMaintain({ accountId }) {
+    const ctx = await this.#loadContext(accountId);
+    if (!ctx) return { done: false };
+    const kinds = {
+      contacts: contactItemKind,
+      calendars: calendarItemKind,
+      tasks: taskItemKind,
+    };
+    let done = false;
+    for (const folder of ctx.folders) {
+      const itemKind = kinds[folder.targetType];
+      if (!itemKind || !folder.targetID || !folder.sessionId) continue;
+      if (!healIsDue(folder)) continue;
+      this.throwIfCancelled(accountId);
+
+      const queued = await localQueue({
+        accountId,
+        folderId: folder.folderId,
+        sessionId: folder.sessionId,
+      }).entries();
+      const result = await healFolderIndex({
+        store: itemKind.storeFactory(folder.targetID),
+        readStamp: (blob) => itemKind.codec.readEasServerIdFromBlob(blob),
+        stored: folder.custom?.indexMap,
+        queuedIds: new Set((queued ?? []).map((e) => e.itemId)),
+      });
+      if (!result) continue;
+
+      done = true;
+      const patch = { custom: { indexHealed: Date.now() } };
+      // Only when something moved: the stamp alone is a small write, while
+      // the map is the whole folder's worth of pairs.
+      if (result.pruned || result.rebuilt) {
+        patch.custom.indexMap = result.entries;
+        this.reportEventLog({
+          accountId,
+          folderId: folder.folderId,
+          level: "info",
+          message:
+            `[${itemKind.changelogKind}-sync] index reconciled: ` +
+            `${result.rebuilt} restored, ${result.pruned} stale entr` +
+            `${result.pruned === 1 ? "y" : "ies"} dropped`,
+        });
+      }
+      await this.updateFolder({
+        accountId,
+        folderId: folder.folderId,
+        patch,
+      });
+    }
+    return { done };
   }
 
   async onSyncFolder({ accountId, folderId }) {

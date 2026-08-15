@@ -112,7 +112,7 @@ function calendarStoreFactory(targetID, type) {
   };
 }
 
-const calendarItemKind = {
+export const calendarItemKind = {
   className: "Calendar",
   filterType: "0",
   changelogKind: "event",
@@ -120,7 +120,7 @@ const calendarItemKind = {
   storeFactory: (targetID) => calendarStoreFactory(targetID, "event"),
 };
 
-const taskItemKind = {
+export const taskItemKind = {
   className: "Tasks",
   filterType: "0",
   changelogKind: "task",

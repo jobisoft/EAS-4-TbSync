@@ -69,7 +69,7 @@ function contactStoreFactory(targetID) {
   };
 }
 
-const contactItemKind = {
+export const contactItemKind = {
   className: "Contacts",
   filterType: "0",
   changelogKind: "contact",
