@@ -47,6 +47,16 @@ import {
 const X_EAS_SERVERID = "X-EAS-SERVERID";
 const X_EAS_RESPONSETYPE = "X-EAS-RESPONSETYPE";
 const X_EAS_MEETINGSTATUS = "X-EAS-MEETINGSTATUS";
+/** The answer we last mailed to the organiser.
+ *
+ *  Below 16.0 the client sends that mail, and the server never records the
+ *  answer in its own ResponseType - it stays 5, "not responded", however
+ *  many times we push an AttendeeStatus. So "does the server already know
+ *  this?" cannot be the test there, and without one every later edit to an
+ *  answered meeting mails the organiser again. This is our own record of
+ *  what they have been told. It is an X-EAS-* property, so the stamp guard
+ *  keeps outside writers off it and an adopt carries it across. */
+const X_EAS_REPLIED = "X-EAS-REPLIED";
 
 // EAS BusyStatus → iCal TRANSP. Tentative (1) maps to "no TRANSP" so the
 // caller falls back to STATUS=TENTATIVE; the codec mirrors legacy here.
@@ -927,6 +937,19 @@ export function appendApplicationDataFromIcal({
             type = "3";
           else if (role === "REQ-PARTICIPANT" || role === "CHAIR") type = "1";
           builder.atag("AttendeeType", type);
+          // The attendee's own answer. [MS-ASCAL] 2.2.2.5: a request
+          // element on 12.0 through 14.1, and "the client MUST NOT include
+          // the AttendeeStatus element in a command request when protocol
+          // version 16.0 or 16.1 is used" - there it is MeetingResponse's
+          // job. Below 16.0 this is how a user answers at all, and the only
+          // way they can change an answer they have already given.
+          if (!asVersion.startsWith("16.")) {
+            const partstat = String(
+              a.getParameter("partstat") ?? "",
+            ).toUpperCase();
+            const status = PARTSTAT_TO_ATTENDEESTATUS[partstat];
+            if (status) builder.atag("AttendeeStatus", status);
+          }
         }
         builder.ctag();
       }
@@ -1647,6 +1670,15 @@ function removeExdate(vevent, jsDate, tzId = null) {
 /** How the user's answer maps onto MeetingResponse's UserResponse. Anything
  *  absent from this table is not an answer: NEEDS-ACTION means the user has
  *  not replied, and there is no UserResponse value for "no reply". */
+/** PARTSTAT → [MS-ASCAL] AttendeeStatus. NEEDS-ACTION is deliberately
+ *  absent: 5 means "not responded", which is the server's to say, and
+ *  writing it back would be us reporting an answer nobody gave. */
+const PARTSTAT_TO_ATTENDEESTATUS = {
+  TENTATIVE: "2",
+  ACCEPTED: "3",
+  DECLINED: "4",
+};
+
 const PARTSTAT_TO_USERRESPONSE = {
   ACCEPTED: 1,
   TENTATIVE: 2,
@@ -2255,4 +2287,24 @@ function collectChildren(adNode, wrapperTag, childTag) {
     }
   }
   return out;
+}
+
+/** What we last told the organiser, or null. */
+export function repliedPartstatOf(ical) {
+  const vcal = parseVCalendar(ical);
+  const master = vcal ? pickMasterVevent(vcal) : null;
+  const v = master?.getFirstPropertyValue(X_EAS_REPLIED.toLowerCase());
+  return v == null || v === "" ? null : String(v).toUpperCase();
+}
+
+/** Record what we just told them. Returns the blob to store. */
+export function stampRepliedPartstat(ical, partstat) {
+  const vcal = parseVCalendar(ical);
+  const master = vcal ? pickMasterVevent(vcal) : null;
+  if (!master) return ical;
+  master.updatePropertyWithValue(
+    X_EAS_REPLIED.toLowerCase(),
+    String(partstat).toUpperCase(),
+  );
+  return vcal.toString();
 }

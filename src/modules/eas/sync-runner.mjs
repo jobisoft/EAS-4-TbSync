@@ -49,10 +49,16 @@ import {
   USERRESPONSE_TO_PARTSTAT,
   isReceivedMeeting,
   preserveSelfPartstat,
+  repliedPartstatOf,
+  stampRepliedPartstat,
   selfUserResponses,
   serverKnownPartstat,
 } from "./calendar-codec.mjs";
 import { sendMeetingResponse } from "./meeting-response.mjs";
+import {
+  buildMeetingResponseMime,
+  sendMail,
+} from "./meeting-response-mail.mjs";
 import {
   localQueue,
   rememberBindings,
@@ -582,16 +588,26 @@ async function runOneSync({
         continue;
       }
       // A meeting somebody else organised cannot be sent as an Add or a
-      // Change: on 16.x the client may state neither the organizer nor an
-      // attendee's status, and the server fills both in with the current
-      // user, so what arrives is not their meeting changed but ours -
-      // re-invited to everyone on it. The user's answer is the one thing we
-      // may say about it, and it goes as a MeetingResponse after the pull.
+      // Change *on 16.x*: there the client may state neither the organizer
+      // ([MS-ASCAL] 2.2.2.35) nor an attendee's status (2.2.2.5), and the
+      // server fills both in with the current user - so what arrives is not
+      // their meeting changed but ours, re-invited to everyone on it. The
+      // answer is the one thing we may say, and it goes as a
+      // MeetingResponse after the pull.
+      //
+      // Below 16.0 the opposite holds. `AttendeeStatus` is a request
+      // element there ("the client MUST NOT include [it] ... when protocol
+      // version 16.0 or 16.1 is used"), and we restate the organizer we
+      // already hold rather than leaving the server to substitute one. So
+      // the answer travels as an ordinary <Change> - which is the only
+      // route that lets a user change their mind, because a 14.1 server
+      // refuses a second MeetingResponse for the same meeting.
       //
       // A delete is exempt: the user removed it from their calendar, which
       // is a plain <Delete> and says nothing about the meeting itself.
       // There is also nothing left to read - the item is already gone.
       if (
+        parseFloat(ctx.asVersion) >= 16 &&
         ctx.itemKind.changelogKind === "event" &&
         e.status !== "deleted_by_user"
       ) {
@@ -1145,6 +1161,7 @@ async function pushPhase(ctx, userEdits) {
       followUpMasters,
     });
     if (r.commands) await applyServerCommands(ctx, r.commands);
+    await mailAnsweredMeetings(ctx, built, failedItems);
 
     // Modified masters are noted here rather than in applyResponses,
     // which sees only the changes the server *refused* - a successful one
@@ -1406,6 +1423,7 @@ async function invitationPhase(ctx, entries) {
           `[event-sync] answered ${what} of ${entry.itemId} with ` +
             `UserResponse ${answer.userResponse}`,
         );
+        await mailTheOrganizer(ctx, entry, item, answer);
       } else {
         allLanded = false;
         lastStatus = answerStatus;
@@ -1483,6 +1501,118 @@ async function invitationPhase(ctx, entries) {
 
 /** Take a queued edit out of the queue, having established that nothing
  *  more can be done with it. */
+/** After a push pass below 16.0, tell the organiser about any answer that
+ *  just went out as an `AttendeeStatus`.
+ *
+ *  The push is what carries the answer there, so this is the equivalent of
+ *  the MeetingResponse-then-SendMail order the spec describes: never before
+ *  the server has taken it, and only for what actually landed.
+ *
+ *  Only an answer the server did not already know is worth a message, which
+ *  is the same test the response phase uses - otherwise every later edit to
+ *  an answered meeting mails the organiser again. */
+async function mailAnsweredMeetings(ctx, sent, failedItems) {
+  if (parseFloat(ctx.asVersion) >= 16) return;
+  if (ctx.itemKind.changelogKind !== "event") return;
+  const userEmail = accountUserAddress(ctx.account);
+  if (!userEmail) return;
+
+  // `sent` is the built batch: { adds, mods, dels }, each carrying the
+  // changelog entry and the item as it went out. A delete says nothing
+  // about the meeting, so only adds and mods are of interest.
+  for (const built of [...(sent?.adds ?? []), ...(sent?.mods ?? [])]) {
+    const entry = built.entry;
+    if (!entry || failedItems?.has?.(entry.itemId)) continue;
+    const item = await ctx.store.get(entry.itemId);
+    if (!item || !isReceivedMeeting(item.blob, userEmail)) continue;
+    const answer = selfUserResponses(item.blob, userEmail).find(
+      (a) => !a.instanceId,
+    );
+    if (!answer) continue;
+    // Not the server's ResponseType: below 16.0 it never leaves 5, because
+    // the reply is ours to send and the server never sees one. Our own
+    // record of what the organiser was last told is the only thing that
+    // can answer "have they heard this already?".
+    const want = USERRESPONSE_TO_PARTSTAT[answer.userResponse];
+    if (repliedPartstatOf(item.blob) === want) continue;
+    const told = await mailTheOrganizer(ctx, entry, item, answer);
+    if (!told) continue;
+    const fresh = await ctx.store.get(entry.itemId);
+    if (!fresh) continue;
+    await ctx.queue.markServerWrite({
+      parentId: ctx.targetID,
+      itemId: entry.itemId,
+      status: SERVER_TAG_STATUSES[1],
+      kind: ctx.itemKind.changelogKind,
+    });
+    await ctx.store.update(
+      entry.itemId,
+      stampRepliedPartstat(fresh.blob, want),
+    );
+  }
+}
+
+/** Tell the organiser, on the versions where that is the client's job.
+ *
+ *  [MS-ASCMD]: the SendMail step "applies only to protocol versions 2.5,
+ *  12.0, 12.1, 14.0, and 14.1" - from 16.0 the server generates the reply.
+ *  So below 16.0 a Status 1 means the user's own calendar was updated and
+ *  nothing else: without this the organiser is never told at all.
+ *
+ *  After the response and never before, as the guidance requires, so the
+ *  invitee's calendar and what the organiser has been told cannot disagree.
+ *  Best-effort: a reply we could not send is worth a warning, not a failed
+ *  folder, and never a retry - the answer itself has already landed, and
+ *  re-running the response would be a second MeetingResponse.
+ */
+async function mailTheOrganizer(ctx, entry, item, answer) {
+  if (parseFloat(ctx.asVersion) >= 16) return false;
+  // An occurrence is answered against the series it belongs to, and the
+  // reply carries no RECURRENCE-ID, so one message per item is right.
+  if (answer.instanceId) return false;
+  const userEmail = accountUserAddress(ctx.account);
+  if (!userEmail) return false;
+
+  const mime = buildMeetingResponseMime({
+    blob: item.blob,
+    userResponse: answer.userResponse,
+    userEmail,
+    userName: ctx.account.custom?.userDisplayName ?? "",
+    now: new Date(),
+  });
+  if (!mime) return false;
+
+  try {
+    const status = await sendMail({
+      account: ctx.account,
+      asVersion: ctx.asVersion,
+      mime,
+      clientId: `tbsync-${crypto.randomUUID()}`,
+    });
+    if (status === null || status === "1") {
+      ctx.eventLog(
+        "info",
+        `[event-sync] told the organiser of ${entry.itemId} - ActiveSync ` +
+          `${ctx.asVersion} leaves that to the client`,
+      );
+      return true;
+    }
+    ctx.eventLog(
+      "warning",
+      `[event-sync] the answer to ${entry.itemId} reached the server, but ` +
+        `the reply to the organiser was refused (SendMail Status ${status})`,
+    );
+    return false;
+  } catch (err) {
+    ctx.eventLog(
+      "warning",
+      `[event-sync] the answer to ${entry.itemId} reached the server, but ` +
+        `the reply to the organiser could not be sent: ${err?.message ?? err}`,
+    );
+  }
+  return false;
+}
+
 async function dropEntry(ctx, entry) {
   await ctx.queue.remove({
     parentId: entry.parentId,
