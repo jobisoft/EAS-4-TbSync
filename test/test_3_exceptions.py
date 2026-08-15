@@ -48,9 +48,19 @@ def _series(s):
 
 @test("3.1", "import - Delete 20260916T130000Z and Change 20260909T130000Z", VERSIONS)
 def t_3_1(s):
-    s.mark()
-    ok("items.create", type="event", ical=probes.fixture("tz-test-exdate.ics"))
-    s.sync()
+    def attempt():
+        # Re-runnable, which a bare create is not: a server-wins rejection
+        # refuses only the exception, leaving the master on the server, so
+        # creating again would import a second series instead of repairing
+        # the first. Clearing first makes the retry an import again.
+        for it in s.items("events", "event"):
+            if MARK in (it.get("item") or ""):
+                ok("items.remove", id=it["id"])
+        s.mark()
+        ok("items.create", type="event", ical=probes.fixture("tz-test-exdate.ics"))
+        s.sync()
+
+    s.conflict_retry(attempt)
 
     cmds = s.instance_commands()
     harness.true(cmds, "no instance commands were sent for the exceptions")
@@ -68,15 +78,24 @@ def t_3_2(s):
 
 @test("3.3", "edit only the master's title - no instance commands", VERSIONS)
 def t_3_3(s):
-    item = _series(s)
-    harness.true(item is not None, "3.1 must have left the series in place")
-    s.mark()
-    ok(
-        "items.update",
-        id=item["id"],
-        ical=item["item"].replace("SUMMARY:TZ6 weekly", "SUMMARY:TZ6 weekly edited"),
-    )
-    s.sync()
+    def attempt():
+        # Read inside: a rejected push leaves the server's own copy in
+        # place, so the title has to be edited again on that copy - and the
+        # copy carries the original title back, which is what makes the
+        # same replacement work a second time.
+        item = _series(s)
+        harness.true(item is not None, "3.1 must have left the series in place")
+        s.mark()
+        ok(
+            "items.update",
+            id=item["id"],
+            ical=item["item"].replace(
+                "SUMMARY:TZ6 weekly", "SUMMARY:TZ6 weekly edited"
+            ),
+        )
+        s.sync()
+
+    s.conflict_retry(attempt)
     harness.eq(
         s.instance_commands(),
         [],

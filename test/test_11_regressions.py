@@ -121,13 +121,24 @@ def t_11_3(s):
     item = s.find("tasks", f"{probes.MARKER} done-task-regression", "task")
     harness.true(item is not None, "the task was not created")
 
-    completed = item["item"].replace(
-        "END:VTODO",
-        "STATUS:COMPLETED\r\nPERCENT-COMPLETE:100\r\n"
-        "COMPLETED:20260916T120000Z\r\nEND:VTODO",
+    def complete(body):
+        # Idempotent, as `edit` requires: a body that already carries the
+        # completion is returned untouched rather than collecting a second
+        # set of lines when the edit is made again.
+        if "STATUS:COMPLETED" in body:
+            return body
+        return body.replace(
+            "END:VTODO",
+            "STATUS:COMPLETED\r\nPERCENT-COMPLETE:100\r\n"
+            "COMPLETED:20260916T120000Z\r\nEND:VTODO",
+        )
+
+    s.edit(
+        lambda: s.find("tasks", f"{probes.MARKER} done-task-regression", "task"),
+        complete,
+        resource="tasks",
+        missing="the task vanished before it was completed",
     )
-    ok("items.update", id=item["id"], ical=completed, resource="tasks")
-    s.sync()
 
     item2 = s.find("tasks", f"{probes.MARKER} done-task-regression", "task")
     harness.true(item2 is not None, "the completed task vanished")

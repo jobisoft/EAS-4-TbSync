@@ -55,22 +55,41 @@ def t_17_1(s):
     item = s.find("events", f"{probes.MARKER} allday-bind", "event")
     harness.true(item is not None, "the all-day series did not reach the calendar")
 
-    body = item["item"]
-    upd = body.replace(
-        "RRULE:FREQ=DAILY;COUNT=3",
-        "RRULE:FREQ=DAILY;COUNT=3\r\nEXDATE;VALUE=DATE:20261014",
-    ).replace("END:VCALENDAR", "\r\n".join([
-        "BEGIN:VEVENT",
-        "UID:allday-bind@eas-test.invalid",
-        "RECURRENCE-ID;VALUE=DATE:20261013",
-        "DTSTAMP:20260801T120000Z",
-        f"SUMMARY:{probes.MARKER} allday-bind OVERRIDDEN",
-        "DTSTART;VALUE=DATE:20261013",
-        "DTEND;VALUE=DATE:20261014",
-        "END:VEVENT", "END:VCALENDAR",
-    ]))
-    ok("items.update", id=item["id"], ical=upd)
-    s.sync()
+    # This is the push that can be overruled: on 16.x the EXDATE and the
+    # override leave as their own instance commands, and one of them drawing
+    # a Status 7 costs the exception under server-wins. Standard conflict
+    # handling is the provider's job and it is right to drop the edit; the
+    # condition this test needs is the test's job to set again.
+    def attempt():
+        item = s.find("events", f"{probes.MARKER} allday-bind", "event")
+        harness.true(item is not None, "the all-day series is not in the calendar")
+        # Strip whatever an overruled attempt left behind, so a retry
+        # rebuilds the exceptions rather than stacking a second set on them.
+        base = re.sub(r"^EXDATE[^\r\n]*\r?\n", "", item["item"], flags=re.M)
+        base = re.sub(
+            r"BEGIN:VEVENT(?:(?!BEGIN:VEVENT)[\s\S])*?RECURRENCE-ID"
+            r"(?:(?!BEGIN:VEVENT)[\s\S])*?END:VEVENT\r?\n",
+            "",
+            base,
+        )
+        upd = base.replace(
+            "RRULE:FREQ=DAILY;COUNT=3",
+            "RRULE:FREQ=DAILY;COUNT=3\r\nEXDATE;VALUE=DATE:20261014",
+        ).replace("END:VCALENDAR", "\r\n".join([
+            "BEGIN:VEVENT",
+            "UID:allday-bind@eas-test.invalid",
+            "RECURRENCE-ID;VALUE=DATE:20261013",
+            "DTSTAMP:20260801T120000Z",
+            f"SUMMARY:{probes.MARKER} allday-bind OVERRIDDEN",
+            "DTSTART;VALUE=DATE:20261013",
+            "DTEND;VALUE=DATE:20261014",
+            "END:VEVENT", "END:VCALENDAR",
+        ]))
+        s.mark()
+        ok("items.update", id=item["id"], ical=upd)
+        s.sync()
+
+    s.conflict_retry(attempt)
     s.rebind("events")
 
     import datetime

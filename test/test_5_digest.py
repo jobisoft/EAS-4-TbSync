@@ -91,9 +91,18 @@ def _stamps(body):
 
 @test("5.1", "create with overrides - master <Add>, one instance command each", VERSIONS)
 def t_5_1(s):
-    s.mark()
-    ok("items.create", type="event", ical=_multi_override())
-    s.sync()
+    def attempt():
+        # Re-runnable: a rejected override leaves the master on the server,
+        # so creating again would import a second series rather than repair
+        # the first.
+        existing = s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event")
+        if existing is not None:
+            ok("items.remove", id=existing["id"])
+        s.mark()
+        ok("items.create", type="event", ical=_multi_override())
+        s.sync()
+
+    s.conflict_retry(attempt)
     harness.contains(s.wire(), "SEND Add", "the master must be added")
     cmds = s.instance_commands()
     harness.eq(len(cmds), 3, f"one command per override, got {cmds}")
@@ -136,6 +145,12 @@ def t_5_3(s):
     VERSIONS,
 )
 def t_5_4(s):
+    # Deliberately NOT wrapped in `conflict_retry`, unlike every other push
+    # in this suite: the Status 7 this sync receives is the subject, not an
+    # interruption. 5.3 dropped the ServerId stamp on purpose, the server
+    # answers with its own copy, and applying that copy is what walks the
+    # repair path asserted below. Retrying would re-apply the edit until the
+    # server accepted it and never exercise the repair at all.
     s.mark()
     s.sync()
     cmds = s.instance_commands()

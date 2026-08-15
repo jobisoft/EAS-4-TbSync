@@ -59,15 +59,11 @@ def t_2_1(s):
 
 @test("2.2", "items.update, sync - one <Change>; the local item shows the change")
 def t_2_2(s):
-    item = _one(s)
-    harness.true(item is not None, "2.1 must have left an item to modify")
-    s.mark()
-    ok(
-        "items.update",
-        id=item["id"],
-        ical=item["item"].replace("LOCATION:Room 1", "LOCATION:Room 2"),
+    s.edit(
+        lambda: _one(s),
+        lambda body: body.replace("LOCATION:Room 1", "LOCATION:Room 2"),
+        missing="2.1 must have left an item to modify",
     )
-    s.sync()
     harness.contains(s.wire(), "SEND Change", "the edit must reach the server")
     harness.contains(_one(s)["item"], "Room 2", "the local item")
     harness.eq(s.changelog("events"), [], "changelog drained")
@@ -152,20 +148,27 @@ def t_2_6(s):
     # the losing <Change> with Status 7, and the same sync's pull delivers
     # the winning version - the losing edit is replaced, never silently
     # dropped.
-    s.mark()
-    item = s.find("events", f"{probes.MARKER} {SLUG}-order", "event")
-    harness.true(item is not None, "2.5 must have left an item to modify")
-    # Touch ONLY the summary. A slug-wide replace also rewrites the UID
-    # line, which re-keys the item - the later delete then cannot resolve
-    # a ServerId and is (correctly) dropped, stranding the probe on the
-    # server. Found the hard way: section 6's re-pull resurrected it.
-    edited = item["item"].replace(
-        f"SUMMARY:{probes.MARKER} {SLUG}-order",
-        f"SUMMARY:{probes.MARKER} {SLUG}-order v2",
+    # Touch ONLY the summary. A slug-wide replace also rewrites the UID line,
+    # which re-keys the item - the later delete then cannot resolve a ServerId
+    # and is (correctly) dropped, stranding the probe on the server. Found the
+    # hard way: section 6's re-pull resurrected it.
+    def bump(body):
+        # Idempotent: "-order" is a prefix of "-order v2", so a second pass
+        # would otherwise append the suffix twice.
+        if "order v2" in body:
+            return body
+        edited = body.replace(
+            f"SUMMARY:{probes.MARKER} {SLUG}-order",
+            f"SUMMARY:{probes.MARKER} {SLUG}-order v2",
+        )
+        harness.true("order v2" in edited, "the summary to edit was present")
+        return edited
+
+    s.edit(
+        lambda: s.find("events", f"{probes.MARKER} {SLUG}-order", "event"),
+        bump,
+        missing="2.5 must have left an item to modify",
     )
-    harness.true("order v2" in edited, "the summary to edit was present")
-    ok("items.update", id=item["id"], ical=edited)
-    s.sync()
     reqs = _sync_requests(s)
     missing = [kind for kind, details in reqs if "<Conflict>1</Conflict>" not in details.replace(" ", "")]
     harness.eq(

@@ -105,24 +105,33 @@ def t_15_2(s):
     # restored none of them. Nothing downstream complained, because the push
     # reads its ServerId from the changelog - which is exactly why this
     # asserts on the item.
-    item = s.find("tasks", SLUG, type_="task")
-    harness.true(item is not None, "15.1 did not leave its task behind")
-    renamed = re.sub(r"SUMMARY:.*", f"SUMMARY:{probes.MARKER} {SLUG} renamed", item["item"])
-    # Sent without any stamp of its own, as Thunderbird's own UI would.
-    renamed = "\r\n".join(
-        l for l in renamed.splitlines() if not l.startswith("X-EAS-")
-    ) + "\r\n"
+    def rename(body):
+        renamed = re.sub(
+            r"SUMMARY:.*", f"SUMMARY:{probes.MARKER} {SLUG} renamed", body
+        )
+        # Sent without any stamp of its own, as Thunderbird's own UI would.
+        return "\r\n".join(
+            l for l in renamed.splitlines() if not l.startswith("X-EAS-")
+        ) + "\r\n"
 
-    s.mark()
-    ok("items.update", resource="tasks", id=item["id"], ical=renamed)
-    after = _blob(s, "renamed")
-    harness.contains(
-        after,
-        "X-EAS-SERVERID",
-        "the edit stripped the ServerId stamp - a task loses its identity on "
-        "every save, and only the changelog fallback hides it",
+    # Asserted between the write and the sync on purpose: the stamp has to be
+    # back because the guard restored it on the local write, not because a
+    # sync put it back afterwards.
+    def stamp_is_back():
+        harness.contains(
+            _blob(s, "renamed"),
+            "X-EAS-SERVERID",
+            "the edit stripped the ServerId stamp - a task loses its identity "
+            "on every save, and only the changelog fallback hides it",
+        )
+
+    s.edit(
+        lambda: s.find("tasks", SLUG, type_="task"),
+        rename,
+        resource="tasks",
+        after_write=stamp_is_back,
+        missing="15.1 did not leave its task behind",
     )
-    s.sync()
     harness.eq(s.changelog("tasks"), [], "the renamed task was not accepted")
 
 
@@ -158,16 +167,20 @@ def t_15_3(s):
     )
 
     # Now the edit that used to destroy them.
-    item = s.find("tasks", RECURRING, type_="task")
-    renamed = re.sub(
-        r"SUMMARY:.*", f"SUMMARY:{probes.MARKER} {RECURRING} renamed", item["item"]
+    def rename(body):
+        renamed = re.sub(
+            r"SUMMARY:.*", f"SUMMARY:{probes.MARKER} {RECURRING} renamed", body
+        )
+        return "\r\n".join(
+            l for l in renamed.splitlines() if not l.startswith("X-EAS-")
+        ) + "\r\n"
+
+    s.edit(
+        lambda: s.find("tasks", RECURRING, type_="task"),
+        rename,
+        resource="tasks",
+        missing="the recurring task is not there to rename",
     )
-    renamed = "\r\n".join(
-        l for l in renamed.splitlines() if not l.startswith("X-EAS-")
-    ) + "\r\n"
-    s.mark()
-    ok("items.update", resource="tasks", id=item["id"], ical=renamed)
-    s.sync()
 
     sent = _sent_recurrence(s, "renamed")
     harness.true(sent is not None, "no <Recurrence> was sent for the renamed task")

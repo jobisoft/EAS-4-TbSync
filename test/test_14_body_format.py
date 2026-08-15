@@ -361,16 +361,22 @@ def t_14_4(s):
         item = _find(s, slug)
         before[slug] = (item["id"], _description(item), _altrep(item))
 
-    s.mark()
-    for slug in SLUGS:
-        item = _find(s, slug)
-        ical = "\r\n".join(
-            f"SUMMARY:{probes.MARKER} {slug} renamed" if line.startswith("SUMMARY")
-            else line
-            for line in (item["item"] or "").splitlines()
-        ) + "\r\n"
-        ok("items.update", id=item["id"], ical=ical)
-    s.sync()
+    # One window, three items, one sync - so the whole batch is the unit
+    # that repeats if the server overrules any of them. Idempotent: each
+    # SUMMARY is replaced with a constant, so re-running changes nothing.
+    def rename_all():
+        s.mark()
+        for slug in SLUGS:
+            item = _find(s, slug)
+            ical = "\r\n".join(
+                f"SUMMARY:{probes.MARKER} {slug} renamed" if line.startswith("SUMMARY")
+                else line
+                for line in (item["item"] or "").splitlines()
+            ) + "\r\n"
+            ok("items.update", id=item["id"], ical=ical)
+        s.sync()
+
+    s.conflict_retry(rename_all)
 
     # Each note goes back in the form we hold it, carrying exactly the data
     # we were given. Omitting the body is not an option on 14.x, where an
@@ -413,15 +419,18 @@ def t_14_4(s):
     # another route.
     settled = {slug: (_description(_find(s, slug)), _altrep(_find(s, slug)))
                for slug in SLUGS}
-    s.mark()
-    for slug in SLUGS:
-        item = _find(s, slug)
-        ical = "\r\n".join(
-            f"SUMMARY:{probes.MARKER} {slug}" if line.startswith("SUMMARY") else line
-            for line in (item["item"] or "").splitlines()
-        ) + "\r\n"
-        ok("items.update", id=item["id"], ical=ical)
-    s.sync()
+    def rename_back():
+        s.mark()
+        for slug in SLUGS:
+            item = _find(s, slug)
+            ical = "\r\n".join(
+                f"SUMMARY:{probes.MARKER} {slug}" if line.startswith("SUMMARY") else line
+                for line in (item["item"] or "").splitlines()
+            ) + "\r\n"
+            ok("items.update", id=item["id"], ical=ical)
+        s.sync()
+
+    s.conflict_retry(rename_back)
     s.rebind("events")
     s.settle("events")
 
@@ -439,22 +448,28 @@ def t_14_4(s):
 
 @test("14.5", "demoting the rich note to plain sticks, on both sides")
 def t_14_5(s):
-    rich = _find(s, SLUGS[1])
-    kept = []
-    dropping = False
-    for line in (rich["item"] or "").splitlines():
-        if line.startswith((" ", "\t")):
-            if dropping:
-                continue
-        else:
-            dropping = line.startswith("DESCRIPTION")
-        if not dropping:
-            kept.append(line)
-    kept.insert(kept.index("END:VEVENT"), f"DESCRIPTION:{PLAIN_ONE_ICAL}")
+    # Idempotent, as `edit` requires: every DESCRIPTION and its folded
+    # continuations are dropped first, then one constant line is put back,
+    # so applying this to its own output yields the same body.
+    def demote(body):
+        kept = []
+        dropping = False
+        for line in (body or "").splitlines():
+            if line.startswith((" ", "\t")):
+                if dropping:
+                    continue
+            else:
+                dropping = line.startswith("DESCRIPTION")
+            if not dropping:
+                kept.append(line)
+        kept.insert(kept.index("END:VEVENT"), f"DESCRIPTION:{PLAIN_ONE_ICAL}")
+        return "\r\n".join(kept) + "\r\n"
 
-    s.mark()
-    ok("items.update", id=rich["id"], ical="\r\n".join(kept) + "\r\n")
-    s.sync()
+    s.edit(
+        lambda: _find(s, SLUGS[1]),
+        demote,
+        missing="the rich note is not there to demote",
+    )
     harness.eq(_pushed_body(s, SLUGS[1])[0], "1", "a note with no ALTREP goes out as text")
 
     s.mark()
@@ -473,22 +488,28 @@ def t_14_5(s):
 
 @test("14.6", "promoting it back to HTML restores the editor's copy")
 def t_14_6(s):
-    plain = _find(s, SLUGS[1])
     altrep = "data:text/html," + "".join(
         {"<": "%3C", ">": "%3E", "/": "%2F", " ": "%20"}.get(c, c)
         for c in PROMOTED_HTML
     )
-    kept = [
-        line for line in (plain["item"] or "").splitlines()
-        if not line.startswith("DESCRIPTION")
-    ]
-    kept.insert(
-        kept.index("END:VEVENT"), f'DESCRIPTION;ALTREP="{altrep}":{PROMOTED_TEXT}'
-    )
 
-    s.mark()
-    ok("items.update", id=plain["id"], ical="\r\n".join(kept) + "\r\n")
-    s.sync()
+    # Idempotent, as `edit` requires: every DESCRIPTION is dropped and one
+    # constant line put back, so applying it to its own output is a no-op.
+    def promote(body):
+        kept = [
+            line for line in (body or "").splitlines()
+            if not line.startswith("DESCRIPTION")
+        ]
+        kept.insert(
+            kept.index("END:VEVENT"), f'DESCRIPTION;ALTREP="{altrep}":{PROMOTED_TEXT}'
+        )
+        return "\r\n".join(kept) + "\r\n"
+
+    s.edit(
+        lambda: _find(s, SLUGS[1]),
+        promote,
+        missing="the plain note is not there to promote",
+    )
     type_, data = _pushed_body(s, SLUGS[1])
     harness.eq(type_, "2", "the promoted note goes out as HTML")
     harness.eq(data, PROMOTED_HTML, "carrying what the user authored")

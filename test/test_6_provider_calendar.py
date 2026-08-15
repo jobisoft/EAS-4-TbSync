@@ -243,9 +243,20 @@ def t_6_8(s):
 
     # The new binding queues and pushes like any other.
     harness.contains(fresh["item"], summary, "the summary line to edit")
-    ok("items.update", id=fresh["id"], ical=fresh["item"].replace(summary, f"{summary} v3"))
-    harness.true(s.changelog("events"), "an edit under the new session was not queued")
-    s.sync()
+
+    def bump_v3(body):
+        # Idempotent: `summary` is a prefix of the bumped form, so a second
+        # pass would otherwise append the suffix twice.
+        return body if f"{summary} v3" in body else body.replace(summary, f"{summary} v3")
+
+    s.edit(
+        lambda: s.find("events", f"{probes.MARKER} {slug}", "event"),
+        bump_v3,
+        after_write=lambda: harness.true(
+            s.changelog("events"), "an edit under the new session was not queued"
+        ),
+        missing="the item did not come back from the server",
+    )
     harness.eq(s.changelog("events"), [], "changelog drained")
 
     done = s.find("events", f"{probes.MARKER} {slug}", "event")
