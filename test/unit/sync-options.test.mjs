@@ -89,6 +89,37 @@ test("pull and push state the same options", () => {
   assert.equal(push, pull);
 });
 
+test("a push says GetChanges 0 - silence would mean 1", () => {
+  // [MS-ASCMD] 2.2.3.84: absent + non-zero SyncKey is handled as if set to
+  // 1, and a client that does not want changes MUST send 0. A push that
+  // says nothing therefore asks the server for a snapshot taken while our
+  // own commands are still in flight.
+  const push = xml({ withChanges: false, withCommands: EMPTY_COMMANDS });
+  assert.match(push, /<GetChanges>0<\/GetChanges>/);
+
+  const instance = xml({
+    withChanges: false,
+    withInstanceCommand: { emit: (w) => w.atag("ServerId", "1") },
+  });
+  assert.match(instance, /<GetChanges>0<\/GetChanges>/);
+
+  // The pull still asks. An empty element is TRUE, per the same section.
+  const pull = xml({ withChanges: true });
+  assert.doesNotMatch(pull, /<GetChanges>0<\/GetChanges>/);
+  assert.match(pull, /<GetChanges\s*\/>|<GetChanges><\/GetChanges>/);
+});
+
+test("GetChanges precedes Options and Commands", () => {
+  // The Collection schema fixes the order: SyncKey, CollectionId,
+  // Supported, DeletesAsMoves, GetChanges, WindowSize, ConversationMode,
+  // Options, Commands. Out of order is a Status 4.
+  const push = xml({ withChanges: false, withCommands: EMPTY_COMMANDS });
+  const g = push.indexOf("<GetChanges>");
+  const o = push.indexOf("<Options>");
+  assert.ok(g > -1 && o > -1, "both must be present on a push");
+  assert.ok(g < o, `GetChanges must precede Options: ${push}`);
+});
+
 test("a request with neither changes nor commands states nothing", () => {
   // The bootstrap. Writing no block leaves the server's options alone,
   // which is the only safe way to say nothing.

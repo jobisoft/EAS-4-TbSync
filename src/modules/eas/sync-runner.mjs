@@ -1909,11 +1909,10 @@ async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
     ctx.syncKeyDirty = true;
   }
 
-  // Exchange returns items it has modified as <Change> commands in this
-  // same reply - a non-zero synckey with no <GetChanges> is treated as
-  // GetChanges=1, so every request implicitly asks for them. Applied
-  // before the status is judged: taking the synckey above tells the
-  // server we have them, and a retry needs them in hand.
+  // This request asked for no changes, so a reply carrying <Commands> is
+  // not expected. It is still applied if one arrives, and that is not
+  // belt-and-braces: the synckey taken above tells the server we have
+  // them, so anything dropped here is dropped for good.
   if (r.commands) await applyServerCommands(ctx, r.commands);
 
   // We sent exactly one command, so at most one response node concerns
@@ -2963,6 +2962,25 @@ export function buildSyncBody({
     w.atag("GetChanges");
     w.atag("WindowSize", String(windowSize ?? 25));
     appendOptions(w, options);
+  } else if (withCommands || withInstanceCommand) {
+    // [MS-ASCMD] 2.2.3.84: "If the client does not want the server changes
+    // returned, the request MUST include the GetChanges element with a
+    // value of 0" - and when the element is absent with a non-zero SyncKey,
+    // "the request is handled as if the GetChanges element were set to 1".
+    // So a push that says nothing is a push that asks for changes.
+    //
+    // It must not. The server answers with a snapshot taken while our own
+    // commands are still going out, and applying that snapshot deletes what
+    // it does not yet know about. Measured on Exchange Online 16.1: a
+    // series was added, its cancellation sent, and the reply to that
+    // cancellation carried the master back with an <Exceptions> block
+    // holding only the cancellation - truthfully, because the override was
+    // still queued behind it. Applying it dropped the override locally; the
+    // next request put it on the server, and the two sides disagreed.
+    //
+    // The pull that follows this push asks properly, once the queue is
+    // empty and a snapshot means what it says.
+    w.atag("GetChanges", "0");
   }
   // A Commands-only push states them too - it is the request the server
   // resolves conflicts in, and it must not leave the collection holding

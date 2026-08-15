@@ -13,6 +13,8 @@ puts genuine two-writer conflicts in the server's hands - and 2.4 remains
 as the regression net for the old failure.
 """
 
+import re
+
 import harness
 import probes
 from bridge import ok, rpc
@@ -100,8 +102,13 @@ def t_2_4(s):
 
 def _sync_requests(s):
     """The Sync requests of the marked window, in order sent, classified:
-    'push' carries <Commands> without <GetChanges>, 'pull' carries
-    <GetChanges>."""
+    'push' carries <Commands>, 'pull' asks for changes.
+
+    Classified on <Commands> first, because a push now carries a GetChanges
+    element too - `<GetChanges>0</GetChanges>`, which is the client saying it
+    wants none. Reading the element's presence alone, as this once did, calls
+    every push a pull and quietly inverts the ordering 2.5 asserts.
+    """
     out = []
     for entry in s.log():
         if "send" not in (entry.get("message") or "").lower():
@@ -109,10 +116,11 @@ def _sync_requests(s):
         details = entry.get("details") or ""
         if "<Sync" not in details:
             continue
-        if "<GetChanges" in details:
-            out.append(("pull", details))
-        elif "<Commands>" in details:
+        flat = re.sub(r"\s+", "", details)
+        if "<Commands>" in flat:
             out.append(("push", details))
+        elif "<GetChanges" in flat and "<GetChanges>0</GetChanges>" not in flat:
+            out.append(("pull", details))
     return out
 
 
