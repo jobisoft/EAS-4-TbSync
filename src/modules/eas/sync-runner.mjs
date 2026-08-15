@@ -46,9 +46,11 @@ import { fetchServerItem, fetchServerItems } from "./item-operations.mjs";
 import { easCommandLikelyAvailable } from "./allowed-commands.mjs";
 import { accountUserAddress } from "./settings.mjs";
 import {
+  USERRESPONSE_TO_PARTSTAT,
   isReceivedMeeting,
   preserveSelfPartstat,
-  selfUserResponse,
+  selfUserResponses,
+  serverKnownPartstat,
 } from "./calendar-codec.mjs";
 import { sendMeetingResponse } from "./meeting-response.mjs";
 import {
@@ -1305,13 +1307,27 @@ async function invitationPhase(ctx, answers) {
       await dropEntry(ctx, entry);
       continue;
     }
-    const userResponse = selfUserResponse(
+    // The series and every occurrence answered on its own. Answering from
+    // the calendar rather than from the message writes an override and
+    // leaves the master untouched, so reading only the master misses the
+    // ordinary way of answering a recurring invitation.
+    const answers = selfUserResponses(
       item.blob,
       accountUserAddress(ctx.account),
-    );
-    if (!userResponse) {
-      // Not an answer: NEEDS-ACTION, or an edit to something else on a
-      // meeting we cannot push anyway. Nothing to send and nothing owed.
+    ).filter((a) => {
+      // Say nothing the server already knows. Its own ResponseType comes
+      // back on every pull, so an answer it has applied stops being resent
+      // on the next unrelated edit - and the organizer stops being mailed
+      // a reply they have already had. A stamp that disagrees, or is
+      // missing entirely, means send: it can cost a duplicate reply, never
+      // a lost answer.
+      const known = serverKnownPartstat(a.responseType);
+      return !known || known !== USERRESPONSE_TO_PARTSTAT[a.userResponse];
+    });
+    if (!answers.length) {
+      // Not an answer: NEEDS-ACTION, an answer the server already has, or
+      // an edit to something else on a meeting we cannot push anyway.
+      // Nothing to send and nothing owed.
       ctx.eventLog(
         "debug",
         `[event-sync] ${entry.itemId} carries no answer to send; dropping the queued edit`,
@@ -1332,22 +1348,66 @@ async function invitationPhase(ctx, answers) {
       continue;
     }
 
-    const result = await sendMeetingResponse({
-      account: ctx.account,
-      asVersion: ctx.asVersion,
-      collectionId: ctx.collectionId,
-      serverID,
-      userResponse,
-    });
-    const status = result?.status ?? null;
-    if (status === "1") {
-      ctx.eventLog(
-        "info",
-        `[event-sync] answered the invitation ${entry.itemId} with UserResponse ${userResponse}`,
-      );
+    // Answering one occurrence needs InstanceId, which is 14.1 and later.
+    // On 14.0 the series can still be answered, so only the occurrences
+    // are held back, and they are held rather than dropped: the account
+    // may be pinned to 14.0 today and not tomorrow.
+    let sendable = answers;
+    if (parseFloat(ctx.asVersion) < 14.1) {
+      const perOccurrence = answers.filter((a) => a.instanceId);
+      if (perOccurrence.length) {
+        ctx.eventLog(
+          "warning",
+          `[event-sync] holding ${perOccurrence.length} per-occurrence answer(s) ` +
+            `on ${entry.itemId}: ActiveSync ${ctx.asVersion} has no InstanceId, ` +
+            `which names the occurrence being answered`,
+        );
+      }
+      sendable = answers.filter((a) => !a.instanceId);
+      if (!sendable.length) continue;
+    }
+
+    let allLanded = true;
+    let lastStatus = null;
+    for (const answer of sendable) {
+      throwIfCancelled(ctx);
+      const result = await sendMeetingResponse({
+        account: ctx.account,
+        asVersion: ctx.asVersion,
+        collectionId: ctx.collectionId,
+        serverID,
+        userResponse: answer.userResponse,
+        instanceId: answer.instanceId,
+      });
+      const answerStatus = result?.status ?? null;
+      const what = answer.instanceId
+        ? `the occurrence on ${answer.rid}`
+        : "the series";
+      if (answerStatus === "1") {
+        ctx.eventLog(
+          "info",
+          `[event-sync] answered ${what} of ${entry.itemId} with ` +
+            `UserResponse ${answer.userResponse}`,
+        );
+      } else {
+        allLanded = false;
+        lastStatus = answerStatus;
+        ctx.eventLog(
+          "warning",
+          `[event-sync] the server refused the answer to ${what} of ` +
+            `${entry.itemId} with Status ${answerStatus}`,
+        );
+      }
+    }
+    // The queued edit stands for every answer on the item, so it is only
+    // spent once they have all gone. One refusal keeps it, and the ones
+    // that did land are not sent again: the server's own ResponseType
+    // comes back on the next pull and filters them out above.
+    if (allLanded) {
       await dropEntry(ctx, entry);
       continue;
     }
+    const status = lastStatus;
     // 2 is an invalid meeting request and 4 a meeting that cannot be
     // responded to - a cancelled one, or somebody else's delegate. Neither
     // improves by being retried, and a queue entry that can never go is a

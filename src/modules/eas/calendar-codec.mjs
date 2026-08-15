@@ -1709,23 +1709,117 @@ export function isReceivedMeeting(ical, userEmail = null) {
   return stripMailto(stringOf(orgProp.getFirstValue())).toLowerCase() !== self;
 }
 
-/** The user's answer to this invitation, as a MeetingResponse UserResponse,
- *  or null when they have not answered one way or the other. */
-export function selfUserResponse(ical, userEmail = null) {
-  const vcal = parseVCalendar(ical);
-  if (!vcal) return null;
-  const master = pickMasterVevent(vcal);
-  if (!master) return null;
-  const self = selfAddress(master, userEmail);
-  if (!self) return null;
-  const attendee = master
+/** The self attendee of one component, by address. */
+function selfAttendeeOf(comp, self) {
+  return comp
     .getAllProperties("attendee")
     .find(
       (a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self,
     );
-  const partstat = attendee?.getParameter("partstat");
+}
+
+/** One component's answer as a MeetingResponse UserResponse, or null when
+ *  it carries none. */
+function userResponseOf(comp, self) {
+  const partstat = selfAttendeeOf(comp, self)?.getParameter("partstat");
   return PARTSTAT_TO_USERRESPONSE[String(partstat).toUpperCase()] ?? null;
 }
+
+/** `MeetingResponse` names an occurrence by an `InstanceId` of exactly 24
+ *  characters - `2026-09-08T09:00:00.000Z`. That is not the form the rest
+ *  of the protocol uses: AirSyncBase's own `InstanceId`, and every other
+ *  date on the wire, is the 16-character basic form. `instanceKey` speaks
+ *  basic, so this widens it, and returns null for anything that is not the
+ *  shape we expect rather than letting a malformed value reach the server -
+ *  which answers `Status 2`, indistinguishable from a stale meeting. */
+function extendedInstanceId(basic) {
+  const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(basic ?? "");
+  if (!m) return null;
+  const [, y, mo, d, h, mi, sec] = m;
+  return `${y}-${mo}-${d}T${h}:${mi}:${sec}.000Z`;
+}
+
+/** Every answer this item carries: the series, and each occurrence the user
+ *  answered on its own.
+ *
+ *  Answering one occurrence of a recurring invitation is what Thunderbird
+ *  does whenever the answer is given from the calendar rather than from the
+ *  message - it writes an override and leaves the master alone - so a
+ *  master-only reading of the item misses the ordinary case entirely.
+ *
+ *  Each answer carries the `instanceId` naming its occurrence, or null for
+ *  the series. An occurrence whose `RECURRENCE-ID` cannot be expressed as
+ *  an `InstanceId` is skipped rather than answered against the series,
+ *  which would apply the answer to every occurrence at once.
+ *
+ *  @returns {Array<{instanceId: string|null, rid: string|null,
+ *                   userResponse: number, responseType: string|null}>}
+ */
+export function selfUserResponses(ical, userEmail = null) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return [];
+  const master = pickMasterVevent(vcal);
+  if (!master) return [];
+  // Addresses live on the master: an override need not repeat the
+  // X-MOZ-INVITED-ATTENDEE marker Thunderbird put there.
+  const self = selfAddress(master, userEmail);
+  if (!self) return [];
+
+  const answers = [];
+  const masterResponse = userResponseOf(master, self);
+  if (masterResponse) {
+    answers.push({
+      instanceId: null,
+      rid: null,
+      userResponse: masterResponse,
+      responseType: responseTypeOf(master),
+    });
+  }
+
+  for (const sub of vcal.getAllSubcomponents("vevent")) {
+    const ridProp = sub.getFirstProperty("recurrence-id");
+    if (!ridProp) continue;
+    const userResponse = userResponseOf(sub, self);
+    if (!userResponse) continue;
+    const rid = instanceKey(sub.getFirstPropertyValue("recurrence-id"));
+    const instanceId = extendedInstanceId(rid);
+    if (!instanceId) continue;
+    answers.push({
+      instanceId,
+      rid,
+      userResponse,
+      // An override of the server's own making carries no ResponseType:
+      // measured on a 14.1 mailbox, answering one occurrence sets the
+      // *master* to 3 and leaves the exception unstamped. Falling back to
+      // the master is therefore what "has the server heard this answer?"
+      // means for an occurrence. It still says send whenever the two
+      // disagree, which is what a decline on one occurrence of an accepted
+      // series looks like.
+      responseType: responseTypeOf(sub) ?? responseTypeOf(master),
+    });
+  }
+  return answers;
+}
+
+/** What the server last told us about this component's response, as the
+ *  PARTSTAT it maps to, or null when the server has never said. */
+export function serverKnownPartstat(responseType) {
+  if (responseType == null || responseType === "") return null;
+  return RESPONSETYPE_TO_PARTSTAT[parseInt(responseType, 10)] ?? null;
+}
+
+function responseTypeOf(comp) {
+  const v = comp.getFirstPropertyValue(X_EAS_RESPONSETYPE.toLowerCase());
+  return v == null || v === "" ? null : String(v);
+}
+
+/** The PARTSTAT the user's answer implies, for comparing against what the
+ *  server already knows. Inverse of `PARTSTAT_TO_USERRESPONSE`. */
+export const USERRESPONSE_TO_PARTSTAT = Object.freeze({
+  1: "ACCEPTED",
+  2: "TENTATIVE",
+  3: "DECLINED",
+});
 
 /** Carry the user's own answer across an adoption of the server's copy.
  *
@@ -1793,46 +1887,69 @@ export function pinEasStamps({ builtIcal, priorIcal = null }) {
     for (const prop of easStampsOf(comp)) comp.removeProperty(prop);
   }
 
-  const master = pickMasterItem(vcal);
+  // Restored per component, not just onto the master. An occurrence of a
+  // recurring meeting carries its own stamps - a 16.1 mailbox records the
+  // answer to one occurrence as a ResponseType on that exception - and
+  // stripping every component while restoring one loses them on every
+  // local edit. The series keys as null so it matches its own prior self
+  // rather than whichever occurrence happens to come first.
   const prior = priorIcal ? parseVCalendar(priorIcal) : null;
-  const priorMaster = prior ? pickMasterItem(prior) : null;
-  if (master && priorMaster) {
-    for (const prop of easStampsOf(priorMaster)) {
-      master.updatePropertyWithValue(prop.name, prop.getFirstValue());
+  const priorStamps = new Map();
+  if (prior) {
+    for (const comp of prior.getAllSubcomponents()) {
+      if (comp.name !== "vevent" && comp.name !== "vtodo") continue;
+      const stamps = easStampsOf(comp);
+      if (!stamps.length) continue;
+      const ridValue = comp.getFirstPropertyValue("recurrence-id");
+      priorStamps.set(ridValue ? instanceKey(ridValue) : null, stamps);
+    }
+  }
+  for (const comp of comps) {
+    const ridValue = comp.getFirstPropertyValue("recurrence-id");
+    const stamps = priorStamps.get(ridValue ? instanceKey(ridValue) : null);
+    if (!stamps) continue;
+    for (const prop of stamps) {
+      comp.updatePropertyWithValue(prop.name, prop.getFirstValue());
     }
   }
   return vcal.toString();
 }
 
 export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
-  const prior = parseFirstVevent(priorIcal);
-  if (!prior) return builtIcal;
-  const self = selfAddress(prior, userEmail);
+  const priorCal = parseVCalendar(priorIcal);
+  const priorMaster = priorCal ? pickMasterVevent(priorCal) : null;
+  if (!priorMaster) return builtIcal;
+  const self = selfAddress(priorMaster, userEmail);
   if (!self) return builtIcal;
-  const priorPartstat = prior
-    .getAllProperties("attendee")
-    .find(
-      (a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self,
-    )
-    ?.getParameter("partstat");
-  if (
-    !priorPartstat ||
-    String(priorPartstat).toUpperCase() === "NEEDS-ACTION"
-  ) {
-    return builtIcal;
+
+  // Keyed by occurrence, with the series under null. An answer given on one
+  // occurrence lives on its override and nowhere else, so carrying only the
+  // master would drop it here - and the answer is read back out of this
+  // item after the pull, so dropping it loses it for good.
+  const keep = new Map();
+  for (const comp of priorCal.getAllSubcomponents("vevent")) {
+    const partstat = selfAttendeeOf(comp, self)?.getParameter("partstat");
+    if (!partstat || String(partstat).toUpperCase() === "NEEDS-ACTION") {
+      continue;
+    }
+    const ridValue = comp.getFirstPropertyValue("recurrence-id");
+    keep.set(ridValue ? instanceKey(ridValue) : null, partstat);
   }
+  if (!keep.size) return builtIcal;
 
   const vcal = parseVCalendar(builtIcal);
-  const vevent = vcal ? pickMasterVevent(vcal) : null;
-  if (!vevent) return builtIcal;
-  const builtSelf = vevent
-    .getAllProperties("attendee")
-    .find(
-      (a) => stripMailto(stringOf(a.getFirstValue())).toLowerCase() === self,
-    );
-  if (!builtSelf) return builtIcal;
-  builtSelf.setParameter("partstat", priorPartstat);
-  return vcal.toString();
+  if (!vcal) return builtIcal;
+  let touched = false;
+  for (const comp of vcal.getAllSubcomponents("vevent")) {
+    const ridValue = comp.getFirstPropertyValue("recurrence-id");
+    const partstat = keep.get(ridValue ? instanceKey(ridValue) : null);
+    if (!partstat) continue;
+    const builtSelf = selfAttendeeOf(comp, self);
+    if (!builtSelf) continue;
+    builtSelf.setParameter("partstat", partstat);
+    touched = true;
+  }
+  return touched ? vcal.toString() : builtIcal;
 }
 
 export function exceptionFingerprint(ical) {

@@ -25,14 +25,17 @@ import assert from "node:assert/strict";
 import {
   isReceivedMeeting,
   preserveSelfPartstat,
-  selfUserResponse,
+  selfUserResponses,
 } from "../../src/modules/eas/calendar-codec.mjs";
 
 const ME = "john.bieling@cvjmbonn.de";
 const ORG = "john.bieling@outlook.de";
 
 /** An item as it looks after a pull: the server's own MeetingStatus. */
-function pulled(meetingStatus, { partstat = "ACCEPTED", serverId = "sid-1" } = {}) {
+function pulled(
+  meetingStatus,
+  { partstat = "ACCEPTED", serverId = "sid-1" } = {},
+) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -112,15 +115,21 @@ test("our own meetings stay ours", () => {
 });
 
 test("an item nobody has said anything about is ours", () => {
-  assert.equal(isReceivedMeeting("BEGIN:VCALENDAR\r\nEND:VCALENDAR", ME), false);
+  assert.equal(
+    isReceivedMeeting("BEGIN:VCALENDAR\r\nEND:VCALENDAR", ME),
+    false,
+  );
   assert.equal(isReceivedMeeting("", ME), false);
   assert.equal(isReceivedMeeting("not a calendar", ME), false);
 });
 
+/** The one answer a non-recurring invitation carries, or null. */
+const answerOf = (ical) => selfUserResponses(ical, ME)[0]?.userResponse ?? null;
+
 test("the answer maps to a UserResponse", () => {
-  assert.equal(selfUserResponse(itip({ partstat: "ACCEPTED" }), ME), 1);
-  assert.equal(selfUserResponse(itip({ partstat: "TENTATIVE" }), ME), 2);
-  assert.equal(selfUserResponse(itip({ partstat: "DECLINED" }), ME), 3);
+  assert.equal(answerOf(itip({ partstat: "ACCEPTED" })), 1);
+  assert.equal(answerOf(itip({ partstat: "TENTATIVE" })), 2);
+  assert.equal(answerOf(itip({ partstat: "DECLINED" })), 3);
 });
 
 test("no answer is not an answer", () => {
@@ -128,9 +137,9 @@ test("no answer is not an answer", () => {
   // produce a response, or every unrelated edit sends an Accept the user
   // never made. There is no UserResponse for "no reply", so this is
   // structural rather than a guard that could be forgotten.
-  assert.equal(selfUserResponse(itip({ partstat: "NEEDS-ACTION" }), ME), null);
-  assert.equal(selfUserResponse(itip({ invited: null }), ME), null);
-  assert.equal(selfUserResponse("", ME), null);
+  assert.equal(answerOf(itip({ partstat: "NEEDS-ACTION" })), null);
+  assert.equal(answerOf(itip({ invited: null })), null);
+  assert.equal(answerOf(""), null);
 });
 
 test("the local answer survives adopting the server's copy", () => {
@@ -144,7 +153,7 @@ test("the local answer survives adopting the server's copy", () => {
     userEmail: ME,
   });
   assert.match(adopted, /PARTSTAT=ACCEPTED/);
-  assert.equal(selfUserResponse(adopted, ME), 1);
+  assert.equal(answerOf(adopted), 1);
 });
 
 test("but an answer we do not have does not overwrite one we do", () => {
