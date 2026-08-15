@@ -2144,10 +2144,10 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
   for (const node of responses.changes) {
     const status = readPathFrom(node, ["Status"]);
     if (status === STATUS_OK) continue;
-    if (status === STATUS_CONFLICT || status === STATUS_OBJECT_NOT_FOUND) {
-      // Status 7 (server-wins conflict) and Status 8 (object-not-found)
-      // are explicit "drop the local edit" signals - both legacy and new
-      // discard the changelog entry without flagging as a failure.
+    if (status === STATUS_CONFLICT) {
+      // Server-wins conflict. Dropping the local edit is the whole point of
+      // the policy we declared, and the server's version arrives on the
+      // pull, so there is nothing to keep and nothing to warn about.
       const serverId = readPathFrom(node, ["ServerId"]);
       const sentEntry = sent.mods.find((m) => m.serverID === serverId);
       if (sentEntry) {
@@ -2156,6 +2156,40 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
           itemId: sentEntry.entry.itemId,
           kind: sentEntry.entry.kind,
         });
+      }
+      continue;
+    }
+    if (status === STATUS_OBJECT_NOT_FOUND) {
+      // The server has no such item, so - unlike a conflict - nothing is
+      // coming down to replace what the user just wrote. Dropping the entry
+      // here would lose the edit *and* leave the item sitting locally with
+      // a ServerId that names nothing.
+      //
+      // They edited it, which is as clear a statement as we get that they
+      // want it. So it is re-queued as an add and the next push re-creates
+      // it: `created` over a `modified_by_user` entry is exactly the "late
+      // create after modify" transition the changelog already defines. The
+      // stale stamp and index entry are corrected when that add is acked.
+      //
+      // This is the one signal of a locally-held item the server has
+      // dropped that costs nothing to collect - it arrives on its own, and
+      // only for an item the user cared enough to touch.
+      const serverId = readPathFrom(node, ["ServerId"]);
+      const sentEntry = sent.mods.find((m) => m.serverID === serverId);
+      if (sentEntry) {
+        await ctx.queue.record({
+          parentId: sentEntry.entry.parentId,
+          itemId: sentEntry.entry.itemId,
+          kind: sentEntry.entry.kind,
+          op: "created",
+        });
+        ctx.indexMap.remove(sentEntry.entry.itemId);
+        ctx.eventLog(
+          "info",
+          `[${ctx.itemKind.changelogKind}-sync] the server no longer has ` +
+            `${sentEntry.entry.itemId}; re-creating it from the local copy ` +
+            `rather than discarding the edit`,
+        );
       }
       continue;
     }
