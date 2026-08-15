@@ -16,8 +16,10 @@ The steps that need a person instead - install lockstep, authentication
 failure, setup flow - are not covered here and are still done by hand.
 """
 
+import json
 import os
 import sys
+import time
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 # `test/vendor/` holds the two files TbSync owns - the bridge client and the
@@ -25,6 +27,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 # harness` reads the same regardless of which side of the boundary it is on.
 sys.path.insert(0, os.path.join(_HERE, "vendor"))
 sys.path.insert(0, _HERE)
+
+import pathlib
 
 import probes
 import session as session_mod
@@ -54,6 +58,11 @@ MODULES = [
     "test_12_capability",
     "test_14_body_format",
     "test_15_task_identity",
+    # Split out of section 3: the move is where item 47 lives, so it fails
+    # without costing the import tests or the all-day binding their run.
+    "test_16_exception_move",
+    # Version-agnostic, and the only exception coverage a 14.x account gets.
+    "test_17_allday_exceptions",
     # After everything that reads the folder, because it re-pulls the whole
     # thing: a section running behind it pays for a full download it did not
     # ask for.
@@ -182,7 +191,43 @@ def main(argv):
                     f" - the section left work that will not push"
                 )
 
-    return run(tests, s, prepare=prepare, finish=finish)
+    rc = run(tests, s, prepare=prepare, finish=finish)
+    save_wire(s, selectors, rc)
+    return rc
+
+
+def save_wire(session, selectors, rc):
+    """Keep the event log of every run, and say where it went.
+
+    The wire is the only evidence there is for an intermittent failure, and
+    preflight clears the buffer at the start of each run - so without this,
+    every run destroyed the previous one's. Two days of chasing section 3
+    were spent on failures whose wire had already been thrown away, and the
+    one capture that survived long enough to be read is what finally showed
+    the server sending an <Exceptions> block with an exception missing.
+
+    Written on success as well as failure: the interesting comparison is a
+    failing run against a passing one, and which is which is not known until
+    afterwards.
+    """
+    from bridge import ok as bridge_ok
+
+    try:
+        entries = bridge_ok("getEventLog")["entries"]
+    except Exception as e:  # noqa: BLE001 - never fail a run over its own record
+        print(f"\n  (could not save the event log: {e})")
+        return
+    out = pathlib.Path(__file__).resolve().parent / "wire"
+    out.mkdir(exist_ok=True)
+    name = (
+        f"{time.strftime('%Y%m%d-%H%M%S')}"
+        f"-{session.account['accountName'].split('@')[0]}"
+        f"-{'+'.join(selectors) or 'all'}"
+        f"-{'pass' if rc == 0 else 'FAIL'}.json"
+    )
+    path = out / name
+    path.write_text(json.dumps(entries, indent=1))
+    print(f"  wire     {path} ({len(entries)} entries)")
 
 
 if __name__ == "__main__":
