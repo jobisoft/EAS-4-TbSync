@@ -87,7 +87,7 @@ END:VCALENDAR
         asVersion: "16.1",
         defaultTimezone: "UTC",
         syncRecurrence: false,
-        userEmail: "kovacik@dgtfactory.com",
+        userEmail: "user@example.invalid",
       }),
     );
     const after = new Date();
@@ -119,7 +119,7 @@ test("single event: appendApplicationDataFromIcal emits the rescheduled Start/En
       asVersion: "16.1",
       defaultTimezone: "UTC",
       syncRecurrence: false,
-      userEmail: "kovacik@dgtfactory.com",
+      userEmail: "user@example.invalid",
     }),
   );
 
@@ -141,7 +141,7 @@ DTSTAMP:20260801T090000Z
 DTSTART:20260801T140000Z
 DTEND:20260801T143000Z
 SUMMARY:test-outbound-organizer
-ORGANIZER;CN=test kovo1:mailto:kovo1@dgtfactory.com
+ORGANIZER;CN=test organizer:mailto:organizer@example.invalid
 END:VEVENT
 END:VCALENDAR
 `;
@@ -153,7 +153,7 @@ END:VCALENDAR
         asVersion: "16.1",
         defaultTimezone: "UTC",
         syncRecurrence: false,
-        userEmail: "kovacik@dgtfactory.com",
+        userEmail: "user@example.invalid",
       }),
     );
     assert.equal(readPathFrom(node16_1, ["OrganizerEmail"]), null);
@@ -168,14 +168,14 @@ END:VCALENDAR
         asVersion: "14.1",
         defaultTimezone: "UTC",
         syncRecurrence: false,
-        userEmail: "kovacik@dgtfactory.com",
+        userEmail: "user@example.invalid",
       }),
     );
     assert.equal(
       readPathFrom(node14_1, ["OrganizerEmail"]),
-      "kovo1@dgtfactory.com",
+      "organizer@example.invalid",
     );
-    assert.equal(readPathFrom(node14_1, ["OrganizerName"]), "test kovo1");
+    assert.equal(readPathFrom(node14_1, ["OrganizerName"]), "test organizer");
   },
 );
 
@@ -200,7 +200,7 @@ test("whole series: appendApplicationDataFromIcal emits a Recurrence block for t
       asVersion: "16.1",
       defaultTimezone: "UTC",
       syncRecurrence: true,
-      userEmail: "kovacik@dgtfactory.com",
+      userEmail: "user@example.invalid",
     }),
   );
 

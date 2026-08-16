@@ -19,7 +19,7 @@ import { parseAdNode } from "./support/ad-node.mjs";
 
 before(() => ensureLoaded());
 
-// Captured live: kovo1@dgtfactory.com invites kovacik@dgtfactory.com to a
+// Captured live: organizer@example.invalid invites user@example.invalid to a
 // weekly recurring meeting, EAS 16.1, unresponded.
 const ADD_TEST24 = `<ApplicationData>
   <AllDayEvent xmlns='Calendar'>0</AllDayEvent>
@@ -28,11 +28,11 @@ const ADD_TEST24 = `<ApplicationData>
   <StartTime xmlns='Calendar'>20260731T133000Z</StartTime>
   <Subject xmlns='Calendar'>test24</Subject>
   <UID xmlns='Calendar'>040000008200E00074C5B7101A82E00800000000E9ABA67E0A21DD01000000000000000010000000977A7C48535D7E4BB962D5FAB0E784A9</UID>
-  <OrganizerName xmlns='Calendar'>test%20kovo1</OrganizerName>
-  <OrganizerEmail xmlns='Calendar'>kovo1%40dgtfactory.com</OrganizerEmail>
+  <OrganizerName xmlns='Calendar'>test%20organizer</OrganizerName>
+  <OrganizerEmail xmlns='Calendar'>organizer%40example.invalid</OrganizerEmail>
   <Attendees xmlns='Calendar'>
     <Attendee xmlns='Calendar'>
-      <Email xmlns='Calendar'>kovacik%40dgtfactory.com</Email>
+      <Email xmlns='Calendar'>user%40example.invalid</Email>
       <Name xmlns='Calendar'>Tom%C3%83%C2%A1%C3%85%C2%A1%20Kov%C3%83%C2%A1%C3%84%C2%8Dik</Name>
       <AttendeeType xmlns='Calendar'>1</AttendeeType>
     </Attendee>
@@ -72,7 +72,7 @@ test("applicationDataToIcal: fresh Add maps Subject/Organizer/Attendee/times", a
     defaultTimezone: "UTC",
     syncRecurrence: true,
     uid: null,
-    userEmail: "kovacik@dgtfactory.com",
+    userEmail: "user@example.invalid",
   });
 
   const vevent = masterVevent(icalString);
@@ -81,12 +81,12 @@ test("applicationDataToIcal: fresh Add maps Subject/Organizer/Attendee/times", a
 
   const organizer = vevent.getFirstProperty("organizer");
   assert.ok(organizer, "expected an ORGANIZER property");
-  assert.equal(organizer.getFirstValue(), "mailto:kovo1@dgtfactory.com");
-  assert.equal(organizer.getParameter("cn"), "test kovo1");
+  assert.equal(organizer.getFirstValue(), "mailto:organizer@example.invalid");
+  assert.equal(organizer.getParameter("cn"), "test organizer");
 
   const attendees = vevent.getAllProperties("attendee");
   assert.equal(attendees.length, 1);
-  assert.equal(attendees[0].getFirstValue(), "mailto:kovacik@dgtfactory.com");
+  assert.equal(attendees[0].getFirstValue(), "mailto:user@example.invalid");
 
   const dtstart = vevent.getFirstPropertyValue("dtstart");
   assert.equal(dtstart.toString(), "2026-07-31T13:30:00Z");
@@ -106,7 +106,7 @@ test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fie
     defaultTimezone: "UTC",
     syncRecurrence: true,
     uid: null,
-    userEmail: "kovacik@dgtfactory.com",
+    userEmail: "user@example.invalid",
   });
 
   const deltaOnly = parseAdNode(
@@ -120,7 +120,7 @@ test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fie
     defaultTimezone: "UTC",
     syncRecurrence: true,
     uid: null,
-    userEmail: "kovacik@dgtfactory.com",
+    userEmail: "user@example.invalid",
   });
 
   const vevent = masterVevent(second);
@@ -132,7 +132,7 @@ test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fie
   const organizer = vevent.getFirstProperty("organizer");
   assert.equal(
     organizer?.getFirstValue(),
-    "mailto:kovo1@dgtfactory.com",
+    "mailto:organizer@example.invalid",
     "Organizer should survive a delta that doesn't mention it",
   );
 });

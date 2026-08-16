@@ -21,7 +21,7 @@ test("14.0 and 14.1 are ours to send", () => {
 });
 
 test("16.x sends its own, so we must stay silent", () => {
-  // Measured on cvjmbonn: the invitation arrives on the second pull with
+  // Measured on a 16.1 account: the invitation arrives on the second pull with
   // nothing sent by us. Sending as well would invite everybody twice.
   assert.equal(versionNeedsClientScheduling("16.0"), false);
   assert.equal(versionNeedsClientScheduling("16.1"), false);

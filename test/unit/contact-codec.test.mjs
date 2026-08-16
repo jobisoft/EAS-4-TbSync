@@ -27,11 +27,11 @@ import { parseAdNode } from "./support/ad-node.mjs";
 import { readPathFrom } from "../../src/modules/eas/wbxml-helpers.mjs";
 
 const ADD_CONTACT = `<ApplicationData>
-  <FirstName xmlns='Contacts'>Tomas</FirstName>
-  <LastName xmlns='Contacts'>Kovacik</LastName>
-  <Email1Address xmlns='Contacts'>Tomas%20Kovacik%20%3Ckovacik%40dgtfactory.com%3E</Email1Address>
-  <BusinessPhoneNumber xmlns='Contacts'>00421907813840</BusinessPhoneNumber>
-  <CompanyName xmlns='Contacts'>DGT%20factory%2C%20a.%20s.</CompanyName>
+  <FirstName xmlns='Contacts'>Sample</FirstName>
+  <LastName xmlns='Contacts'>User</LastName>
+  <Email1Address xmlns='Contacts'>Sample%20User%20%3Cuser%40example.invalid%3E</Email1Address>
+  <BusinessPhoneNumber xmlns='Contacts'>%2B49301234567</BusinessPhoneNumber>
+  <CompanyName xmlns='Contacts'>Example%20GmbH</CompanyName>
   <JobTitle xmlns='Contacts'>President%20of%20space</JobTitle>
 </ApplicationData>`;
 
@@ -47,17 +47,17 @@ test("applicationDataToVCard: maps Name/Email/Phone/Organization/JobTitle and st
 
   const comp = new ICAL.Component(ICAL.parse(vcard));
   assert.deepEqual(comp.getFirstPropertyValue("n"), [
-    "Kovacik",
-    "Tomas",
+    "User",
+    "Sample",
     "",
     "",
     "",
   ]);
-  assert.equal(comp.getFirstPropertyValue("email"), "kovacik@dgtfactory.com");
+  assert.equal(comp.getFirstPropertyValue("email"), "user@example.invalid");
   const tel = comp.getFirstProperty("tel");
-  assert.equal(tel.getFirstValue(), "00421907813840");
+  assert.equal(tel.getFirstValue(), "+49301234567");
   assert.equal(tel.getParameter("type"), "work");
-  assert.deepEqual(comp.getFirstPropertyValue("org"), "DGT factory, a. s.");
+  assert.deepEqual(comp.getFirstPropertyValue("org"), "Example GmbH");
   assert.equal(comp.getFirstPropertyValue("title"), "President of space");
   assert.equal(readEasServerIdFromVCard(vcard), "server-id-contact-1");
 });
@@ -74,7 +74,7 @@ test("applicationDataToVCard: Name is merge-aware - a delta with no name tags le
 
   const afterPhoneOnlyChange = await applicationDataToVCard({
     adNode: parseAdNode(
-      `<ApplicationData><MobilePhoneNumber xmlns='Contacts'>00421900000000</MobilePhoneNumber></ApplicationData>`,
+      `<ApplicationData><MobilePhoneNumber xmlns='Contacts'>+49301234568</MobilePhoneNumber></ApplicationData>`,
     ),
     existingVcard: afterAdd,
     serverID: "server-id-contact-1",
@@ -85,8 +85,8 @@ test("applicationDataToVCard: Name is merge-aware - a delta with no name tags le
 
   const comp = new ICAL.Component(ICAL.parse(afterPhoneOnlyChange));
   assert.deepEqual(comp.getFirstPropertyValue("n"), [
-    "Kovacik",
-    "Tomas",
+    "User",
+    "Sample",
     "",
     "",
     "",
@@ -97,7 +97,7 @@ test("applicationDataToVCard: Name is merge-aware - a delta with no name tags le
   // this delta carries. That's the documented behavior, not a bug.
   const tels = comp.getAllProperties("tel");
   assert.equal(tels.length, 1);
-  assert.equal(tels[0].getFirstValue(), "00421900000000");
+  assert.equal(tels[0].getFirstValue(), "+49301234568");
 });
 
 test("stampEasServerId / readEasServerIdFromVCard round-trip", async () => {
@@ -117,10 +117,10 @@ test("appendApplicationDataFromVCard: outbound round-trip via the real WBXML enc
   const vcard = [
     "BEGIN:VCARD",
     "VERSION:4.0",
-    "N:Kovacik;Tomas;;;",
-    "EMAIL:kovacik@dgtfactory.com",
-    "TEL;TYPE=work:00421907813840",
-    "ORG:DGT factory, a. s.",
+    "N:User;Sample;;;",
+    "EMAIL:user@example.invalid",
+    "TEL;TYPE=work:+49301234567",
+    "ORG:Example GmbH",
     "TITLE:President of space",
     "END:VCARD",
     "",
@@ -138,10 +138,10 @@ test("appendApplicationDataFromVCard: outbound round-trip via the real WBXML enc
   w.ctag();
   const node = parseAdNode(decodeWBXML(w.getBytes()));
 
-  assert.equal(readPathFrom(node, ["FirstName"]), "Tomas");
-  assert.equal(readPathFrom(node, ["LastName"]), "Kovacik");
-  assert.equal(readPathFrom(node, ["Email1Address"]), "kovacik@dgtfactory.com");
-  assert.equal(readPathFrom(node, ["BusinessPhoneNumber"]), "00421907813840");
-  assert.equal(readPathFrom(node, ["CompanyName"]), "DGT factory, a. s.");
+  assert.equal(readPathFrom(node, ["FirstName"]), "Sample");
+  assert.equal(readPathFrom(node, ["LastName"]), "User");
+  assert.equal(readPathFrom(node, ["Email1Address"]), "user@example.invalid");
+  assert.equal(readPathFrom(node, ["BusinessPhoneNumber"]), "+49301234567");
+  assert.equal(readPathFrom(node, ["CompanyName"]), "Example GmbH");
   assert.equal(readPathFrom(node, ["JobTitle"]), "President of space");
 });

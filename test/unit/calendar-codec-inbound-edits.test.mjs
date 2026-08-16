@@ -31,7 +31,7 @@ const COMMON = {
   defaultTimezone: "UTC",
   syncRecurrence: true,
   uid: null,
-  userEmail: "kovacik@dgtfactory.com",
+  userEmail: "user@example.invalid",
 };
 
 const ADD_SINGLE_EVENT = `<ApplicationData>
@@ -162,7 +162,7 @@ test("single occurrence (16.1 standalone Change): applyInstanceChange reschedule
     instanceUtc,
     asVersion: "16.1",
     defaultTimezone: "UTC",
-    userEmail: "kovacik@dgtfactory.com",
+    userEmail: "user@example.invalid",
   });
 
   const master = masterVevent(afterInstanceChange);

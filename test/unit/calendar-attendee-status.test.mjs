@@ -23,7 +23,7 @@ import assert from "node:assert/strict";
 import { applicationDataToIcal } from "../../src/modules/eas/calendar-codec.mjs";
 import { el } from "./support/ad-node.mjs";
 
-const ME = "john.bieling@ekir.de";
+const ME = "user@example.invalid";
 
 /** An invitation as the server sends one: the organizer is somebody else,
  *  and the user is in the attendee list. Omitting `attendeeStatus` is the
@@ -34,7 +34,7 @@ function invitation({ attendeeStatus = null, responseType = null } = {}) {
     el("Subject", "Hamburg"),
     el("StartTime", "20260901T100000Z"),
     el("EndTime", "20260901T110000Z"),
-    el("OrganizerEmail", "john.bieling@outlook.de"),
+    el("OrganizerEmail", "organizer@example.invalid"),
     el("OrganizerName", "John Bieling"),
     el("MeetingStatus", "3"),
     ...(responseType === null ? [] : [el("ResponseType", String(responseType))]),

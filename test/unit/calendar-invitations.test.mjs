@@ -28,8 +28,8 @@ import {
   selfUserResponses,
 } from "../../src/modules/eas/calendar-codec.mjs";
 
-const ME = "john.bieling@cvjmbonn.de";
-const ORG = "john.bieling@outlook.de";
+const ME = "user@example.invalid";
+const ORG = "organizer@example.invalid";
 
 /** An item as it looks after a pull: the server's own MeetingStatus. */
 function pulled(

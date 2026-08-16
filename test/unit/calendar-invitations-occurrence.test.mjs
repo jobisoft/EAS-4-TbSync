@@ -25,8 +25,8 @@ import {
   serverKnownPartstat,
 } from "../../src/modules/eas/calendar-codec.mjs";
 
-const ME = "john.bieling@cvjmbonn.de";
-const ORG = "john.bieling@outlook.de";
+const ME = "user@example.invalid";
+const ORG = "organizer@example.invalid";
 
 /** A recurring invitation. `master` is the series answer, `overrides` a map
  *  of RECURRENCE-ID to that occurrence's answer. `stamps` gives a component
