@@ -1,15 +1,11 @@
-# Patches for Thunderbird itself
+# An empty async result loses its "search me again" flag
 
-Fixes this add-on needs that live in Thunderbird's own code, not in ours or
-in the vendored experiment. They cannot be shipped from an add-on; they are
-kept here so the diagnosis is not lost and so the change can be offered
-upstream.
+A fix this add-on needs that lives in Thunderbird's own code, not in ours and
+not in the vendored experiment. It cannot be shipped from an add-on, so it is
+kept here: the diagnosis is not lost, and the change can be offered upstream.
 
-Apply with `patch -p1` from the root of a `comm` checkout.
-
----
-
-## thunderbird-autocomplete-empty-async-result.patch
+Apply `thunderbird-autocomplete-empty-async-result.patch` with `patch -p1`
+from the root of a `comm` checkout.
 
 **File:** `mailnews/addrbook/src/AbAutoCompleteSearch.sys.mjs`
 **Against:** comm-central `4acf91d731b7` (2026-08-16)
@@ -68,16 +64,17 @@ only difference being one local contact:
 
 | local contact matching the prefix | Search requests | result |
 | --- | --- | --- |
-| no  | 2 (`cvj`, `cvjm`) | 3 hits |
-| yes | 1 (`cvj` only)    | no hits |
+| no  | 2 (`abd`, `abde`) | hits |
+| yes | 1 (`abd` only)    | no hits |
 
-Steps:
+Steps, using the reporter's own directory - it holds `Abdelhamid` and
+`Abderazzak`, both of which match `abde`:
 
 1. An account whose GAL needs four characters (Exchange Online does).
-2. Type `cvj` in a compose address field - the provider is asked, the server
+2. Type `abd` in a compose address field - the provider is asked, the server
    declines, the provider answers empty and incomplete.
-3. Extend to `cvjm`. The provider is not asked. No GAL results appear.
-4. Add a contact to a local address book whose name matches `cvj`, and the
+3. Extend to `abde`. The provider is not asked. No GAL results appear.
+4. Add a contact to a local address book whose name matches `abd`, and the
    behaviour flips: without it the extension works, with it it does not.
 
 Holding a breakpoint in the provider's callback also makes it work, for the

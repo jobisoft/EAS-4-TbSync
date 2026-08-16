@@ -154,14 +154,14 @@ test("an answer with no stated total is never narrowed from", async () => {
   // people. Without a total we cannot tell "that is everyone" from "I did
   // not look", so the longer query has to be asked.
   const { search, asked } = await galUnderTest({
-    cvj: { results: [], total: null, delivered: 0 },
-    cvjm: complete(["CVJM Buero", "Flohmarkt CVJM", "CVJM Bonn"]),
+    abd: { results: [], total: null, delivered: 0 },
+    abde: complete(["Abdelhamid", "Abderazzak"]),
   });
-  const declined = search("cvj");
+  const declined = search("abd");
   assert.equal(await settledOr(declined), HELD, "the empty answer is held");
-  const found = await search("cvjm");
-  assert.deepEqual(asked, ["cvj", "cvjm"], "the server was asked both times");
-  assert.equal(found.results.length, 3, "the people the short query missed");
+  const found = await search("abde");
+  assert.deepEqual(asked, ["abd", "abde"], "the server was asked both times");
+  assert.equal(found.results.length, 2, "the people the short query missed");
   // `declined` stays held - nothing releases it but its own timer.
   assert.equal(await settledOr(declined), HELD, "still held");
 });
@@ -215,16 +215,16 @@ test("a hold belongs to its own search and nothing can end it early", async () =
   // end another's hold, its search would complete, and the bug would come
   // back there.
   const { search } = await galUnderTest({
-    cvj: { results: [], total: null, delivered: 0 },
-    abc: { results: [], total: null, delivered: 0 },
+    abd: { results: [], total: null, delivered: 0 },
+    xyz: { results: [], total: null, delivered: 0 },
   });
-  const first = search("cvj");
+  const first = search("abd");
   assert.equal(await settledOr(first), HELD, "held");
 
-  search("abc"); // another window, another question
+  search("xyz"); // another window, another question
   assert.equal(await settledOr(first), HELD, "still held");
 
-  search("cvj"); // and even the same question again
+  search("abd"); // and even the same question again
   assert.equal(await settledOr(first), HELD, "still held");
 });
 
@@ -233,12 +233,12 @@ test("contacts.query is answered even when the answer is empty", async () => {
   // awaits one promise per address book and would hang for good otherwise -
   // and it is nothing to do with the bug being worked around.
   const { query, asked } = await galUnderTest({
-    cvj: { results: [], total: null, delivered: 0 },
+    abd: { results: [], total: null, delivered: 0 },
   });
-  const answered = await settledOr(query("cvj"));
+  const answered = await settledOr(query("abd"));
   assert.notEqual(answered, HELD, "a real query is never withheld");
   assert.deepEqual(answered, { results: [], isCompleteResult: false });
-  assert.deepEqual(asked, ["cvj"]);
+  assert.deepEqual(asked, ["abd"]);
 });
 
 test("a failed search is not remembered as an answer", async () => {
