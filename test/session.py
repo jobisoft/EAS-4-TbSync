@@ -432,7 +432,7 @@ def preflight(provider="eas", require=KINDS, sync_gap=None):
     _require_debug_logging()
     _require_no_sync_after_change(granted)
     _require_server_wins(granted)
-    _widen_and_clear_event_log()
+    _clear_event_log()
 
     # Nothing is bound here. Every section now disconnects and re-binds what
     # it needs, so binding a guess at start-up would only be torn down again
@@ -446,36 +446,21 @@ def preflight(provider="eas", require=KINDS, sync_gap=None):
     return session
 
 
-EVENT_LOG_MAX_WANTED = 5000
+def _clear_event_log():
+    """Start the run with an empty log.
 
+    Every wire assertion reads the buffer - `wire()` reconstructs what was
+    sent from the logged requests - so a section must not be able to reach
+    entries from a previous run.
 
-def _widen_and_clear_event_log():
-    """Give the run a buffer big enough to hold a whole section, and start it
-    empty.
-
-    The log is a ring buffer, 500 entries by default. Every wire assertion
-    reads it - `wire()` reconstructs what was sent from the logged requests -
-    so once it rolls mid-section, a command that *was* sent is simply no
-    longer there, and the assertion reports "the edit never reached the
-    server". That is indistinguishable from the defect it exists to catch.
-
-    Set, not checked, unlike the log level and sync-after-change: those are
-    the account owner's choices about their own data, while this is a debug
-    buffer size with no effect on what syncs. It is restored to the stored
-    default by the host on the next Thunderbird restart, since the buffer
-    itself is session-scoped.
-
-    Cleared as well, so a section's reads cannot reach entries from a
-    previous run - and so the whole buffer belongs to this one. The size is
-    chosen for headroom rather than measured need: the cheapest section uses
-    15 entries, the heaviest run for minutes, and the cost of guessing low is
-    an assertion that reports a command as never sent when it was only no
-    longer recorded.
+    The size is no longer set here. It was, because the host's buffer used
+    to default to 500 entries and a long section would roll it, at which
+    point a command that *was* sent is simply no longer there and the
+    assertion reports "the edit never reached the server" - indistinguishable
+    from the defect it exists to catch. The host now holds the size as a
+    constant of 5000, the same value this used to ask for, so there is
+    nothing to raise.
     """
-    snap = ok("storage.snapshot")
-    settings = dict(snap.get("tbsync.settings") or {})
-    settings["eventLogMax"] = EVENT_LOG_MAX_WANTED
-    ok("storage.restore", data={"tbsync.settings": settings})
     ok("clearEventLog")
 
 
