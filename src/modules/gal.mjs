@@ -29,7 +29,133 @@ import { isOAuthAccount, primeAuth } from "./eas/oauth.mjs";
 
 const MIN_QUERY_LENGTH = 3;
 
+/** How long an answer stays usable. Long enough to cover a compose
+ *  session's typing and re-typing, short enough that a colleague added to
+ *  the directory today is findable within the same sitting. */
+const CACHE_TTL_MS = 120_000;
+
 const listeners = new Map(); // accountId → { callback, addressBookId }
+
+/* ── Answers we have already paid for ─────────────────────────────────
+ *
+ * Worth having because Thunderbird asks the same thing repeatedly: it
+ * starts a fresh search on every keystroke and discards any answer that
+ * arrives after the next one, so a query typed, deleted and retyped is
+ * asked several times over - and it asks each GAL directory separately, so
+ * a machine with four EAS accounts pays four round trips per keystroke.
+ * Measured against a Z-Push GAL, one search took ~1.7s, longer than the
+ * gap between keystrokes: without this, the answer to what the user is
+ * typing reliably arrives too late to be shown.
+ *
+ * It never sees a query Thunderbird can answer itself: a complete result
+ * for "abc" licenses it to narrow locally, so "abcd" never reaches us.
+ *
+ * What is stored is the promise rather than the answer, which makes one
+ * structure do both jobs: a second asker for a question still in flight
+ * waits on the request already running, and once it settles the same entry
+ * is the cached answer. Awaiting a settled promise costs nothing.
+ *
+ * Entries carry the moment they expire, computed once when stored, and are
+ * dropped by the lookup that finds them stale. Nothing sweeps.
+ */
+
+const answers = new Map(); // `${accountId}\n${query}` → { eol, promise }
+
+function cacheKey(accountId, query) {
+  // Case-folded: the server matches case-insensitively, so "Biel" and
+  // "biel" are the same question and should not be asked twice.
+  return `${accountId}\n${query.toLowerCase()}`;
+}
+
+/** The pending or settled answer for this query, or null when there is
+ *  none or the one we had has expired. Expiry is applied here, which is
+ *  what makes a sweeper unnecessary. */
+function cachedAnswer(key) {
+  const hit = answers.get(key);
+  if (!hit) return null;
+  if (hit.eol <= Date.now()) {
+    answers.delete(key);
+    return null;
+  }
+  return hit.promise;
+}
+
+/** Keep a running search under its query. A failure is not kept: handing
+ *  the same rejection to every caller for the whole TTL would leave the
+ *  GAL looking dead long after the network came back. */
+function rememberAnswer(key, promise) {
+  const entry = { eol: Date.now() + CACHE_TTL_MS, promise, answer: null };
+  answers.set(key, entry);
+  promise.then(
+    (answer) => {
+      // Kept on the entry as well as in the promise so `narrowFrom` can
+      // read a finished answer without awaiting - it must not block on a
+      // search still running for some other prefix.
+      entry.answer = answer;
+    },
+    () => {
+      if (answers.get(key)?.promise === promise) answers.delete(key);
+    },
+  );
+  return promise;
+}
+
+/** Everything we hold about one result, lower-cased once, for matching. */
+function haystack(contact) {
+  return Object.values(contact).join(" ").toLowerCase();
+}
+
+/** Answer `query` from a wider answer we already have, or null.
+ *
+ *  Thunderbird does this itself for the compose autocomplete - a complete
+ *  result for "bie" licenses it to narrow locally and "biel" never reaches
+ *  us - but the address book search has no such step and asks us for every
+ *  keystroke. On a GAL that takes ~1.7s per search that is the whole of the
+ *  delay, so we do the same narrowing here.
+ *
+ *  Only from a *complete* answer: a truncated one is the first hundred of
+ *  a larger set, and narrowing it would hide everyone the server held back.
+ *  Longest prefix first, since it is the smallest set to filter and the
+ *  most recently confirmed.
+ *
+ *  Verified against ekir's GAL before being written: the server's answer
+ *  for "biel" is exactly this filter applied to its answer for "bie" (10
+ *  of 76), and for "bielz" exactly this filter applied to "biel" (1 of 10).
+ *  The assumption is that a longer query matches a subset of a shorter
+ *  one, which holds for any substring or prefix matching. */
+function narrowFrom(accountId, query) {
+  const needle = query.toLowerCase();
+  const prefix = `${accountId}\n`;
+  let best = null;
+  for (const [key, entry] of answers) {
+    if (!key.startsWith(prefix) || !entry.answer) continue;
+    if (entry.eol <= Date.now()) continue;
+    const cachedQuery = key.slice(prefix.length);
+    if (cachedQuery.length >= needle.length) continue;
+    if (!needle.startsWith(cachedQuery)) continue;
+    const { total, delivered } = entry.answer;
+    if (total == null || total > delivered) continue; // truncated - unsafe
+    if (!best || cachedQuery.length > best.q.length) {
+      best = { q: cachedQuery, answer: entry.answer };
+    }
+  }
+  if (!best) return null;
+  const results = best.answer.results.filter((c) =>
+    haystack(c).includes(needle),
+  );
+  // Complete by construction: it is every match in a set that was itself
+  // complete.
+  return { results, total: results.length, delivered: results.length };
+}
+
+/** Drop an account's answers, so a re-enabled account is never served from
+ *  the period it was gone. */
+function forgetAnswers(accountId) {
+  const prefix = `${accountId}\n`;
+  for (const key of answers.keys()) {
+    if (key.startsWith(prefix)) answers.delete(key);
+  }
+}
 
 let renameWatcherInstalled = false;
 
@@ -152,19 +278,45 @@ export async function enableGal({ provider, account }) {
           servertype: fresh.custom?.servertype,
         });
       }
-      const results = await provider.runGalSearch({
-        accountId,
-        query,
-        companyName: fresh.accountName,
-      });
-      return { results, isCompleteResult: true };
+      const key = cacheKey(accountId, query);
+      const { results, total, delivered } = await (cachedAnswer(key) ??
+        narrowFrom(accountId, query) ??
+        rememberAnswer(
+          key,
+          provider.runGalSearch({
+            accountId,
+            query,
+            companyName: fresh.accountName,
+          }),
+        ));
+      // `isCompleteResult: true` licenses Thunderbird to stop asking and
+      // narrow this set locally as the user types on. Two things stop us
+      // saying that, and both mean "ask again":
+      //
+      //   - the server stated no <Total>, so we know nothing about the
+      //     match set - the spec says it MUST state one, and a server that
+      //     does not has left us unable to tell "that is everyone" from
+      //     "that is the first hundred of many";
+      //   - it found more than it sent, having capped the answer at the
+      //     <Range> we asked for.
+      //
+      // Getting this wrong towards `true` costs a user a colleague they
+      // cannot find, with nothing to show why. Towards `false` it costs
+      // some extra requests.
+      const isCompleteResult = !(total == null || total > delivered);
+      return { results, isCompleteResult };
     } catch (err) {
       provider.reportEventLog?.({
         level: "warning",
         accountId,
         message: `[gal] search failed: ${err?.message ?? String(err)}`,
       });
-      return { results: [], isCompleteResult: true };
+      // Incomplete, not complete: a search that failed has told us nothing
+      // about the match set, and calling the empty answer final would let
+      // Thunderbird narrow it locally for every further character - so one
+      // timeout would silence the GAL for the rest of the typing, long
+      // after the network recovered.
+      return { results: [], isCompleteResult: false };
     }
   };
 
@@ -190,6 +342,7 @@ export async function disableGal({ provider, accountId }) {
   const entry = listeners.get(accountId);
   if (!entry) return;
   listeners.delete(accountId);
+  forgetAnswers(accountId);
 
   try {
     messenger.addressBooks.provider.onSearchRequest.removeListener(
