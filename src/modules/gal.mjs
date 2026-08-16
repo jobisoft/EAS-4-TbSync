@@ -227,6 +227,100 @@ export function installRenameWatcher(provider) {
   });
 }
 
+/* ── Withholding an empty answer ──────────────────────────────────────
+ *
+ * Thunderbird drops our "ask me again" flag when the answer is empty.
+ * `AbAutoCompleteSearch.onSearchFinished` records the directory in
+ * `result.asyncDirectories` - the list the next search re-queries - but
+ * that line sits inside `if (cards.length)`, so an empty result never gets
+ * on it. The next keystroke then takes the reuse path, which *replaces*
+ * the directory list with the previous result's instead of walking the
+ * address book manager again, finds it empty, and returns before searching
+ * anything. Our callback is never called again, however many characters
+ * the user types.
+ *
+ * That is the whole of issue #344 for anyone whose server declines short
+ * queries - Exchange wants four characters and answers three with a bare
+ * <Result/> - and who also has a local contact matching the same prefix,
+ * because a local match is what makes the previous result RESULT_SUCCESS
+ * and so eligible for reuse. With no local match the result is
+ * RESULT_NOMATCH, reuse is skipped, and the same typing works.
+ *
+ * So an empty answer is not returned at all: the promise is left pending,
+ * `onSearchFinished` never runs for it, and the search stays
+ * RESULT_SUCCESS_ONGOING. Reuse requires RESULT_SUCCESS exactly, so the
+ * next keystroke searches afresh and reaches us. This is what happens by
+ * accident when a debugger holds the search open, which is how the cause
+ * was found.
+ *
+ * At most one is held per address book: the next request releases the one
+ * before it. Releasing late costs nothing - Thunderbird has moved on and
+ * discards the answer at its own `this._result != result` guard.
+ *
+ * Remove this once Thunderbird records the flag for empty results. It
+ * exploits an implementation detail rather than a contract, and it leaves
+ * one search per address book permanently open if the user stops typing
+ * on a query the server declined.
+ */
+/** How long an empty autocomplete answer is held before being let go.
+ *  Long enough to cover any amount of typing, and matched to the cache TTL
+ *  so an answer is held for exactly as long as it would have been reused. */
+const WITHHOLD_MS = CACHE_TTL_MS;
+
+/** Hand back `answer`, unless it is the empty one the autocomplete cannot
+ *  remember - that one is held for a while instead of returned.
+ *
+ *  Thunderbird records "ask me again" only for an answer that carried at
+ *  least one card: in `AbAutoCompleteSearch.onSearchFinished` the
+ *  `result.asyncDirectories.push(dir)` that the next search reads sits
+ *  inside `if (cards.length)`. An empty answer is therefore forgotten, and
+ *  the next keystroke takes the reuse path - which replaces the directory
+ *  list with the previous result's rather than rebuilding it from the
+ *  address book manager - finds it empty, and never asks us again, however
+ *  many characters follow. That is the whole of #344 for anyone whose
+ *  server declines short queries, and it only bites when a local card also
+ *  matches, because that is what makes the previous result RESULT_SUCCESS
+ *  and so eligible for reuse.
+ *
+ *  Not answering leaves the search RESULT_SUCCESS_ONGOING. Reuse requires
+ *  RESULT_SUCCESS exactly, so the next keystroke searches afresh and
+ *  reaches us. Holding on a timer rather than releasing on the next request
+ *  keeps this free of shared state: the API tells us nothing about which
+ *  window is asking - `onSearchRequest` passes the address book, the string
+ *  and the query, and no caller identity - so anything keyed per account
+ *  would let one compose window end another's hold and bring the bug back
+ *  there. A timer belongs to its own search and to nothing else.
+ *
+ *  `abQuery` keeps this to the one caller that has the bug. Of the four
+ *  things in Thunderbird that search a directory, only the autocomplete's
+ *  async branch passes null:
+ *
+ *    AbAutoCompleteSearch:599  dir.search(null, str, listener)   <- this one
+ *    AbAutoCompleteSearch:225  directory.search(query, str, ...) sync path
+ *    AddrBookDataAdapter:38    dir.search(query, str, this)      address book
+ *    ext-addressBook:1302      book.item.search(query, str, ...) contacts.query
+ *
+ *  The last two wait for us - `contacts.query` awaits one promise per book,
+ *  resolved in `onSearchFinished` - so withholding from them would hang a
+ *  caller with nothing to do with this bug.
+ *
+ *  Remove all of this once Thunderbird records the flag for empty results;
+ *  `patches/` carries that fix. It exploits an implementation detail rather
+ *  than a contract, and it costs one held search per query for the TTL. */
+function answerOrWithhold(abQuery, answer) {
+  if (abQuery != null) return answer;
+  if (answer.results.length || answer.isCompleteResult) return answer;
+  return new Promise((resolve) => {
+    const timer = setTimeout(
+      () => resolve({ results: [], isCompleteResult: false }),
+      WITHHOLD_MS,
+    );
+    // No-op in the browser, where setTimeout returns a number. Under
+    // node:test it stops a pending hold from keeping the process alive.
+    timer?.unref?.();
+  });
+}
+
 /** Register the per-account onSearchRequest listener. No-op when the
  *  account has no Search capability or a listener is already in place. */
 export async function enableGal({ provider, account }) {
@@ -237,7 +331,7 @@ export async function enableGal({ provider, account }) {
   const accountId = account.accountId;
   const addressBookId = galAddressBookId(accountId);
 
-  const callback = async (_node, searchString) => {
+  const callback = async (_node, searchString, abQuery = null) => {
     const query = String(searchString ?? "").trim();
     if (query.length < MIN_QUERY_LENGTH) {
       // `isCompleteResult: false`, deliberately: `true` tells Thunderbird
@@ -247,7 +341,10 @@ export async function enableGal({ provider, account }) {
       // more character than MIN_QUERY_LENGTH (#344: gate 3, observed 4).
       // "Incomplete" keeps it querying, so the search genuinely fires the
       // moment the query is long enough.
-      return { results: [], isCompleteResult: false };
+      return answerOrWithhold(abQuery, {
+        results: [],
+        isCompleteResult: false,
+      });
     }
     try {
       // Reload the account each time so we pick up token / server-URL
@@ -304,7 +401,7 @@ export async function enableGal({ provider, account }) {
       // cannot find, with nothing to show why. Towards `false` it costs
       // some extra requests.
       const isCompleteResult = !(total == null || total > delivered);
-      return { results, isCompleteResult };
+      return answerOrWithhold(abQuery, { results, isCompleteResult });
     } catch (err) {
       provider.reportEventLog?.({
         level: "warning",
@@ -316,7 +413,10 @@ export async function enableGal({ provider, account }) {
       // Thunderbird narrow it locally for every further character - so one
       // timeout would silence the GAL for the rest of the typing, long
       // after the network recovered.
-      return { results: [], isCompleteResult: false };
+      return answerOrWithhold(abQuery, {
+        results: [],
+        isCompleteResult: false,
+      });
     }
   };
 
