@@ -1,0 +1,24 @@
+--- a/mailnews/addrbook/src/AbAutoCompleteSearch.sys.mjs
++++ b/mailnews/addrbook/src/AbAutoCompleteSearch.sys.mjs
+@@ -576,10 +576,17 @@
+                 isCompleteResult,
+               });
+             }
+-            if (!isCompleteResult) {
+-              // Next time perform a full search again to get better results.
+-              result.asyncDirectories.push(dir);
+-            }
++          }
++          if (!isCompleteResult) {
++            // Next time perform a full search again to get better results.
++            // Outside the `cards.length` test on purpose: a directory that
++            // reports an incomplete result has to be searched again whether
++            // or not it had anything to return this time. An empty result
++            // is the case that needs it most - the directory could not
++            // answer yet - and leaving it off the list means the reuse path
++            // above, which replaces asyncDirectories rather than rebuilding
++            // it from the manager, never searches that directory again.
++            result.asyncDirectories.push(dir);
+           }
+           if (result._searchResults.length) {
+             result.searchResult = searches.size
