@@ -53,10 +53,24 @@ function buildSearchBody(query) {
   return w.getBytes();
 }
 
-/** Run a GAL Search request and return mapped contact properties.
+/** Run a GAL Search request.
+ *
+ *  Returns `{ results, total }`: the mapped contact properties, and what
+ *  the server says it found. [MS-ASCMD] has the server return as many
+ *  entries as `<Range>` asks for - 100 by default, which is what we ask -
+ *  and it "MUST also indicate the total number of entries that are found"
+ *  in `<Total>`. So `total > results.length` means the answer is a
+ *  truncated view of a larger match set, which is the only reliable way
+ *  to know: counting rows cannot tell a GAL holding exactly 100 matches
+ *  from one holding 400.
+ *
+ *  `total` is null when the server states none, which is what an empty
+ *  result set looks like on some servers. The caller treats that as
+ *  complete - there is nothing being hidden behind an absent count.
+ *
  *  Caller must have verified that the account's `allowedEasCommands`
- *  include `Search`. Returns an empty list on a non-success Status or
- *  when the response carries no Result nodes. */
+ *  include `Search`. Yields no results on a non-success Status or when
+ *  the response carries no Result nodes. */
 export async function runGalSearch({ account, asVersion, query, companyName }) {
   const body = buildSearchBody(query);
   const { doc } = await easRequest({
@@ -65,7 +79,7 @@ export async function runGalSearch({ account, asVersion, query, companyName }) {
     body,
     asVersion,
   });
-  if (!doc) return [];
+  if (!doc) return { results: [], total: null };
 
   const topStatus =
     doc.getElementsByTagName("Status")[0]?.textContent ?? null;
@@ -78,12 +92,25 @@ export async function runGalSearch({ account, asVersion, query, companyName }) {
     });
   }
 
+  const rows = doc.getElementsByTagName("Result");
   const results = [];
-  for (const result of doc.getElementsByTagName("Result")) {
+  for (const result of rows) {
     const props = readProperties(result, companyName);
     if (props) results.push(props);
   }
-  return results;
+  // One <Total> per response, inside <Store> beside <Range>. Read flat
+  // like the Result nodes above; a Search response carries no other.
+  const totalText = doc.getElementsByTagName("Total")[0]?.textContent;
+  const total = Number.isFinite(Number(totalText)) && totalText !== ""
+    ? Number(totalText)
+    : null;
+  // `delivered` is what the server sent, `results` what we could map -
+  // a row carrying neither a name nor an address is dropped by
+  // `readProperties`. Completeness is a statement about the server's
+  // match set, so it has to be judged against what it delivered;
+  // comparing `total` with `results.length` would report a complete
+  // answer as truncated whenever a single row was unusable.
+  return { results, total, delivered: rows.length };
 }
 
 function readProperties(resultNode, companyName) {
