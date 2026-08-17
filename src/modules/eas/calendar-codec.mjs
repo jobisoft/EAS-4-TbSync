@@ -140,18 +140,6 @@ export async function applicationDataToIcal({
   if (uid) vevent.updatePropertyWithValue("uid", uid);
   vevent.updatePropertyWithValue(X_EAS_SERVERID.toLowerCase(), serverID);
 
-  if (eventLog) {
-    const orgEmailRaw = readPathFrom(adNode, ["OrganizerEmail"]);
-    const orgNameRaw = readPathFrom(adNode, ["OrganizerName"]);
-    const hasOrgInfo =
-      childByTag(adNode, "OrganizerEmail") ||
-      childByTag(adNode, "OrganizerName");
-    eventLog(
-      "debug",
-      `[calendar-codec] receive OrganizerInfo: present=${!!hasOrgInfo} OrganizerEmail=${JSON.stringify(orgEmailRaw ?? null)} OrganizerName=${JSON.stringify(orgNameRaw ?? null)}`,
-    );
-  }
-
   await populateVeventFromAd({
     adNode,
     vevent,
@@ -803,25 +791,10 @@ export function appendApplicationDataFromIcal({
     const orgProp = vevent.getFirstProperty("organizer");
     const localEmail = orgProp ? stripMailto(orgProp.getFirstValue()) : null;
     const localCn = orgProp?.getParameter("cn") ?? null;
-    let emittedEmail = null;
-    let emittedName = null;
     if (orgProp) {
-      const cn = localCn;
-      const name = cn || fallbackOrganizerName;
-      if (name) {
-        builder.atag("OrganizerName", name);
-        emittedName = name;
-      }
-      if (localEmail) {
-        builder.atag("OrganizerEmail", localEmail);
-        emittedEmail = localEmail;
-      }
-    }
-    if (eventLog) {
-      eventLog(
-        "debug",
-        `[calendar-codec] push OrganizerInfo: local ORGANIZER email=${JSON.stringify(localEmail)} cn=${JSON.stringify(localCn)} → emitted OrganizerEmail=${JSON.stringify(emittedEmail)} OrganizerName=${JSON.stringify(emittedName)}`,
-      );
+      const name = localCn || fallbackOrganizerName;
+      if (name) builder.atag("OrganizerName", name);
+      if (localEmail) builder.atag("OrganizerEmail", localEmail);
     }
   }
 
@@ -859,7 +832,7 @@ export function appendApplicationDataFromIcal({
   // as supported on 16.0/16.1.
   const alarm = vevent.getFirstSubcomponent("valarm");
   if (alarm) {
-    const minutes = alarmMinutes(alarm, dtstart, eventLog);
+    const minutes = alarmMinutes(alarm, dtstart, eventLog, pushLabelOf(vevent));
     if (minutes != null && minutes >= 0)
       builder.atag("Reminder", String(minutes));
   } else if (asVersion === "16.1") {
@@ -1055,6 +1028,20 @@ export function clientRejectReason({ blob, syncRecurrence }) {
     }
   }
   return null;
+}
+
+/** How a log line names the item being pushed.
+ *
+ *  The ServerId first: it is what the server calls the item and what the
+ *  wire dump beside the entry shows, so it is the id that correlates. An
+ *  item the server has not seen yet carries no stamp and can only offer
+ *  its UID, which is also the id it has locally. */
+function pushLabelOf(vevent) {
+  return (
+    stringOf(vevent.getFirstPropertyValue(X_EAS_SERVERID.toLowerCase())) ||
+    stringOf(vevent.getFirstPropertyValue("uid")) ||
+    "an item with no id"
+  );
 }
 
 export function readEasServerIdFromIcal(ical) {
@@ -2287,7 +2274,7 @@ function appendDisplayAlarm(vevent, minutesBeforeStart) {
   vevent.addSubcomponent(alarm);
 }
 
-function alarmMinutes(alarm, dtstartProp, eventLog) {
+function alarmMinutes(alarm, dtstartProp, eventLog, itemLabel) {
   const trig = alarm.getFirstProperty("trigger");
   if (!trig) return null;
   const v = trig.getFirstValue();
@@ -2304,16 +2291,18 @@ function alarmMinutes(alarm, dtstartProp, eventLog) {
     return null;
   }
   if (eventLog) {
+    // Info-level: the user is being told an alarm of theirs was rewritten
+    // or lost, which says nothing useful without naming the event.
     if (wasAbsolute) {
       eventLog(
         "info",
-        `[calendar-sync] converted absolute VALARM trigger to relative offset (${minutes} min before start) - EAS supports relative alarms only`,
+        `[calendar-sync] converted the absolute VALARM trigger of ${itemLabel} to a relative offset (${minutes} min before start) - EAS supports relative alarms only`,
       );
     }
     if (minutes < 0) {
       eventLog(
         "info",
-        "[calendar-sync] dropped VALARM scheduled after event start - EAS supports alarms before start only",
+        `[calendar-sync] dropped the VALARM of ${itemLabel}, scheduled after event start - EAS supports alarms before start only`,
       );
     }
   }
