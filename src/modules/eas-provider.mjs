@@ -75,7 +75,7 @@ import {
   primeAuth,
   primeAccessToken,
   forgetAuth,
-  currentRefreshToken,
+  setRotationSink,
   startAuth,
   isOAuthAccount,
 } from "./eas/oauth.mjs";
@@ -283,6 +283,14 @@ export class EasProvider extends TbSyncProviderImplementation {
     // into `account.custom.galName` so the rename survives across the
     // teardown/recreate cycle on next TB start.
     installGalRenameWatcher(this);
+    // Store a refresh token the server rotated, whoever's request caused
+    // it. Announced from the OAuth layer rather than written by each
+    // caller: a rotation is invisible to the caller, and the ones outside
+    // the sync hooks - the GAL search, a free/busy lookup - used to lose it
+    // silently, leaving storage holding a token the server had retired.
+    setRotationSink((accountId, refreshToken) =>
+      this.#storeRotatedRefreshToken(accountId, refreshToken),
+    );
   }
 
   // ── Base-class hooks ───────────────────────────────────────────────────
@@ -646,19 +654,10 @@ export class EasProvider extends TbSyncProviderImplementation {
     const ctx = await this.#loadContext(accountId);
     if (!ctx) throw withCode(new Error("unknown account"), ERR.UNKNOWN_ACCOUNT);
     this.reportSyncState({ accountId, syncState: "prepare" });
-    const oauth = isOAuthAccount(ctx.account.custom);
-    const storedRefreshToken = ctx.account.custom?.refreshToken;
-    try {
-      // Refresh the folder list each sync so server-side additions surface.
-      // Items themselves are synced per folder, by onSyncFolder.
-      await this.#connectAndDiscoverFolders(accountId);
-      return ok();
-    } finally {
-      // Also on the failure path: a sync can rotate the token and then fail
-      // for an unrelated reason, and the rotated token is still the good one.
-      if (oauth)
-        await this.#persistRotatedRefreshToken(accountId, storedRefreshToken);
-    }
+    // Refresh the folder list each sync so server-side additions surface.
+    // Items themselves are synced per folder, by onSyncFolder.
+    await this.#connectAndDiscoverFolders(accountId);
+    return ok();
   }
 
   /** OPTIONS probe (once) → pre-emptive Provision (if user-toggled) →
@@ -1129,23 +1128,15 @@ export class EasProvider extends TbSyncProviderImplementation {
     });
   }
 
-  /** Write back a refresh token Microsoft rotated during this sync.
-   *
-   *  A refresh can hand us a new refresh token, which the OAuth layer keeps
-   *  in memory. The background page is persistent, so that lasts the whole
-   *  session - but the next start primes from `custom`, so without this the
-   *  account comes back on a token the server may already have retired.
-   *
-   *  Done after the sync rather than at the moment of rotation, which keeps
-   *  a storage write off the token-refresh path. Rotation is rare, so this
-   *  is a comparison that almost always does nothing. */
-  async #persistRotatedRefreshToken(accountId, storedRefreshToken) {
-    const live = currentRefreshToken(accountId);
-    if (!live || live === storedRefreshToken) return;
+  /** Write a rotated refresh token to `custom`, so the next start - or the
+   *  next wake of a suspended background - primes from the one that still
+   *  works. */
+  async #storeRotatedRefreshToken(accountId, refreshToken) {
+    if (!refreshToken) return;
     try {
       await this.updateAccount({
         accountId,
-        patch: { custom: { refreshToken: live } },
+        patch: { custom: { refreshToken } },
       });
       // Rotation cannot be provoked - the server decides when to hand back
       // a new token - so the only way to confirm this path works is to
@@ -1164,7 +1155,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           "[oauth] the server rotated the refresh token; stored the new one",
       });
     } catch (err) {
-      // Losing the write costs a re-auth at worst; failing the sync that
+      // Losing the write costs a re-auth at worst; failing the request that
       // otherwise succeeded would be the bigger harm.
       console.debug(
         `[eas] persisting rotated refresh token for ${accountId} failed:`,
@@ -1260,137 +1251,128 @@ export class EasProvider extends TbSyncProviderImplementation {
       return ok();
     }
 
-    const oauth = isOAuthAccount(ctx.account.custom);
-    const storedRefreshToken = ctx.account.custom?.refreshToken;
-    if (oauth) this.#primeAuth(ctx);
+    if (isOAuthAccount(ctx.account.custom)) this.#primeAuth(ctx);
 
-    try {
-      // Lazy-bind the local TB target on first sync (or after the user
-      // removed it manually).
-      if (tt === "contacts") {
-        if (
-          !folder.targetID ||
-          !(await addressBook.bookExists(folder.targetID))
-        ) {
-          const name = localNameForFolder(folder, ctx);
-          const targetID = await addressBook.createBook(name);
-          await this.updateFolder({
-            accountId,
-            folderId,
-            patch: { targetID, targetName: name },
-          });
-          folder = { ...folder, targetID, targetName: name };
-        }
-      } else {
-        if (
-          !folder.targetID ||
-          !(await calendarStore.calendarExists(folder.targetID))
-        ) {
-          const name = localNameForFolder(folder, ctx);
-          // The colour the user last gave this folder, or a fresh one from
-          // the palette. Written back either way, so an assigned colour is
-          // remembered from then on and the calendar keeps it through the
-          // next disable/enable.
-          const color =
-            folder.targetColor || (await calendarStore.pickCalendarColor());
-          const targetID = await calendarStore.createCalendar({
-            name,
-            kind: tt === "calendars" ? "events" : "tasks",
-            color,
-            type: CALENDAR_TYPE,
-            url: CALENDAR_URL,
-            ...calendarOwner(ctx.account),
-          });
-          await this.updateFolder({
-            accountId,
-            folderId,
-            patch: { targetID, targetName: name, targetColor: color },
-          });
-          folder = {
-            ...folder,
-            targetID,
-            targetName: name,
-            targetColor: color,
-          };
-        }
-        // Thunderbird's own refresh timer duplicates the schedule this
-        // add-on already runs. New calendars are created with it off; this
-        // reaches the ones that are not, including any where the user has
-        // set an interval in the calendar's properties dialog since.
-        await calendarStore.suppressCalendarRefresh(folder.targetID);
-
-        // Exchange invites the attendees of a meeting we push, so Thunderbird
-        // must not mail them as well. New calendars say so from the start;
-        // this reaches the ones made before that.
-        await calendarStore
-          .deferSchedulingToServer(folder.targetID)
-          .then((written) => {
-            if (written) {
-              this.reportEventLog({
-                level: "info",
-                accountId,
-                folderId,
-                message:
-                  "[eas] invitations for this calendar are left to the server",
-              });
-            }
-          })
-          .catch((err) =>
-            this.reportEventLog({
-              level: "debug",
-              accountId,
-              folderId,
-              message: `[eas] could not defer scheduling to the server: ${err?.message ?? String(err)}`,
-            }),
-          );
-
-        // Calendars made before the account knew its own address carry no
-        // owner; declaring it here reaches them without a recreate.
-        const owner = calendarOwner(ctx.account);
-        await calendarStore
-          .setCalendarOwner(folder.targetID, owner)
-          .then((written) => {
-            // Only on a change - `setCalendarOwner` compares first, so a
-            // line here means the calendar just learned something, not
-            // that it is asked every sync.
-            if (written) {
-              this.reportEventLog({
-                level: "info",
-                accountId,
-                folderId,
-                message: `[eas] this calendar now belongs to ${owner.organizer}`,
-              });
-            }
-          })
-          .catch((err) =>
-            this.reportEventLog({
-              level: "debug",
-              accountId,
-              folderId,
-              message: `[eas] could not declare the calendar owner: ${err?.message ?? String(err)}`,
-            }),
-          );
+    // Lazy-bind the local TB target on first sync (or after the user
+    // removed it manually).
+    if (tt === "contacts") {
+      if (
+        !folder.targetID ||
+        !(await addressBook.bookExists(folder.targetID))
+      ) {
+        const name = localNameForFolder(folder, ctx);
+        const targetID = await addressBook.createBook(name);
+        await this.updateFolder({
+          accountId,
+          folderId,
+          patch: { targetID, targetName: name },
+        });
+        folder = { ...folder, targetID, targetName: name };
       }
+    } else {
+      if (
+        !folder.targetID ||
+        !(await calendarStore.calendarExists(folder.targetID))
+      ) {
+        const name = localNameForFolder(folder, ctx);
+        // The colour the user last gave this folder, or a fresh one from
+        // the palette. Written back either way, so an assigned colour is
+        // remembered from then on and the calendar keeps it through the
+        // next disable/enable.
+        const color =
+          folder.targetColor || (await calendarStore.pickCalendarColor());
+        const targetID = await calendarStore.createCalendar({
+          name,
+          kind: tt === "calendars" ? "events" : "tasks",
+          color,
+          type: CALENDAR_TYPE,
+          url: CALENDAR_URL,
+          ...calendarOwner(ctx.account),
+        });
+        await this.updateFolder({
+          accountId,
+          folderId,
+          patch: { targetID, targetName: name, targetColor: color },
+        });
+        folder = {
+          ...folder,
+          targetID,
+          targetName: name,
+          targetColor: color,
+        };
+      }
+      // Thunderbird's own refresh timer duplicates the schedule this
+      // add-on already runs. New calendars are created with it off; this
+      // reaches the ones that are not, including any where the user has
+      // set an interval in the calendar's properties dialog since.
+      await calendarStore.suppressCalendarRefresh(folder.targetID);
 
-      this.reportSyncState({ accountId, folderId, syncState: "sync" });
+      // Exchange invites the attendees of a meeting we push, so Thunderbird
+      // must not mail them as well. New calendars say so from the start;
+      // this reaches the ones made before that.
+      await calendarStore
+        .deferSchedulingToServer(folder.targetID)
+        .then((written) => {
+          if (written) {
+            this.reportEventLog({
+              level: "info",
+              accountId,
+              folderId,
+              message:
+                "[eas] invitations for this calendar are left to the server",
+            });
+          }
+        })
+        .catch((err) =>
+          this.reportEventLog({
+            level: "debug",
+            accountId,
+            folderId,
+            message: `[eas] could not defer scheduling to the server: ${err?.message ?? String(err)}`,
+          }),
+        );
 
-      const args = {
-        provider: this,
-        account: ctx.account,
-        folder,
-        accountId,
-        folderId,
-        asVersion: ctx.account.custom?.asversion ?? "14.1",
-      };
-      if (tt === "contacts") return await syncContactFolder(args);
-      if (tt === "calendars") return await syncCalendarFolder(args);
-      return await syncTaskFolder(args);
-    } finally {
-      // Item sync is where a long run is most likely to cross a token
-      // refresh, so this is the folder hook's reason for a finally.
-      if (oauth)
-        await this.#persistRotatedRefreshToken(accountId, storedRefreshToken);
+      // Calendars made before the account knew its own address carry no
+      // owner; declaring it here reaches them without a recreate.
+      const owner = calendarOwner(ctx.account);
+      await calendarStore
+        .setCalendarOwner(folder.targetID, owner)
+        .then((written) => {
+          // Only on a change - `setCalendarOwner` compares first, so a
+          // line here means the calendar just learned something, not
+          // that it is asked every sync.
+          if (written) {
+            this.reportEventLog({
+              level: "info",
+              accountId,
+              folderId,
+              message: `[eas] this calendar now belongs to ${owner.organizer}`,
+            });
+          }
+        })
+        .catch((err) =>
+          this.reportEventLog({
+            level: "debug",
+            accountId,
+            folderId,
+            message: `[eas] could not declare the calendar owner: ${err?.message ?? String(err)}`,
+          }),
+        );
     }
+
+    this.reportSyncState({ accountId, folderId, syncState: "sync" });
+
+    const args = {
+      provider: this,
+      account: ctx.account,
+      folder,
+      accountId,
+      folderId,
+      asVersion: ctx.account.custom?.asversion ?? "14.1",
+    };
+    if (tt === "contacts") return await syncContactFolder(args);
+    if (tt === "calendars") return await syncCalendarFolder(args);
+    return await syncTaskFolder(args);
   }
 
   // ── Setup / config popup backings ─────────────────────────────────────

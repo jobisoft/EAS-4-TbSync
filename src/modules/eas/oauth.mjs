@@ -18,10 +18,31 @@
  * missing falls back to DEFAULT_OAUTH_CLIENT_ID. Scope is derived from
  * `account.custom.servertype` via `scopeForServertype`. The same
  * `servertype` field is the discriminator for "is this an OAuth
- * account?" (see `isOAuthAccount`). Access tokens are kept in an
- * in-memory cache only; we refresh transparently on expiry. `primeAuth`
- * seeds the auth cache at the top of every on* hook that hits the
- * network.
+ * account?" (see `isOAuthAccount`).
+ *
+ * In-memory state is one **session** per account. A session is a sign-in
+ * lineage: Microsoft rotates the refresh token on every redemption, so one
+ * consent produces a chain of tokens, and the current access token, the
+ * refresh in flight, and the stored refresh token are all facts about that
+ * chain. The invariant the shape enforces: nothing from one lineage can
+ * leak into another. Callers run concurrently - the GAL search and the
+ * free/busy lookup fire one request per keystroke - and every historical
+ * bug in this file was such a leak: two callers redeeming the same
+ * refresh token, a stale storage snapshot overwriting a rotated one, a
+ * late-landing refresh burying the token a re-sign-in had just stored.
+ *
+ * Hence: a session is created whole (`primeAuth`, which seeds and never
+ * replaces), discarded whole (`forgetAuth` - the account was disabled,
+ * deleted, or re-authenticated, the cases where storage really is newer),
+ * and written only by its own refresh, which holds the object itself. A
+ * refresh that outlives its session writes into an orphan nobody can
+ * reach. `primeAuth` runs at the top of every on* hook that hits the
+ * network, and per request from the GAL and free/busy paths.
+ *
+ * A rotation is announced through `setRotationSink` so it reaches
+ * `account.custom` whichever caller triggered it - the background is an
+ * event page, and a suspend takes these sessions with it, so the next wake
+ * primes from storage.
  */
 
 import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
@@ -91,40 +112,71 @@ export function isOAuthAccount(custom) {
 /** Refresh 30 s before the token expires. */
 const REFRESH_SKEW_MS = 30_000;
 
-/** accountId → { token, expiresAt } */
-const accessTokenCache = new Map();
+/** accountId → session. See the module docstring: a session is one
+ *  sign-in lineage, created whole, discarded whole, and written only by
+ *  its own refresh. Shape:
+ *
+ *    { refreshToken, servertype,   // the lineage's current link + scope
+ *      accessToken, expiresAt,     // what the lineage has redeemed
+ *      pending }                   // the one refresh in flight, or null
+ */
+const sessions = new Map();
 
-/** accountId → { refreshToken, servertype }. */
-const authCache = new Map();
+/** Called with (accountId, refreshToken) when the live session's token
+ *  rotates, so the new one can reach storage. Set once by the provider;
+ *  absent in tests and before construction. */
+let rotationSink = null;
 
+export function setRotationSink(fn) {
+  rotationSink = typeof fn === "function" ? fn : null;
+}
+
+/** Open a session for this account from what storage holds - unless one
+ *  is already live. An existing session has redeemed its way past the
+ *  stored token, so replacing it would revive a link the server has
+ *  already retired; and the concurrent callers this module serves each
+ *  read storage at their own moment, so stale snapshots arriving here is
+ *  the normal case, not a corner. `forgetAuth` is how a caller says the
+ *  stored token really is the newer one. */
 export function primeAuth(accountId, { refreshToken, servertype }) {
   if (!refreshToken || !servertype) return;
-  authCache.set(accountId, { refreshToken, servertype });
-}
-
-export function forgetAuth(accountId) {
-  authCache.delete(accountId);
-  accessTokenCache.delete(accountId);
-}
-
-export function invalidateAccessToken(accountId) {
-  accessTokenCache.delete(accountId);
-}
-
-export function primeAccessToken(accountId, token, expiresIn) {
-  accessTokenCache.set(accountId, {
-    token,
-    expiresAt: Date.now() + (expiresIn ?? 3600) * 1000,
+  if (sessions.has(accountId)) return;
+  sessions.set(accountId, {
+    refreshToken,
+    servertype,
+    accessToken: null,
+    expiresAt: 0,
+    pending: null,
   });
 }
 
-/** The refresh token currently in play for this account, which is not
- *  necessarily the one stored on the account: Microsoft rotates refresh
- *  tokens, and `getAccessToken` keeps the new one in `authCache` only.
- *  Lets the provider write a rotated token back to `custom` after a sync,
- *  so a restart re-primes from the token that actually works. */
-export function currentRefreshToken(accountId) {
-  return authCache.get(accountId)?.refreshToken ?? null;
+/** End the account's session - lineage, access token, in-flight slot, all
+ *  of it. A refresh still in the air keeps its orphaned object and settles
+ *  for its own callers, but can no longer be seen through the map. */
+export function forgetAuth(accountId) {
+  sessions.delete(accountId);
+}
+
+/** Drop the redeemed access token but keep the lineage, so the next call
+ *  refreshes. A refresh already in flight is left alone on purpose: it is
+ *  fetching a new token, which is exactly what a caller who just saw a
+ *  401 wants to join. */
+export function invalidateAccessToken(accountId) {
+  const session = sessions.get(accountId);
+  if (!session) return;
+  session.accessToken = null;
+  session.expiresAt = 0;
+}
+
+/** Hand the session an access token obtained elsewhere - the interactive
+ *  sign-in returns one, and keeping it saves the next request a refresh
+ *  round-trip. Without a session this is a no-op: an access token with no
+ *  lineage behind it could never be renewed. */
+export function primeAccessToken(accountId, token, expiresIn) {
+  const session = sessions.get(accountId);
+  if (!session) return;
+  session.accessToken = token;
+  session.expiresAt = Date.now() + (expiresIn ?? 3600) * 1000;
 }
 
 // ── Interactive sign-in ────────────────────────────────────────────────────
@@ -218,32 +270,57 @@ async function exchangeCode({ clientID, code, scope }) {
 
 // ── Refresh-on-demand ─────────────────────────────────────────────────────
 
-/** Returns a valid access token. Refreshes transparently using the cached
- *  refresh token when the in-memory access token is expired or missing.
- *  `primeAuth(accountId, …)` must have been called first. */
+/** Returns a valid access token for the account's session, refreshing
+ *  transparently when the one in hand is expired or missing. `primeAuth`
+ *  must have opened a session first.
+ *
+ *  At most one refresh per session is ever in flight; concurrent callers
+ *  join it and share its answer. Everything the refresh learns is written
+ *  to the session it started from - never through the map - so a refresh
+ *  that lands after its session ended settles its own callers and changes
+ *  nothing else. */
 export async function getAccessToken(accountId) {
-  const cached = accessTokenCache.get(accountId);
-  if (cached && cached.expiresAt > Date.now() + REFRESH_SKEW_MS) {
-    return cached.token;
-  }
-  const auth = authCache.get(accountId);
-  if (!auth) {
+  const session = sessions.get(accountId);
+  if (!session) {
     throw withCode(
       new Error("OAuth auth not primed - call primeAuth first"),
       ERR.AUTH,
     );
   }
-  const fresh = await refreshAccessToken(auth);
-  accessTokenCache.set(accountId, {
-    token: fresh.access_token,
-    expiresAt: Date.now() + (fresh.expires_in ?? 3600) * 1000,
-  });
-  // Microsoft sometimes rotates refresh tokens; capture the new one if so.
-  if (fresh.refresh_token && fresh.refresh_token !== auth.refreshToken) {
-    auth.refreshToken = fresh.refresh_token;
-    authCache.set(accountId, auth);
+  if (session.accessToken && session.expiresAt > Date.now() + REFRESH_SKEW_MS) {
+    return session.accessToken;
   }
-  return fresh.access_token;
+  session.pending ??= (async () => {
+    try {
+      const fresh = await refreshAccessToken(session);
+      session.accessToken = fresh.access_token;
+      session.expiresAt = Date.now() + (fresh.expires_in ?? 3600) * 1000;
+      // Microsoft sometimes rotates refresh tokens; move the lineage on.
+      if (fresh.refresh_token && fresh.refresh_token !== session.refreshToken) {
+        session.refreshToken = fresh.refresh_token;
+        // Only the live session speaks to storage: writing a rotation that
+        // belongs to an ended lineage would leave `custom.refreshToken` on
+        // the dead chain, and the next start would prime from it. Not
+        // awaited, and a rejection is caught rather than left to the
+        // process - the sink is an async function handed in from outside,
+        // and one that threw would slip past a plain try/catch.
+        if (sessions.get(accountId) === session) {
+          try {
+            Promise.resolve(rotationSink?.(accountId, fresh.refresh_token)).catch(
+              (err) =>
+                console.debug("[eas] refresh-token rotation sink failed:", err),
+            );
+          } catch (err) {
+            console.debug("[eas] refresh-token rotation sink threw:", err);
+          }
+        }
+      }
+      return fresh.access_token;
+    } finally {
+      session.pending = null;
+    }
+  })();
+  return session.pending;
 }
 
 /** Exchange a refresh token for a fresh access token. Throws ERR.AUTH on
