@@ -176,7 +176,7 @@ test("an override carrying its own DURATION emits a derived EndTime in the embed
   );
 });
 
-test("clientRejectReason holds endless and non-positive events, passes representable ones", () => {
+test("clientRejectReason holds endless and backwards events, passes representable ones", () => {
   const reject = (lines) =>
     clientRejectReason({ blob: vcal(lines), syncRecurrence: true });
 
@@ -185,14 +185,14 @@ test("clientRejectReason holds endless and non-positive events, passes represent
     /neither DTEND nor DURATION/,
     "a start with no expressed end is held",
   );
-  assert.match(
-    String(reject(["DTSTART:20260810T140000Z", "DTEND:20260810T140000Z"])),
-    /does not end after it starts/,
-    "zero length is held",
+  assert.equal(
+    reject(["DTSTART:20260810T140000Z", "DTEND:20260810T140000Z"]),
+    null,
+    "zero length is representable - the server accepts StartTime == EndTime",
   );
   assert.match(
     String(reject(["DTSTART:20260810T140000Z", "DTEND:20260810T130000Z"])),
-    /does not end after it starts/,
+    /ends before it starts/,
     "a negative length is held",
   );
   assert.equal(
@@ -296,14 +296,17 @@ test("an all-day event whose DTEND equals its DTSTART is a day, not nothing", ()
   assert.equal(readPathFrom(node, ["EndTime"]), "20260811T000000Z");
 });
 
-test("a timed zero-length event is still held - only all-day gets the day", () => {
-  assert.match(
-    String(
-      clientRejectReason({
-        blob: vcal(["DTSTART:20260810T140000Z", "DTEND:20260810T140000Z"]),
-        syncRecurrence: true,
-      }),
-    ),
-    /does not end after it starts/,
-  );
+test("a timed zero-length event goes out as StartTime == EndTime", () => {
+  // Outlook writes these - a point-in-time reminder is exactly this shape,
+  // and one arrived from Exchange in a user report. Holding it meant
+  // refusing to send back an item the server had given us, failing on
+  // every sync, with no fix available to the user that did not change
+  // their data. Measured on Exchange 16.1: Status 1 on the Add, the
+  // Change accepted, and the times unchanged on the next pull.
+  const blob = vcal(["DTSTART:20260810T140000Z", "DTEND:20260810T140000Z"]);
+  assert.equal(clientRejectReason({ blob, syncRecurrence: true }), null);
+  const node = emit(blob);
+  assert.equal(readPathFrom(node, ["StartTime"]), "20260810T140000Z");
+  assert.equal(readPathFrom(node, ["EndTime"]), "20260810T140000Z");
+  assert.equal(readPathFrom(node, ["AllDayEvent"]), "0");
 });

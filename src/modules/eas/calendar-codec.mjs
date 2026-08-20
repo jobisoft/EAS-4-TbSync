@@ -1008,10 +1008,17 @@ export function clientRejectReason({ blob, syncRecurrence }) {
 
   // Timing, for the master and for every override - an occurrence rides
   // the same writer, so a bad one lands on the wire the same way. An
-  // event with a start but no expressed end, or an end not after its
-  // start, cannot go out without inventing data, so it is held like a
+  // event with a start but no expressed end, or one ending before it
+  // starts, cannot go out without inventing data, so it is held like a
   // server rejection. A VEVENT with no DTSTART at all is left alone:
   // that is the status-only exception-delta shape, which is legitimate.
+  //
+  // A zero-length event is NOT held. Outlook writes them - a point-in-time
+  // reminder is exactly that shape - so the server hands us items we would
+  // then refuse to hand back, and the user cannot fix it without giving
+  // the event a duration it never had. Measured against Exchange 16.1:
+  // StartTime == EndTime is answered Status 1 on an Add and accepted on a
+  // Change, and comes back unchanged on the next pull.
   for (const comp of vcal.getAllSubcomponents("vevent")) {
     const startVal = comp.getFirstPropertyValue("dtstart");
     if (!(startVal instanceof ICAL.Time)) continue;
@@ -1023,8 +1030,8 @@ export function clientRejectReason({ blob, syncRecurrence }) {
     if (!(endVal instanceof ICAL.Time)) {
       return `${where} has a start but no end (neither DTEND nor DURATION)`;
     }
-    if (endVal.compare(startVal) <= 0) {
-      return `${where} does not end after it starts`;
+    if (endVal.compare(startVal) < 0) {
+      return `${where} ends before it starts`;
     }
   }
   return null;
