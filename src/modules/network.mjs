@@ -91,6 +91,7 @@ export class EasHttpError extends Error {
     this.code = code;
     this.status = status;
     if (options.newLocation) this.newLocation = options.newLocation;
+    if (options.retryAfterMs != null) this.retryAfterMs = options.retryAfterMs;
   }
 }
 
@@ -226,6 +227,16 @@ export async function easRequest({ account, command, body, asVersion }) {
     if (resp.status === 449)
       throw new EasHttpError(NET_ERR.PROVISION_REQUIRED, 449);
     if (resp.status === 451) throw redirectError(resp);
+    if (resp.status === 503) {
+      // "Retry later", by the book: [MS-ASCMD] 2.2.2 has pre-14.0 servers
+      // answer HTTP 503 where 14.0+ answers Status 111
+      // (ServerErrorRetryLater), and Exchange throttling uses it too. Carry
+      // the server's own Retry-After when it states one, so the sync layer
+      // can pause autosync for the time the server asked for, not a guess.
+      throw new EasHttpError(NET_ERR.HTTP, 503, {
+        retryAfterMs: parseRetryAfterMs(resp.headers.get("Retry-After")),
+      });
+    }
     if (!resp.ok) throw new EasHttpError(NET_ERR.HTTP, resp.status);
 
     const buf = rawBuf ?? new Uint8Array(0);
@@ -409,6 +420,30 @@ async function buildAuthHeader(account) {
   if (custom.password == null)
     throw new Error("buildAuthHeader: account.custom.password is missing");
   return basicAuthHeader(custom.user, custom.password);
+}
+
+/** How long to pause autosync on a retry-later signal when the server
+ *  does not say. Legacy paused 30 minutes on Sync Status 110; kept. */
+export const RETRY_LATER_BACKOFF_MS = 30 * 60 * 1000;
+
+/** The Retry-After header, as milliseconds from now, or null.
+ *
+ *  RFC 9110 allows delay-seconds or an HTTP-date; both occur in the wild.
+ *  Clamped to [1 min, 4 h]: below a minute a pause is not worth
+ *  recording, and above four hours a confused server would silence an
+ *  account for a day on one header nobody can see. */
+export function parseRetryAfterMs(header) {
+  if (!header) return null;
+  const s = header.trim();
+  let ms = null;
+  if (/^\d+$/.test(s)) {
+    ms = Number(s) * 1000;
+  } else {
+    const date = Date.parse(s);
+    if (!Number.isNaN(date)) ms = date - Date.now();
+  }
+  if (ms == null) return null;
+  return Math.min(Math.max(ms, 60_000), 4 * 60 * 60 * 1000);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────

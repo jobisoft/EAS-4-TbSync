@@ -38,7 +38,7 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
-import { easRequest } from "../network.mjs";
+import { easRequest, RETRY_LATER_BACKOFF_MS } from "../network.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
@@ -96,11 +96,14 @@ const STATUS_FOLDER_HIERARCHY = "12";
 // Top-level only: "something on the server caused a retriable error", whose
 // documented resolution is "resend the request" ([MS-ASCMD] §2.2.3.177.17).
 const STATUS_RETRY = "16";
-// Server temporarily unavailable / busy. Legacy paused autosync for 30
-// minutes on this; we mirror that by writing `noAutosyncUntil` on the
-// account so the host's autosync ticker skips it for the duration.
-const STATUS_BUSY = "110";
-const BUSY_BACKOFF_MS = 30 * 60 * 1000;
+// "Come back later", in both spellings [MS-ASCMD] 2.2.2 gives it: 111
+// (ServerErrorRetryLater) is the named one, and 110 (ServerError) is kept
+// because real servers send it when they mean busy - the legacy add-on's
+// 30-minute pause was built on observing exactly that. Autosync is
+// suppressed via `noAutosyncUntil` on the account; a pre-14.0 server says
+// the same thing as HTTP 503, which arrives as a thrown wire error and is
+// folded into this path by the caller.
+const BUSY_STATUSES = new Set(["110", "111"]);
 
 // Top-level Sync.Status codes that indicate a malformed wire-level
 // payload ([MS-ASCMD] §2.2.3.167.16). Distinct from collection-level
@@ -280,17 +283,31 @@ export async function runItemSync({
 
   let workingFolder = folder;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const result = await runOneSync({
-      provider,
-      account,
-      folder: workingFolder,
-      accountId,
-      folderId,
-      asVersion,
-      collectionId,
-      itemKind,
-      defaultTimezone,
-    });
+    let result;
+    try {
+      result = await runOneSync({
+        provider,
+        account,
+        folder: workingFolder,
+        accountId,
+        folderId,
+        asVersion,
+        collectionId,
+        itemKind,
+        defaultTimezone,
+      });
+    } catch (err) {
+      // HTTP 503 is "retry later" said at the transport - the shape
+      // pre-14.0 servers use for Status 111, and throttling Exchanges for
+      // any version - so it takes the same pause as the in-band statuses
+      // instead of failing the folder red. Everything else stays thrown.
+      if (err?.status !== 503) throw err;
+      result = {
+        code: "BUSY",
+        httpStatus: 503,
+        retryAfterMs: err.retryAfterMs ?? null,
+      };
+    }
     if (result.code === "RESYNC") {
       // Status 3: the server does not recognise the sync key we sent, so
       // our view of this collection is void. Starting over re-downloads
@@ -372,14 +389,20 @@ export async function runItemSync({
       );
     }
     if (result.code === "BUSY") {
-      // Server signalled "temporarily unavailable" (Sync Status 110).
-      // Suppress autosync for 30 minutes via the host-recognized
-      // top-level `noAutosyncUntil` field; the user can still trigger a
-      // manual sync, which will retry the request immediately.
+      // The server asked us to come back later - Sync Status 110/111 in
+      // the body, or HTTP 503 at the transport. Suppress autosync via the
+      // host-recognized top-level `noAutosyncUntil` field, for as long as
+      // the server's own Retry-After asked when it sent one; the user can
+      // still trigger a manual sync, which retries immediately.
+      const pauseMs = result.retryAfterMs ?? RETRY_LATER_BACKOFF_MS;
+      const pauseMin = Math.max(1, Math.round(pauseMs / 60_000));
+      const via = result.httpStatus
+        ? `HTTP ${result.httpStatus}`
+        : `Status ${result.topStatus ?? result.collStatus}`;
       await provider
         .updateAccount({
           accountId,
-          patch: { noAutosyncUntil: Date.now() + BUSY_BACKOFF_MS },
+          patch: { noAutosyncUntil: Date.now() + pauseMs },
         })
         .catch((err) =>
           console.debug(
@@ -391,9 +414,11 @@ export async function runItemSync({
         level: "warning",
         accountId,
         folderId,
-        message: `[${itemKind.changelogKind}-sync] server busy (Status 110); autosync paused for 30 min`,
+        message: `[${itemKind.changelogKind}-sync] server asks to retry later (${via}); autosync paused for ${pauseMin} min`,
       });
-      return warningStatus("Server busy - autosync paused for 30 minutes");
+      return warningStatus(
+        `Server busy - autosync paused for ${pauseMin} minutes`,
+      );
     }
     return result.status ?? ok();
   }
@@ -544,7 +569,13 @@ async function runOneSync({
       return await finishWith(ctx, { code: "HIERARCHY" });
     if (boot.code === "PROVISION_REQUIRED")
       return await finishWith(ctx, { code: "PROVISION_REQUIRED" });
-    if (boot.code === "BUSY") return await finishWith(ctx, { code: "BUSY" });
+    if (boot.code === "BUSY") {
+      return await finishWith(ctx, {
+        code: "BUSY",
+        topStatus: boot.topStatus,
+        collStatus: boot.collStatus,
+      });
+    }
     if (boot.error)
       return await finishWith(ctx, { status: errorStatus(boot.error) });
     ctx.synckey = boot.synckey;
@@ -1004,7 +1035,8 @@ async function pullPhase(ctx) {
     if (r.code === "RESYNC") return { code: "RESYNC" };
     if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
     if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
-    if (r.code === "BUSY") return { code: "BUSY" };
+    if (r.code === "BUSY")
+      return { code: "BUSY", topStatus: r.topStatus, collStatus: r.collStatus };
     if (r.error) return { status: errorStatus(r.error) };
 
     if (r.commands) {
@@ -1130,7 +1162,8 @@ async function pushPhase(ctx, userEdits) {
     if (r.code === "RESYNC") return { code: "RESYNC" };
     if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
     if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
-    if (r.code === "BUSY") return { code: "BUSY" };
+    if (r.code === "BUSY")
+      return { code: "BUSY", topStatus: r.topStatus, collStatus: r.collStatus };
 
     if (r.code === "MALFORMED") {
       if (slice.length > 1) {
@@ -1889,7 +1922,8 @@ export async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
   if (r.code === "RESYNC") return { code: "RESYNC" };
   if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
   if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
-  if (r.code === "BUSY") return { code: "BUSY" };
+  if (r.code === "BUSY")
+      return { code: "BUSY", topStatus: r.topStatus, collStatus: r.collStatus };
   if (r.error) {
     // Errors carrying no status of their own - protocol fault, access
     // denied, a reply we cannot parse - are account-level and sink the sync.
@@ -3140,7 +3174,7 @@ async function sendSync({ account, asVersion, body }) {
 function parseSyncResponse(doc) {
   const top = readPath(doc, ["Status"]);
   if (top && top !== STATUS_OK) {
-    if (top === STATUS_BUSY) return { code: "BUSY", topStatus: top };
+    if (BUSY_STATUSES.has(top)) return { code: "BUSY", topStatus: top };
     if (top === STATUS_RESYNC) return { code: "RESYNC", topStatus: top };
     if (top === STATUS_FOLDER_HIERARCHY)
       return { code: "HIERARCHY", topStatus: top };
@@ -3180,7 +3214,7 @@ function parseSyncResponse(doc) {
       return { code: "HIERARCHY", collStatus };
     if (STATUS_PROVISION_REQUIRED.has(collStatus))
       return { code: "PROVISION_REQUIRED", collStatus };
-    if (collStatus === STATUS_BUSY) return { code: "BUSY", collStatus };
+    if (BUSY_STATUSES.has(collStatus)) return { code: "BUSY", collStatus };
     if (
       collStatus === STATUS_MALFORMED ||
       collStatus === STATUS_INVALID ||

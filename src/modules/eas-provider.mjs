@@ -66,6 +66,7 @@ import {
   withCode,
   ok,
   error,
+  warning,
   TbSyncProviderImplementation,
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "../vendor/tbsync/address-book.mjs";
@@ -100,7 +101,11 @@ import {
   sendDeviceInformation,
 } from "./eas/settings.mjs";
 import { runGalSearch as runGalSearchRequest } from "./eas/gal-search.mjs";
-import { NET_ERR, setSyncSignalResolver } from "./network.mjs";
+import {
+  NET_ERR,
+  RETRY_LATER_BACKOFF_MS,
+  setSyncSignalResolver,
+} from "./network.mjs";
 import {
   enableGal,
   disableGal,
@@ -654,9 +659,36 @@ export class EasProvider extends TbSyncProviderImplementation {
     const ctx = await this.#loadContext(accountId);
     if (!ctx) throw withCode(new Error("unknown account"), ERR.UNKNOWN_ACCOUNT);
     this.reportSyncState({ accountId, syncState: "prepare" });
-    // Refresh the folder list each sync so server-side additions surface.
-    // Items themselves are synced per folder, by onSyncFolder.
-    await this.#connectAndDiscoverFolders(accountId);
+    try {
+      // Refresh the folder list each sync so server-side additions surface.
+      // Items themselves are synced per folder, by onSyncFolder.
+      await this.#connectAndDiscoverFolders(accountId);
+    } catch (err) {
+      // HTTP 503 is the server saying "retry later" ([MS-ASCMD] 2.2.2:
+      // pre-14.0 servers answer it where 14.0+ answers Status 111, and
+      // throttling Exchanges use it for any version). Pause autosync for
+      // the server's own Retry-After when it stated one, instead of
+      // failing the account red and letting the ticker hammer a server
+      // that just asked for room. A manual sync still retries at once.
+      if (err?.status !== 503) throw err;
+      const pauseMs = err.retryAfterMs ?? RETRY_LATER_BACKOFF_MS;
+      const pauseMin = Math.max(1, Math.round(pauseMs / 60_000));
+      await this.updateAccount({
+        accountId,
+        patch: { noAutosyncUntil: Date.now() + pauseMs },
+      }).catch((e) =>
+        console.debug(
+          `[eas] updateAccount(noAutosyncUntil) for ${accountId} failed:`,
+          e,
+        ),
+      );
+      this.reportEventLog({
+        level: "warning",
+        accountId,
+        message: `[eas] server asks to retry later (HTTP 503); autosync paused for ${pauseMin} min`,
+      });
+      return warning(`Server busy - autosync paused for ${pauseMin} minutes`);
+    }
     return ok();
   }
 
