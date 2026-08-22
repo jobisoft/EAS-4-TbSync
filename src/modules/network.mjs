@@ -211,6 +211,12 @@ export async function easRequest({ account, command, body, asVersion }) {
       { readBody: true },
     );
 
+    // Log what a failing response actually said - headers and body - at
+    // debug, before the throw ladder decides what the failure means. The
+    // retried 401 lands here too; one debug line for a recovered auth blip
+    // is cheap, and its absence made real prompts undiagnosable.
+    if (!resp.ok) logRecvError({ account, command, resp, buf: rawBuf });
+
     if (resp.status === 401 || resp.status === 403) {
       // OAuth-specific recovery: cached access token may be stale despite
       // not being expired (server-side revocation, clock skew). Invalidate
@@ -295,6 +301,58 @@ function logRecvXML({ account, command, xml }) {
     accountId: account?.accountId,
     message: `[eas:net] receive ${command}`,
     details: xml,
+  });
+}
+
+/** Response headers as "Name: value" lines, for the error log.
+ *
+ *  Set-Cookie is withheld - a session cookie in an event log is a
+ *  credential in every bug report the log is attached to. Everything else
+ *  goes through: Retry-After, X-MS-*, WWW-Authenticate and whatever else
+ *  the server volunteers are exactly what a report needs. */
+export function formatHeadersForLog(headers) {
+  const lines = [];
+  for (const [name, value] of headers?.entries?.() ?? []) {
+    if (name.toLowerCase() === "set-cookie") continue;
+    lines.push(`${name}: ${value}`);
+  }
+  return lines.join("\n");
+}
+
+/** Cap for a logged error body. Server error pages are small; anything
+ *  beyond this is boilerplate that would only crowd the log. */
+const ERROR_BODY_LOG_MAX = 4000;
+
+/** One entry for a response we are about to throw on. Until this existed,
+ *  every receive log line required a healthy response - the throw ladder
+ *  ran first - so the reports that most needed the wire (an HTTP 500 with
+ *  the server's own explanation in the body, a 503 with a Retry-After)
+ *  carried none of it.
+ *
+ *  Info, not debug like the other wire lines: those fire on every healthy
+ *  request and are most of the log's bytes, while a failing response is
+ *  rare, capped small, and exactly what a bug report needs - so it must be
+ *  captured at the default log level, without asking the reporter to raise
+ *  verbosity and fail again. */
+function logRecvError({ account, command, resp, buf }) {
+  let body = "";
+  if (buf?.length) {
+    try {
+      body = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+    } catch {
+      body = "<decode-failed>";
+    }
+    if (body.length > ERROR_BODY_LOG_MAX) {
+      body = `${body.slice(0, ERROR_BODY_LOG_MAX)}\n… (${body.length} chars total)`;
+    }
+  }
+  reportEventLog({
+    level: "info",
+    accountId: account?.accountId,
+    message: `[eas:net] receive ${command} failed (HTTP ${resp.status})`,
+    details: [formatHeadersForLog(resp.headers), body]
+      .filter(Boolean)
+      .join("\n\n"),
   });
 }
 
@@ -477,8 +535,18 @@ async function fetchWithTimeout(url, init, cancelSignal = null, opts = {}) {
     }
     try {
       const resp = await fetch(url, { ...init, signal: controller.signal });
-      if (!readBody || !resp.ok) return { resp, buf: null };
-      const buf = new Uint8Array(await resp.arrayBuffer());
+      if (!readBody) return { resp, buf: null };
+      // Error responses are read too: a 500 from a non-Microsoft server
+      // usually carries its own explanation as HTML or text, and dropping
+      // it unread is why error reports used to arrive with nothing but the
+      // status number. A failed body read on an error response is not
+      // worth failing over - the status is already in hand.
+      let buf = null;
+      try {
+        buf = new Uint8Array(await resp.arrayBuffer());
+      } catch (err) {
+        if (resp.ok) throw err;
+      }
       return { resp, buf };
     } catch (err) {
       clearTimeout(timer);

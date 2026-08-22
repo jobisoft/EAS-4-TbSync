@@ -16,7 +16,9 @@ import assert from "node:assert/strict";
 import { installWebextEnv } from "./support/webext-env.mjs";
 installWebextEnv();
 
-const { parseRetryAfterMs } = await import("../../src/modules/network.mjs");
+const { parseRetryAfterMs, formatHeadersForLog } = await import(
+  "../../src/modules/network.mjs"
+);
 
 test("delay-seconds is read as milliseconds", () => {
   assert.equal(parseRetryAfterMs("120"), 120_000);
@@ -45,4 +47,26 @@ test("absent or unreadable answers null, never a guess", () => {
   assert.equal(parseRetryAfterMs(null), null);
   assert.equal(parseRetryAfterMs(""), null);
   assert.equal(parseRetryAfterMs("soon"), null);
+});
+
+test("logged headers keep the diagnosis and withhold the cookie", () => {
+  // The log ends up attached to bug reports, so Set-Cookie - a session
+  // credential - must never ride along. Everything else is exactly what a
+  // report needs.
+  const headers = new Headers([
+    ["Retry-After", "120"],
+    ["X-MS-RP", "16.1"],
+    ["Set-Cookie", "session=SECRET; HttpOnly"],
+    ["WWW-Authenticate", 'Bearer error="invalid_token"'],
+  ]);
+  const out = formatHeadersForLog(headers);
+  assert.match(out, /retry-after: 120/i);
+  assert.match(out, /x-ms-rp: 16.1/i);
+  assert.match(out, /www-authenticate/i);
+  assert.ok(!/set-cookie|SECRET/i.test(out), "the cookie stays out");
+});
+
+test("no headers is an empty string, not a crash", () => {
+  assert.equal(formatHeadersForLog(null), "");
+  assert.equal(formatHeadersForLog(new Headers()), "");
 });
