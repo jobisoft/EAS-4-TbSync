@@ -2260,6 +2260,110 @@ function namesInstance(t, jsDate, tzId) {
  *  uses for all-day instances (`YYYYMMDDT000000Z`); a DATE-TIME row keys
  *  as its instant, which keeps old-form blobs comparable to fingerprints
  *  taken before the DATE form existed. */
+/** Render a property in a parameter-order-independent canonical form so
+ *  TB's parameter reordering (which is also legal per RFC 5545) doesn't
+ *  trigger a diff. Falls back to toICALString() if the structured form
+ *  isn't available. */
+export function canonicalPropertyString(prop) {
+  try {
+    const j = prop.toJSON(); // [name, paramsObj, valueType, ...values]
+    const name = j[0];
+    const params = j[1] ?? {};
+    const valueType = j[2];
+    const values = j.slice(3);
+    const paramKeys = Object.keys(params).sort();
+    const paramStr = paramKeys
+      .map((k) => `;${k.toUpperCase()}=${stringifyValue(params[k])}`)
+      .join("");
+    const valStr = values.map(stringifyValue).join(",");
+    return `${name.toUpperCase()}${paramStr}${valueType ? "" : ""}:${valStr}`;
+  } catch {
+    try {
+      return prop.toICALString();
+    } catch {
+      return `${prop.name}:${stringifyValue(prop.getFirstValue())}`;
+    }
+  }
+}
+
+function stringifyValue(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v.map(stringifyValue).join(",");
+  if (typeof v === "object" && typeof v.toString === "function")
+    return v.toString();
+  return String(v);
+}
+
+/** Which property names differ between two iCal blobs, and nothing else.
+ *
+ *  Names only, never values: the one caller logs this at info level, so
+ *  it lands in every bug report made with default settings, and an event's
+ *  summary, location or attendees have no business there. A name is enough
+ *  to say who wrote - `x-moz-lastack` is an alarm being acknowledged,
+ *  `rrule` is something rewriting recurrence.
+ *
+ *  Compared per component and keyed the way `pinEasStamps` keys them, so a
+ *  change confined to one occurrence is not read as a change to the series,
+ *  and alarms are walked too - an acknowledgement may land on the VALARM
+ *  rather than the event. `x-eas-*` is excluded: the caller already knows
+ *  those differ, which is why it is asking.
+ *
+ *  Returns a sorted array; empty means the two carry the same properties,
+ *  which is the loudest answer of all - a write that changed nothing.
+ *  Returns null if either side cannot be parsed, which the caller reports
+ *  as "unknown" rather than as "nothing".
+ */
+export function differingPropertyNames(aIcal, bIcal) {
+  const a = propertyMapOf(aIcal);
+  const b = propertyMapOf(bIcal);
+  if (!a || !b) return null;
+  const names = new Set();
+  for (const key of new Set([...a.keys(), ...b.keys()])) {
+    const left = a.get(key) ?? [];
+    const right = b.get(key) ?? [];
+    if (left.length === right.length && left.every((s, i) => s === right[i])) {
+      continue;
+    }
+    // The key is "<component>\u0000<PROPERTY>"; only the property is named.
+    names.add(key.slice(key.indexOf("\u0000") + 1).toLowerCase());
+  }
+  return [...names].sort();
+}
+
+/** Every property of every component of an iCal blob, as
+ *  "<component-key>\u0000<NAME>" -> sorted canonical strings.
+ *
+ *  The component key distinguishes the series from its overrides and each
+ *  alarm from the next, so a diff cannot cancel out across them. Sorted
+ *  values make multi-occurrence properties (EXDATE, ATTENDEE) compare
+ *  without caring about order. */
+function propertyMapOf(ical) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return null;
+  const map = new Map();
+  const add = (compKey, comp) => {
+    for (const p of comp.getAllProperties()) {
+      if (p.name.toLowerCase().startsWith("x-eas-")) continue;
+      const key = `${compKey}\u0000${p.name.toUpperCase()}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(canonicalPropertyString(p));
+    }
+  };
+  for (const comp of vcal.getAllSubcomponents()) {
+    if (comp.name !== "vevent" && comp.name !== "vtodo") continue;
+    const rid = comp.getFirstPropertyValue("recurrence-id");
+    const compKey = rid ? instanceKey(rid) : "";
+    add(compKey, comp);
+    // Alarms carry no id of their own, so they are keyed by position -
+    // enough to notice one changing, which is all this is for.
+    const alarms = comp.getAllSubcomponents("valarm");
+    alarms.forEach((alarm, i) => add(`${compKey}/valarm[${i}]`, alarm));
+  }
+  for (const list of map.values()) list.sort();
+  return map;
+}
+
 function instanceKey(t) {
   return t instanceof ICAL.Time && t.isDate
     ? fakeLocalAsUtcFromValue(t)

@@ -39,6 +39,7 @@
 
 import ICAL from "../../vendor/ical.min.js";
 import { easRequest, RETRY_LATER_BACKOFF_MS } from "../network.mjs";
+import { canonicalPropertyString } from "./calendar-codec.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
@@ -3624,37 +3625,3 @@ function innerProps(text, target) {
   return map;
 }
 
-/** Render a property in a parameter-order-independent canonical form so
- *  TB's parameter reordering (which is also legal per RFC 5545) doesn't
- *  trigger a diff. Falls back to toICALString() if the structured form
- *  isn't available. */
-function canonicalPropertyString(prop) {
-  try {
-    const j = prop.toJSON(); // [name, paramsObj, valueType, ...values]
-    const name = j[0];
-    const params = j[1] ?? {};
-    const valueType = j[2];
-    const values = j.slice(3);
-    const paramKeys = Object.keys(params).sort();
-    const paramStr = paramKeys
-      .map((k) => `;${k.toUpperCase()}=${stringifyValue(params[k])}`)
-      .join("");
-    const valStr = values.map(stringifyValue).join(",");
-    return `${name.toUpperCase()}${paramStr}${valueType ? "" : ""}:${valStr}`;
-  } catch {
-    try {
-      return prop.toICALString();
-    } catch {
-      return `${prop.name}:${stringifyValue(prop.getFirstValue())}`;
-    }
-  }
-}
-
-function stringifyValue(v) {
-  if (v == null) return "";
-  if (typeof v === "string") return v;
-  if (Array.isArray(v)) return v.map(stringifyValue).join(",");
-  if (typeof v === "object" && typeof v.toString === "function")
-    return v.toString();
-  return String(v);
-}

@@ -36,6 +36,7 @@
 import ICAL from "../vendor/ical.min.js";
 import {
   announceableOf,
+  differingPropertyNames,
   exceptionFingerprint,
   isReceivedMeeting,
   pinEasStamps,
@@ -445,9 +446,43 @@ async function guardStamps(item, priorIcal) {
     level: "info",
     message:
       `[event-sync] restored the EAS stamps on ${item.id}: the incoming ` +
-      `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}`,
+      `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}` +
+      alsoChanges(ical, priorIcal),
   });
   return { ...item, item: guarded };
+}
+
+/** How many property names the line above will print before it stops. A
+ *  rewrite that touches everything says so in a word instead of listing
+ *  the whole item. */
+const CHANGED_NAMES_SHOWN = 8;
+
+/** What this write changes besides our stamps, named for the log.
+ *
+ *  The question the line exists to answer: who wrote this? A name is
+ *  enough to tell an alarm being acknowledged (`x-moz-lastack`) from
+ *  something rewriting recurrence (`rrule`) - and "nothing else" is the
+ *  most useful answer of all, because a write that changes nothing but
+ *  the stamps we just restored is one we should not be pushing.
+ *
+ *  Never throws. It runs inside the item hook, which holds the user's
+ *  save: a hook that does not return the item makes the platform treat
+ *  the edit as failed and the user's change disappears. Diagnostics are
+ *  not worth that, so anything unexpected here degrades to saying
+ *  nothing. */
+function alsoChanges(ical, priorIcal) {
+  if (!priorIcal) return "";
+  try {
+    const names = differingPropertyNames(priorIcal, ical);
+    if (names == null) return "";
+    if (!names.length) return "; nothing else differs from the stored copy";
+    const shown = names.slice(0, CHANGED_NAMES_SHOWN).join(", ");
+    const rest = names.length - CHANGED_NAMES_SHOWN;
+    return `; it also changes ${shown}${rest > 0 ? ` and ${rest} more` : ""}`;
+  } catch (err) {
+    console.debug("[eas] could not diff an incoming item:", err);
+    return "";
+  }
 }
 
 /** Register the item hooks. Safe to call more than once.
