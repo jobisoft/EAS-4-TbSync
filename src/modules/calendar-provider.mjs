@@ -478,7 +478,60 @@ async function guardStamps(item, priorIcal) {
       `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}` +
       alsoChanges(ical, priorIcal),
   });
+  reportOverwrite(item.id, ical, priorIcal);
   return { ...item, item: guarded };
+}
+
+/** Both versions of an item a foreign write replaced, at debug.
+ *
+ *  The line above says who was touched and which properties moved; this
+ *  says what the two versions actually were. What it does *not* carry is
+ *  the writer's envelope: the platform re-serialises the item before the
+ *  hook sees it, so a foreign `PRODID` is replaced by Thunderbird's own and
+ *  `METHOD` is gone - measured, not assumed. The writer is identified by
+ *  what lands on the event itself, `X-MOZ-RECEIVED-DTSTAMP` and
+ *  `X-MOZ-INVITED-ATTENDEE` for an answered invitation.
+ *
+ *  Both versions whole, rather than a diff of the values: a diff answers
+ *  the question it was built for, and an investigation of a foreign writer
+ *  keeps changing its question. This is also the one place where the state
+ *  before the write still exists - a moment later it has been overwritten.
+ *
+ *  The incoming version is logged as delivered - before `pinEasStamps`
+ *  merges our stamps back in - because the question is what arrived, not
+ *  what we made of it.
+ *
+ *  Debug, so it stays out of a default bug report: these are complete
+ *  calendar entries with subject, location, attendees and description.
+ *  Whole, though, because the log holds one record per entry and rolls by
+ *  entry count - and half an item cannot be compared with anything.
+ *
+ *  Never throws: this runs inside the item hook, which holds the user's
+ *  save, and a hook that does not return the item makes the platform treat
+ *  the edit as failed. */
+function reportOverwrite(id, incomingIcal, priorIcal) {
+  try {
+    report?.({
+      level: "debug",
+      message: `[event-sync] the write that overwrote ${id}`,
+      details: overwriteDetails(incomingIcal, priorIcal),
+    });
+  } catch (err) {
+    console.debug("[eas] could not log an overwriting write:", err);
+  }
+}
+
+/** The two versions, labelled, for the entry above.
+ *
+ *  A stored version is only omitted when there was none - the write
+ *  arrived for an item the calendar did not hold - and then the labels
+ *  still say which of the two this is, so a reader is never left guessing
+ *  whether the missing half was dropped or never existed. */
+export function overwriteDetails(incomingIcal, priorIcal) {
+  const parts = [];
+  if (priorIcal) parts.push(`--- stored ---\n${priorIcal}`);
+  parts.push(`--- incoming ---\n${incomingIcal}`);
+  return parts.join("\n\n");
 }
 
 /** How many property names the line above will print before it stops. A
