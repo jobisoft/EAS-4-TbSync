@@ -40,6 +40,7 @@ import {
   exceptionFingerprint,
   isReceivedMeeting,
   pinEasStamps,
+  readEasServerIdFromIcal,
 } from "./eas/calendar-codec.mjs";
 import { clientSchedulingFor } from "./eas/client-scheduling.mjs";
 import {
@@ -410,6 +411,34 @@ export function identify(item) {
   }
 }
 
+/** What a create hook should actually record: `"updated"` when the
+ *  calendar already holds this item *and* the server already knows it,
+ *  `"created"` otherwise.
+ *
+ *  The platform calls it a create whenever a write arrives carrying its own
+ *  id - an .ics import, another add-on, and above all Thunderbird's iTIP
+ *  handling, which re-creates a meeting when the user answers an invitation
+ *  to one the calendar already holds. Filing that as a new item sends an
+ *  `<Add>` for something the server has: a server that notices says so and
+ *  the edit never lands, one that does not keeps a second copy under the
+ *  same UID, invisible to the user whose calendar shows one.
+ *
+ *  The stamp decides, not the mere presence of a prior copy. An item can be
+ *  here while the server has never seen it - a queue dropped with its
+ *  binding leaves exactly that - and calling that an update would leave the
+ *  push with no address to send to, which discards the edit. Without a stamp
+ *  `pinEasStamps` also has nothing to restore, so the stored item carries no
+ *  server identity either: treating it as new is what the item itself says. */
+export function opForCreatedItem(priorIcal) {
+  if (typeof priorIcal !== "string" || !priorIcal) return "created";
+  try {
+    return readEasServerIdFromIcal(priorIcal) ? "updated" : "created";
+  } catch {
+    // An unreadable prior cannot testify that the server knows the item.
+    return "created";
+  }
+}
+
 /** The version of this item the calendar already holds, as iCal, or null.
  *
  *  An item's id is its iCal UID, so this is the UID lookup - one local
@@ -514,8 +543,14 @@ export function registerCalendarProvider() {
     // synced event would quietly detach from the server.
     const prior = await priorIcalOf(calendar?.id, base);
     const guarded = await guardStamps(base, prior);
-    await record(calendar?.id, guarded?.id ?? item?.id, "created", {
+    // The same lookup that saves the stamps also says what this write is:
+    // an item the server already knows is being overwritten, not created.
+    const op = opForCreatedItem(prior);
+    await record(calendar?.id, guarded?.id ?? item?.id, op, {
       type: item?.type,
+      // What the recurring push needs to see which overrides were there
+      // before the edit - the update hook is handed it by the platform.
+      ...(op === "updated" ? { oldIcal: prior } : {}),
       ical: guarded?.item ?? item?.item,
       flags: flagsOf(hookOptions),
     });
