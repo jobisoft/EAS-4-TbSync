@@ -319,10 +319,6 @@ export function formatHeadersForLog(headers) {
   return lines.join("\n");
 }
 
-/** Cap for a logged error body. Server error pages are small; anything
- *  beyond this is boilerplate that would only crowd the log. */
-const ERROR_BODY_LOG_MAX = 4000;
-
 /** One entry for a response we are about to throw on. Until this existed,
  *  every receive log line required a healthy response - the throw ladder
  *  ran first - so the reports that most needed the wire (an HTTP 500 with
@@ -331,9 +327,14 @@ const ERROR_BODY_LOG_MAX = 4000;
  *
  *  Info, not debug like the other wire lines: those fire on every healthy
  *  request and are most of the log's bytes, while a failing response is
- *  rare, capped small, and exactly what a bug report needs - so it must be
- *  captured at the default log level, without asking the reporter to raise
- *  verbosity and fail again. */
+ *  rare and exactly what a bug report needs - so it must be captured at
+ *  the default log level, without asking the reporter to raise verbosity
+ *  and fail again.
+ *
+ *  Logged whole. The log holds one record per entry and rolls by entry
+ *  count, so a long body costs nothing a short one does not - and a
+ *  truncated server error page is exactly the one that stops explaining
+ *  itself at the interesting line. */
 function logRecvError({ account, command, resp, buf }) {
   let body = "";
   if (buf?.length) {
@@ -341,9 +342,6 @@ function logRecvError({ account, command, resp, buf }) {
       body = new TextDecoder("utf-8", { fatal: false }).decode(buf);
     } catch {
       body = "<decode-failed>";
-    }
-    if (body.length > ERROR_BODY_LOG_MAX) {
-      body = `${body.slice(0, ERROR_BODY_LOG_MAX)}\n… (${body.length} chars total)`;
     }
   }
   reportEventLog({
