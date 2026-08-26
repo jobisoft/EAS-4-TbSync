@@ -860,24 +860,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         account: ctx.account,
         asVersion,
       });
-      if (result === NO_POLICY_FOR_DEVICE) {
-        // Server demanded Provision but has no policy to apply.
-        // Disable the flag and abort; user can retry, the server may
-        // by then have a policy or have stopped demanding one.
-        await this.updateAccount({
-          accountId,
-          patch: { custom: { provision: false, policykey: "0" } },
-        });
-        throw withCode(
-          new Error("Server has no policy for this device"),
-          ERR.UNKNOWN_COMMAND,
-        );
-      }
-      await this.updateAccount({
-        accountId,
-        patch: { custom: { policykey: result, provision: true } },
-      });
-      ctx = await this.#loadContext(accountId);
+      ctx = await this.#persistPolicyKeyResult(accountId, result);
     }
 
     // 3) Settings/DeviceInformation. Skip on AS 2.5 (the command
@@ -1035,25 +1018,52 @@ export class EasProvider extends TbSyncProviderImplementation {
 
   async #provisionAndPersist(accountId, ctx, asVersion) {
     const result = await acquirePolicyKey({ account: ctx.account, asVersion });
+    const next = await this.#persistPolicyKeyResult(accountId, result);
+    // Re-send DeviceInformation now that the policy key has changed -
+    // some servers tie device registration to the active policy.
+    await this.#maybeSendDeviceInformation(next.account, asVersion);
+    return next;
+  }
+
+  /** Store what Provision came back with, and return the reloaded
+   *  context.
+   *
+   *  `NO_POLICY_FOR_DEVICE` is an answer, not a failure: the server has
+   *  told us it enforces nothing on this device, so there is no key to
+   *  keep and no reason to ask again. Recording that as
+   *  `provision: false` is what stops the pre-emptive block asking on
+   *  every sync, and it keeps the account's own setting describing what
+   *  actually happens - a server with no policy is not a server we send
+   *  Provision to.
+   *
+   *  Said out loud because it turns a setting the user chose back off.
+   *  A connection that silently un-does what someone just switched on is
+   *  unexplainable from the outside, whichever way it then behaves.
+   *
+   *  The reload is not optional on either branch: `acquirePolicyKey`
+   *  sets `provision: true` on the in-memory account before it sends
+   *  anything, so without re-reading, a no-policy account would go on
+   *  stamping `X-MS-PolicyKey` for the rest of the connect. */
+  async #persistPolicyKeyResult(accountId, result) {
     if (result === NO_POLICY_FOR_DEVICE) {
       await this.updateAccount({
         accountId,
         patch: { custom: { provision: false, policykey: "0" } },
       });
-      throw withCode(
-        new Error("Server has no policy for this device"),
-        ERR.UNKNOWN_COMMAND,
-      );
+      this.reportEventLog({
+        level: "warning",
+        accountId,
+        message:
+          "[eas] the server reports no policy for this device, so " +
+          "provisioning has been switched off again for this account",
+      });
+    } else {
+      await this.updateAccount({
+        accountId,
+        patch: { custom: { policykey: result, provision: true } },
+      });
     }
-    await this.updateAccount({
-      accountId,
-      patch: { custom: { policykey: result, provision: true } },
-    });
-    const next = await this.#loadContext(accountId);
-    // Re-send DeviceInformation now that the policy key has changed -
-    // some servers tie device registration to the active policy.
-    await this.#maybeSendDeviceInformation(next.account, asVersion);
-    return next;
+    return await this.#loadContext(accountId);
   }
 
   async #maybeSendDeviceInformation(account, asVersion) {

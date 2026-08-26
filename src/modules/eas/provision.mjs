@@ -76,11 +76,16 @@ function buildAckBody(asVersion, policyKey) {
 }
 
 /** Sentinel return value from `acquirePolicyKey` when the server reports
- *  `Provision.Policies.Policy.Status = 2` ("server has no policy for
- *  this device"). The caller flips `provision: false`, clears the policy
- *  key, and aborts the current connect - legacy treats this as a
- *  contradictory state (the server demanded Provision but has no policy
- *  to apply) and lets the user re-try after the flag flips. */
+ *  `Provision.Policies.Policy.Status = 2` - [MS-ASPROV] "there is no
+ *  policy for this client".
+ *
+ *  A complete answer to what we asked, not a failure: a server that
+ *  enforces nothing says so this way. There is no key to acquire and no
+ *  ACK to send, because an ACK acknowledges a policy and none was
+ *  offered - so this returns before the second request.
+ *
+ *  The caller records it as `provision: false` and carries on with the
+ *  connection. */
 export const NO_POLICY_FOR_DEVICE = Symbol("NO_POLICY_FOR_DEVICE");
 
 /** Returns the post-ACK policy key, or `NO_POLICY_FOR_DEVICE` if the
