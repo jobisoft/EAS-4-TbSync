@@ -262,3 +262,143 @@ def t_6_8(s):
     done = s.find("events", f"{probes.MARKER} {slug}", "event")
     ok("items.remove", id=done["id"])
     s.sync()
+
+
+# The occurrence tests below all edit the same series, so they build their
+# own rather than reuse SLUG's - 6.3 leaves it renamed.
+OCC_SLUG = "provider-occurrence"
+
+
+def _occurrence_series(s):
+    """A synced series, and the id it was stored under.
+
+    Synced deliberately, and this is the subtle part: the provider hook
+    only parses what the extension returns when the extension returns a
+    *typed* item, and this add-on returns one only when it had stamps to
+    restore. An unsynced series carries none, so the hook hands the item
+    straight back, the API skips the parse entirely, and a test written
+    against it would pass without touching the code it names.
+    """
+    ok(
+        "items.create",
+        type="event",
+        ical=probes.event(
+            OCC_SLUG,
+            lines=[
+                "DTSTART:20261117T090000Z",
+                "DTEND:20261117T100000Z",
+                "RRULE:FREQ=DAILY;COUNT=4",
+            ],
+        ),
+    )
+    s.sync()
+    item = s.find("events", f"{probes.MARKER} {OCC_SLUG}", "event")
+    harness.true(item is not None, "the probe series was not created")
+    harness.true(
+        "X-EAS-SERVERID" in item["item"],
+        "the series must be synced before this runs - see _occurrence_series",
+    )
+    return item
+
+
+@test("6.9", "editing one occurrence persists - the series keeps the rest")
+def t_6_9(s):
+    """A lone occurrence has no parent in it, and that used to be fatal.
+
+    The experiment serialises only the item it was handed, so an edited
+    occurrence reaches the provider as one vevent carrying a recurrence-id
+    and nothing to attach it to. Parsing that threw, the provider turned
+    the throw into a bare NS_ERROR_FAILURE, and the event dialog closed as
+    though the edit had been saved (#354).
+
+    A bare vevent rather than a vcalendar on purpose: that is what makes
+    the API hand `modifyItem` an occurrence, which is the route the dialog
+    takes. Wrapped in a vcalendar it would be merged one layer earlier and
+    the provider would never see it.
+    """
+    item = _occurrence_series(s)
+    ok(
+        "items.update",
+        id=item["id"],
+        ical=(
+            "BEGIN:VEVENT\r\n"
+            f"UID:{item['id']}\r\n"
+            "RECURRENCE-ID:20261118T090000Z\r\n"
+            "DTSTAMP:20261117T080000Z\r\n"
+            "DTSTART:20261118T113000Z\r\n"
+            "DTEND:20261118T120000Z\r\n"
+            f"SUMMARY:{probes.MARKER} {OCC_SLUG} moved\r\n"
+            "END:VEVENT"
+        ),
+    )
+    stored = ok("items.get", id=item["id"])["item"]
+    harness.contains(stored, "RECURRENCE-ID", "the override was not stored")
+    harness.contains(stored, "DTSTART:20261118T113000Z", "the new time was not stored")
+    harness.contains(stored, "RRULE", "the series lost its recurrence rule")
+    harness.contains(stored, "X-EAS-SERVERID", "the series lost its server identity")
+    s.settle("events")
+
+
+@test("6.10", "an exception-only vcalendar is merged into the series it names")
+def t_6_10(s):
+    """The other way in, one layer above 6.9: handed a vcalendar holding
+    only an exception, the items API resolves the series itself rather
+    than refusing. Same branch, different caller.
+    """
+    item = s.find("events", f"{probes.MARKER} {OCC_SLUG}", "event")
+    harness.true(item is not None, "6.9 left no series to edit")
+    ok(
+        "items.update",
+        id=item["id"],
+        ical=(
+            "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//suite//EN\r\n"
+            "BEGIN:VEVENT\r\n"
+            f"UID:{item['id']}\r\n"
+            "RECURRENCE-ID:20261119T090000Z\r\n"
+            "DTSTAMP:20261117T081000Z\r\n"
+            "DTSTART:20261119T140000Z\r\n"
+            "DTEND:20261119T143000Z\r\n"
+            f"SUMMARY:{probes.MARKER} {OCC_SLUG} second\r\n"
+            "END:VEVENT\r\nEND:VCALENDAR"
+        ),
+    )
+    stored = ok("items.get", id=item["id"])["item"]
+    harness.contains(stored, "DTSTART:20261119T140000Z", "the second override was not stored")
+    harness.contains(stored, "DTSTART:20261118T113000Z", "6.9's override was lost")
+    harness.contains(stored, "RRULE", "the series lost its recurrence rule")
+    s.settle("events")
+
+
+@test("6.11", "create refuses an exception - that is what update is for")
+def t_6_11(s):
+    """Resolving the series is for the paths that modify it.
+
+    Given the same payload, create must not find the series and quietly
+    change it: a create that already exists is an error, and one that
+    silently edits an existing series instead is worse than a refusal.
+    """
+    item = s.find("events", f"{probes.MARKER} {OCC_SLUG}", "event")
+    harness.true(item is not None, "6.9 left no series to edit")
+    before = ok("items.get", id=item["id"])["item"]
+
+    reply = rpc(
+        "items.create",
+        ical=(
+            "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//suite//EN\r\n"
+            "BEGIN:VEVENT\r\n"
+            f"UID:{item['id']}\r\n"
+            "RECURRENCE-ID:20261120T090000Z\r\n"
+            "DTSTAMP:20261117T082000Z\r\n"
+            "DTSTART:20261120T160000Z\r\n"
+            "DTEND:20261120T163000Z\r\n"
+            f"SUMMARY:{probes.MARKER} {OCC_SLUG} sneaky\r\n"
+            "END:VEVENT\r\nEND:VCALENDAR"
+        ),
+    )
+    harness.eq(reply.get("ok"), False, "create accepted an item that is only an exception")
+    harness.eq(
+        ok("items.get", id=item["id"])["item"],
+        before,
+        "create left the series changed",
+    )
+    s.settle("events")
