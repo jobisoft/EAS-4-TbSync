@@ -97,7 +97,16 @@ function expecting(...bodies) {
 test("no policy for this device is reported, not thrown", async () => {
   const account = expecting(NO_POLICY);
   const result = await acquirePolicyKey({ account, asVersion: "16.1" });
-  assert.equal(result, NO_POLICY_FOR_DEVICE);
+  assert.equal(result.policy, NO_POLICY_FOR_DEVICE);
+});
+
+test("the device details are acknowledged even when no policy exists", async () => {
+  // The two are independent, and this is the shape #353 was reported on:
+  // the same reply that says "no policy for this client" also says the
+  // device details were taken.
+  const account = expecting(NO_POLICY);
+  const result = await acquirePolicyKey({ account, asVersion: "16.1" });
+  assert.equal(result.deviceInfoAcked, true);
 });
 
 test("no policy means no ACK - there is nothing to acknowledge", async () => {
@@ -109,7 +118,7 @@ test("no policy means no ACK - there is nothing to acknowledge", async () => {
 test("a real policy is acknowledged and its final key returned", async () => {
   const account = expecting(withPolicy("TEMP-1"), withPolicy("FINAL-2"));
   const result = await acquirePolicyKey({ account, asVersion: "16.1" });
-  assert.equal(result, "FINAL-2");
+  assert.equal(result.policy, "FINAL-2");
   assert.equal(calls.length, 2);
   // The ACK carries the temp key as X-MS-PolicyKey; the bootstrap "0" is
   // what the first request sends.
@@ -125,4 +134,12 @@ test("a policy verdict we do not know still fails loudly", async () => {
     () => acquirePolicyKey({ account, asVersion: "16.1" }),
     /PolicyStatus=3/,
   );
+});
+
+test("a reply that says nothing about the device claims no acknowledgement", async () => {
+  // Below 14.1 the element is not in the request at all, so the reply
+  // cannot answer for it - and the Settings command remains the route.
+  const account = expecting(withPolicy("TEMP-1"), withPolicy("FINAL-2"));
+  const result = await acquirePolicyKey({ account, asVersion: "14.0" });
+  assert.equal(result.deviceInfoAcked, false);
 });

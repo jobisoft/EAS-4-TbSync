@@ -1,9 +1,18 @@
 /**
  * EAS Settings command - specifically the DeviceInformation/Set sub-
- * operation. Legacy sends this every account sync (gated on AS != 2.5
- * AND the server having advertised the Settings command in OPTIONS).
- * Some servers reject FolderSync from devices that haven't introduced
- * themselves; sending DeviceInformation up front keeps everyone happy.
+ * operation, by which the device introduces itself to the server.
+ *
+ * There are two carriers. On 14.1 and above the initial Provision body
+ * embeds the element, because [MS-ASPROV] §2.2.2.53 requires it there;
+ * this command carries it everywhere else. An account that provisions
+ * therefore never uses this route on those versions - the announcement
+ * has gone, or is about to, in a request of its own.
+ *
+ * Where this route is the one in use, it goes out on every sync until the
+ * server acknowledges it and never again. Some servers reject FolderSync
+ * from a device that has not introduced itself; Exchange is quieter about
+ * it and simply reports every folder as empty while the device sits in
+ * DeviceDiscovery, which is why silence cannot be read as success.
  *
  *   <Settings>
  *     <DeviceInformation>
@@ -26,6 +35,7 @@ import {
   getDeviceOs,
   getUserAgent,
 } from "../network.mjs";
+import { easCommandAdvertised } from "./allowed-commands.mjs";
 import {
   childByTag,
   readChildTexts,
@@ -41,6 +51,18 @@ const PROVISION_REQUIRED_STATUSES = new Set(["141", "142", "143", "144"]);
 // deviceId, we preserve the same call shape so multi-account installations
 // stay distinguishable in the Exchange admin UI.
 const MODEL = "Computer";
+
+/** AS versions whose *initial* Provision body must embed
+ *  `settings:DeviceInformation`, per [MS-ASPROV] §3.1.4.1.1. The ACK
+ *  ("subsequent") request goes out without it even on these.
+ *
+ *  Lives here rather than with the Provision command because it is a
+ *  fact about where device information travels, and both carriers need
+ *  to agree on it: it is what tells `shouldSendDeviceInformation` that
+ *  an account which provisions has no use for this route. */
+export const PROVISION_EMBEDS_DEVICE_INFO = Object.freeze(
+  new Set(["14.1", "16.0", "16.1"]),
+);
 
 /** Append `<DeviceInformation><Set>…</Set></DeviceInformation>` under
  *  the Settings codepage. Leaves the writer's codepage state at
@@ -174,10 +196,48 @@ export async function fetchUserInformation({ account, asVersion }) {
   return readUserInformation(doc);
 }
 
-/** Send DeviceInformation/Set. Throws on a non-1 Settings.Status; the
- *  caller is expected to invoke this only when `allowedEasCommands` includes
- *  "Settings" (the OPTIONS-probed command list) and `asVersion != "2.5"`.
- *  Returns null on success. */
+/** Whether this account still owes the server an introduction *by this
+ *  route*.
+ *
+ *  `2.5` has no way to convey device information at all, and a server
+ *  that did not advertise `Settings` cannot be asked through it.
+ *
+ *  An account that provisions does not need this route on the versions
+ *  whose Provision body embeds the details. `provision: true` is never
+ *  written alone: it arrives either with `policykey: "0"`, so a Provision
+ *  runs on this connect, or after one has completed. Either way the
+ *  details have gone or are about to, and sending them again here would
+ *  be the same announcement twice in one connection. On 14.0 the
+ *  Provision body carries nothing, so there this route is the only one
+ *  and the flag means nothing to it.
+ *
+ *  Otherwise it is the acknowledgement that decides, and only that: the
+ *  partnership is durable server-side state - [MS-ASPROV] puts the
+ *  announcement in the *initial* Provision request "but not on
+ *  subsequent requests" - so the server's confirmation is the one thing
+ *  that can stop the asking. An account never confirmed looks exactly
+ *  like one never asked, which is what carries existing accounts over. */
+export function shouldSendDeviceInformation(account, asVersion) {
+  if (asVersion === "2.5") return false;
+  if (!easCommandAdvertised(account, "Settings")) return false;
+  if (
+    account?.custom?.provision === true &&
+    PROVISION_EMBEDS_DEVICE_INFO.has(asVersion)
+  ) {
+    return false;
+  }
+  return account?.custom?.deviceInfoAcked !== true;
+}
+
+/** Send DeviceInformation/Set and report whether the server confirmed
+ *  it. Returns true only on an acknowledgement; throws otherwise, and
+ *  the caller decides what a refusal is worth (see
+ *  `#maybeSendDeviceInformation`).
+ *
+ *  Both statuses have to be 1. The outer one says the command was
+ *  understood, the inner one says the device information was taken, and
+ *  only the second is the thing being asked about - a server can parse
+ *  the request and still decline the operation inside it. */
 export async function sendDeviceInformation({ account, asVersion }) {
   const { doc } = await easRequest({
     account,
@@ -189,7 +249,6 @@ export async function sendDeviceInformation({ account, asVersion }) {
     throw withCode(new Error("Empty Settings response"), ERR.UNKNOWN_COMMAND);
   }
   const status = readPath(doc, ["Status"]);
-  if (status === "1") return null;
   if (PROVISION_REQUIRED_STATUSES.has(status)) {
     // Server demands re-Provision before accepting DeviceInformation.
     // Same shape HTTP 449 throws (network.mjs), so the upstream
@@ -198,8 +257,13 @@ export async function sendDeviceInformation({ account, asVersion }) {
       message: `Settings rejected (Status=${status}); server demands re-Provision`,
     });
   }
+  const deviceStatus = readPath(doc, ["DeviceInformation", "Status"]);
+  if (status === "1" && deviceStatus === "1") return true;
   throw withCode(
-    new Error(`Settings rejected (Status=${status ?? "missing"})`),
+    new Error(
+      `Settings rejected (Status=${status ?? "missing"}, ` +
+        `DeviceInformation.Status=${deviceStatus ?? "missing"})`,
+    ),
     ERR.UNKNOWN_COMMAND,
   );
 }

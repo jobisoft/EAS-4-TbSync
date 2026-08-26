@@ -26,16 +26,10 @@ import { ERR, withCode } from "../../vendor/tbsync/provider.mjs";
 import { createWBXML } from "../wbxml.mjs";
 import { easRequest } from "../network.mjs";
 import { readPath } from "./wbxml-helpers.mjs";
-import { appendDeviceInformationSet } from "./settings.mjs";
-
-/** AS versions where the *initial* Provision body MUST embed
- *  `settings:DeviceInformation` and the Settings command MUST NOT be
- *  used to convey device info. Per [MS-ASPROV] §3.1.4.1.1. The ACK
- *  ("subsequent") Provision request still goes out without
- *  DeviceInformation on these versions. */
-export const PROVISION_EMBEDS_DEVICE_INFO = Object.freeze(
-  new Set(["14.1", "16.0", "16.1"]),
-);
+import {
+  appendDeviceInformationSet,
+  PROVISION_EMBEDS_DEVICE_INFO,
+} from "./settings.mjs";
 
 function policyTypeFor(asVersion) {
   return asVersion === "2.5"
@@ -88,11 +82,24 @@ function buildAckBody(asVersion, policyKey) {
  *  connection. */
 export const NO_POLICY_FOR_DEVICE = Symbol("NO_POLICY_FOR_DEVICE");
 
-/** Returns the post-ACK policy key, or `NO_POLICY_FOR_DEVICE` if the
- *  server says it has no policy for this device. Mutates
- *  `account.custom.policykey` and `account.custom.provision` in-memory
- *  between the two requests so the second POST sends the temp key as
- *  `X-MS-PolicyKey` (network.mjs gates that header on
+/** Runs the Provision exchange and reports both of its outcomes:
+ *
+ *    `policy`         the post-ACK policy key, or `NO_POLICY_FOR_DEVICE`
+ *    `deviceInfoAcked` whether the server confirmed the device details
+ *
+ *  The second is not a side errand. On 14.1/16.x the initial request
+ *  carries `settings:DeviceInformation` because [MS-ASPROV] §2.2.2.53
+ *  requires it there, and the reply answers it in the same document. A
+ *  caller that ignored that would have to ask again through the Settings
+ *  command for something it has already been told.
+ *
+ *  Read before the policy is judged, because the two are independent: a
+ *  server with no policy to apply still accepts the device details, and
+ *  that is the case this was measured on (#353).
+ *
+ *  Mutates `account.custom.policykey` and `account.custom.provision`
+ *  in-memory between the two requests so the second POST sends the temp
+ *  key as `X-MS-PolicyKey` (network.mjs gates that header on
  *  `provision === true`). The caller persists the returned final key
  *  (and the `provision: true` flip) onto the host row. */
 export async function acquirePolicyKey({ account, asVersion }) {
@@ -128,11 +135,17 @@ export async function acquirePolicyKey({ account, asVersion }) {
       ERR.UNKNOWN_COMMAND,
     );
   }
+  // Only ever present when we put the element in the request, so this
+  // needs no version test of its own: a server does not answer for
+  // something it was not asked.
+  const deviceInfoAcked =
+    readPath(initial.doc, ["DeviceInformation", "Status"]) === "1";
+
   const policyStatus = readPath(initial.doc, ["Policies", "Policy", "Status"]);
   if (policyStatus === "2") {
     // Server has no policy for this device. Surface to caller; do not
     // attempt the ACK request.
-    return NO_POLICY_FOR_DEVICE;
+    return { policy: NO_POLICY_FOR_DEVICE, deviceInfoAcked };
   }
   if (policyStatus !== "1") {
     throw withCode(
@@ -182,5 +195,5 @@ export async function acquirePolicyKey({ account, asVersion }) {
     );
   }
   account.custom.policykey = finalKey;
-  return finalKey;
+  return { policy: finalKey, deviceInfoAcked };
 }

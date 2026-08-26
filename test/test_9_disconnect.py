@@ -21,6 +21,8 @@ the sync had finished in 1.5 and the disconnect had aborted nothing.
 import threading
 import time
 
+import re
+
 import harness
 import session as session_mod
 from bridge import ok, rpc
@@ -65,6 +67,14 @@ def _syncing_now(s):
 
 @test("9.1", "disconnect while a sync is running - the sync stops with it")
 def t_9_1(s):
+    # Read while the account is still connected: 9.4 compares against it.
+    # The value differs legitimately between accounts - one that
+    # provisions never acquires it by the Settings route at all - so the
+    # test is that the disconnect left it alone, not what it holds.
+    s.device_ack_before = (_account_row(s).get("custom") or {}).get(
+        "deviceInfoAcked"
+    )
+
     thread, _outcome = _sync_in_background(s)
 
     # Catch the sync in the act rather than sleeping a fixed guess: this
@@ -117,6 +127,7 @@ def t_9_2(s):
 
 @test("9.3", "connect and sync again - the account is usable, so nothing is stuck")
 def t_9_3(s):
+    s.mark()
     ok("setAccountEnabled", accountId=s.account_id, enabled=True)
     time.sleep(3)
     # Disconnecting cleared the folder records; the provider re-announces
@@ -127,3 +138,33 @@ def t_9_3(s):
     s.sync()
     harness.eq(s.status("events"), "success", "folder status after reconnect")
     harness.eq(_account_row(s)["error"], None, "account error after reconnect")
+
+
+@test("9.4", "the device stays introduced across a disconnect")
+def t_9_4(s):
+    """Disconnecting is a client-side act, and the partnership it leaves
+    alone lives on the server.
+
+    So the record of it survives, and reconnecting must not re-announce
+    the same device: that would be a request telling the server something
+    it already knows, on every reconnect, forever. This reads 9.3's
+    window, where the account was re-enabled and synced.
+
+    Neither carrier may do it - the standalone Settings command, nor a
+    Provision body, which embeds the same element on 14.1 and above.
+    """
+    announced = []
+    for entry in s.log():
+        details = re.sub(r"\s+", " ", entry.get("details") or "")
+        message = (entry.get("message") or "").lower()
+        if "send" not in message:
+            continue
+        if "<DeviceInformation" in details and "<Set" in details:
+            announced.append(message)
+
+    harness.eq(announced, [], "device details re-announced after reconnect")
+    harness.eq(
+        (_account_row(s).get("custom") or {}).get("deviceInfoAcked"),
+        s.device_ack_before,
+        "the record of the acknowledgement changed across the disconnect",
+    )

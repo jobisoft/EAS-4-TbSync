@@ -5,6 +5,8 @@ answering, a sync completes, and what came down is not already corrupt. Every
 later section assumes all three, so they run first and the numbering says so.
 """
 
+import re
+
 import harness
 import probes
 from harness import test
@@ -59,3 +61,38 @@ def t_1_3(s):
             len(items),
             f"{kind}: {len(items)} item(s) but {len(uids)} distinct UID(s)",
         )
+
+
+def device_information_sent(s):
+    """The DeviceInformation/Set requests of the marked window."""
+    out = []
+    for entry in s.log():
+        if "send" not in (entry.get("message") or "").lower():
+            continue
+        details = re.sub(r"\s+", " ", entry.get("details") or "")
+        if "<DeviceInformation>" in details and "<Set>" in details:
+            out.append(details)
+    return out
+
+
+@test("1.4", "the device introduces itself once, not on every sync")
+def t_1_4(s):
+    # The introduction creates durable server-side state, so it is sent
+    # until the server acknowledges it and never again. 1.2 has already
+    # synced, so by now this account is either acknowledged or is talking
+    # to a server that refuses to be introduced - and the second is worth
+    # failing on, because it would mean a wasted request on every sync
+    # for the life of the account.
+    #
+    # Nothing here is version-specific: every version but 2.5 carries the
+    # element the same way, which is the whole point of the gate that was
+    # removed with it.
+    #
+    # It says something on every account only because preflight clears the
+    # device and provision state first. An account that provisions skips
+    # this route outright on 14.1 and above, and would pass here without
+    # touching the acknowledgement at all - so if that override ever goes,
+    # this test quietly stops testing anything on half the accounts.
+    s.mark()
+    s.sync()
+    harness.eq(device_information_sent(s), [], "DeviceInformation sent again")

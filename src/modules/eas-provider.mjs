@@ -85,7 +85,6 @@ import { discoverEasServer } from "./eas/autodiscover.mjs";
 import {
   acquirePolicyKey,
   NO_POLICY_FOR_DEVICE,
-  PROVISION_EMBEDS_DEVICE_INFO,
 } from "./eas/provision.mjs";
 import { runFolderSync } from "./eas/folder-sync.mjs";
 import { syncContactFolder, contactItemKind } from "./eas/contact-sync.mjs";
@@ -99,6 +98,7 @@ import { healFolderIndex, healIsDue } from "./eas/index-heal.mjs";
 import {
   fetchUserInformation,
   sendDeviceInformation,
+  shouldSendDeviceInformation,
 } from "./eas/settings.mjs";
 import { runGalSearch as runGalSearchRequest } from "./eas/gal-search.mjs";
 import {
@@ -458,6 +458,10 @@ export class EasProvider extends TbSyncProviderImplementation {
     // The mailbox address goes too: an account re-pointed at a different
     // login or server would otherwise keep naming the old mailbox as its
     // calendars' owner, and a wrong owner is worse than none.
+    // The device acknowledgement deliberately stays. Disconnecting is a
+    // client-side act: the partnership it created lives on the server and
+    // is still there when the account comes back, so re-announcing the
+    // same device would be a request that tells nobody anything.
     await this.updateAccount({
       accountId,
       patch: {
@@ -874,7 +878,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       ctx,
       asVersion,
       async (c) => {
-        await this.#maybeSendDeviceInformation(c.account, asVersion);
+        await this.#maybeSendDeviceInformation(accountId, c.account, asVersion);
         return c;
       },
     );
@@ -1019,13 +1023,15 @@ export class EasProvider extends TbSyncProviderImplementation {
   async #provisionAndPersist(accountId, ctx, asVersion) {
     const result = await acquirePolicyKey({ account: ctx.account, asVersion });
     const next = await this.#persistPolicyKeyResult(accountId, result);
-    // Re-send DeviceInformation now that the policy key has changed -
-    // some servers tie device registration to the active policy.
-    await this.#maybeSendDeviceInformation(next.account, asVersion);
+    // On the versions whose Provision body does not carry the device
+    // details - and on a server that did not answer for them - this is
+    // where they still go. When the exchange above already collected the
+    // acknowledgement, it does nothing.
+    await this.#maybeSendDeviceInformation(accountId, next.account, asVersion);
     return next;
   }
 
-  /** Store what Provision came back with, and return the reloaded
+  /** Store both things Provision came back with, and return the reloaded
    *  context.
    *
    *  `NO_POLICY_FOR_DEVICE` is an answer, not a failure: the server has
@@ -1044,11 +1050,15 @@ export class EasProvider extends TbSyncProviderImplementation {
    *  sets `provision: true` on the in-memory account before it sends
    *  anything, so without re-reading, a no-policy account would go on
    *  stamping `X-MS-PolicyKey` for the rest of the connect. */
-  async #persistPolicyKeyResult(accountId, result) {
-    if (result === NO_POLICY_FOR_DEVICE) {
+  async #persistPolicyKeyResult(accountId, { policy, deviceInfoAcked }) {
+    // The initial Provision body carried the device details on 14.1/16.x,
+    // and this reply answered them. Recording it here is what keeps the
+    // Settings command from asking again for something already granted.
+    const acked = deviceInfoAcked ? { deviceInfoAcked: true } : {};
+    if (policy === NO_POLICY_FOR_DEVICE) {
       await this.updateAccount({
         accountId,
-        patch: { custom: { provision: false, policykey: "0" } },
+        patch: { custom: { provision: false, policykey: "0", ...acked } },
       });
       this.reportEventLog({
         level: "warning",
@@ -1060,19 +1070,92 @@ export class EasProvider extends TbSyncProviderImplementation {
     } else {
       await this.updateAccount({
         accountId,
-        patch: { custom: { policykey: result, provision: true } },
+        patch: { custom: { policykey: policy, provision: true, ...acked } },
+      });
+    }
+    if (deviceInfoAcked) {
+      // Said at the same level as the Settings route says it, so a bug
+      // report shows the device was introduced whichever carried it.
+      this.reportEventLog({
+        level: "info",
+        accountId,
+        message:
+          "[eas] the server acknowledged this device in its Provision " +
+          "reply; its details will not be sent separately",
       });
     }
     return await this.#loadContext(accountId);
   }
 
-  async #maybeSendDeviceInformation(account, asVersion) {
-    if (asVersion === "2.5") return;
-    // 14.1/16.0/16.1 carry DeviceInformation inside the initial
-    // Provision body and forbid the separate Settings command for it.
-    if (PROVISION_EMBEDS_DEVICE_INFO.has(asVersion)) return;
-    if (!easCommandAdvertised(account, "Settings")) return;
-    await sendDeviceInformation({ account, asVersion });
+  /** Introduce this device to the server, until it says it heard us.
+   *
+   *  The partnership this creates is durable server-side state, so the
+   *  acknowledgement is recorded and nothing is sent again. Until one
+   *  arrives it goes out on every sync: a device the server does not
+   *  know is not told so - Exchange parks it in DeviceDiscovery and
+   *  answers every folder with "nothing here" - so there is no error to
+   *  wait for, only an answer to keep asking for.
+   *
+   *  A refusal must not fail the sync. This runs on the connect path for
+   *  every account, and an introduction the server declines is worth a
+   *  log line, not a red account - the same judgement
+   *  `#maybeLearnUserAddress` makes about the mailbox address. The one
+   *  exception is a 141-144, which is the in-band "provision first"
+   *  signal that `#withProvisionRecovery` exists to act on; it is
+   *  re-thrown so the recovery pass can run and this can be retried
+   *  behind it.
+   *
+   *  The record survives a disconnect, because the partnership it
+   *  describes does: it lives on the server, not here. A device the
+   *  server has genuinely forgotten is beyond this - it reports no error
+   *  for that, it just answers that every folder is empty - and removing
+   *  and re-adding the account is what introduces a new one.
+   *
+   *  An account that provisions is left alone entirely on the versions
+   *  whose Provision body embeds the details, acknowledged or not: that
+   *  request carries the announcement, so making a second one here would
+   *  say the same thing twice in one connection. */
+  async #maybeSendDeviceInformation(accountId, account, asVersion) {
+    if (!shouldSendDeviceInformation(account, asVersion)) return false;
+
+    try {
+      await sendDeviceInformation({ account, asVersion });
+    } catch (err) {
+      if (err?.code === NET_ERR.PROVISION_REQUIRED) throw err;
+      this.reportEventLog({
+        level: "debug",
+        accountId,
+        message:
+          `[eas] the server did not accept this device's details, will ` +
+          `retry: ${err?.message ?? String(err)}`,
+      });
+      return false;
+    }
+
+    try {
+      await this.updateAccount({
+        accountId,
+        patch: { custom: { deviceInfoAcked: true } },
+      });
+    } catch (err) {
+      // Sent and accepted; only the note of it failed. Saying nothing
+      // would mean sending it again next sync, which is harmless.
+      this.reportEventLog({
+        level: "debug",
+        accountId,
+        message: `[eas] could not record the device acknowledgement: ${err?.message ?? String(err)}`,
+      });
+      return false;
+    }
+
+    this.reportEventLog({
+      level: "info",
+      accountId,
+      message:
+        "[eas] the server has acknowledged this device; its details will " +
+        "not be sent again",
+    });
+    return true;
   }
 
   /** Learn which mailbox this account is, once, and remember it.
