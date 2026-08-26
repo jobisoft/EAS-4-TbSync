@@ -1,9 +1,12 @@
 """Preflight, and the helpers every test uses.
 
-Preflight decides whether the suite may run at all. It refuses loudly rather
-than testing the wrong thing: an EAS account with all three resources granted
-is the contract, and anything else stops the run with a message saying what to
-fix in the Bridge tab.
+Preflight decides whether the suite may run at all, and it draws the line in
+two places. What only a person can supply - a bridge that is up, an EAS
+account, the resources this run needs granted to it - is refused loudly
+rather than tested around, with a message saying what to fix in the Bridge
+tab. What is merely a setting the run needs a particular value for is
+changed instead, registered with the call that puts it back, and undone when
+the run ends; see `_overrides`.
 
 Nothing here hard-codes an account or folder id. Both change whenever an
 account is reconfigured - during one afternoon of this suite's development
@@ -38,6 +41,9 @@ KINDS = ("contacts", "events", "tasks")
 # going slower is the only thing that can.
 #   TBSYNC_TEST_SYNC_GAP=5 npm test      # the old pace, for a quick local run
 DEFAULT_SYNC_GAP_S = float(os.environ.get("TBSYNC_TEST_SYNC_GAP", "20"))
+
+# What TbSync logs at when nothing has chosen a level.
+DEFAULT_LOG_LEVEL = 2
 
 
 class PreflightError(Exception):
@@ -429,9 +435,10 @@ def preflight(provider="eas", require=KINDS, sync_gap=None):
             f"the Bridge tab."
         )
 
-    _require_debug_logging()
-    _require_no_sync_after_change(granted)
-    _require_server_wins(granted)
+    _ensure_debug_logging()
+    _ensure_no_sync_after_change(granted)
+    _ensure_server_wins(granted)
+    _ensure_unintroduced_device(granted)
     _clear_event_log()
 
     # Nothing is bound here. Every section now disconnects and re-binds what
@@ -464,9 +471,8 @@ def _clear_event_log():
     ok("clearEventLog")
 
 
-def require_recurrence(session, sections):
-    """Refuse to run sections whose subject is recurrence when the account
-    has recurrence sync switched off.
+def ensure_recurrence(session, sections):
+    """Switch recurrence sync on for the run, for sections that need it.
 
     With `syncrecurrence` false the codec emits no recurrence at all -
     deliberately, and the client-side rejection for sub-daily rules is
@@ -475,83 +481,198 @@ def require_recurrence(session, sections):
     passes vacuously: section 12's "the hourly event must not be pushed"
     reads as a code regression when it is an account setting.
 
-    Checked, not set - like the log level. The flag is the user's
-    choice, and an account created by an older release carries it off.
+    Only asked for when a selected section declares `NEEDS_RECURRENCE`, so
+    a run that never touches a series leaves the flag alone.
     """
     if (session.account.get("custom") or {}).get("syncrecurrence"):
         return
-    raise PreflightError(
-        f"{session.account['accountName']} has recurrence sync switched "
-        f"off, and section(s) {', '.join(sections)} test recurrence.\n"
-        f"  Switch 'Synchronize recurring events' on for this account - "
-        f"without it no series reaches the wire, so these tests would "
-        f"report a code fault that is not there."
+    print(
+        f"  {session.account['accountName']} has recurrence sync off and "
+        f"section(s) {', '.join(sections)} test recurrence; switching it on "
+        f"for this run."
+    )
+    _override_account_custom(
+        session.account, "syncrecurrence", True, "recurrence sync"
     )
 
 
-def _require_server_wins(account):
-    """Refuse to run unless the account declares the server-wins policy.
+# TbSync's own account record, which is where `custom` lives.
+ACCOUNTS_KEY = "tbsync.accounts"
 
-    Every push states `<Conflict>` from this setting. On server-wins a
-    rejected push is answered with Status 7, the server's own copy is taken
-    and the edit is dropped - which `conflict_retry` is written to absorb.
-    On device-wins the server accepts the push instead, so that answer never
-    arrives and a test written around it would pass without ever exercising
-    what it names.
+# What this run changed, newest last, each with the call that puts it back.
+#
+# A run needs settings it does not own: the wire is only logged at debug,
+# the suite has to be the only thing syncing the account, a device-wins
+# account never produces the conflict half the tests are about, with
+# recurrence sync off no series reaches the wire at all, and an account
+# the server already knows takes a different path through the device
+# introduction than one it does not. Refusing to start until someone has
+# clicked all of them is a worse way of respecting whose settings they
+# are than changing them and handing them back.
+#
+# Module-level rather than carried on the Session, because the window that
+# has to be covered opens inside preflight - before there is a Session to
+# hang anything on - and the caller's `finally` must be able to close it
+# whether preflight returned, raised, or was interrupted.
+_overrides = []
 
-    Checked, not set, like the two beside it: the value is the account
-    owner's choice. Absent counts as server-wins, because that is what the
-    provider does with it.
+
+def _override(label, undo):
+    _overrides.append((label, undo))
+
+
+def restore_overrides():
+    """Put back everything this run changed, newest first.
+
+    Never raises: it runs in the caller's `finally`, where an exception
+    would replace the run's own report with this one's, and where the most
+    likely caller is an interrupted run that has already said what it did.
+    Each undo is independent, so one that fails does not strand the rest.
     """
-    value = (account.get("custom") or {}).get("conflict")
-    if value != "0":
-        return
-    raise PreflightError(
-        f"{account['accountName']} is set to device-wins, and these tests "
-        f"expect server-wins.\n"
-        f"  Set 'Conflict resolution' to the server's copy winning, in this "
-        f"account's TbSync configuration - on device-wins the server accepts "
-        f"every push, so the conflict handling these tests cover is never "
-        f"reached."
+    while _overrides:
+        label, undo = _overrides.pop()
+        try:
+            undo()
+            print(f"  {label} restored")
+        except Exception as err:  # noqa: BLE001 - see docstring
+            print(f"  could not restore {label}: {err}")
+
+
+def _set_account_custom(account_id, key, value):
+    """Write one `custom` key on one account, leaving the rest alone.
+
+    Through the whole-storage verbs rather than a dedicated one, because
+    the bridge has none: `custom` belongs to TbSync's account record, and
+    `providerStorage.set` writes the provider's own storage instead. Only
+    the accounts key is handed back, so `storage.restore`'s `set` touches
+    nothing else, and the host reads the record fresh on every access, so
+    the change takes effect without a reload.
+
+    Read immediately before each write, so the round trip never carries a
+    stale copy of everything else on the record - a run writes sync keys
+    onto these same accounts throughout.
+
+    `value=None` removes the key, which is how a setting that was never
+    there is put back: absent is a state of its own, and the provider
+    reads it as the default rather than as an empty value.
+    """
+    accounts = ok("storage.snapshot").get(ACCOUNTS_KEY)
+    record = (accounts or {}).get("data", {}).get(account_id)
+    if record is None:
+        raise PreflightError(f"account {account_id} is not in {ACCOUNTS_KEY}")
+    custom = dict(record.get("custom") or {})
+    previous = custom.get(key)
+    if value is None:
+        custom.pop(key, None)
+    else:
+        custom[key] = value
+    record["custom"] = custom
+    ok("storage.restore", data={ACCOUNTS_KEY: accounts})
+    return previous
+
+
+def _override_account_custom(account, key, value, label):
+    account_id = account["accountId"]
+    previous = _set_account_custom(account_id, key, value)
+    _override(label, lambda: _set_account_custom(account_id, key, previous))
+
+
+def _override_account_custom_many(account, values, label):
+    """Several `custom` keys as one override, undone as one."""
+    account_id = account["accountId"]
+    previous = {k: _set_account_custom(account_id, k, v) for k, v in values.items()}
+    _override(
+        label,
+        lambda: [_set_account_custom(account_id, k, v) for k, v in previous.items()],
     )
 
 
-def _require_no_sync_after_change(account):
-    """Refuse to run while the account syncs itself after every change.
+def _ensure_unintroduced_device(account):
+    """Start every run from a device the server has not been told about.
 
-    Unlike the two checks around it, this one is not about assertions going
-    vacuous - it is about the suite no longer being the only thing driving
-    the account. With the option on, every item this suite writes arms a
-    timer in the provider, and seconds later a sync it never asked for
-    starts: mid-section, between an edit and the assertion about the queue
-    that holds it, or on top of a sync already running.
+    Two accounts otherwise exercise two different paths. One that
+    provisions skips the standalone route outright on 14.1 and above,
+    because the Provision body carries the announcement - so 1.4 passes
+    there without touching the acknowledgement at all, and 9.4 compares
+    an absent value against an absent value. One that does not provision
+    exercises both. Which of the two a run happens to get is then a
+    property of the account rather than of the code.
 
-    Seen before it was checked for: preflight's own writes armed the timer,
+    Clearing both makes the first sync of a run announce the device and
+    the rest not, on every account. It also means a server that demands
+    provisioning is answered the way a new account answers it -
+    reactively, on the first refusal - which is worth walking through on
+    every run rather than only on the accounts that have never done it.
+
+    The policy key is deliberately left alone. It buys nothing here - the
+    pre-emptive block needs `provision` true as well, so it cannot run
+    whatever the key holds - and it is the one field that could be handed
+    back wrong: a run that provisions along the way is issued a new key
+    and the old one is void, so restoring the old one would leave the
+    account a request out of step until the next challenge repaired it.
+
+    Restored afterwards like the rest, to the values the run found.
+    """
+    custom = account.get("custom") or {}
+    if not custom.get("provision") and custom.get("deviceInfoAcked") is None:
+        return
+    print(
+        f"  {account['accountName']} already knows the server; clearing the "
+        f"device introduction state for this run."
+    )
+    _override_account_custom_many(
+        account,
+        {"provision": False, "deviceInfoAcked": None},
+        "device introduction state",
+    )
+
+
+def _ensure_no_sync_after_change(account):
+    """Stop the account syncing itself after every change, for the run.
+
+    With it on, the suite is not the only thing driving the account: every
+    item it writes arms a timer in the provider, and seconds later a sync
+    nobody asked for starts - mid-section, between an edit and the
+    assertion about the queue that holds it, or on top of a sync already
+    running.
+
+    Seen before this existed: preflight's own writes armed the timer,
     preflight then rebound the calendar, and the timer fired at a target
     that no longer existed.
-
-    Checked, not set - like the log level, and for the same reason. The
-    value is the account owner's choice, and it is the suite's job to say
-    what it needs rather than to hand back a profile configured differently
-    from how it was found. Absent counts as on, because that is what the
-    provider does with it.
     """
     value = (account.get("custom") or {}).get("syncOnChange")
     if value == "0":
         return
     shown = "the default" if value is None else f"{value} seconds"
-    raise PreflightError(
-        f"{account['accountName']} syncs a calendar after every change "
-        f"({shown}), so this suite would not be the only thing syncing it.\n"
-        f"  Set 'Synchronize a calendar after a change' to Off for this "
-        f"account, in TbSync's account settings under Calendar - a sync "
-        f"arriving in the middle of a section fails tests that are about "
-        f"something else entirely."
+    print(
+        f"  {account['accountName']} syncs a calendar after every change "
+        f"({shown}); switching it off for this run."
     )
+    _override_account_custom(account, "syncOnChange", "0", "sync-after-change")
 
 
-def _require_debug_logging():
-    """Refuse to run unless the Event Log is capturing `debug`.
+def _ensure_server_wins(account):
+    """Put the account on server-wins for the run.
+
+    Every push states `<Conflict>` from this setting, and anything but
+    "0" is server-wins (`sync-runner.accountConflictSetting`). On
+    server-wins a rejected push is answered with Status 7, the server's
+    own copy is taken and the edit is dropped - which `conflict_retry` is
+    written to absorb. On device-wins the server accepts the push
+    instead, so that answer never arrives and a test written around it
+    would pass without ever exercising what it names.
+    """
+    if (account.get("custom") or {}).get("conflict") != "0":
+        return
+    print(
+        f"  {account['accountName']} is set to device-wins; putting it on "
+        f"server-wins for this run."
+    )
+    _override_account_custom(account, "conflict", "1", "conflict resolution")
+
+
+def _ensure_debug_logging():
+    """Raise the Event Log to debug for the run.
 
     The decoded WBXML of every request and response is logged at that level
     and nowhere else, so below it `wire()` returns an empty list. Assertions
@@ -559,18 +680,20 @@ def _require_debug_logging():
     worse - the ones checking something was *not* sent pass without looking
     at anything.
 
-    Checked, not set: the log level is the user's setting, and a suite that
-    quietly rewrote it would hand back a profile in a state its owner did
-    not choose.
+    The only one of the four that is not an account setting: it is TbSync's
+    own, so it is put back through the verb that owns it rather than
+    through the account record. A level that was never stored reads as the
+    default, and is put back by storing that rather than by leaving the
+    run's own value behind.
     """
     level = (ok("storage.snapshot").get("tbsync.settings") or {}).get("logLevel")
-    if level != 3:
-        raise PreflightError(
-            f"the Event Log level is {level}, so the wire is not being "
-            f"captured.\n  Set it to 3 (Debug) in TbSync's Event Log tab - "
-            f"below that, tests that assert nothing was sent pass without "
-            f"testing anything."
-        )
+    if level == 3:
+        return
+    shown = "the default" if level is None else level
+    print(f"  the Event Log level is {shown}; raising it to debug for this run.")
+    ok("setLogLevel", level=3)
+    previous = DEFAULT_LOG_LEVEL if level is None else level
+    _override("the Event Log level", lambda: ok("setLogLevel", level=previous))
 
 
 def _granted_account(accounts):
@@ -770,5 +893,3 @@ def ensure_bound(session, kinds):
                 f"{kind} ({row['displayName']}) did not bind after a sync - "
                 f"status {row['status']!r}, error {row.get('error')!r}."
             )
-
-
