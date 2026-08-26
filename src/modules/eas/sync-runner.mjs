@@ -2124,7 +2124,7 @@ async function buildPushBatch(ctx, slice, failedItems) {
 
 /* ── Apply responses to our push ──────────────────────────────────── */
 
-async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
+export async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
   const {
     hadResponsesElement = true,
     instanceMasters = null,
@@ -2145,6 +2145,44 @@ async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
     const status = readPathFrom(node, ["Status"]);
     const sentEntry = sent.adds.find((a) => a.clientId === clientId);
     if (!sentEntry) continue;
+    if (status === STATUS_CONFLICT) {
+      // The server already holds an item matching this one. Unlike a
+      // conflict on a <Change>, the response does not say which: an Add
+      // response names the item by our own ClientId, and a refused Add
+      // carries no ServerId to adopt. So there is no address to turn this
+      // into a change, and no way to learn one from this reply.
+      //
+      // That leaves nothing a retry can improve - the identical Add draws
+      // the identical refusal on every later sync - so the entry is
+      // retired. Only the queued push is: the item itself is untouched and
+      // stays exactly as the user left it. What it does not have is a
+      // server identity, so it stays local-only until something gives it
+      // one, and that is why this is a warning rather than a silent drop.
+      //
+      // Kept out of `failedItems` on purpose: that set re-stages the entry
+      // for the next sync, which is the one thing this branch has decided
+      // against. It has a second reader, though - below 16.0
+      // `mailAnsweredMeetings` skips whatever is in it - so an answered
+      // invitation retired here still reaches the organiser. That is the
+      // right way round: the user did accept, and below 16.0 telling the
+      // organiser is ours to do because the server never does. What stays
+      // behind is the calendar item, not the answer.
+      reportRejectedPushItem(
+        ctx,
+        "add",
+        status,
+        sentEntry,
+        "warning",
+        "the server already holds a matching item, and a refused add names " +
+          "no ServerId to adopt, so the queued add has been retired",
+      );
+      await ctx.queue.remove({
+        parentId: sentEntry.entry.parentId,
+        itemId: sentEntry.entry.itemId,
+        kind: sentEntry.entry.kind,
+      });
+      continue;
+    }
     if (status !== STATUS_OK || !serverId) {
       // Per-item Add failure: mark for the final aggregate warning so
       // the user knows this edit didn't make it. Tail-re-staging in
@@ -3548,8 +3586,12 @@ function diffComponentProperties(expectedStr, actualStr, target) {
 
 /** One entry naming an item the server refused. `sentEntry` is an
  *  element of `built.adds` / `.mods` / `.dels`; deletes carry no `item`,
- *  so they report without a summary or details. */
-function reportRejectedPushItem(ctx, operation, status, sentEntry, level) {
+ *  so they report without a summary or details.
+ *
+ *  `note` is for a rejection we act on rather than retry, so the line can
+ *  say what became of the queued edit instead of leaving the user to wait
+ *  for a repair that is not coming. */
+function reportRejectedPushItem(ctx, operation, status, sentEntry, level, note) {
   const itemId = sentEntry?.entry?.itemId ?? sentEntry?.item?.id ?? "unknown";
   const localStatus = sentEntry?.entry?.status;
   const blob = sentEntry?.item?.blob;
@@ -3563,7 +3605,8 @@ function reportRejectedPushItem(ctx, operation, status, sentEntry, level) {
       `local item ${itemId}` +
       (localStatus ? ` (${localStatus})` : "") +
       ` (Status ${status ?? "unknown"})` +
-      (summary ? `: ${summary}` : ""),
+      (summary ? `: ${summary}` : "") +
+      (note ? ` - ${note}` : ""),
     details: typeof blob === "string" && blob ? blob : null,
   });
 }
