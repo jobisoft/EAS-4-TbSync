@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Could not save the settings."
+  },
+  "duplicates.title": {
+    "message": "TbSync found duplicate items on the server"
+  },
+  "duplicates.intro": {
+    "message": "The server holds some of these items more than once. This was most probably caused by a bug in an earlier version of TbSync. Thunderbird keeps only one copy of each, so the extra copies are invisible here but stay on the server and come back with every full synchronisation. Removing them changes nothing you can see. The copy Thunderbird is using is kept."
+  },
+  "duplicates.loading": {
+    "message": "Reading the findings…"
+  },
+  "duplicates.empty": {
+    "message": "Nothing is duplicated any more."
+  },
+  "duplicates.item.untitled": {
+    "message": "(no title)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Select all"
+  },
+  "duplicates.column.calendar": {
+    "message": "Kalendarz"
+  },
+  "duplicates.column.item": {
+    "message": "Item"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Extra copies"
+  },
+  "duplicates.button.delete": {
+    "message": "Remove the extra copies"
+  },
+  "duplicates.button.deleting": {
+    "message": "Removing…"
+  },
+  "duplicates.button.later": {
+    "message": "Zamknij"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Could not read the findings."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Could not remove the copies."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "This account is synchronising. Try again once it has finished."
+  },
+  "duplicates.error.partial": {
+    "message": "Some copies could not be removed. The event log says what the server answered."
+  },
+  "duplicates.progress": {
+    "message": "Removed $DONE$ of $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "If you close this window, the extra copies stay on the server. This list is only shown again after a full synchronisation of the account."
   }
 }
