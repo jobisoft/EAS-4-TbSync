@@ -270,13 +270,26 @@ export function easToRrule(recNode) {
  * offers no control for it, so the local value is not the user's choice in
  * any meaningful sense.
  *
- * An item authored here has no such stamp, and then the local rule *is* the
- * only statement of intent there is, so it goes out. ical.js counts
- * 1=Sunday..7=Saturday where EAS counts 0=Sunday, hence the offset.
+ * Otherwise it goes out only if the rule genuinely names one, and that has
+ * to be read off the serialised rule rather than the parsed object: ical.js
+ * gives every parsed rule a `wkst`, defaulting to Monday, so the parsed
+ * value cannot tell a rule that states a week start from one that says
+ * nothing about it. `toICALString` round-trips the source and can - it
+ * keeps `WKST=MO` when it was written and adds nothing when it was not.
+ *
+ * Reading the parsed value instead put `FirstDayOfWeek: 1` on every
+ * recurring item authored here, on every push, at every frequency -
+ * including yearly rules on a fixed date, where a week start means nothing
+ * at all. Nobody had expressed that preference; ical.js had.
+ *
+ * ical.js counts 1=Sunday..7=Saturday where EAS counts 0=Sunday, hence the
+ * offset.
  */
 export function firstDayOfWeekOf(comp, rruleProp = null) {
   const stamped = comp.getFirstPropertyValue(FIRST_DAY_OF_WEEK.prop);
   if (stamped != null && stamped !== "") return String(stamped);
+  const written = rruleProp?.toICALString?.() ?? "";
+  if (!/;WKST=/i.test(written)) return null;
   const wkst = rruleProp?.getFirstValue?.()?.wkst;
   return wkst ? String(wkst - 1) : null;
 }

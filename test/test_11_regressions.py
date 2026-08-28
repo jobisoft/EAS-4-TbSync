@@ -18,6 +18,8 @@ from harness import test
 
 # Resources this section touches.
 NEEDS = ("events", "tasks")
+# 11.5 pushes a yearly rule, so the account has to sync recurrence.
+NEEDS_RECURRENCE = True
 
 DAY = "20260916"
 NEXT_DAY = "20260917"
@@ -187,3 +189,59 @@ def t_11_4(s):
         start.endswith("T140000"),
         f"the event shifted: started 14:00 Berlin, came back {start} ({tzid})",
     )
+
+
+@test("11.5", "a rule sends no week start it was never given")
+def t_11_5(s):
+    """ical.js gives every parsed rule a `wkst`, Monday when the text says
+    nothing, so reading the parsed value put `FirstDayOfWeek` on every rule
+    pushed from here - a preference nobody expressed, at frequencies where a
+    week start means nothing at all.
+
+    The wire is the assertion, not the outcome: every server tried accepts
+    the element without complaint, so a test that only watched the folder
+    turn green would pass while the bug was still there. The rule is that
+    what we send has to be what somebody asked for.
+
+    A yearly rule on a fixed date because that is the case where the
+    element is most obviously meaningless - but the same held for every
+    frequency.
+    """
+    s.mark()
+    ok(
+        "items.create",
+        type="event",
+        ical=probes.event(
+            "wkst-regression",
+            lines=[
+                "DTSTART;VALUE=DATE:20260831",
+                "DTEND;VALUE=DATE:20260901",
+                # No WKST: the rule states nothing about the week start, so
+                # nothing about one may leave here.
+                "RRULE:FREQ=YEARLY;BYMONTHDAY=31;BYMONTH=8",
+            ],
+        ),
+    )
+    s.sync()
+
+    pushed = [
+        re.sub(r"\s+", " ", e.get("details") or "")
+        for e in s.log()
+        if "send" in (e.get("message") or "").lower()
+        and "<Recurrence" in str(e.get("details") or "")
+    ]
+    harness.true(
+        pushed,
+        "no recurrence was pushed at all - the rule never reached the wire",
+    )
+    offenders = [p for p in pushed if "FirstDayOfWeek" in p]
+    harness.eq(
+        offenders,
+        [],
+        "a week start nobody asked for went out with the rule",
+    )
+
+    # And the folder survived it. On Z-Push the element is not merely
+    # untidy - the push is answered with HTTP 500 and the folder goes red.
+    harness.eq(s.status("events"), "success", "events folder status")
+    s.settle("events")

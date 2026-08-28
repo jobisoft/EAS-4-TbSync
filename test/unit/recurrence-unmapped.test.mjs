@@ -180,14 +180,28 @@ test("a Monday week start survives even though the rule cannot show it", async (
   assert.match(pushedRecurrence(ical), /<FirstDayOfWeek>1<\/FirstDayOfWeek>/);
 });
 
-test("a rule authored here sends our own week start", async () => {
-  // No stamp means the server never stated one, so the local rule is the
-  // only statement of intent there is and it goes out. ical.js always has a
-  // `wkst` - Monday when the rule does not say - so something is always
-  // sent rather than leaving the server to guess.
+test("a rule that says nothing about the week start sends nothing", async () => {
+  // ical.js gives every parsed rule a `wkst`, Monday when the text is
+  // silent, so reading the parsed value put FirstDayOfWeek: 1 on every rule
+  // authored here - a preference nobody expressed, at frequencies where a
+  // week start means nothing at all.
   const ical = await inbound("");
   assert.doesNotMatch(ical, /X-EAS-FIRSTDAYOFWEEK/i, "nothing was stamped");
-  assert.match(pushedRecurrence(ical), /<FirstDayOfWeek>1<\/FirstDayOfWeek>/);
+  assert.doesNotMatch(ical, /WKST=/, "and the rule does not name one");
+  assert.doesNotMatch(pushedRecurrence(ical), /<FirstDayOfWeek>/);
+});
+
+test("a rule that does name one still sends it", async () => {
+  // The other half: silence is not the same as a stated preference, and a
+  // rule that says WKST is the only statement of intent there is. Read off
+  // the serialised rule, because the parsed object cannot tell the two
+  // apart - it reports Monday either way.
+  const ical = (await inbound("")).replace(
+    /^RRULE:(.*)$/m,
+    "RRULE:$1;WKST=TH",
+  );
+  assert.match(ical, /WKST=TH/);
+  assert.match(pushedRecurrence(ical), /<FirstDayOfWeek>4<\/FirstDayOfWeek>/);
 });
 
 test("but the server's own value wins over ours", async () => {
