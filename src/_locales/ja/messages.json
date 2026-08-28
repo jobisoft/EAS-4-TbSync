@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "設定を保存できませんでした。"
+  },
+  "duplicates.title": {
+    "message": "TbSync がサーバー上に重複した項目を見つけました"
+  },
+  "duplicates.intro": {
+    "message": "サーバーはこれらの項目のいくつかを二つ以上保持しています。以前のバージョンの TbSync の不具合が原因である可能性が高いです。Thunderbird はそれぞれ一つだけを保持するため、余分な複製はここには表示されませんが、サーバーには残り続け、完全同期のたびに戻ってきます。削除しても、表示されている内容は何も変わりません。Thunderbird が使用している複製はそのまま残ります。"
+  },
+  "duplicates.loading": {
+    "message": "結果を読み込んでいます…"
+  },
+  "duplicates.empty": {
+    "message": "重複しているものはもうありません。"
+  },
+  "duplicates.item.untitled": {
+    "message": "(タイトルなし)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "すべて選択"
+  },
+  "duplicates.column.calendar": {
+    "message": "カレンダー"
+  },
+  "duplicates.column.item": {
+    "message": "項目"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "余分な複製"
+  },
+  "duplicates.button.delete": {
+    "message": "余分な複製を削除"
+  },
+  "duplicates.button.deleting": {
+    "message": "削除しています…"
+  },
+  "duplicates.button.later": {
+    "message": "閉じる"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "結果を読み込めませんでした。"
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "複製を削除できませんでした。"
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "このアカウントは同期中です。終了してからもう一度お試しください。"
+  },
+  "duplicates.error.partial": {
+    "message": "一部の複製を削除できませんでした。サーバーの応答はイベントログに記録されています。"
+  },
+  "duplicates.progress": {
+    "message": "$TOTAL$ 件中 $DONE$ 件を削除しました。",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "このウィンドウを閉じると、余分な複製はサーバーに残ります。この一覧が再び表示されるのは、アカウントを完全に同期したあとだけです。"
   }
 }

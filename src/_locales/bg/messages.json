@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Настройките не можаха да бъдат запазени."
+  },
+  "duplicates.title": {
+    "message": "TbSync намери дублирани елементи на сървъра"
+  },
+  "duplicates.intro": {
+    "message": "Сървърът съхранява някои от тези елементи повече от веднъж. Това най-вероятно е причинено от грешка в по-стара версия на TbSync. Thunderbird запазва само по едно копие от всеки, така че допълнителните копия не се виждат тук, но остават на сървъра и се връщат при всяко пълно синхронизиране. Премахването им не променя нищо от това, което виждате. Копието, което Thunderbird използва, се запазва."
+  },
+  "duplicates.loading": {
+    "message": "Четене на резултатите…"
+  },
+  "duplicates.empty": {
+    "message": "Вече няма дублирани елементи."
+  },
+  "duplicates.item.untitled": {
+    "message": "(без заглавие)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Избиране на всички"
+  },
+  "duplicates.column.calendar": {
+    "message": "Календар"
+  },
+  "duplicates.column.item": {
+    "message": "Елемент"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Допълнителни копия"
+  },
+  "duplicates.button.delete": {
+    "message": "Премахване на допълнителните копия"
+  },
+  "duplicates.button.deleting": {
+    "message": "Премахване…"
+  },
+  "duplicates.button.later": {
+    "message": "Затваряне"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Резултатите не можаха да бъдат прочетени."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Копията не можаха да бъдат премахнати."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Тази регистрация се синхронизира в момента. Опитайте отново, след като приключи."
+  },
+  "duplicates.error.partial": {
+    "message": "Някои копия не можаха да бъдат премахнати. В дневника на събитията е записано какво отговори сървърът."
+  },
+  "duplicates.progress": {
+    "message": "Премахнати са $DONE$ от $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Ако затворите този прозорец, допълнителните копия остават на сървъра. Този списък се показва отново едва след пълно синхронизиране на регистрацията."
   }
 }

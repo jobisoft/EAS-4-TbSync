@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Impossible d’enregistrer les paramètres."
+  },
+  "duplicates.title": {
+    "message": "TbSync a trouvé des éléments en double sur le serveur"
+  },
+  "duplicates.intro": {
+    "message": "Le serveur conserve certains de ces éléments plusieurs fois. Cela vient très probablement d'une erreur d'une version antérieure de TbSync. Thunderbird n'en garde qu'un seul exemplaire, si bien que les copies supplémentaires sont invisibles ici, mais elles restent sur le serveur et reviennent à chaque synchronisation complète. Les supprimer ne change rien à ce que vous voyez. L'exemplaire utilisé par Thunderbird est conservé."
+  },
+  "duplicates.loading": {
+    "message": "Lecture des résultats…"
+  },
+  "duplicates.empty": {
+    "message": "Il n'y a plus de doublons."
+  },
+  "duplicates.item.untitled": {
+    "message": "(sans titre)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Tout sélectionner"
+  },
+  "duplicates.column.calendar": {
+    "message": "Agenda"
+  },
+  "duplicates.column.item": {
+    "message": "Élément"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Copies supplémentaires"
+  },
+  "duplicates.button.delete": {
+    "message": "Supprimer les copies supplémentaires"
+  },
+  "duplicates.button.deleting": {
+    "message": "Suppression…"
+  },
+  "duplicates.button.later": {
+    "message": "Fermer"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Les résultats n'ont pas pu être lus."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Les copies n'ont pas pu être supprimées."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Ce compte est en cours de synchronisation. Réessayez une fois qu'elle sera terminée."
+  },
+  "duplicates.error.partial": {
+    "message": "Certaines copies n'ont pas pu être supprimées. Le journal des événements indique ce que le serveur a répondu."
+  },
+  "duplicates.progress": {
+    "message": "$DONE$ sur $TOTAL$ supprimées.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Si vous fermez cette fenêtre, les copies supplémentaires restent sur le serveur. Cette liste ne sera affichée de nouveau qu'après une synchronisation complète du compte."
   }
 }

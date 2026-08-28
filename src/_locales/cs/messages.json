@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Nastavení se nepodařilo uložit."
+  },
+  "duplicates.title": {
+    "message": "TbSync našel na serveru duplicitní položky"
+  },
+  "duplicates.intro": {
+    "message": "Server má některé z těchto položek uložené více než jednou. Nejpravděpodobnější příčinou je chyba ve starší verzi TbSyncu. Thunderbird si z každé ponechá jen jednu, takže kopie navíc zde nejsou vidět, zůstávají ale na serveru a vracejí se při každé úplné synchronizaci. Jejich odstranění nezmění nic z toho, co vidíte. Kopie, kterou Thunderbird používá, zůstane zachována."
+  },
+  "duplicates.loading": {
+    "message": "Načítání výsledků…"
+  },
+  "duplicates.empty": {
+    "message": "Už není nic duplicitní."
+  },
+  "duplicates.item.untitled": {
+    "message": "(bez názvu)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Vybrat vše"
+  },
+  "duplicates.column.calendar": {
+    "message": "Kalendář"
+  },
+  "duplicates.column.item": {
+    "message": "Položka"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Kopie navíc"
+  },
+  "duplicates.button.delete": {
+    "message": "Odstranit kopie navíc"
+  },
+  "duplicates.button.deleting": {
+    "message": "Odstraňování…"
+  },
+  "duplicates.button.later": {
+    "message": "Zavřít"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Výsledky se nepodařilo načíst."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Kopie se nepodařilo odstranit."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Tento účet se právě synchronizuje. Zkuste to znovu, až synchronizace skončí."
+  },
+  "duplicates.error.partial": {
+    "message": "Některé kopie se nepodařilo odstranit. Co odpověděl server, je zapsáno v protokolu událostí."
+  },
+  "duplicates.progress": {
+    "message": "Odstraněno $DONE$ z $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Když toto okno zavřete, kopie navíc zůstanou na serveru. Tento seznam se znovu zobrazí až po úplné synchronizaci účtu."
   }
 }

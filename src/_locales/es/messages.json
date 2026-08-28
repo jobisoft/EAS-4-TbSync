@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "No se pudieron guardar los ajustes."
+  },
+  "duplicates.title": {
+    "message": "TbSync ha encontrado elementos duplicados en el servidor"
+  },
+  "duplicates.intro": {
+    "message": "El servidor guarda algunos de estos elementos más de una vez. Lo más probable es que lo haya causado un error de una versión anterior de TbSync. Thunderbird conserva solo una copia de cada uno, así que las copias sobrantes no se ven aquí, pero siguen en el servidor y vuelven con cada sincronización completa. Eliminarlas no cambia nada de lo que usted ve. La copia que Thunderbird utiliza se conserva."
+  },
+  "duplicates.loading": {
+    "message": "Leyendo los resultados…"
+  },
+  "duplicates.empty": {
+    "message": "Ya no hay nada duplicado."
+  },
+  "duplicates.item.untitled": {
+    "message": "(sin título)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Seleccionar todo"
+  },
+  "duplicates.column.calendar": {
+    "message": "Calendario"
+  },
+  "duplicates.column.item": {
+    "message": "Elemento"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Copias sobrantes"
+  },
+  "duplicates.button.delete": {
+    "message": "Eliminar las copias sobrantes"
+  },
+  "duplicates.button.deleting": {
+    "message": "Eliminando…"
+  },
+  "duplicates.button.later": {
+    "message": "Cerrar"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "No se han podido leer los resultados."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "No se han podido eliminar las copias."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Esta cuenta se está sincronizando. Vuelva a intentarlo cuando haya terminado."
+  },
+  "duplicates.error.partial": {
+    "message": "Algunas copias no se han podido eliminar. En el registro de eventos consta lo que respondió el servidor."
+  },
+  "duplicates.progress": {
+    "message": "Se han eliminado $DONE$ de $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Si cierra esta ventana, las copias sobrantes se quedan en el servidor. Esta lista solo se vuelve a mostrar tras una sincronización completa de la cuenta."
   }
 }

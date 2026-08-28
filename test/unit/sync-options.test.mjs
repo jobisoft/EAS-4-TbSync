@@ -25,7 +25,7 @@ import assert from "node:assert/strict";
 import { installWebextEnv } from "./support/webext-env.mjs";
 installWebextEnv();
 
-import { buildSyncBody } from "../../src/modules/eas/sync-runner.mjs";
+import { buildSyncBody } from "../../src/modules/eas/sync-body.mjs";
 import { decodeWBXML } from "../../src/modules/wbxml.mjs";
 
 /** `appendCommands` writes nothing for an empty batch, which is what these
@@ -175,4 +175,25 @@ test("2.5 pulls a window and pushes no options at all", () => {
     }),
   );
   assert.deepEqual(push, []);
+});
+
+/* ── Where a calendar's FilterType comes from ───────────────────────── */
+
+const { calendarFilterType } =
+  await import("../../src/modules/eas/calendar-sync.mjs");
+
+test("a calendar's FilterType is the account's window, not the kind's", () => {
+  // `calendarItemKind.filterType` is "0" - unfiltered - and is the answer
+  // for tasks and contacts, which have no window to set. Reading it for a
+  // calendar states an Options block that widens the window to everything,
+  // and because the block is sticky that loss outlives the request that
+  // caused it. Any request that states options for a calendar has to ask
+  // here.
+  assert.equal(calendarFilterType({ custom: { synclimit: "4" } }), "4");
+  assert.equal(
+    calendarFilterType({ custom: {} }),
+    "7",
+    "six months by default",
+  );
+  assert.equal(calendarFilterType(undefined), "7");
 });

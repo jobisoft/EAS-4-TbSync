@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Impossibile salvare le impostazioni."
+  },
+  "duplicates.title": {
+    "message": "TbSync ha trovato elementi duplicati sul server"
+  },
+  "duplicates.intro": {
+    "message": "Il server conserva alcuni di questi elementi più di una volta. Con ogni probabilità la causa è un errore di una versione precedente di TbSync. Thunderbird ne tiene una sola copia ciascuno, perciò le copie in più non si vedono qui, ma restano sul server e tornano a ogni sincronizzazione completa. Rimuoverle non cambia nulla di ciò che si vede. La copia che Thunderbird utilizza viene mantenuta."
+  },
+  "duplicates.loading": {
+    "message": "Lettura dei risultati…"
+  },
+  "duplicates.empty": {
+    "message": "Non c'è più nulla di duplicato."
+  },
+  "duplicates.item.untitled": {
+    "message": "(senza titolo)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Seleziona tutto"
+  },
+  "duplicates.column.calendar": {
+    "message": "Calendario"
+  },
+  "duplicates.column.item": {
+    "message": "Elemento"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Copie in più"
+  },
+  "duplicates.button.delete": {
+    "message": "Rimuovi le copie in più"
+  },
+  "duplicates.button.deleting": {
+    "message": "Rimozione…"
+  },
+  "duplicates.button.later": {
+    "message": "Chiudi"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Non è stato possibile leggere i risultati."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Non è stato possibile rimuovere le copie."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Questo account si sta sincronizzando. Riprovare quando avrà finito."
+  },
+  "duplicates.error.partial": {
+    "message": "Alcune copie non è stato possibile rimuoverle. Nel registro eventi è riportato che cosa ha risposto il server."
+  },
+  "duplicates.progress": {
+    "message": "Rimosse $DONE$ di $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Se si chiude questa finestra, le copie in più restano sul server. Questo elenco viene mostrato di nuovo solo dopo una sincronizzazione completa dell'account."
   }
 }

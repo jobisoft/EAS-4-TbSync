@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Nie udało się zapisać ustawień."
+  },
+  "duplicates.title": {
+    "message": "TbSync znalazł na serwerze zduplikowane elementy"
+  },
+  "duplicates.intro": {
+    "message": "Serwer przechowuje niektóre z tych elementów więcej niż raz. Najprawdopodobniej spowodował to błąd we wcześniejszej wersji TbSynca. Thunderbird zachowuje tylko jedną kopię każdego z nich, więc nadmiarowych kopii tutaj nie widać, ale pozostają one na serwerze i wracają przy każdej pełnej synchronizacji. Ich usunięcie niczego nie zmieni w tym, co widzisz. Kopia, z której korzysta Thunderbird, zostaje zachowana."
+  },
+  "duplicates.loading": {
+    "message": "Odczytywanie wyników…"
+  },
+  "duplicates.empty": {
+    "message": "Nic już nie jest zduplikowane."
+  },
+  "duplicates.item.untitled": {
+    "message": "(bez tytułu)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Zaznacz wszystko"
+  },
+  "duplicates.column.calendar": {
+    "message": "Kalendarz"
+  },
+  "duplicates.column.item": {
+    "message": "Element"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Nadmiarowe kopie"
+  },
+  "duplicates.button.delete": {
+    "message": "Usuń nadmiarowe kopie"
+  },
+  "duplicates.button.deleting": {
+    "message": "Usuwanie…"
+  },
+  "duplicates.button.later": {
+    "message": "Zamknij"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Nie udało się odczytać wyników."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Nie udało się usunąć kopii."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "To konto jest właśnie synchronizowane. Spróbuj ponownie, gdy synchronizacja się zakończy."
+  },
+  "duplicates.error.partial": {
+    "message": "Niektórych kopii nie udało się usunąć. W dzienniku zdarzeń zapisano, co odpowiedział serwer."
+  },
+  "duplicates.progress": {
+    "message": "Usunięto $DONE$ z $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Jeśli zamkniesz to okno, nadmiarowe kopie zostaną na serwerze. Ta lista pojawi się ponownie dopiero po pełnej synchronizacji konta."
   }
 }

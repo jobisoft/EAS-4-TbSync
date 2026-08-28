@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Die Einstellungen konnten nicht gespeichert werden."
+  },
+  "duplicates.title": {
+    "message": "TbSync hat mehrfach vorhandene Einträge auf dem Server gefunden"
+  },
+  "duplicates.intro": {
+    "message": "Einige dieser Einträge liegen mehrfach auf dem Server. Ursache war höchstwahrscheinlich ein Fehler in einer früheren Version von TbSync. Thunderbird behält davon jeweils nur einen, die zusätzlichen Kopien sind hier also nicht zu sehen, bleiben aber auf dem Server und kommen bei jeder vollständigen Synchronisation wieder mit. Das Entfernen ändert nichts an dem, was Sie sehen. Die von Thunderbird verwendete Kopie bleibt erhalten."
+  },
+  "duplicates.loading": {
+    "message": "Ergebnisse werden gelesen…"
+  },
+  "duplicates.empty": {
+    "message": "Es ist nichts mehr mehrfach vorhanden."
+  },
+  "duplicates.item.untitled": {
+    "message": "(ohne Titel)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Alle auswählen"
+  },
+  "duplicates.column.calendar": {
+    "message": "Kalender"
+  },
+  "duplicates.column.item": {
+    "message": "Eintrag"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Zusätzliche Kopien"
+  },
+  "duplicates.button.delete": {
+    "message": "Zusätzliche Kopien entfernen"
+  },
+  "duplicates.button.deleting": {
+    "message": "Wird entfernt…"
+  },
+  "duplicates.button.later": {
+    "message": "Schließen"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Die Ergebnisse konnten nicht gelesen werden."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Die Kopien konnten nicht entfernt werden."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Dieses Konto wird gerade synchronisiert. Bitte versuchen Sie es danach erneut."
+  },
+  "duplicates.error.partial": {
+    "message": "Einige Kopien konnten nicht entfernt werden. Das Ereignisprotokoll zeigt, was der Server geantwortet hat."
+  },
+  "duplicates.progress": {
+    "message": "$DONE$ von $TOTAL$ entfernt.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Wenn Sie dieses Fenster schließen, bleiben die zusätzlichen Kopien auf dem Server. Diese Liste wird erst nach einer vollständigen Synchronisation des Kontos wieder angezeigt."
   }
 }

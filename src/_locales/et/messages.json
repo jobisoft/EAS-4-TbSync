@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Seadeid ei õnnestunud salvestada."
+  },
+  "duplicates.title": {
+    "message": "TbSync leidis serverist topeltkirjeid"
+  },
+  "duplicates.intro": {
+    "message": "Server hoiab mõnda neist kirjetest rohkem kui ühe korra. Kõige tõenäolisemalt põhjustas selle viga TbSynci varasemas versioonis. Thunderbird hoiab igast alles ainult ühe, seega lisakoopiaid siin ei näe, kuid need jäävad serverisse ja tulevad iga täissünkroonimisega tagasi. Nende eemaldamine ei muuda midagi sellest, mida te näete. Koopia, mida Thunderbird kasutab, jääb alles."
+  },
+  "duplicates.loading": {
+    "message": "Tulemuste lugemine…"
+  },
+  "duplicates.empty": {
+    "message": "Enam ei ole midagi topelt."
+  },
+  "duplicates.item.untitled": {
+    "message": "(pealkirjata)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Vali kõik"
+  },
+  "duplicates.column.calendar": {
+    "message": "Kalender"
+  },
+  "duplicates.column.item": {
+    "message": "Kirje"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Lisakoopiaid"
+  },
+  "duplicates.button.delete": {
+    "message": "Eemalda lisakoopiad"
+  },
+  "duplicates.button.deleting": {
+    "message": "Eemaldamine…"
+  },
+  "duplicates.button.later": {
+    "message": "Sulge"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Tulemusi ei õnnestunud lugeda."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Koopiaid ei õnnestunud eemaldada."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Seda kontot sünkroonitakse praegu. Proovige uuesti, kui see on lõppenud."
+  },
+  "duplicates.error.partial": {
+    "message": "Osa koopiaid ei õnnestunud eemaldada. Sündmuste logis on kirjas, mida server vastas."
+  },
+  "duplicates.progress": {
+    "message": "Eemaldatud $DONE$ / $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Kui te selle akna sulgete, jäävad lisakoopiad serverisse. Seda loendit näidatakse uuesti alles pärast konto täissünkroonimist."
   }
 }

@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "A beállításokat nem sikerült menteni."
+  },
+  "duplicates.title": {
+    "message": "A TbSync többszörös bejegyzéseket talált a kiszolgálón"
+  },
+  "duplicates.intro": {
+    "message": "A kiszolgáló néhány bejegyzést többször is tárol. Ezt nagy valószínűséggel a TbSync egy korábbi változatának hibája okozta. A Thunderbird mindegyikből csak egy példányt tart meg, így a többletpéldányok itt nem látszanak, a kiszolgálón azonban megmaradnak, és minden teljes szinkronizálással visszatérnek. Az eltávolításuk semmit nem változtat azon, amit Ön lát. A Thunderbird által használt példány megmarad."
+  },
+  "duplicates.loading": {
+    "message": "Az eredmények beolvasása…"
+  },
+  "duplicates.empty": {
+    "message": "Már semmi sincs többszörösen."
+  },
+  "duplicates.item.untitled": {
+    "message": "(cím nélkül)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Összes kijelölése"
+  },
+  "duplicates.column.calendar": {
+    "message": "Naptár"
+  },
+  "duplicates.column.item": {
+    "message": "Bejegyzés"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Többletpéldányok"
+  },
+  "duplicates.button.delete": {
+    "message": "A többletpéldányok eltávolítása"
+  },
+  "duplicates.button.deleting": {
+    "message": "Eltávolítás…"
+  },
+  "duplicates.button.later": {
+    "message": "Bezárás"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Az eredményeket nem sikerült beolvasni."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "A példányokat nem sikerült eltávolítani."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Ez a fiók éppen szinkronizál. Próbálja újra, ha befejeződött."
+  },
+  "duplicates.error.partial": {
+    "message": "Néhány példányt nem sikerült eltávolítani. Az eseménynaplóban benne van, mit válaszolt a kiszolgáló."
+  },
+  "duplicates.progress": {
+    "message": "$DONE$ / $TOTAL$ eltávolítva.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Ha bezárja ezt az ablakot, a többletpéldányok a kiszolgálón maradnak. Ez a lista csak a fiók teljes szinkronizálása után jelenik meg újra."
   }
 }

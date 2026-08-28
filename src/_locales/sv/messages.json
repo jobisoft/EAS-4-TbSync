@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Det gick inte att spara inställningarna."
+  },
+  "duplicates.title": {
+    "message": "TbSync hittade dubblerade poster på servern"
+  },
+  "duplicates.intro": {
+    "message": "Servern har vissa av de här posterna sparade mer än en gång. Det beror med största sannolikhet på ett fel i en tidigare version av TbSync. Thunderbird behåller bara en kopia av varje, så de överflödiga kopiorna syns inte här, men de ligger kvar på servern och kommer tillbaka vid varje fullständig synkronisering. Att ta bort dem ändrar ingenting av det du ser. Kopian som Thunderbird använder behålls."
+  },
+  "duplicates.loading": {
+    "message": "Läser resultatet…"
+  },
+  "duplicates.empty": {
+    "message": "Ingenting är dubblerat längre."
+  },
+  "duplicates.item.untitled": {
+    "message": "(utan titel)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Markera alla"
+  },
+  "duplicates.column.calendar": {
+    "message": "Kalender"
+  },
+  "duplicates.column.item": {
+    "message": "Post"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Överflödiga kopior"
+  },
+  "duplicates.button.delete": {
+    "message": "Ta bort de överflödiga kopiorna"
+  },
+  "duplicates.button.deleting": {
+    "message": "Tar bort…"
+  },
+  "duplicates.button.later": {
+    "message": "Stäng"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Det gick inte att läsa resultatet."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Det gick inte att ta bort kopiorna."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Det här kontot synkroniseras just nu. Försök igen när det är klart."
+  },
+  "duplicates.error.partial": {
+    "message": "Vissa kopior gick inte att ta bort. I händelseloggen står vad servern svarade."
+  },
+  "duplicates.progress": {
+    "message": "Tog bort $DONE$ av $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Om du stänger det här fönstret ligger de överflödiga kopiorna kvar på servern. Listan visas igen först efter en fullständig synkronisering av kontot."
   }
 }

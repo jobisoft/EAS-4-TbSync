@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Setările nu au putut fi salvate."
+  },
+  "duplicates.title": {
+    "message": "TbSync a găsit elemente duplicate pe server"
+  },
+  "duplicates.intro": {
+    "message": "Serverul păstrează unele dintre aceste elemente de mai multe ori. Cel mai probabil cauza este o eroare dintr-o versiune mai veche a TbSync. Thunderbird păstrează doar o singură copie din fiecare, așa că exemplarele în plus nu se văd aici, dar rămân pe server și revin la fiecare sincronizare completă. Ștergerea lor nu schimbă nimic din ceea ce vedeți. Copia folosită de Thunderbird este păstrată."
+  },
+  "duplicates.loading": {
+    "message": "Se citesc rezultatele…"
+  },
+  "duplicates.empty": {
+    "message": "Nu mai există nimic duplicat."
+  },
+  "duplicates.item.untitled": {
+    "message": "(fără titlu)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Selectează tot"
+  },
+  "duplicates.column.calendar": {
+    "message": "Calendar"
+  },
+  "duplicates.column.item": {
+    "message": "Element"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Copii în plus"
+  },
+  "duplicates.button.delete": {
+    "message": "Șterge copiile în plus"
+  },
+  "duplicates.button.deleting": {
+    "message": "Se șterg…"
+  },
+  "duplicates.button.later": {
+    "message": "Închide"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Rezultatele nu au putut fi citite."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Copiile nu au putut fi șterse."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Acest cont se sincronizează acum. Încercați din nou după ce se termină."
+  },
+  "duplicates.error.partial": {
+    "message": "Unele copii nu au putut fi șterse. În jurnalul de evenimente scrie ce a răspuns serverul."
+  },
+  "duplicates.progress": {
+    "message": "Șterse $DONE$ din $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Dacă închideți această fereastră, copiile în plus rămân pe server. Această listă este afișată din nou abia după o sincronizare completă a contului."
   }
 }

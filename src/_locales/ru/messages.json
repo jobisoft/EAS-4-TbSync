@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Не удалось сохранить настройки."
+  },
+  "duplicates.title": {
+    "message": "TbSync нашёл на сервере повторяющиеся элементы"
+  },
+  "duplicates.intro": {
+    "message": "Сервер хранит некоторые из этих элементов больше одного раза. Скорее всего, причиной была ошибка в более ранней версии TbSync. Thunderbird оставляет только по одной копии каждого, поэтому лишние копии здесь не видны, но остаются на сервере и возвращаются при каждой полной синхронизации. Их удаление никак не изменит то, что вы видите. Копия, которой пользуется Thunderbird, будет сохранена."
+  },
+  "duplicates.loading": {
+    "message": "Чтение результатов…"
+  },
+  "duplicates.empty": {
+    "message": "Повторяющихся элементов больше нет."
+  },
+  "duplicates.item.untitled": {
+    "message": "(без названия)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Выбрать все"
+  },
+  "duplicates.column.calendar": {
+    "message": "Календарь"
+  },
+  "duplicates.column.item": {
+    "message": "Элемент"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Лишние копии"
+  },
+  "duplicates.button.delete": {
+    "message": "Удалить лишние копии"
+  },
+  "duplicates.button.deleting": {
+    "message": "Удаление…"
+  },
+  "duplicates.button.later": {
+    "message": "Закрыть"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Не удалось прочитать результаты."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Не удалось удалить копии."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Эта учётная запись сейчас синхронизируется. Повторите попытку после её завершения."
+  },
+  "duplicates.error.partial": {
+    "message": "Некоторые копии удалить не удалось. Что ответил сервер, записано в журнале событий."
+  },
+  "duplicates.progress": {
+    "message": "Удалено $DONE$ из $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Если вы закроете это окно, лишние копии останутся на сервере. Этот список будет показан снова только после полной синхронизации учётной записи."
   }
 }

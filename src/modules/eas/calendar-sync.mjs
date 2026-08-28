@@ -172,6 +172,18 @@ async function withWritableCalendar(folder, action) {
   }
 }
 
+/** The calendar window this account asked for, as the `FilterType` of the
+ *  Options block.
+ *
+ *  Shared rather than derived twice: the block is sticky per collection
+ *  and a new one REPLACES it, so any request that states options and gets
+ *  this wrong silently resets the window for every request after it. The
+ *  item kind's own `filterType` is the tasks/contacts answer and is not
+ *  it - see the `<Options>` unit tests. */
+export function calendarFilterType(account) {
+  return String(account?.custom?.synclimit ?? "7");
+}
+
 export async function syncCalendarFolder({
   provider,
   account,
@@ -180,7 +192,7 @@ export async function syncCalendarFolder({
   folderId,
   asVersion,
 }) {
-  const filterType = String(account.custom?.synclimit ?? "7");
+  const filterType = calendarFilterType(account);
   const defaultTimezone = await getDefaultTimezone();
   await ensureTimezoneMappingLoaded((level, message) =>
     provider.reportEventLog({ level, accountId, folderId, message }),

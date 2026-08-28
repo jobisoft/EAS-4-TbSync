@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Non se puideron gardar os axustes."
+  },
+  "duplicates.title": {
+    "message": "TbSync atopou elementos duplicados no servidor"
+  },
+  "duplicates.intro": {
+    "message": "O servidor garda algúns destes elementos máis dunha vez. O máis probable é que o causase un erro dunha versión anterior de TbSync. Thunderbird conserva só unha copia de cada un, así que as copias sobrantes non se ven aquí, pero seguen no servidor e volven con cada sincronización completa. Eliminalas non cambia nada do que vostede ve. A copia que Thunderbird emprega consérvase."
+  },
+  "duplicates.loading": {
+    "message": "Lendo os resultados…"
+  },
+  "duplicates.empty": {
+    "message": "Xa non hai nada duplicado."
+  },
+  "duplicates.item.untitled": {
+    "message": "(sen título)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Seleccionar todo"
+  },
+  "duplicates.column.calendar": {
+    "message": "Calendario"
+  },
+  "duplicates.column.item": {
+    "message": "Elemento"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Copias sobrantes"
+  },
+  "duplicates.button.delete": {
+    "message": "Eliminar as copias sobrantes"
+  },
+  "duplicates.button.deleting": {
+    "message": "Eliminando…"
+  },
+  "duplicates.button.later": {
+    "message": "Pechar"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Non se puideron ler os resultados."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Non se puideron eliminar as copias."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Esta conta estase a sincronizar. Ténteo de novo cando remate."
+  },
+  "duplicates.error.partial": {
+    "message": "Algunhas copias non se puideron eliminar. No rexistro de eventos consta o que respondeu o servidor."
+  },
+  "duplicates.progress": {
+    "message": "Elimináronse $DONE$ de $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Se pecha esta xanela, as copias sobrantes quedan no servidor. Esta lista só se volve amosar tras unha sincronización completa da conta."
   }
 }

@@ -548,5 +548,72 @@
   },
   "services.error.saveFailed": {
     "message": "Não foi possível salvar as configurações."
+  },
+  "duplicates.title": {
+    "message": "O TbSync encontrou itens duplicados no servidor"
+  },
+  "duplicates.intro": {
+    "message": "O servidor guarda alguns destes itens mais de uma vez. Isso provavelmente foi causado por um erro de uma versão anterior do TbSync. O Thunderbird mantém apenas uma cópia de cada um, então as cópias excedentes não aparecem aqui, mas continuam no servidor e voltam a cada sincronização completa. Removê-las não muda nada do que você vê. A cópia que o Thunderbird usa é mantida."
+  },
+  "duplicates.loading": {
+    "message": "Lendo os resultados…"
+  },
+  "duplicates.empty": {
+    "message": "Não há mais nada duplicado."
+  },
+  "duplicates.item.untitled": {
+    "message": "(sem título)"
+  },
+  "duplicates.column.selectAll": {
+    "message": "Selecionar tudo"
+  },
+  "duplicates.column.calendar": {
+    "message": "Agenda"
+  },
+  "duplicates.column.item": {
+    "message": "Item"
+  },
+  "duplicates.column.uid": {
+    "message": "UID"
+  },
+  "duplicates.column.copies": {
+    "message": "Cópias excedentes"
+  },
+  "duplicates.button.delete": {
+    "message": "Remover as cópias excedentes"
+  },
+  "duplicates.button.deleting": {
+    "message": "Removendo…"
+  },
+  "duplicates.button.later": {
+    "message": "Fechar"
+  },
+  "duplicates.error.loadFailed": {
+    "message": "Não foi possível ler os resultados."
+  },
+  "duplicates.error.deleteFailed": {
+    "message": "Não foi possível remover as cópias."
+  },
+  "eas.duplicates.error.syncing": {
+    "message": "Esta conta está sincronizando. Tente novamente quando terminar."
+  },
+  "duplicates.error.partial": {
+    "message": "Algumas cópias não puderam ser removidas. O registro de eventos mostra o que o servidor respondeu."
+  },
+  "duplicates.progress": {
+    "message": "Removidas $DONE$ de $TOTAL$.",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "75"
+      },
+      "total": {
+        "content": "$2",
+        "example": "532"
+      }
+    }
+  },
+  "duplicates.footnote": {
+    "message": "Se você fechar esta janela, as cópias excedentes permanecem no servidor. Esta lista só é exibida novamente após uma sincronização completa da conta."
   }
 }

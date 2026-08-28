@@ -48,6 +48,18 @@
  *   - displayNameRaw  - server-supplied folder name; the visible
  *                       `displayName` is recomputed from this on every
  *                       push (with optional "Trash | " prefix)
+ *   - duplicates      - array of {uid, title, keeper, surplus[]}: items
+ *                       the server holds more than once, as the last sync
+ *                       that could see them found. What the duplicates
+ *                       window offers and what its cleanup deletes
+ *                       against. See `eas/duplicate-uids.mjs`.
+ *   - duplicatesPending - the uids of those the user asked to have
+ *                       cleaned up, read by the sync that does it.
+ *
+ * Every one of those keys has to be listed in
+ * `finalizeFolderListForPush`. The host takes a pushed descriptor's
+ * `custom` whole, so a key missing from that list is dropped on the next
+ * folder push - which is every account sync.
  * Pending user edits are ours, for every resource. A calendar we supply
  * hands us the edit directly; an address book we watch (see the vendored
  * the vendored `address-book.mjs`), pre-tagging our own writes so the events they
@@ -82,10 +94,7 @@ import {
 } from "./eas/oauth.mjs";
 import { negotiateAsVersion } from "./eas/connect.mjs";
 import { discoverEasServer } from "./eas/autodiscover.mjs";
-import {
-  acquirePolicyKey,
-  NO_POLICY_FOR_DEVICE,
-} from "./eas/provision.mjs";
+import { acquirePolicyKey, NO_POLICY_FOR_DEVICE } from "./eas/provision.mjs";
 import { runFolderSync } from "./eas/folder-sync.mjs";
 import { syncContactFolder, contactItemKind } from "./eas/contact-sync.mjs";
 import {
@@ -142,6 +151,12 @@ const PROVISION_REQUIRED_STATUSES = new Set(["141", "142", "143", "144"]);
  *  advertised version / command list (legacy used the same window -
  *  EAS-4-TbSync sync.js:87, 86_400_000 ms). */
 const OPTIONS_REPROBE_MS = 24 * 60 * 60 * 1000;
+
+/** How long a duplicate finding waits before the window opens. Re-armed
+ *  by each folder that reports one, so an account whose calendars and
+ *  address book all have findings produces one window listing all of
+ *  them rather than three in a row. */
+const DUPLICATE_OFFER_DELAY_MS = 5000;
 
 // ── Config-popup allow-list values ───────────────────────────────────────
 //
@@ -247,6 +262,18 @@ export class EasProvider extends TbSyncProviderImplementation {
    *  password field opens blank and is only submitted when typed, so a
    *  field comparison would misread "Save without retyping it". */
   #configSaves = new Set();
+
+  /** accountId -> the timer that will open the duplicates window.
+   *
+   *  Only the timer: the findings themselves live on the folder rows the
+   *  syncs wrote them to, so they survive a restart, can be read back
+   *  without the window, and cannot disagree with what the cleanup will
+   *  act on. */
+  #duplicates = new Map();
+
+  /** Accounts whose duplicate window is open, so a second folder finding
+   *  raises nothing and a second sync opens nothing on top of it. */
+  #duplicateWindows = new Set();
 
   constructor() {
     super({
@@ -1708,6 +1735,150 @@ export class EasProvider extends TbSyncProviderImplementation {
     return null;
   }
 
+  // ── Duplicate copies on the server ────────────────────────────────────
+
+  /**
+   * A folder sync found UIDs the server holds more than once.
+   *
+   * The finding itself is already on the folder row by the time this runs.
+   * All that is left is when to say so, and the answer is once per account
+   * rather than once per folder: the timer is re-armed by each folder that
+   * reports and again while the account is still syncing, so one window
+   * ends up listing everything the run found.
+   */
+  async offerDuplicateCleanup({ accountId }) {
+    const armed = this.#duplicates.get(accountId);
+    if (armed) clearTimeout(armed);
+    this.#duplicates.set(
+      accountId,
+      setTimeout(
+        () => this.#showDuplicatesWindow(accountId),
+        DUPLICATE_OFFER_DELAY_MS,
+      ),
+    );
+  }
+
+  async #showDuplicatesWindow(accountId) {
+    this.#duplicates.delete(accountId);
+    // Still syncing: the folders left to run may have findings of their
+    // own, and a window opened over them would list half of what is there.
+    if (this.syncSignal(accountId))
+      return this.offerDuplicateCleanup({ accountId });
+    if (this.#duplicateWindows.has(accountId)) return;
+    const { rows } = await this.readDuplicatesForDialog(accountId);
+    if (!rows.length) return;
+
+    const url = new URL(
+      browser.runtime.getURL("dialogs/duplicates/duplicates.html"),
+    );
+    url.searchParams.set("accountId", accountId);
+    this.#duplicateWindows.add(accountId);
+    let win = null;
+    try {
+      win = await browser.windows.create({
+        url: url.toString(),
+        type: "popup",
+        width: 720,
+        height: 520,
+      });
+      this.registerAccountWindow(accountId, win.id);
+    } catch (err) {
+      this.#duplicateWindows.delete(accountId);
+      this.reportEventLog({
+        level: "debug",
+        accountId,
+        message: `[eas] could not open the duplicates window: ${err?.message ?? String(err)}`,
+      });
+      return;
+    }
+    const onRemoved = (windowId) => {
+      if (windowId !== win.id) return;
+      browser.windows.onRemoved.removeListener(onRemoved);
+      this.unregisterAccountWindow(accountId, win.id);
+      this.#duplicateWindows.delete(accountId);
+    };
+    browser.windows.onRemoved.addListener(onRemoved);
+  }
+
+  /**
+   * Tell the duplicates window how far its cleanup has got.
+   *
+   * Broadcast rather than returned, because the answer to `cleanupDuplicates`
+   * cannot arrive until the whole sync has: the deletes go out in chunks
+   * and a large cluster is twenty-odd requests. Nothing is listening once
+   * the window has closed, and a message with no receiver rejects, which
+   * is not a reason to fail the sync that was reporting it.
+   */
+  async reportDuplicateProgress({ accountId, deleted, total }) {
+    try {
+      await browser.runtime.sendMessage({
+        type: "eas.duplicatesProgress",
+        accountId,
+        deleted,
+        total,
+      });
+    } catch {
+      /* the window is gone; the cleanup is not about the window */
+    }
+  }
+
+  /** What the duplicates window shows: one row per duplicated UID, read
+   *  from the folder rows the syncs wrote them to. */
+  async readDuplicatesForDialog(accountId) {
+    const ctx = await this.#loadContext(accountId);
+    const rows = [];
+    for (const folder of ctx?.folders ?? []) {
+      for (const cluster of folder.custom?.duplicates ?? []) {
+        rows.push({
+          folderId: folder.folderId,
+          folderName: folder.targetName || folder.name || folder.folderId,
+          uid: cluster.uid,
+          title: cluster.title,
+          copies: cluster.surplus?.length ?? 0,
+        });
+      }
+    }
+    return { rows };
+  }
+
+  /**
+   * Ask for the surplus copies of the selected UIDs to be removed.
+   *
+   * Nothing is sent from here. The selection is written to the folder rows
+   * and a sync is requested for each, because the deletes advance the
+   * folder's SyncKey and must not run beside a sync that is doing the
+   * same. The host is what serialises that: it defers a request made while
+   * the account is syncing instead of dropping it, so an autosync, a sync
+   * armed by an edit, and this cannot overlap. `requestSync` resolves when
+   * the sync it asked for has finished, which is what makes the count
+   * below a real answer rather than a promise.
+   */
+  async cleanupDuplicates({ accountId, uids }) {
+    const ctx = await this.#loadContext(accountId);
+    if (!ctx) throw withCode(new Error("Unknown account"), ERR.UNKNOWN_ACCOUNT);
+    const wanted = new Set(uids ?? []);
+    const targets = [];
+    for (const folder of ctx.folders) {
+      const finding = folder.custom?.duplicates ?? [];
+      const asked = finding.filter((c) => wanted.has(c.uid));
+      if (!asked.length) continue;
+      await this.updateFolder({
+        accountId,
+        folderId: folder.folderId,
+        patch: { custom: { duplicatesPending: asked.map((c) => c.uid) } },
+      });
+      targets.push(folder);
+    }
+    for (const folder of targets) {
+      await this.requestSync({ parentId: folder.targetID });
+    }
+    // Read back rather than reported from here: what actually went is
+    // whatever the sync managed, and the row is where it says so.
+    const after = await this.readDuplicatesForDialog(accountId);
+    const left = after.rows.filter((r) => wanted.has(r.uid)).length;
+    return { requested: wanted.size, remaining: left };
+  }
+
   /** Write allow-listed fields from config.html via UPDATE_ACCOUNT. Any
    *  key not on this list is silently dropped. Validates the bounded
    *  enum fields so a tampered patch can't smuggle in a bogus value. */
@@ -2057,6 +2228,8 @@ export async function finalizeFolderListForPush(folders) {
         synckey: f.custom?.synckey ?? "0",
         indexMap: f.custom?.indexMap ?? [],
         displayNameRaw: f.custom?.displayNameRaw,
+        duplicates: f.custom?.duplicates ?? [],
+        duplicatesPending: f.custom?.duplicatesPending ?? [],
       },
     }));
 }

@@ -92,6 +92,19 @@ const MESSAGE_HANDLERS = {
       accountId: msg.accountId,
       settings: msg.settings ?? {},
     }),
+
+  // Duplicate copies the last sync found, and the cleanup for them. The
+  // dialog names UIDs; which ServerIds those stand for is the provider's
+  // to decide, against the finding rather than against anything the
+  // window is holding.
+  "eas.readDuplicates": (msg) =>
+    provider.readDuplicatesForDialog(msg.accountId),
+
+  "eas.cleanupDuplicates": (msg) =>
+    provider.cleanupDuplicates({
+      accountId: msg.accountId,
+      uids: msg.uids ?? [],
+    }),
 };
 
 /** Run a handler and shape the reply the dialogs expect. `details` rides

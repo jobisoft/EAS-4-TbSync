@@ -40,7 +40,6 @@
 import ICAL from "../../vendor/ical.min.js";
 import { easRequest, RETRY_LATER_BACKOFF_MS } from "../network.mjs";
 import { canonicalPropertyString } from "./calendar-codec.mjs";
-import { createWBXML } from "../wbxml.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
 import { runGetItemEstimate } from "./get-item-estimate.mjs";
 import { fetchServerItem, fetchServerItems } from "./item-operations.mjs";
@@ -69,6 +68,13 @@ import {
 } from "./meeting-response-mail.mjs";
 import { buildMeetingRequestMime } from "./meeting-request-mail.mjs";
 import { createServerIdIndex } from "./server-id-index.mjs";
+import {
+  duplicateClusters,
+  noteUidClaim,
+  titleFromBlob,
+} from "./duplicate-uids.mjs";
+import { deleteSurplusCopies } from "./duplicate-cleanup.mjs";
+import { blobHasInstanceOverrides, buildSyncBody } from "./sync-body.mjs";
 import {
   localQueue,
   rememberBindings,
@@ -506,6 +512,11 @@ async function runOneSync({
     // this?" - see `server-id-index.mjs`, and item 50 for what happens
     // when it is lost.
     indexMap: createServerIdIndex(folder.custom?.indexMap),
+    // uid -> Set of every ServerId this sync heard the server claim for
+    // it. More than one means the server holds the item twice; see
+    // `duplicate-uids.mjs` for why only what this sync saw may count.
+    uidClaims: new Map(),
+    fullPull: false,
     syncKeyDirty: false,
     maxItems,
     // Where this folder's pending edits live. A calendar we supply keeps
@@ -551,6 +562,10 @@ async function runOneSync({
 
   // 1) Bootstrap if needed.
   if (synckey === "0" || !synckey) {
+    // Everything the server holds is about to arrive, so what this sync
+    // does not see, the folder does not have. That is the one condition
+    // under which a stored duplicate finding may be cleared.
+    ctx.fullPull = true;
     const boot = await sendSync({
       account,
       asVersion,
@@ -582,6 +597,15 @@ async function runOneSync({
     ctx.synckey = boot.synckey;
     ctx.syncKeyDirty = true;
   }
+
+  // 1b) Remove server copies the user asked to be rid of, before anything
+  // else looks at the collection. Inside the sync rather than beside it:
+  // the host serialises syncs per account and defers a request made while
+  // one is running, which is what stops an autosync - or a sync armed by
+  // an edit - reaching this folder's SyncKey while the deletes are
+  // advancing it. Running first also means the pull that follows sees only
+  // the copy that stays.
+  await duplicateCleanupPhase(ctx);
 
   // 2) Push pass, BEFORE the pull - the order [MS-ASCMD] shapes a Sync
   // around (client Commands are applied before GetChanges is answered).
@@ -946,7 +970,147 @@ async function revertLocalChanges(ctx) {
   return false;
 }
 
+/** Hand any duplicate clusters this sync saw to the provider, which
+ *  collects them across the account's folders and offers the cleanup.
+ *
+ *  Reporting only, and best-effort with it: a calendar that has synced is
+ *  a calendar that has synced, and a folder must not go red because the
+ *  thing that noticed a mailbox problem tripped over. */
+async function duplicateFinding(ctx) {
+  if (!ctx.uidClaims.size) return null;
+  try {
+    const clusters = await duplicateClusters(ctx.uidClaims, {
+      serverIdFor: (uid) => ctx.indexMap.serverIdFor(uid),
+      titleFor: async (uid) => titleFromBlob((await ctx.store.get(uid))?.blob),
+    });
+    if (!clusters.length) {
+      // A pull that saw the whole folder and found nothing duplicated is
+      // proof that an older finding is spent. An incremental one is not,
+      // so it leaves what is stored alone.
+      return ctx.fullPull ? [] : null;
+    }
+    const copies = clusters.reduce((n, c) => n + c.surplus.length, 0);
+    ctx.eventLog(
+      "warning",
+      `[${ctx.itemKind.changelogKind}-sync] the server holds ${clusters.length} ` +
+        `item(s) more than once - ${copies} surplus copy/copies, ` +
+        `offering to remove them`,
+    );
+    return clusters;
+  } catch (err) {
+    ctx.eventLog(
+      "debug",
+      `[${ctx.itemKind.changelogKind}-sync] duplicate scan failed: ${err?.message ?? String(err)}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * Send the deletes the duplicates window asked for.
+ *
+ * The selection is read from the folder row, not from the window: the
+ * window names UIDs, and which ServerIds those stand for is decided here
+ * against the finding the sync made. A UID no longer in the finding is
+ * silently nothing to do.
+ *
+ * The SyncKey stays the runner's. `deleteSurplusCopies` hands each new one
+ * back through `persistSyncKey`, and the flush at the end of this sync
+ * writes it with everything else, so there is no second writer for it.
+ */
+async function duplicateCleanupPhase(ctx) {
+  const wanted = ctx.folder.custom?.duplicatesPending;
+  ctx.eventLog(
+    "debug",
+    `[${ctx.itemKind.changelogKind}-sync] duplicate cleanup: ` +
+      `${Array.isArray(wanted) ? wanted.length : 0} requested, ` +
+      `${(ctx.folder.custom?.duplicates ?? []).length} cluster(s) on record`,
+  );
+  if (!Array.isArray(wanted) || !wanted.length) return;
+  const finding = Array.isArray(ctx.folder.custom?.duplicates)
+    ? ctx.folder.custom.duplicates
+    : [];
+  const asked = new Set(wanted);
+  const clusters = finding.filter((c) => asked.has(c.uid));
+  const serverIds = clusters.flatMap((c) => c.surplus ?? []);
+
+  let outcome = { deleted: 0, failed: [] };
+  try {
+    if (serverIds.length) {
+      outcome = await deleteSurplusCopies({
+        account: ctx.account,
+        asVersion: ctx.asVersion,
+        collectionId: ctx.collectionId,
+        className: ctx.itemKind.className,
+        filterType: ctx.itemKind.filterType,
+        conflict: ctx.conflict,
+        synckey: ctx.synckey,
+        serverIds,
+        persistSyncKey: (synckey) => {
+          ctx.synckey = synckey;
+          ctx.syncKeyDirty = true;
+        },
+        // Chunk by chunk, so the window that asked for this can say how
+        // far it has got. A cluster the size of the one this was written
+        // for is twenty-odd requests, and a button that only goes quiet
+        // looks like a button that did nothing.
+        onProgress: ({ deleted, total }) =>
+          ctx.provider.reportDuplicateProgress?.({
+            accountId: ctx.accountId,
+            folderId: ctx.folderId,
+            deleted,
+            total,
+          }),
+      });
+    }
+    ctx.eventLog(
+      "info",
+      `[${ctx.itemKind.changelogKind}-sync] removed ${outcome.deleted} of ` +
+        `${serverIds.length} surplus server copy/copies`,
+    );
+  } catch (err) {
+    // Whatever was acknowledged before this is gone from the server for
+    // good, and the SyncKey that went with it has already been taken. The
+    // request stays on the row so the next sync finishes the job.
+    ctx.eventLog(
+      "warning",
+      `[${ctx.itemKind.changelogKind}-sync] removing surplus copies stopped: ${err?.message ?? String(err)}`,
+    );
+    return;
+  }
+  for (const f of outcome.failed) {
+    ctx.eventLog(
+      "warning",
+      `[${ctx.itemKind.changelogKind}-sync] the server refused to remove the ` +
+        `surplus copy ${f.serverId} (Status ${f.status})`,
+    );
+  }
+  // Both the request and the clusters it answered leave the row together.
+  // A refused copy is dropped with them on purpose: it is the server's
+  // verdict on that item, and re-offering it every sync would be a prompt
+  // the user cannot act on.
+  ctx.folder = {
+    ...ctx.folder,
+    custom: {
+      ...ctx.folder.custom,
+      duplicates: finding.filter((c) => !asked.has(c.uid)),
+      duplicatesPending: [],
+    },
+  };
+  await ctx.provider.updateFolder({
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    patch: {
+      custom: {
+        duplicates: ctx.folder.custom.duplicates,
+        duplicatesPending: [],
+      },
+    },
+  });
+}
+
 async function finishWith(ctx, result) {
+  const duplicates = await duplicateFinding(ctx);
   // How much is still queued, for the host's needs-sync badge. Only our own
   // queue needs reporting - the host can count the one it holds itself -
   // and it rides along on the flush that was happening anyway. Sent on
@@ -963,6 +1127,11 @@ async function finishWith(ctx, result) {
   const custom = {};
   if (ctx.syncKeyDirty) custom.synckey = ctx.synckey;
   if (ctx.indexMap.dirty) custom.indexMap = ctx.indexMap.toArray();
+  // The finding lives on the folder row rather than in the provider's
+  // memory: it is what the window offers, what the cleanup deletes
+  // against, and - since it is stored where every other piece of folder
+  // state is - what can be read back without the window.
+  if (duplicates !== null) custom.duplicates = duplicates;
   const patch = Object.keys(custom).length ? { custom } : {};
   if (ctx.pendingCount !== undefined) patch.localChanges = ctx.pendingCount;
   if (!Object.keys(patch).length) return result;
@@ -978,6 +1147,15 @@ async function finishWith(ctx, result) {
       accountId: ctx.accountId,
       folderId: ctx.folderId,
       message: `[${ctx.itemKind.changelogKind}-sync] flush failed: ${err?.message ?? String(err)}`,
+    });
+  }
+  // After the row is written, never before: the offer reads the finding
+  // back from the folder, so announcing it first would open a window on
+  // state that is not there yet.
+  if (duplicates?.length) {
+    await ctx.provider.offerDuplicateCleanup?.({
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
     });
   }
   return result;
@@ -1289,17 +1467,6 @@ async function pushPhase(ctx, userEdits) {
     instanceMasters: instanceMasters ?? [],
     followUpMasters: followUpMasters ?? [],
   };
-}
-
-/** Cheap pre-filter for the instance phase: does this blob carry anything
- *  `listInstanceCommands` could emit? A false positive costs one no-op
- *  call, a false negative is impossible - both shapes it walks leave one
- *  of these two markers in the iCal text. */
-function blobHasInstanceOverrides(blob) {
-  return (
-    typeof blob === "string" &&
-    (blob.includes("RECURRENCE-ID") || blob.includes("EXDATE"))
-  );
 }
 
 /* ── Instance phase ───────────────────────────────────────────────────
@@ -1639,9 +1806,7 @@ async function organizedMeetingPhase(ctx) {
   // so the server does not have the change yet. Leaving it costs a sync;
   // sending would announce something the server never accepted, and would
   // spend the single attempt doing it.
-  const stillQueued = new Set(
-    (await ctx.queue.pending()).map((e) => e.itemId),
-  );
+  const stillQueued = new Set((await ctx.queue.pending()).map((e) => e.itemId));
 
   for (const note of notes) {
     if (stillQueued.has(note.itemId)) continue;
@@ -1924,7 +2089,7 @@ export async function sendInstanceCommand(ctx, command, blob, attempt = 0) {
   if (r.code === "HIERARCHY") return { code: "HIERARCHY" };
   if (r.code === "PROVISION_REQUIRED") return { code: "PROVISION_REQUIRED" };
   if (r.code === "BUSY")
-      return { code: "BUSY", topStatus: r.topStatus, collStatus: r.collStatus };
+    return { code: "BUSY", topStatus: r.topStatus, collStatus: r.collStatus };
   if (r.error) {
     // Errors carrying no status of their own - protocol fault, access
     // denied, a reply we cannot parse - are account-level and sink the sync.
@@ -2124,7 +2289,13 @@ async function buildPushBatch(ctx, slice, failedItems) {
 
 /* ── Apply responses to our push ──────────────────────────────────── */
 
-export async function applyResponses(ctx, responses, sent, failedItems, opts = {}) {
+export async function applyResponses(
+  ctx,
+  responses,
+  sent,
+  failedItems,
+  opts = {},
+) {
   const {
     hadResponsesElement = true,
     instanceMasters = null,
@@ -2501,7 +2672,10 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
   ad = resolved.adNode;
   await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = await findExistingByServerId(ctx, serverID);
-  if (existing) return applyChangeFromAd(ctx, ad, existing, serverID, resolved);
+  if (existing) {
+    noteUidClaim(ctx.uidClaims, existing.itemId, serverID);
+    return applyChangeFromAd(ctx, ad, existing, serverID, resolved);
+  }
 
   // The UID the server gave this item. Every mailbox holding the same
   // meeting names it the same way, and it is the one identifier that
@@ -2510,6 +2684,7 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
   // minted one, and Thunderbird's item ids are iCal UIDs, which makes the
   // next lookup possible at all.
   const serverUid = readPathFrom(ad, ["UID"]);
+  noteUidClaim(ctx.uidClaims, serverUid, serverID);
   const kind = ctx.itemKind.changelogKind;
   let newId;
   if (serverUid) {
@@ -2599,6 +2774,7 @@ async function applyChange(ctx, changeNode, noteBacklog = null) {
   await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = await findExistingByServerId(ctx, serverID);
   if (!existing) return declineChangeForUnknownItem(ctx, serverID);
+  noteUidClaim(ctx.uidClaims, existing.itemId, serverID);
   // 16.1 per-instance Change: ApplicationData carries <InstanceId> and
   // is scoped to a single occurrence of the master event referenced by
   // ServerId. Route to the codec's exception path; bail back to the
@@ -2947,242 +3123,6 @@ async function applyDelete(ctx, delNode, noteBacklog = null) {
   });
   await ctx.store.delete(existing.itemId);
   ctx.indexMap.remove(existing.itemId);
-}
-
-/* ── Sync request building ────────────────────────────────────────── */
-
-/**
- * The collection's options, complete, or nothing at all.
- *
- * [MS-ASCMD] keeps the last `<Options>` block per collection and a new one
- * REPLACES it - so every element that should still be active has to appear
- * in every block we write. A block naming one option silently retires the
- * rest, and the server carries that loss until something states them again.
- *
- * That is why this is one function rather than a rule each call site
- * follows. The rule was written down once, in a comment on the push batch,
- * and the same commit that wrote it restored `BodyPreference` while leaving
- * `FilterType` out - so every push reset the calendar window to unfiltered
- * and the next filtered pull removed what it had just added. Measured on
- * Exchange Online 16.1: a push-triggered sync pulled 45 items as adds with
- * a six-month window and none with the window set to "all".
- *
- * A request that writes no options at all is safe and sometimes required -
- * the server keeps what it has. The instance-command request relies on
- * that, and does not come through here.
- */
-function appendOptions(w, { asVersion, className, filterType, conflict }) {
-  if (asVersion === "2.5") {
-    // 2.5 has no Class or BodyPreference inside Options - both arrived in
-    // AS 12 - and it keeps the server's conflict default, that branch being
-    // minimal-touch by policy and untestable. Calendar is the only class
-    // left with a window worth stating, and without it the server treats
-    // the initial pull as "every event ever". Matches legacy
-    // sync.js:409-412.
-    if (className !== "Calendar") return;
-    w.otag("Options");
-    w.atag("FilterType", String(filterType));
-    w.ctag();
-    return;
-  }
-
-  w.otag("Options");
-  // FilterType narrows Calendar pulls to a window (e.g. last 2 weeks).
-  // Only meaningful for Calendar - Contacts/Tasks have no time axis.
-  // Legacy gates this on `type == "Calendar"` (sync.js:401); we mirror by
-  // emitting the tag only for the Calendar class.
-  if (className === "Calendar") w.atag("FilterType", String(filterType));
-  w.atag("Class", className);
-  // The account's conflict preference, on every request that states
-  // options at all - including the one carrying Commands, which is the
-  // request the server resolves conflicts in.
-  if (conflict != null) w.atag("Conflict", conflict);
-  w.switchpage("AirSyncBase");
-  w.otag("BodyPreference");
-  // Plain text, for every class.
-  //
-  // Asking for HTML looks harmless and is not. Exchange answers a
-  // plain-text note by generating an HTML document around it - its own
-  // wrapper, its own styles - which we would store in the ALTREP and, on
-  // the next push of that item, send straight back as the note. The server
-  // takes that as a real edit to the body and bumps the item's version, so
-  // an event nobody touched churns on every sync, and an instance command
-  // travelling behind its master's <Change> in the same sync is answered
-  // with Status 7 (conflict) against our own write. Section 3.4 is where
-  // that surfaced.
-  //
-  // A note the user formats in Thunderbird still goes out as Type 2 -
-  // `appendBodyFromDescription` sends the HTML whenever a DESCRIPTION
-  // carries an ALTREP - so authored formatting reaches the server. Only
-  // formatting the server invented for itself stays out of the ALTREP.
-  w.atag("Type", "1");
-  w.ctag();
-  w.switchpage("AirSync");
-  w.ctag();
-}
-
-/** Exported for `test/unit/sync-options.test.mjs`, which decodes what this
- *  emits: the options block is worth pinning and there is no other seam
- *  that reaches it. Nothing outside this module calls it in production. */
-export function buildSyncBody({
-  synckey,
-  collectionId,
-  asVersion,
-  withChanges,
-  withCommands,
-  withInstanceCommand,
-  className,
-  filterType,
-  windowSize,
-  conflict,
-}) {
-  const options = { asVersion, className, filterType, conflict };
-  const w = createWBXML();
-  w.switchpage("AirSync");
-  w.otag("Sync");
-  w.otag("Collections");
-  w.otag("Collection");
-  if (asVersion === "2.5") w.atag("Class", className);
-  w.atag("SyncKey", synckey);
-  w.atag("CollectionId", collectionId);
-  if (withChanges) {
-    w.atag("DeletesAsMoves");
-    w.atag("GetChanges");
-    w.atag("WindowSize", String(windowSize ?? 25));
-    appendOptions(w, options);
-  } else if (withCommands || withInstanceCommand) {
-    // [MS-ASCMD] 2.2.3.84: "If the client does not want the server changes
-    // returned, the request MUST include the GetChanges element with a
-    // value of 0" - and when the element is absent with a non-zero SyncKey,
-    // "the request is handled as if the GetChanges element were set to 1".
-    // So a push that says nothing is a push that asks for changes.
-    //
-    // It must not. The server answers with a snapshot taken while our own
-    // commands are still going out, and applying that snapshot deletes what
-    // it does not yet know about. Measured on Exchange Online 16.1: a
-    // series was added, its cancellation sent, and the reply to that
-    // cancellation carried the master back with an <Exceptions> block
-    // holding only the cancellation - truthfully, because the override was
-    // still queued behind it. Applying it dropped the override locally; the
-    // next request put it on the server, and the two sides disagreed.
-    //
-    // The pull that follows this push asks properly, once the queue is
-    // empty and a snapshot means what it says.
-    w.atag("GetChanges", "0");
-  }
-  // A Commands-only push states them too - it is the request the server
-  // resolves conflicts in, and it must not leave the collection holding
-  // fewer options than it had. Options precedes Commands in the Collection
-  // schema.
-  //
-  // Instance-command requests are deliberately excluded, and write no
-  // options at all: an exception <Change> always follows our own master
-  // push in the same sync, and with an explicit <Conflict> Exchange
-  // conflict-checks it against exactly that master change and discards it
-  // with Status 7 (measured on Exchange Online; without the element the
-  // same request is accepted). A conflict verdict against our own change is
-  // never wanted - and writing no block leaves the collection's options
-  // exactly as the request before it set them.
-  //
-  // 2.5 is left alone: it never stated options on a push before, its pull
-  // states the only one it has, and nothing in a Commands request there can
-  // retire it. Minimal-touch on a version we cannot test.
-  if (!withChanges && withCommands && asVersion !== "2.5") {
-    appendOptions(w, options);
-  }
-  if (withCommands) appendCommands(w, withCommands);
-  if (withInstanceCommand) appendInstanceCommand(w, withInstanceCommand);
-  w.ctag();
-  w.ctag();
-  w.ctag();
-  return w.getBytes();
-}
-
-/** `<Commands>` holding a single per-instance command - see the instance
- *  phase for why it is never more than one. The descriptor writes the
- *  element itself and leaves the builder on AirSync, same contract as the
- *  codec calls in `appendCommands`. */
-function appendInstanceCommand(w, command) {
-  w.otag("Commands");
-  command.emit(w);
-  w.ctag();
-}
-
-function appendCommands(
-  w,
-  {
-    adds,
-    mods,
-    dels,
-    separator,
-    asVersion,
-    codec,
-    defaultTimezone,
-    syncRecurrence,
-    userEmail,
-    fallbackOrganizerName,
-    eventLog,
-  },
-) {
-  if (!adds.length && !mods.length && !dels.length) return;
-  w.otag("Commands");
-  for (const a of adds) {
-    w.otag("Add");
-    w.atag("ClientId", a.clientId);
-    w.otag("ApplicationData");
-    codec.appendApplicationDataFromBlob({
-      builder: w,
-      op: "add",
-      blob: a.item.blob,
-      asVersion,
-      separator,
-      defaultTimezone,
-      syncRecurrence,
-      // An Add never carries embedded exceptions on ≤14.x - they follow
-      // as a <Change> once the ack yields a ServerId (followUpPhase).
-      // On 16.1 the writer never embeds them anyway.
-      suppressExceptions:
-        asVersion !== "16.1" &&
-        syncRecurrence &&
-        blobHasInstanceOverrides(a.item.blob),
-      userEmail,
-      fallbackOrganizerName,
-      eventLog,
-    });
-    w.switchpage("AirSync");
-    w.ctag();
-    w.ctag();
-  }
-  for (const m of mods) {
-    w.otag("Change");
-    w.atag("ServerId", m.serverID);
-    w.otag("ApplicationData");
-    codec.appendApplicationDataFromBlob({
-      builder: w,
-      op: "change",
-      blob: m.item.blob,
-      asVersion,
-      separator,
-      defaultTimezone,
-      syncRecurrence,
-      userEmail,
-      fallbackOrganizerName,
-      eventLog,
-    });
-    w.switchpage("AirSync");
-    w.ctag();
-    w.ctag();
-    // A 16.1 master's exceptions are *not* emitted here. They share this
-    // master's ServerId, and Exchange rejects a second command against a
-    // ServerId in the same block - the instance phase sends them one
-    // request at a time once this push has landed.
-  }
-  for (const d of dels) {
-    w.otag("Delete");
-    w.atag("ServerId", d.serverID);
-    w.ctag();
-  }
-  w.ctag();
 }
 
 /* ── Sync response parsing ────────────────────────────────────────── */
@@ -3591,7 +3531,14 @@ function diffComponentProperties(expectedStr, actualStr, target) {
  *  `note` is for a rejection we act on rather than retry, so the line can
  *  say what became of the queued edit instead of leaving the user to wait
  *  for a repair that is not coming. */
-function reportRejectedPushItem(ctx, operation, status, sentEntry, level, note) {
+function reportRejectedPushItem(
+  ctx,
+  operation,
+  status,
+  sentEntry,
+  level,
+  note,
+) {
   const itemId = sentEntry?.entry?.itemId ?? sentEntry?.item?.id ?? "unknown";
   const localStatus = sentEntry?.entry?.status;
   const blob = sentEntry?.item?.blob;
@@ -3667,4 +3614,3 @@ function innerProps(text, target) {
   }
   return map;
 }
-
