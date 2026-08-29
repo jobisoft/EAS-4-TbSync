@@ -543,7 +543,7 @@ export function listInstanceCommands({
       },
     });
   }
-  for (const override of overrides) {
+  for (const override of inEmissionOrder(overrides)) {
     const rid = override.getFirstPropertyValue("recurrence-id");
     const instanceId = instanceKey(rid);
     // Unchanged since the server last saw it: the whole point of carrying a
@@ -1572,7 +1572,7 @@ function appendOutboundExceptions({
     builder.atag("Deleted", "1");
     builder.ctag();
   }
-  for (const override of overrides) {
+  for (const override of inEmissionOrder(overrides)) {
     const rid = override.getFirstPropertyValue("recurrence-id");
     builder.otag("Exception");
     builder.atag("ExceptionStartTime", instanceKey(rid));
@@ -2468,6 +2468,32 @@ function stripMailto(s) {
 }
 
 /* ── Helpers: recurrence ───────────────────────────────────────────── */
+
+/**
+ * The order modified occurrences must be written in.
+ *
+ * A server applies each exception against the occurrences as they stand,
+ * and silently refuses one that would carry an occurrence past a sibling
+ * that has not moved yet - `Status 1`, and it is absent on the next pull.
+ *
+ * The direction of the move decides the order, so one sort does not serve
+ * both: an occurrence moving later is written once every later sibling
+ * has moved out of its way, one moving earlier once every earlier sibling
+ * has. Measured on ekir both ways.
+ */
+function inEmissionOrder(overrides) {
+  const at = (comp, name) =>
+    comp.getFirstPropertyValue(name)?.toUnixTime?.() ?? 0;
+  const slot = (comp) => at(comp, "recurrence-id");
+  const later = [];
+  const rest = [];
+  for (const comp of overrides) {
+    (at(comp, "dtstart") > slot(comp) ? later : rest).push(comp);
+  }
+  later.sort((a, b) => slot(b) - slot(a));
+  rest.sort((a, b) => slot(a) - slot(b));
+  return [...later, ...rest];
+}
 
 /** Element order is `[MS-ASCAL]`'s and is load-bearing - the server validates
  *  against a sequence - so it is kept exactly as it was when this derivation
