@@ -1046,9 +1046,18 @@ async function duplicateCleanupPhase(ctx) {
         conflict: ctx.conflict,
         synckey: ctx.synckey,
         serverIds,
-        persistSyncKey: (synckey) => {
+        // Written through to the row, not just banked on `ctx`: the
+        // end-of-sync flush only runs if the sync gets that far, and a
+        // throw in a later phase would leave the row behind the server's
+        // key - a Status 3 and a full re-download.
+        persistSyncKey: async (synckey) => {
           ctx.synckey = synckey;
           ctx.syncKeyDirty = true;
+          await ctx.provider.updateFolder({
+            accountId: ctx.accountId,
+            folderId: ctx.folderId,
+            patch: { custom: { synckey } },
+          });
         },
         // Chunk by chunk, so the window that asked for this can say how
         // far it has got. A cluster the size of the one this was written
