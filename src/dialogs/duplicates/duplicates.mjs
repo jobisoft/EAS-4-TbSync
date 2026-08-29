@@ -118,9 +118,10 @@ browser.runtime.onMessage.addListener((msg) => {
 
 function setBusy(busy) {
   $("btn-delete").disabled = busy;
-  $("btn-close").disabled = busy;
   $("check-all").disabled = busy;
   for (const box of checkboxes()) box.disabled = busy;
+  // Close stays live: the removal runs inside a sync and finishes either
+  // way, and several hundred copies take minutes.
 }
 
 async function remove() {
