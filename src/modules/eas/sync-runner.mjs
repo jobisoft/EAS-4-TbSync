@@ -2670,6 +2670,23 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
   }
   let ad = childByTag(addNode, "ApplicationData");
   if (!ad) return;
+  // Read off the wire, before the body is resolved and before anything is
+  // built from it: an item shaped like this must not enter the calendar at
+  // all. The sync key still advances, so the server will not offer it
+  // again until it changes, and what never arrives cannot be edited into
+  // something we would have to send back.
+  const refusal = ctx.itemKind.codec.serverRejectReason?.({ adNode: ad });
+  if (refusal) {
+    ctx.provider.reportEventLog({
+      level: "warning",
+      accountId: ctx.accountId,
+      folderId: ctx.folderId,
+      message:
+        `[${ctx.itemKind.changelogKind}-sync] skipping ${serverID} sent by ` +
+        `the server: ${refusal} - it stays out of the calendar`,
+    });
+    return;
+  }
   // A note the server holds as HTML is applied with the flattening in hand
   // and upgraded after the loop, one request for the whole window; the
   // resolver's inline fetch is for callers with no window to batch over.

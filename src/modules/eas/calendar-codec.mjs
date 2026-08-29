@@ -980,6 +980,33 @@ export function appendApplicationDataFromIcal({
 
 /* ── ID stamping ───────────────────────────────────────────────────── */
 
+/**
+ * Why an item the server sent cannot be taken, read off the wire before
+ * anything is built from it.
+ *
+ * `<Exceptions>` with no `<Recurrence>`: exceptions to a rule that was
+ * never stated. Kerio Connect answers this way for meetings it imported
+ * from an Outlook invitation, and the keys give the missing rule away -
+ * they land on the instants of one, fortnightly on a weekday. The
+ * occurrences between them are the rule's to produce, so they are not in
+ * the message and no reader can recover them.
+ *
+ * Nothing is reconstructed from it. A rule built from the keys either
+ * invents occurrences the server never stated or states fewer than it
+ * holds, and one such item names a single instant, which fits every rule
+ * and none. Thunderbird refuses the shape outright, so the folder failed
+ * on every sync for as long as the server sent it (#355).
+ *
+ * Adds only, which is why the message alone decides: a <Change> is for an
+ * item already here, and one of these never becomes that.
+ */
+export function serverRejectReason({ adNode }) {
+  if (!adNode) return null;
+  if (!childByTag(adNode, "Exceptions")) return null;
+  if (childByTag(adNode, "Recurrence")) return null;
+  return "it states exceptions but no recurrence rule, which ActiveSync does not define";
+}
+
 /** Names why an event cannot go on the wire without changing its
  *  meaning, or null when it can. The EAS Recurrence Type enum has no
  *  sub-daily frequencies, so an HOURLY/MINUTELY/SECONDLY rule would
