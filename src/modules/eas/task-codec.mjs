@@ -348,6 +348,28 @@ export function appendApplicationDataFromIcal({
  *  emission itself. */
 export function clientRejectReason({ blob, syncRecurrence }) {
   if (!syncRecurrence || typeof blob !== "string") return null;
+
+  // A moved occurrence, which a task cannot carry. [MS-ASTASK] declares no
+  // exception element at any version and this codec neither writes nor
+  // reads one, so an override would be dropped in silence and its
+  // occurrence would sit back on the rule's own instant rather than the
+  // one the item states. An event has somewhere to put it; a task has not.
+  //
+  // The calendar guard is what produces these: it restates a set of loose
+  // dates as a rule with an override moving each occurrence onto its date,
+  // and it does that for a VTODO as readily as for a VEVENT.
+  const vcal = parseVCalendar(blob);
+  if (
+    vcal
+      ?.getAllSubcomponents("vtodo")
+      .some((c) => c.getFirstProperty("recurrence-id"))
+  ) {
+    return (
+      "this task moves individual occurrences, and ActiveSync can state " +
+      "a task's occurrences only as a rule"
+    );
+  }
+
   if (!blob.includes("RRULE")) return null;
   const vtodo = parseFirstVtodo(blob);
   const rrule = vtodo?.getFirstProperty("rrule");

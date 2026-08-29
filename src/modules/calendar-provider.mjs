@@ -48,6 +48,8 @@ import {
   lookupBinding,
   rememberBindings,
 } from "../vendor/tbsync/change-queue.mjs";
+import * as calendarStore from "../vendor/tbsync/calendar.mjs";
+import { conformRecurrence } from "./recurrence-shape.mjs";
 
 /** Every folder of ours that is bound to a calendar, as
  *  `targetID -> {accountId, folderId, targetName, targetColor}`. The host owns
@@ -482,6 +484,53 @@ async function guardStamps(item, priorIcal) {
   return { ...item, item: guarded };
 }
 
+/** Keep the shapes `recurrence-shape.mjs` describes: at most one rule per
+ *  item, and a list of dates only on an item a server stated that way.
+ *  An item breaking that is reduced to the piece keeping its identity, and
+ *  the rest is written beside it as new items.
+ *
+ *  Returns the iCal the caller should store for this item, or null when
+ *  nothing needed doing - the common path, which parses and returns.
+ *
+ *  Siblings are written first. If one fails nothing has moved and the item
+ *  is stored as it came, keeping its occurrences; reducing it first and
+ *  failing afterwards would drop them.
+ *
+ *  They go through `<id>#cache`, which raises no item hook, so each one's
+ *  queue entry is filed here - nothing else will. */
+async function conformItem(calendarId, item, flags) {
+  const ical = item?.item;
+  if (typeof ical !== "string" || !calendarId) return null;
+  const conformed = conformRecurrence(ical);
+  if (!conformed) return null;
+
+  const writeId = calendarStore.cacheId(calendarId);
+  const type = item?.type === "task" ? "task" : "event";
+  for (const sibling of conformed.siblings) {
+    await calendarStore.createItem(writeId, {
+      id: sibling.uid,
+      type,
+      ical: sibling.ical,
+    });
+    await record(calendarId, sibling.uid, "created", {
+      type: item?.type,
+      ical: sibling.ical,
+      flags,
+    });
+  }
+  report?.({
+    level: "info",
+    message:
+      `[${type}-sync] ${item.id} states its occurrences with ` +
+      `${conformed.shape}, which one item cannot carry` +
+      (conformed.siblings.length
+        ? `, so it was split into ${conformed.siblings.length + 1}: ` +
+          `${[item.id, ...conformed.siblings.map((s) => s.uid)].join(", ")}`
+        : ", so they were restated as a rule"),
+  });
+  return conformed.master;
+}
+
 /** Both versions of an item a foreign write replaced, at debug.
  *
  *  The line above says who was touched and which properties moved; this
@@ -599,14 +648,18 @@ export function registerCalendarProvider() {
     // The same lookup that saves the stamps also says what this write is:
     // an item the server already knows is being overwritten, not created.
     const op = opForCreatedItem(prior);
+    const flags = flagsOf(hookOptions);
+    // Before the record, so what is queued is the shape this item became.
+    const conformed = await conformItem(calendar?.id, guarded, flags);
     await record(calendar?.id, guarded?.id ?? item?.id, op, {
       type: item?.type,
       // What the recurring push needs to see which overrides were there
       // before the edit - the update hook is handed it by the platform.
       ...(op === "updated" ? { oldIcal: prior } : {}),
-      ical: guarded?.item ?? item?.item,
-      flags: flagsOf(hookOptions),
+      ical: conformed ?? guarded?.item ?? item?.item,
+      flags,
     });
+    if (conformed) return { ...guarded, item: conformed };
     return guarded === item ? { item } : guarded;
   }, options);
 
@@ -614,12 +667,15 @@ export function registerCalendarProvider() {
     async (calendar, item, oldItem, hookOptions) => {
       const oldIcal = oldItem?.item ?? null;
       const guarded = await guardStamps(item, oldIcal);
+      const flags = flagsOf(hookOptions);
+      const conformed = await conformItem(calendar?.id, guarded, flags);
       await record(calendar?.id, item?.id, "updated", {
         type: item?.type,
         oldIcal,
-        ical: guarded?.item ?? item?.item,
-        flags: flagsOf(hookOptions),
+        ical: conformed ?? guarded?.item ?? item?.item,
+        flags,
       });
+      if (conformed) return { ...guarded, item: conformed };
       return guarded === item ? { item } : guarded;
     },
     options,

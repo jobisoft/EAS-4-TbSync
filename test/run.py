@@ -68,6 +68,11 @@ MODULES = [
     # assert on a wire shape only 16.x produces, so the <=14.x path where
     # exceptions ride embedded in the master had no coverage at all.
     "test_18_exception_outcomes",
+    # The import path: a recurrence one item cannot carry, split and
+    # restated. Version-agnostic - everything it sends is an ordinary
+    # series - and it re-pulls the folder, so it sits with the sections
+    # that do.
+    "test_19_recurrence_shapes",
     # After everything that reads the folder, because it re-pulls the whole
     # thing: a section running behind it pays for a full download it did not
     # ask for.

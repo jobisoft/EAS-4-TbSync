@@ -997,6 +997,19 @@ export function clientRejectReason({ blob, syncRecurrence }) {
   const master = vcal ? pickMasterVevent(vcal) : null;
   if (!master) return null;
 
+  // Dates the guard could not restate as a rule. It restates every other
+  // set, so the only one that survives it is two occurrences on the same
+  // calendar day: no daily rule sits under both, and EAS has no finer
+  // frequency. Sending it anyway means the server storing the item
+  // without its dates, which is the occurrences lost in silence.
+  if (syncRecurrence && master.getFirstProperty("rdate")) {
+    return (
+      "this event has two occurrences on the same day, and ActiveSync " +
+      "can state occurrences only as a rule, which has no interval " +
+      "shorter than a day"
+    );
+  }
+
   if (syncRecurrence && SUB_DAILY_FREQ.test(blob)) {
     const freq = String(
       master.getFirstProperty("rrule")?.getFirstValue()?.freq ?? "",
