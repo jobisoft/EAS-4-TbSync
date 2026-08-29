@@ -81,6 +81,13 @@ export function installWebextEnv() {
     runtime: {
       getURL: (relativePath) => FIXTURE_SCHEME + relativePath,
     },
+    // Every key answers "", which is what an unknown one does in the real
+    // extension - so code that falls back to a literal when a message is
+    // missing takes that path here, and code that does not shows up as an
+    // empty message rather than a TypeError from a missing API.
+    i18n: {
+      getMessage: () => "",
+    },
     // storage is deliberately absent: no codec module may touch it, and
     // a test that trips over this is a layering bug worth hearing about.
   };

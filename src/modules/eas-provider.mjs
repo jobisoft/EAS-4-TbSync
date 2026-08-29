@@ -18,7 +18,8 @@
  *   - server, user, password / servertype, refreshToken,
  *     authenticatedUserEmail - see the two flavours above
  *   - deviceId       - stable per-account EAS device identifier
- *   - asversion      - negotiated AS version ("2.5" | "14.0" | "14.1" | "16.1")
+ *   - asversion      - the version this account speaks, decided on connect
+ *                      ("2.5" | "14.0" | "14.1" | "16.1")
  *   - policykey      - current provision key ("0" before first Provision)
  *   - foldersynckey  - FolderSync key ("0" before first FolderSync)
  *
@@ -92,7 +93,11 @@ import {
   startAuth,
   isOAuthAccount,
 } from "./eas/oauth.mjs";
-import { negotiateAsVersion } from "./eas/connect.mjs";
+import {
+  isNoOptionsAnswer,
+  negotiateAsVersion,
+  suggestedAsVersion,
+} from "./eas/connect.mjs";
 import { discoverEasServer } from "./eas/autodiscover.mjs";
 import { acquirePolicyKey, NO_POLICY_FOR_DEVICE } from "./eas/provision.mjs";
 import { runFolderSync } from "./eas/folder-sync.mjs";
@@ -450,7 +455,11 @@ export class EasProvider extends TbSyncProviderImplementation {
     // EAS version, run Provision if required, run FolderSync to discover
     // the resource list, and push it to the host so the manager can
     // render contacts/calendars/tasks rows. Idempotent on re-enable.
-    await this.#connectAndDiscoverFolders(accountId);
+    //
+    // The one moment the account's EAS version is decided: `connecting`
+    // is what lets `#doConnectAndDiscover` read the user's choice, which
+    // it must not do on the syncs that follow.
+    await this.#connectAndDiscoverFolders(accountId, { connecting: true });
     // OPTIONS has populated allowedEasCommands by now, so we know
     // whether the server supports the GAL Search command.
     const rv = await this.getAccount(accountId);
@@ -520,6 +529,62 @@ export class EasProvider extends TbSyncProviderImplementation {
     return null;
   }
 
+  /**
+   * The OPTIONS probe, or a way to carry on without one.
+   *
+   * Returns what the probe negotiated, or `null` to mean "no answer, but
+   * this connect can still go ahead" - the caller then stores nothing and
+   * uses the version already on the account.
+   *
+   * A server can refuse OPTIONS and serve everything else perfectly well.
+   * Before this, that combination was fatal and stayed fatal: the probe
+   * runs whenever there is no `asversion`, so the failure that stopped one
+   * being stored is the same failure that re-runs on every attempt, and
+   * choosing a version by hand could not break the loop because the pin
+   * lives in a different field. It also broke *working* accounts, since
+   * the probe re-runs daily and a server that starts refusing it would
+   * take the account down a day later with a good version still stored.
+   *
+   * `easOptionsUnavailable` records which of those two worlds we are in,
+   * for the one capability that reads "the server did not advertise it"
+   * as "it does not have it" - see `shouldSendDeviceInformation`.
+   */
+  async #negotiateOrFallBack(accountId, ctx) {
+    try {
+      const negotiated = await negotiateAsVersion({ account: ctx.account });
+      if (ctx.account.custom?.easOptionsUnavailable) {
+        await this.updateAccount({
+          accountId,
+          patch: { custom: { easOptionsUnavailable: false } },
+        });
+      }
+      return negotiated;
+    } catch (err) {
+      if (!isNoOptionsAnswer(err)) throw err;
+      const custom = ctx.account.custom ?? {};
+      const pinned =
+        custom.asversionselected && custom.asversionselected !== "auto"
+          ? custom.asversionselected
+          : null;
+      const fallback = pinned ?? custom.asversion ?? "";
+      if (!fallback) throw err;
+      this.reportEventLog({
+        level: "warning",
+        accountId,
+        message: browser.i18n.getMessage(
+          "eas.connect.warning.optionsFallback",
+          [fallback],
+        ),
+        details: err?.cause?.message ?? err?.message ?? null,
+      });
+      await this.updateAccount({
+        accountId,
+        patch: { custom: { easOptionsUnavailable: true } },
+      });
+      return null;
+    }
+  }
+
   async onRegisterSuccessful({ accountId }) {
     // OPTIONS probe up-front so the manager UI / config popup have the
     // server-advertised EAS version and command list (notably Search/GAL)
@@ -532,11 +597,13 @@ export class EasProvider extends TbSyncProviderImplementation {
       if (!ctx) return null;
       if (isOAuthAccount(ctx.account.custom)) this.#primeAuth(ctx);
       const negotiated = await negotiateAsVersion({ account: ctx.account });
+      // What the server offers, not what this account will run on. That
+      // is decided when it is connected, from the config the user leaves
+      // behind here - see `#doConnectAndDiscover`.
       await this.updateAccount({
         accountId,
         patch: {
           custom: {
-            asversion: negotiated.asVersion,
             allowedEasVersions: negotiated.allowedAsVersions,
             allowedEasCommands: negotiated.allowedCommands,
             lastEasOptionsUpdate: Date.now(),
@@ -735,11 +802,14 @@ export class EasProvider extends TbSyncProviderImplementation {
    *  Autodiscover re-run in case the cached MobileSync URL has rotated. */
   async #connectAndDiscoverFolders(
     accountId,
-    redirectsRemaining = 1,
-    rediscoversRemaining = 1,
+    {
+      connecting = false,
+      redirectsRemaining = 1,
+      rediscoversRemaining = 1,
+    } = {},
   ) {
     try {
-      await this.#doConnectAndDiscover(accountId);
+      await this.#doConnectAndDiscover(accountId, connecting);
     } catch (err) {
       if (
         err.code === NET_ERR.HOST_REDIRECT &&
@@ -750,21 +820,21 @@ export class EasProvider extends TbSyncProviderImplementation {
           accountId,
           patch: { custom: { server: err.newLocation } },
         });
-        await this.#connectAndDiscoverFolders(
-          accountId,
-          redirectsRemaining - 1,
+        await this.#connectAndDiscoverFolders(accountId, {
+          connecting,
+          redirectsRemaining: redirectsRemaining - 1,
           rediscoversRemaining,
-        );
+        });
         return;
       }
       if (err.code === NET_ERR.NETWORK && rediscoversRemaining > 0) {
         const rediscovered = await this.#rediscoverServerUrl(accountId);
         if (rediscovered) {
-          await this.#connectAndDiscoverFolders(
-            accountId,
+          await this.#connectAndDiscoverFolders(accountId, {
+            connecting,
             redirectsRemaining,
-            rediscoversRemaining - 1,
-          );
+            rediscoversRemaining: rediscoversRemaining - 1,
+          });
           return;
         }
       }
@@ -808,7 +878,7 @@ export class EasProvider extends TbSyncProviderImplementation {
     return true;
   }
 
-  async #doConnectAndDiscover(accountId) {
+  async #doConnectAndDiscover(accountId, connecting = false) {
     let ctx = await this.#loadContext(accountId);
     if (!ctx) throw withCode(new Error("unknown account"), ERR.UNKNOWN_ACCOUNT);
 
@@ -828,40 +898,40 @@ export class EasProvider extends TbSyncProviderImplementation {
       !ctx.account.custom?.asversion ||
       Date.now() - lastOptionsUpdate > OPTIONS_REPROBE_MS;
     if (needsOptionsProbe) {
-      const negotiated = await negotiateAsVersion({ account: ctx.account });
-      // Sticky: a connected account KEEPS the version it was negotiated
-      // onto for as long as the server still advertises it. The re-probe
-      // tracks the server's list; it does not migrate live accounts to
-      // whatever the preference order currently picks - a protocol
-      // switch changes item-identity semantics (UID handling differs
-      // between 14.x and 16.1), so it happens only when the server
-      // drops the stored version. The preference order thus reaches only
-      // fresh negotiations.
-      const current = ctx.account.custom?.asversion;
-      const asversion =
-        current && negotiated.allowedAsVersions.includes(current)
-          ? current
-          : negotiated.asVersion;
-      await this.updateAccount({
-        accountId,
-        patch: {
-          custom: {
-            asversion,
-            allowedEasVersions: negotiated.allowedAsVersions,
-            allowedEasCommands: negotiated.allowedCommands,
-            lastEasOptionsUpdate: Date.now(),
+      const negotiated = await this.#negotiateOrFallBack(accountId, ctx);
+      // Null means the probe told us nothing and the connect is going
+      // ahead on a version we already hold - the pin, or the one this
+      // account was negotiated onto before. Nothing is stored for it:
+      // writing an empty command list would retire capabilities the
+      // server does support, and the version is read below from exactly
+      // those two places anyway.
+      if (negotiated) {
+        // What the server advertises, and nothing else. The probe runs on
+        // connected accounts too, and the version one of those is running
+        // on may not move underneath it: a protocol switch changes
+        // item-identity semantics (UID handling differs between 14.x and
+        // 16.1). Connecting is the only thing that decides that value.
+        await this.updateAccount({
+          accountId,
+          patch: {
+            custom: {
+              allowedEasVersions: negotiated.allowedAsVersions,
+              allowedEasCommands: negotiated.allowedCommands,
+              lastEasOptionsUpdate: Date.now(),
+            },
           },
-        },
-      });
-      ctx = await this.#loadContext(accountId);
+        });
+        ctx = await this.#loadContext(accountId);
+      }
     }
 
-    // The user can override negotiation via the config popup. "auto"
-    // (the default) uses the negotiated value cached in account.custom.
-    // When a specific version is forced, validate it against the server's
-    // advertised list - matches legacy sync.js:107-108. We only enforce
-    // when `allowedEasVersions` is non-empty so a corrupted-state account
-    // isn't blocked from re-probing.
+    // Which version this account speaks. Three values decide it and only
+    // one of them is the user's: the config says a version or `auto`, and
+    // `auto` means the best overlap between what the server advertises
+    // and what we speak. Validated against the advertised list first -
+    // matches legacy sync.js:107-108 - and only when that list is
+    // non-empty, so a corrupted-state account is not blocked from
+    // re-probing.
     const selected = ctx.account.custom?.asversionselected || "auto";
     const allowedVersions = ctx.account.custom?.allowedEasVersions ?? [];
     if (
@@ -876,8 +946,40 @@ export class EasProvider extends TbSyncProviderImplementation {
         ERR.UNKNOWN_COMMAND,
       );
     }
-    const asVersion =
-      selected === "auto" ? ctx.account.custom.asversion : selected;
+    // Decided on a connect, and only then. This runs on every sync too,
+    // and a live account keeps the version it connected on: the config
+    // cannot change underneath it - the popup is read-only while an
+    // account is enabled - so the only thing that could move it mid-life
+    // is the server changing its suggestion, which is what must not
+    // reach a connected account.
+    const asVersion = connecting
+      ? selected === "auto"
+        ? suggestedAsVersion(allowedVersions)
+        : selected
+      : ctx.account.custom?.asversion;
+    if (!asVersion) {
+      // The probe never answered and nothing was pinned, so there is no
+      // version to speak. Said as an instruction rather than a fault:
+      // the dropdown in the account settings is the way out, and it
+      // offers every version we support when the server named none.
+      throw withCode(
+        new Error(
+          browser.i18n.getMessage("eas.connect.error.chooseVersion") ||
+            "Choose an ActiveSync version in the account settings.",
+        ),
+        ERR.UNKNOWN_COMMAND,
+      );
+    }
+    // Written down before anything speaks it, so the handshake below and
+    // every request after it use one version rather than two. This is the
+    // only writer.
+    if (connecting && asVersion !== ctx.account.custom?.asversion) {
+      await this.updateAccount({
+        accountId,
+        patch: { custom: { asversion: asVersion } },
+      });
+      ctx = await this.#loadContext(accountId);
+    }
 
     // 2) Pre-emptive Provision (legacy "Kerio" semantics). When the
     // user has flipped the toggle on - or a previous 449 stuck it on -
@@ -1569,6 +1671,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           // Common EAS state:
           deviceId: generateDeviceId(),
           asversion: "",
+          asversionselected: "auto",
           policykey: "0",
           foldersynckey: "0",
           // Legacy semantic: off by default. Self-corrects to true on
@@ -1601,6 +1704,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           password: args.password,
           deviceId: generateDeviceId(),
           asversion: "",
+          asversionselected: "auto",
           policykey: "0",
           foldersynckey: "0",
           provision: false,
@@ -1632,6 +1736,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         password: args.password,
         deviceId: generateDeviceId(),
         asversion: "",
+        asversionselected: "auto",
         policykey: "0",
         foldersynckey: "0",
         provision: false,
@@ -1661,7 +1766,11 @@ export class EasProvider extends TbSyncProviderImplementation {
       authenticatedUserEmail: c.authenticatedUserEmail ?? null,
       // Protocol section.
       deviceId: c.deviceId ?? "",
+      // What it runs on, and what the server would pick for it. The two
+      // differ exactly when the user has chosen a version, which is when
+      // the popup is worth reading.
       asVersion: c.asversion ?? "",
+      asVersionSuggested: suggestedAsVersion(c.allowedEasVersions) ?? "",
       allowedAsVersions: Array.isArray(c.allowedEasVersions)
         ? c.allowedEasVersions
         : [],

@@ -35,7 +35,10 @@ import {
   getDeviceOs,
   getUserAgent,
 } from "../network.mjs";
-import { easCommandAdvertised } from "./allowed-commands.mjs";
+import {
+  easCommandAdvertised,
+  easCommandLikelyAvailable,
+} from "./allowed-commands.mjs";
 import {
   childByTag,
   readChildTexts,
@@ -219,7 +222,17 @@ export async function fetchUserInformation({ account, asVersion }) {
  *  like one never asked, which is what carries existing accounts over. */
 export function shouldSendDeviceInformation(account, asVersion) {
   if (asVersion === "2.5") return false;
-  if (!easCommandAdvertised(account, "Settings")) return false;
+  // Normally the server has to have advertised Settings: introducing the
+  // device is not worth a request against a server that says it cannot
+  // take one. But an account connected without a usable OPTIONS probe has
+  // no command list at all, and reading that silence as "no Settings"
+  // would leave it never introducing itself - which is #353's empty-sync
+  // exactly, reappearing for the accounts least able to afford it. There,
+  // ask anyway: a refusal costs one request and is already absorbed.
+  const advertised = account?.custom?.easOptionsUnavailable
+    ? easCommandLikelyAvailable(account, "Settings")
+    : easCommandAdvertised(account, "Settings");
+  if (!advertised) return false;
   if (
     account?.custom?.provision === true &&
     PROVISION_EMBEDS_DEVICE_INFO.has(asVersion)

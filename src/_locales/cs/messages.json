@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automaticky (použít verzi preferovanou serverem)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Aktuálně dohodnuto: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "Aktuálně používáno: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "Server doporučuje $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Když toto okno zavřete, kopie navíc zůstanou na serveru. Tento seznam se znovu zobrazí až po úplné synchronizaci účtu."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "Server neodpověděl na dotaz na verzi ActiveSync."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "Server nesdělil, které verze ActiveSync podporuje. Vyberte si jednu sami v nastavení účtu v položce Verze ActiveSync."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "Server neodpověděl na dotaz na verzi ActiveSync. Pokračuje se s verzí $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "Server nesdělil, které verze podporuje, proto jsou nabízeny všechny."
   }
 }

@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automatique (utiliser la version préférée du serveur)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Version négociée actuellement : $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "Actuellement utilisée : $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "Le serveur suggère $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Si vous fermez cette fenêtre, les copies supplémentaires restent sur le serveur. Cette liste ne sera affichée de nouveau qu'après une synchronisation complète du compte."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "Le serveur n'a pas répondu à la requête de version ActiveSync."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "Le serveur n'a pas indiqué quelles versions d'ActiveSync il prend en charge. Choisissez-en une vous-même dans les paramètres du compte, sous Version d'ActiveSync."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "Le serveur n'a pas répondu à la requête de version ActiveSync. Poursuite avec la version $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "Le serveur n'a pas indiqué les versions qu'il prend en charge, elles sont donc toutes proposées."
   }
 }

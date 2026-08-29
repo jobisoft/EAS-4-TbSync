@@ -127,6 +127,57 @@ function easUrlFor(custom, context) {
 
 // ── Public API ────────────────────────────────────────────────────────────
 
+/**
+ * One OPTIONS request, logged like every other exchange.
+ *
+ * Request headers are deliberately not logged - `Authorization` is one of
+ * them. Response headers are, because the version and command lists live
+ * there, and because a server that fails here usually names its own trace
+ * id (`X-Request-Id` and friends), which is what lets its administrator
+ * find the failure from the other side.
+ */
+async function sendOptions({ account }) {
+  const custom = account?.custom ?? {};
+  const serverUrl = easUrlFor(custom, "easOptions");
+
+  const headers = new Headers({
+    Authorization: await buildAuthHeader(account),
+    "User-Agent": await getUserAgent(),
+  });
+  stampAnchorMailbox(headers, custom);
+  reportEventLog({
+    level: "debug",
+    accountId: account?.accountId,
+    message: "[eas:net] send OPTIONS",
+    details: serverUrl,
+  });
+
+  const { resp } = await fetchWithTimeout(
+    serverUrl,
+    { method: "OPTIONS", headers },
+    syncSignalFor(account?.accountId),
+  );
+  let buf = null;
+  try {
+    buf = new Uint8Array(await resp.arrayBuffer());
+  } catch {
+    /* a body we cannot read is not a reason to lose the status */
+  }
+  reportEventLog({
+    level: "debug",
+    accountId: account?.accountId,
+    message: `[eas:net] receive OPTIONS (HTTP ${resp.status})`,
+    details: formatHeadersForLog(resp.headers),
+  });
+  if (!resp.ok) logRecvError({ account, command: "OPTIONS", resp, buf });
+
+  return {
+    resp,
+    versions: parseList(resp.headers.get("MS-ASProtocolVersions")),
+    commands: parseList(resp.headers.get("MS-ASProtocolCommands")),
+  };
+}
+
 export async function easOptions({ account }) {
   const custom = account?.custom ?? {};
   const serverUrl = easUrlFor(custom, "easOptions");
@@ -141,26 +192,13 @@ export async function easOptions({ account }) {
       ]),
     });
   }
-  const authHeader = await buildAuthHeader(account);
-  const headers = new Headers({
-    Authorization: authHeader,
-    "User-Agent": await getUserAgent(),
-  });
-  stampAnchorMailbox(headers, custom);
-  const { resp } = await fetchWithTimeout(
-    serverUrl,
-    { method: "OPTIONS", headers },
-    syncSignalFor(account?.accountId),
-  );
+  const { resp, versions, commands } = await sendOptions({ account });
   if (resp.status === 401 || resp.status === 403) {
     throw new EasHttpError(NET_ERR.AUTH, resp.status);
   }
   if (resp.status === 451) throw redirectError(resp);
   if (!resp.ok) throw new EasHttpError(NET_ERR.HTTP, resp.status);
-  return {
-    versions: parseList(resp.headers.get("MS-ASProtocolVersions")),
-    commands: parseList(resp.headers.get("MS-ASProtocolCommands")),
-  };
+  return { versions, commands };
 }
 
 /** How this module reaches the running sync's AbortSignal.
@@ -254,10 +292,9 @@ export async function easRequest({ account, command, body, asVersion }) {
         .map((b) => b.toString(16).padStart(2, "0"))
         .join(" ");
       throw new EasHttpError(NET_ERR.HTTP, resp.status, {
-        message: browser.i18n.getMessage(
-          "eas.network.error.responseNotWbxml",
-          [head],
-        ),
+        message: browser.i18n.getMessage("eas.network.error.responseNotWbxml", [
+          head,
+        ]),
       });
     }
 

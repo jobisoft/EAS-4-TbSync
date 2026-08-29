@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automată (folosește versiunea preferată de server)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Negociată în prezent: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "În uz în prezent: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "Serverul sugerează $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Dacă închideți această fereastră, copiile în plus rămân pe server. Această listă este afișată din nou abia după o sincronizare completă a contului."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "Serverul nu a răspuns la interogarea versiunii ActiveSync."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "Serverul nu a comunicat ce versiuni ActiveSync acceptă. Alegeți una dumneavoastră în setările contului, la Versiune ActiveSync."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "Serverul nu a răspuns la interogarea versiunii ActiveSync. Se continuă cu versiunea $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "Serverul nu a comunicat ce versiuni acceptă, așa că sunt oferite toate."
   }
 }

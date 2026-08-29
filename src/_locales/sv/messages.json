@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automatisk (använd serverns föredragna version)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Aktuell förhandlad version: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "Används just nu: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "Servern föreslår $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Om du stänger det här fönstret ligger de överflödiga kopiorna kvar på servern. Listan visas igen först efter en fullständig synkronisering av kontot."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "Servern svarade inte på förfrågan om ActiveSync-version."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "Servern angav inte vilka ActiveSync-versioner den stöder. Välj en själv i kontoinställningarna, under ActiveSync-version."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "Servern svarade inte på förfrågan om ActiveSync-version. Fortsätter med version $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "Servern angav inte vilka versioner den stöder, så alla erbjuds."
   }
 }

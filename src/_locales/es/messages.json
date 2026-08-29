@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automática (usar la versión preferida del servidor)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Negociada actualmente: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "En uso actualmente: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "El servidor sugiere $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Si cierra esta ventana, las copias sobrantes se quedan en el servidor. Esta lista solo se vuelve a mostrar tras una sincronización completa de la cuenta."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "El servidor no ha respondido a la consulta de la versión de ActiveSync."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "El servidor no ha indicado qué versiones de ActiveSync admite. Elija una usted mismo en la configuración de la cuenta, en Versión de ActiveSync."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "El servidor no ha respondido a la consulta de la versión de ActiveSync. Se continúa con la versión $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "El servidor no ha indicado qué versiones admite, así que se ofrecen todas."
   }
 }

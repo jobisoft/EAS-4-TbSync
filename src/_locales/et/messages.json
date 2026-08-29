@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automaatne (kasuta serveri eelistatud versiooni)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Praegu kokku lepitud: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "Praegu kasutusel: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "Server soovitab versiooni $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Kui te selle akna sulgete, jäävad lisakoopiad serverisse. Seda loendit näidatakse uuesti alles pärast konto täissünkroonimist."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "Server ei vastanud ActiveSynci versiooni päringule."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "Server ei öelnud, milliseid ActiveSynci versioone ta toetab. Valige ise üks konto sätetes ActiveSynci versiooni alt."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "Server ei vastanud ActiveSynci versiooni päringule. Jätkatakse versiooniga $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "Server ei öelnud, milliseid versioone ta toetab, seega pakutakse kõiki."
   }
 }

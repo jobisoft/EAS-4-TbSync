@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "自動 (サーバーの推奨バージョンを使用)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "現在ネゴシエート済み: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "現在使用中: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "サーバーは $VERSION$ を推奨しています。",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "このウィンドウを閉じると、余分な複製はサーバーに残ります。この一覧が再び表示されるのは、アカウントを完全に同期したあとだけです。"
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "サーバーが ActiveSync バージョンの問い合わせに応答しませんでした。"
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "サーバーは対応している ActiveSync のバージョンを示しませんでした。アカウント設定の ActiveSync バージョンから、ご自身で選択してください。"
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "サーバーが ActiveSync バージョンの問い合わせに応答しませんでした。バージョン $VERSION$ で続行します。",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "サーバーが対応バージョンを示さなかったため、すべてを表示しています。"
   }
 }

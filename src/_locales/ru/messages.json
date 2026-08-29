@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Автоматически (использовать предпочтительную версию сервера)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Согласована в данный момент: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "Сейчас используется: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "Сервер предлагает $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Если вы закроете это окно, лишние копии останутся на сервере. Этот список будет показан снова только после полной синхронизации учётной записи."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "Сервер не ответил на запрос версии ActiveSync."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "Сервер не сообщил, какие версии ActiveSync он поддерживает. Выберите версию самостоятельно в настройках учётной записи, в поле Версия ActiveSync."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "Сервер не ответил на запрос версии ActiveSync. Продолжаем с версией $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "Сервер не сообщил, какие версии он поддерживает, поэтому предлагаются все."
   }
 }

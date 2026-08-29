@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Автоматично (използване на предпочитаната от сървъра версия)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Договорена в момента: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "В момента се използва: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "Сървърът предлага $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Ако затворите този прозорец, допълнителните копия остават на сървъра. Този списък се показва отново едва след пълно синхронизиране на регистрацията."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "Сървърът не отговори на запитването за версията на ActiveSync."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "Сървърът не съобщи кои версии на ActiveSync поддържа. Изберете сами една в настройките на регистрацията, под Версия на ActiveSync."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "Сървърът не отговори на запитването за версията на ActiveSync. Продължава се с версия $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "Сървърът не съобщи кои версии поддържа, затова се предлагат всички."
   }
 }

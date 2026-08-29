@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automatic (use server's preferred version)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Currently negotiated: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "Currently in use: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "The server suggests $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "If you close this window, the extra copies stay on the server. This list is only shown again after a full synchronisation of the account."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "The server did not answer the ActiveSync version probe."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "The server did not say which ActiveSync versions it supports. Choose one yourself in the account settings, under ActiveSync version."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "The server did not answer the ActiveSync version probe. Continuing with version $VERSION$.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "The server did not say which versions it supports, so all are offered."
   }
 }

@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "Automatikus (a kiszolgáló által preferált verzió használata)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "Jelenleg egyeztetett: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "Jelenleg használt: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "A kiszolgáló a következőt javasolja: $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "Ha bezárja ezt az ablakot, a többletpéldányok a kiszolgálón maradnak. Ez a lista csak a fiók teljes szinkronizálása után jelenik meg újra."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "A kiszolgáló nem válaszolt az ActiveSync-verzió lekérdezésére."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "A kiszolgáló nem közölte, mely ActiveSync-verziókat támogatja. Válasszon egyet a fiók beállításaiban, az ActiveSync-verzió alatt."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "A kiszolgáló nem válaszolt az ActiveSync-verzió lekérdezésére. A folytatás a(z) $VERSION$ verzióval történik.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "A kiszolgáló nem közölte, mely verziókat támogatja, ezért mind felkínálásra kerül."
   }
 }

@@ -212,8 +212,17 @@
   "config.protocol.asVersion.auto": {
     "message": "자동 (서버가 선호하는 버전 사용)"
   },
-  "config.protocol.asVersion.negotiatedHint": {
-    "message": "현재 협상된 버전: $VERSION$",
+  "config.protocol.asVersion.usingHint": {
+    "message": "현재 사용 중: $VERSION$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "14.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.suggestedHint": {
+    "message": "서버가 $VERSION$을(를) 제안합니다.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -612,5 +621,23 @@
   },
   "duplicates.footnote": {
     "message": "이 창을 닫으면 남는 사본은 서버에 그대로 남습니다. 이 목록은 계정을 전체 동기화한 뒤에만 다시 표시됩니다."
+  },
+  "eas.connect.error.optionsUnavailable": {
+    "message": "서버가 ActiveSync 버전 조회에 응답하지 않았습니다."
+  },
+  "eas.connect.error.chooseVersion": {
+    "message": "서버가 지원하는 ActiveSync 버전을 알려주지 않았습니다. 계정 설정의 ActiveSync 버전에서 직접 선택하세요."
+  },
+  "eas.connect.warning.optionsFallback": {
+    "message": "서버가 ActiveSync 버전 조회에 응답하지 않았습니다. 버전 $VERSION$(으)로 계속합니다.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "16.1"
+      }
+    }
+  },
+  "config.protocol.asVersion.unknownHint": {
+    "message": "서버가 지원 버전을 알려주지 않아 전체를 표시합니다."
   }
 }

@@ -196,9 +196,35 @@ async function load() {
   }
 }
 
-/** Build the AS-version dropdown: "auto" plus the known fixed list,
- *  matching the legacy add-on. The hint underneath shows the currently
- *  negotiated version, but only while "auto" is selected. */
+/** Which versions to offer: the ones this add-on speaks and the server
+ *  says it speaks, intersected.
+ *
+ *  Not the server's list on its own - a server advertising 12.0 must not
+ *  offer a version we cannot talk. And not a filtered list when the
+ *  server named none: that is the case where the probe never answered,
+ *  which is exactly when the user has to choose one blind, so an empty
+ *  intersection would leave a dropdown offering nothing but "auto".
+ *
+ *  A value already selected stays on the list whatever the server now
+ *  advertises, so opening this window cannot silently change the setting
+ *  it is showing. */
+function offeredAsVersions(account) {
+  const advertised = Array.isArray(account.allowedAsVersions)
+    ? account.allowedAsVersions
+    : [];
+  const base = advertised.length
+    ? KNOWN_AS_VERSIONS.filter((v) => advertised.includes(v))
+    : KNOWN_AS_VERSIONS;
+  const list = base.length ? base : KNOWN_AS_VERSIONS;
+  const selected = account.asVersionSelected;
+  return selected && selected !== "auto" && !list.includes(selected)
+    ? [...list, selected]
+    : list;
+}
+
+/** Build the AS-version dropdown: "auto" plus whatever this server can be
+ *  asked for. The hint underneath says what the account is using and what
+ *  the server would pick for it. */
 function populateAsVersionDropdown(account) {
   const sel = $("as-version-selected");
   sel.innerHTML = "";
@@ -207,7 +233,7 @@ function populateAsVersionDropdown(account) {
   autoOpt.textContent = i18n("config.protocol.asVersion.auto", "");
   sel.appendChild(autoOpt);
 
-  for (const v of KNOWN_AS_VERSIONS) {
+  for (const v of offeredAsVersions(account)) {
     const opt = document.createElement("option");
     opt.value = v;
     opt.textContent = v;
@@ -221,13 +247,35 @@ function populateAsVersionDropdown(account) {
 function updateAsVersionHint(account) {
   const sel = $("as-version-selected");
   const hintEl = $("as-version-hint");
-  if (sel.value === "auto" && account.asVersion) {
-    hintEl.textContent = i18n("config.protocol.asVersion.negotiatedHint", "", [
-      account.asVersion,
-    ]);
-  } else {
-    hintEl.textContent = "";
+  const advertised = Array.isArray(account.allowedAsVersions)
+    ? account.allowedAsVersions
+    : [];
+  if (!advertised.length) {
+    // Said out loud, because the list is the full one and the reason is
+    // not visible: the server never answered the version probe, so this
+    // is a choice the user has to make without its help.
+    hintEl.textContent = i18n("config.protocol.asVersion.unknownHint", "");
+    return;
   }
+  // Two different questions, and the popup is where they get confused.
+  // What the account speaks is settled when it connects and cannot move
+  // while it is enabled; what the server suggests is re-read every day.
+  // They differ whenever a version has been chosen by hand, so both are
+  // said rather than one standing in for the other.
+  const lines = [];
+  if (readOnly && account.asVersion) {
+    lines.push(
+      i18n("config.protocol.asVersion.usingHint", "", [account.asVersion]),
+    );
+  }
+  if (account.asVersionSuggested) {
+    lines.push(
+      i18n("config.protocol.asVersion.suggestedHint", "", [
+        account.asVersionSuggested,
+      ]),
+    );
+  }
+  hintEl.textContent = lines.join(" ");
 }
 
 function applyReadOnly() {
