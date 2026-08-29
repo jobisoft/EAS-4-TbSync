@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "Koopiaid ei õnnestunud eemaldada."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "Seda kontot sünkroonitakse praegu. Proovige uuesti, kui see on lõppenud."
-  },
   "duplicates.error.partial": {
     "message": "Osa koopiaid ei õnnestunud eemaldada. Sündmuste logis on kirjas, mida server vastas."
   },

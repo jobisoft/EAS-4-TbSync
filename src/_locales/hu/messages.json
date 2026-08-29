@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "A példányokat nem sikerült eltávolítani."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "Ez a fiók éppen szinkronizál. Próbálja újra, ha befejeződött."
-  },
   "duplicates.error.partial": {
     "message": "Néhány példányt nem sikerült eltávolítani. Az eseménynaplóban benne van, mit válaszolt a kiszolgáló."
   },

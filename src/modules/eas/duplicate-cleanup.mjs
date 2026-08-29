@@ -66,7 +66,6 @@ export async function deleteSurplusCopies({
   serverIds,
   persistSyncKey,
   onProgress,
-  signal,
   paceMs = PACE_MS,
 }) {
   let key = String(synckey ?? "0");
@@ -79,7 +78,6 @@ export async function deleteSurplusCopies({
   let deleted = 0;
 
   for (let i = 0; i < serverIds.length; i += CHUNK) {
-    if (signal?.aborted) break;
     const chunk = serverIds.slice(i, i + CHUNK);
     const body = buildSyncBody({
       synckey: key,

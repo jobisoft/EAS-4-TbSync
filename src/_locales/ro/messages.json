@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "Copiile nu au putut fi șterse."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "Acest cont se sincronizează acum. Încercați din nou după ce se termină."
-  },
   "duplicates.error.partial": {
     "message": "Unele copii nu au putut fi șterse. În jurnalul de evenimente scrie ce a răspuns serverul."
   },

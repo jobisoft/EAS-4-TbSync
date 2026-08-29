@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "Não foi possível remover as cópias."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "Esta conta está sincronizando. Tente novamente quando terminar."
-  },
   "duplicates.error.partial": {
     "message": "Algumas cópias não puderam ser removidas. O registro de eventos mostra o que o servidor respondeu."
   },

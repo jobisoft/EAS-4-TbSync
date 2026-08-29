@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "사본을 제거할 수 없습니다."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "이 계정은 동기화 중입니다. 끝난 뒤에 다시 시도하세요."
-  },
   "duplicates.error.partial": {
     "message": "일부 사본을 제거하지 못했습니다. 서버가 무엇이라고 응답했는지는 이벤트 로그에 있습니다."
   },

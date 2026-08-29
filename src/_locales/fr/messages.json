@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "Les copies n'ont pas pu être supprimées."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "Ce compte est en cours de synchronisation. Réessayez une fois qu'elle sera terminée."
-  },
   "duplicates.error.partial": {
     "message": "Certaines copies n'ont pas pu être supprimées. Le journal des événements indique ce que le serveur a répondu."
   },

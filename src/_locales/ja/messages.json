@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "複製を削除できませんでした。"
   },
-  "eas.duplicates.error.syncing": {
-    "message": "このアカウントは同期中です。終了してからもう一度お試しください。"
-  },
   "duplicates.error.partial": {
     "message": "一部の複製を削除できませんでした。サーバーの応答はイベントログに記録されています。"
   },

@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "Det gick inte att ta bort kopiorna."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "Det här kontot synkroniseras just nu. Försök igen när det är klart."
-  },
   "duplicates.error.partial": {
     "message": "Vissa kopior gick inte att ta bort. I händelseloggen står vad servern svarade."
   },

@@ -594,9 +594,6 @@
   "duplicates.error.deleteFailed": {
     "message": "Kopie se nepodařilo odstranit."
   },
-  "eas.duplicates.error.syncing": {
-    "message": "Tento účet se právě synchronizuje. Zkuste to znovu, až synchronizace skončí."
-  },
   "duplicates.error.partial": {
     "message": "Některé kopie se nepodařilo odstranit. Co odpověděl server, je zapsáno v protokolu událostí."
   },

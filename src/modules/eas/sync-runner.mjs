@@ -1020,16 +1020,15 @@ async function duplicateFinding(ctx) {
  */
 async function duplicateCleanupPhase(ctx) {
   const wanted = ctx.folder.custom?.duplicatesPending;
-  ctx.eventLog(
-    "debug",
-    `[${ctx.itemKind.changelogKind}-sync] duplicate cleanup: ` +
-      `${Array.isArray(wanted) ? wanted.length : 0} requested, ` +
-      `${(ctx.folder.custom?.duplicates ?? []).length} cluster(s) on record`,
-  );
   if (!Array.isArray(wanted) || !wanted.length) return;
   const finding = Array.isArray(ctx.folder.custom?.duplicates)
     ? ctx.folder.custom.duplicates
     : [];
+  ctx.eventLog(
+    "debug",
+    `[${ctx.itemKind.changelogKind}-sync] duplicate cleanup: ` +
+      `${wanted.length} requested, ${finding.length} cluster(s) on record`,
+  );
   const asked = new Set(wanted);
   const clusters = finding.filter((c) => asked.has(c.uid));
   const serverIds = clusters.flatMap((c) => c.surplus ?? []);
@@ -1046,10 +1045,13 @@ async function duplicateCleanupPhase(ctx) {
         conflict: ctx.conflict,
         synckey: ctx.synckey,
         serverIds,
-        // Written through to the row, not just banked on `ctx`: the
-        // end-of-sync flush only runs if the sync gets that far, and a
-        // throw in a later phase would leave the row behind the server's
-        // key - a Status 3 and a full re-download.
+        // Written through to the folder row, not just banked on `ctx`.
+        // The flush at the end of a sync is the usual writer, but it only
+        // runs if the sync gets there: a throw in a later phase would
+        // leave the row holding the key from before these deletes, while
+        // the server has moved several steps past it. That costs a
+        // Status 3 and a full re-download of the folder - the one thing a
+        // mailbox with hundreds of copies can least afford.
         persistSyncKey: async (synckey) => {
           ctx.synckey = synckey;
           ctx.syncKeyDirty = true;
