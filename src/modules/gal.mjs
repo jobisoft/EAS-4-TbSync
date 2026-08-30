@@ -118,7 +118,7 @@ function haystack(contact) {
  *  Longest prefix first, since it is the smallest set to filter and the
  *  most recently confirmed.
  *
- *  Verified against ekir's GAL before being written: the server's answer
+ *  Verified against a Z-Push GAL before being written: the server's answer
  *  for "biel" is exactly this filter applied to its answer for "bie" (10
  *  of 76), and for "bielz" exactly this filter applied to "biel" (1 of 10).
  *  The assumption is that a longer query matches a subset of a shorter

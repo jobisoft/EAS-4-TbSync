@@ -4,7 +4,7 @@
  * A server applies each exception against the occurrences as they stand at
  * that moment and refuses one that would carry an occurrence past a
  * sibling that has not moved yet - silently, with Status 1, so the
- * exception is just absent on the next pull. Measured on ekir both ways:
+ * exception is just absent on the next pull. Measured on Z-Push both ways:
  * two occurrences moved later survive only when the latest is written
  * first, two moved earlier only when the earliest is.
  *

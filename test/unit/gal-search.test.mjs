@@ -16,7 +16,7 @@
  * Counting rows cannot substitute for reading `<Total>`: a GAL holding
  * exactly 100 matches and one holding 400 both return 100 rows.
  *
- * The response shape below is a capture from ekir (Z-Push, AS 14.1),
+ * The response shape below is a capture from Z-Push (AS 14.1),
  * trimmed of contact details - <Total> sits inside <Store> beside <Range>.
  *
  * Run with `npm run test:unit` (node --test).
@@ -94,7 +94,7 @@ test("a truncated answer reports the larger total", async () => {
 });
 
 test("a complete answer reports a total equal to what it sent", async () => {
-  // Measured on ekir: Total=10 with Range=0-9, ten rows.
+  // Measured on Z-Push: Total=10 with Range=0-9, ten rows.
   const { results, total } = await run(searchReply(10, 10));
   assert.equal(results.length, 10);
   assert.equal(total, 10);

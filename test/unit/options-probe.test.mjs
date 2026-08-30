@@ -1,11 +1,12 @@
 /**
  * Unit tests for what happens when a server will not answer OPTIONS.
  *
- * exchange4cloud answers OPTIONS with HTTP 500. That was terminal and
- * stayed terminal: the probe runs whenever an account has no `asversion`,
- * so the failure that stopped one being stored is the same failure that
- * runs again on every attempt, and picking a version by hand could not
- * break the loop because the pin lives in a different field.
+ * One hosted Exchange server answers OPTIONS with HTTP 500. That was
+ * terminal and stayed terminal: the probe runs whenever an account has
+ * no `asversion`, so the failure that stopped one being stored is the
+ * same failure that runs again on every attempt, and picking a version
+ * by hand could not break the loop because the pin lives in a different
+ * field.
  *
  * What this pins is the shape of the failure, not a cure for it. A
  * refused credential and a redirect stay exactly what they are, so a

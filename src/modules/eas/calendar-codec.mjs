@@ -2522,7 +2522,7 @@ function stripMailto(s) {
  * The direction of the move decides the order, so one sort does not serve
  * both: an occurrence moving later is written once every later sibling
  * has moved out of its way, one moving earlier once every earlier sibling
- * has. Measured on ekir both ways.
+ * has. Measured on Z-Push both ways.
  */
 function inEmissionOrder(overrides) {
   const at = (comp, name) =>

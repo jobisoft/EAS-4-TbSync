@@ -14,8 +14,8 @@ of the same code:
 `followUpPhase` fires only when an *Add* carrying overrides is acked, which
 no other section does on 14.x - 17.1 creates a bare series and adds the
 exceptions in a later edit, which is an ordinary modify. Measured: a full
-72-test ekir run contains no <Add> carrying <Exceptions> anywhere in its
-wire.
+72-test Z-Push run contains no <Add> carrying <Exceptions> anywhere in
+its wire.
 
 So this section asserts the *outcome* - what the calendar holds after a
 clean pull - which is identical on both wire forms and is the thing a user

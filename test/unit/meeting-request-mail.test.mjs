@@ -178,7 +178,7 @@ test("a cancellation reads as one in the calendar, not only the subject", () => 
   // A client renders an iTIP message from the calendar item rather than
   // from the MIME headers, so a prefix that lived only in the subject
   // arrived looking exactly like the invitation it was cancelling -
-  // measured on outlook.de, which showed the bare title.
+  // measured on Microsoft, which showed the bare title.
   const mime = build({ method: "CANCEL", recipients: ["ann@x.de"] });
   assert.ok(has(mime, /^SUMMARY:Canceled: Standup$/));
   assert.ok(has(mime, /^Subject: Canceled: Standup$/));

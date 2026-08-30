@@ -140,7 +140,7 @@ export function buildMeetingRequestMime({
     // Outlook does and what a recipient actually reads: a client renders an
     // iTIP message from the calendar item, not from the MIME headers, so a
     // cancellation whose prefix lived only in the subject arrived looking
-    // exactly like the invitation it was cancelling. Measured on outlook.de.
+    // exactly like the invitation it was cancelling. Measured on Microsoft.
     const titled = headerSafe(event.getFirstPropertyValue("summary") ?? "");
     event.removeAllProperties("summary");
     event.addPropertyWithValue("summary", `${SUBJECT_PREFIX.CANCEL}${titled}`);

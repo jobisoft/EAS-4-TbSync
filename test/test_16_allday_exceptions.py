@@ -32,10 +32,10 @@ def t_17_1(s):
     # (the pre-fix form) the override floats beside the series and a
     # cancelled day keeps rendering.
     #
-    # Two-step on purpose: at least one 14.1 server (ekir, running Z-Push)
-    # accepts an all-day <Add> whose payload embeds <Exceptions> and then
-    # quietly drops the recurrence, series and all. The same exceptions
-    # sent as a <Change> on the following sync survive. The same server
+    # Two-step on purpose: at least one 14.1 server (Z-Push) accepts an
+    # all-day <Add> whose payload embeds <Exceptions> and then quietly
+    # drops the recurrence, series and all. The same exceptions sent as a
+    # <Change> on the following sync survive. The same server
     # also re-anchors an all-day series one day early, so every assertion
     # below is relative to the DTSTART that comes back, not to the dates
     # that went in.
