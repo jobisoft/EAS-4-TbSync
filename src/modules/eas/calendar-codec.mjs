@@ -25,7 +25,7 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
-import { readPathFrom } from "./wbxml-helpers.mjs";
+import { readPathFrom, isFiletimeZero } from "./wbxml-helpers.mjs";
 import {
   readBodyIntoDescription,
   appendBodyFromDescription,
@@ -1357,6 +1357,9 @@ function writeDateProp(vevent, name, easUtc, tzId, allDay) {
 
 function parseEasUtc(s) {
   if (!s) return null;
+  // A field the server never set, serialised rather than omitted. Read as
+  // absent, which is the same path an omitted element takes.
+  if (isFiletimeZero(s)) return null;
   // Accept extended ISO and basic compact forms. The fraction goes with
   // the separators: both are what distinguishes extended from compact, and
   // EAS's extended form carries milliseconds (2026-10-01T00:00:00.000Z).

@@ -19,7 +19,11 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
-import { readPathFrom, readChildTexts } from "./wbxml-helpers.mjs";
+import {
+  readPathFrom,
+  readChildTexts,
+  isFiletimeZero,
+} from "./wbxml-helpers.mjs";
 import {
   asNoteText,
   rememberNoteLineEndings,
@@ -318,12 +322,16 @@ function readDates(adNode, comp) {
   if (childByTag(adNode, "Birthday")) {
     comp.removeAllProperties("bday");
     const bday = readPathFrom(adNode, ["Birthday"]);
-    if (bday) comp.updatePropertyWithValue("bday", isoDateOnly(bday));
+    if (bday && !isFiletimeZero(bday)) {
+      comp.updatePropertyWithValue("bday", isoDateOnly(bday));
+    }
   }
   if (childByTag(adNode, "Anniversary")) {
     comp.removeAllProperties("anniversary");
     const ann = readPathFrom(adNode, ["Anniversary"]);
-    if (ann) comp.updatePropertyWithValue("anniversary", isoDateOnly(ann));
+    if (ann && !isFiletimeZero(ann)) {
+      comp.updatePropertyWithValue("anniversary", isoDateOnly(ann));
+    }
   }
 }
 

@@ -11,7 +11,7 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
-import { readPathFrom } from "./wbxml-helpers.mjs";
+import { readPathFrom, isFiletimeZero } from "./wbxml-helpers.mjs";
 import {
   readBodyIntoDescription,
   appendBodyFromDescription,
@@ -84,7 +84,7 @@ export async function applicationDataToIcal({
   // DTSTART/DUE to the reminder time before they are written.
   const reminderTime =
     readPathFrom(adNode, ["ReminderSet"]) === "1"
-      ? readPathFrom(adNode, ["ReminderTime"])
+      ? readDate(adNode, "ReminderTime")
       : null;
   const msTodoOverride = msTodoCompat === true && !!reminderTime;
 
@@ -100,10 +100,10 @@ export async function applicationDataToIcal({
     writeUtcDateProp(vtodo, "due", reminderTime);
     dtstartSource = reminderTime;
   } else {
-    const startUtc = readPathFrom(adNode, ["UtcStartDate"]);
-    const startLocal = readPathFrom(adNode, ["StartDate"]);
-    const dueUtc = readPathFrom(adNode, ["UtcDueDate"]);
-    const dueLocal = readPathFrom(adNode, ["DueDate"]);
+    const startUtc = readDate(adNode, "UtcStartDate");
+    const startLocal = readDate(adNode, "StartDate");
+    const dueUtc = readDate(adNode, "UtcDueDate");
+    const dueLocal = readDate(adNode, "DueDate");
 
     // Recover the server-hinted IANA zone for each pair via the
     // moment-in-time offset between the local-clock and UTC forms.
@@ -152,7 +152,7 @@ export async function applicationDataToIcal({
     if (complete === "1") {
       vtodo.updatePropertyWithValue("status", "COMPLETED");
       vtodo.updatePropertyWithValue("percent-complete", 100);
-      const dc = readPathFrom(adNode, ["DateCompleted"]);
+      const dc = readDate(adNode, "DateCompleted");
       if (dc) writeUtcDateProp(vtodo, "completed", dc);
     }
   }
@@ -620,6 +620,13 @@ function parseVCalendar(ical) {
   } catch {
     return null;
   }
+}
+
+/** A date element, with the Windows FILETIME zero read as absent - see
+ *  `isFiletimeZero`. Every date this codec reads goes through here. */
+function readDate(adNode, tag) {
+  const v = readPathFrom(adNode, [tag]);
+  return v && !isFiletimeZero(v) ? v : null;
 }
 
 function parseFirstVtodo(ical) {

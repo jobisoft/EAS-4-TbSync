@@ -83,3 +83,29 @@ export function childByTag(node, tag) {
   }
   return null;
 }
+
+/**
+ * Is this EAS date value the Windows FILETIME zero?
+ *
+ * FILETIME counts 100-nanosecond intervals from 1601-01-01T00:00:00Z, so a
+ * field that was never set serialises as exactly that instant. Kerio
+ * Connect sends it for a contact's Anniversary that has never been set,
+ * and for a Birthday the user has just cleared - which is how a cleared
+ * birthday came back as 1 January 1601 and could never be cleared again.
+ *
+ * ActiveSync has no sentinel for "no value": an unset element is simply
+ * omitted, so a value that can only be a null leaking through
+ * serialisation is read as absent.
+ *
+ * The whole day is matched, not the instant alone. A server rendering the
+ * epoch in its own zone produces 1600-12-31T23:00:00Z or 1601-01-01T01:00Z
+ * rather than the epoch itself, and those are the same non-value.
+ */
+export function isFiletimeZero(value) {
+  if (!value) return false;
+  const m = /^(\d{4})-?(\d{2})-?(\d{2})/.exec(String(value));
+  if (!m) return false;
+  const [, y, mo, d] = m;
+  const day = `${y}${mo}${d}`;
+  return day === "16010101" || day === "16001231";
+}
