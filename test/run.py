@@ -55,6 +55,9 @@ MODULES = [
     "test_6_provider_calendar",
     "test_7_task_recurrence",
     "test_10_contacts",
+    # The contact photo, kept out of section 10 so a server that mishandles
+    # one contact field cannot cost it its coverage.
+    "test_20_contact_photo",
     "test_11_regressions",
     "test_12_capability",
     "test_14_body_format",
