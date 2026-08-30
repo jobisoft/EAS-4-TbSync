@@ -588,42 +588,96 @@ def _override_account_custom_many(account, values, label):
 
 
 def _ensure_unintroduced_device(account):
-    """Start every run from a device the server has not been told about.
+    """Reconnect the account so it introduces its device the way it would.
 
-    Two accounts otherwise exercise two different paths. One that
-    provisions skips the standalone route outright on 14.1 and above,
-    because the Provision body carries the announcement - so 1.4 passes
-    there without touching the acknowledgement at all, and 9.4 compares
-    an absent value against an absent value. One that does not provision
-    exercises both. Which of the two a run happens to get is then a
-    property of the account rather than of the code.
+    Every run should start from a device the server has not been told
+    about, or 1.4 asserts against whatever the last run happened to leave.
+    But there are two legitimate ways a server learns about a device, and
+    which one an account uses is the server's choice, not ours: Exchange
+    is told by a standalone Settings request, while a server that demands
+    provisioning is told inside the Provision reply and never sees the
+    standalone one at all.
 
-    Clearing both makes the first sync of a run announce the device and
-    the rest not, on every account. It also means a server that demands
-    provisioning is answered the way a new account answers it -
-    reactively, on the first refusal - which is worth walking through on
-    every run rather than only on the accounts that have never done it.
+    So this clears the acknowledgement - sync state, which the next
+    connect re-establishes - and then *triggers a real connect* rather
+    than hand-writing the state one would produce. Each server then takes
+    its own route, and the account is left in a state a connect can
+    actually reach.
 
-    The policy key is deliberately left alone. It buys nothing here - the
-    pre-emptive block needs `provision` true as well, so it cannot run
-    whatever the key holds - and it is the one field that could be handed
-    back wrong: a run that provisions along the way is issued a new key
-    and the old one is void, so restoring the old one would leave the
-    account a request out of step until the next challenge repaired it.
+    `provision` is not touched. It is the user's configuration, not sync
+    state, and the same argument the policy key gets applies with more
+    force: clearing it on a server that demands provisioning does not
+    produce a fresh account, it produces a broken one. Kerio Connect
+    answers such a request with HTTP 400 and no 449 challenge, so nothing
+    self-corrects and every request for the rest of the run fails.
 
-    Restored afterwards like the rest, to the values the run found.
+    The policy key goes with it, because a device the server has not been
+    told about does not hold one either. It has to: where the reply
+    carries the acknowledgement, a still-valid key means no Provision
+    runs, so the device is never re-acknowledged and the account
+    re-announces itself on every sync for the rest of its life. Measured
+    on Kerio - key kept, no Provision, acknowledgement never set; key
+    cleared, Provision runs, acknowledged in its reply.
+
+    The key is cleared but **not** restored. It is the one field that
+    could be handed back wrong: a run that provisions is issued a new key
+    and the old one is void, so restoring it would leave the account a
+    request out of step until the next challenge repaired it. What the
+    run leaves behind is a key the server just issued, which is better
+    than the one it replaced.
     """
     custom = account.get("custom") or {}
-    if not custom.get("provision") and custom.get("deviceInfoAcked") is None:
-        return
-    print(
-        f"  {account['accountName']} already knows the server; clearing the "
-        f"device introduction state for this run."
-    )
-    _override_account_custom_many(
-        account,
-        {"provision": False, "deviceInfoAcked": None},
-        "device introduction state",
+    account_id = account["accountId"]
+    if custom.get("deviceInfoAcked") is not None:
+        print(
+            f"  {account['accountName']} already knows the server; clearing the "
+            f"device acknowledgement and reconnecting for this run."
+        )
+        _override_account_custom(
+            account, "deviceInfoAcked", None, "device acknowledgement"
+        )
+    _set_account_custom(account_id, "policykey", "0")
+    _reconnect_account(account_id, account["accountName"])
+
+
+def _reconnect_account(account_id, account_name):
+    """Disable and re-enable the account, then wait for it to be usable.
+
+    The re-enable is what runs the connect - Provision where the server
+    asks for it, the device announcement by whichever route that server
+    uses - so this is the one place the run exercises the real lifecycle
+    rather than a state written into storage.
+
+    Waiting matters as much as connecting. A freshly connected account
+    needs a sync before its folders bind, and a section that starts
+    inside that window fails with "did not bind after a sync", which says
+    nothing about the code under test.
+    """
+    ok("setAccountEnabled", accountId=account_id, enabled=False)
+    time.sleep(3)
+    ok("setAccountEnabled", accountId=account_id, enabled=True)
+
+    # Nothing is bound at preflight - every section binds what it needs -
+    # so a folder status cannot be the signal here. What is asked instead
+    # is the one thing that must hold before any section runs: a sync
+    # completes without the add-on logging an error, and the account has
+    # a folder list to bind from. `ok` raises on a logged error, which is
+    # exactly the connect failing.
+    deadline = time.time() + 120
+    last = None
+    while time.time() < deadline:
+        time.sleep(5)
+        try:
+            ok("syncAccount", accountId=account_id, timeout=900)
+            if ok("getFolders", accountId=account_id)["folders"]:
+                return
+            last = "the account discovered no folders"
+        except Exception as err:  # mid-connect, or the connect itself failing
+            last = str(err).splitlines()[0]
+    raise PreflightError(
+        f"{account_name} did not become usable after reconnecting: {last}.\n"
+        f"  The connect itself is failing, so nothing below it would mean "
+        f"anything."
     )
 
 

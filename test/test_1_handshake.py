@@ -9,6 +9,7 @@ import re
 
 import harness
 import probes
+from bridge import ok
 from harness import test
 
 # Resources this section touches. Preflight binds only what the selected
@@ -75,24 +76,33 @@ def device_information_sent(s):
     return out
 
 
-@test("1.4", "the device introduces itself once, not on every sync")
+@test("1.4", "the device was introduced once, and is not introduced again")
 def t_1_4(s):
-    # The introduction creates durable server-side state, so it is sent
-    # until the server acknowledges it and never again. 1.2 has already
-    # synced, so by now this account is either acknowledged or is talking
-    # to a server that refuses to be introduced - and the second is worth
-    # failing on, because it would mean a wasted request on every sync
-    # for the life of the account.
+    # Two halves, because a server chooses how it is told about a device
+    # and both ways are legitimate. Exchange is told by a standalone
+    # Settings request. A server that demands provisioning is told inside
+    # the Provision reply and never sees the standalone one - Kerio
+    # Connect refuses it outright.
     #
-    # Nothing here is version-specific: every version but 2.5 carries the
+    # So the first half asserts the account *was* introduced, by whichever
+    # route its server uses. Preflight cleared the acknowledgement and
+    # reconnected, so exactly one of the two must have happened during
+    # that connect; neither means the account will re-announce itself on
+    # every sync for the rest of its life.
+    snap = ok("storage.snapshot")
+    custom = snap["tbsync.accounts"]["data"][s.account_id]["custom"]
+    acked = custom.get("deviceInfoAcked")
+    harness.true(
+        acked is not None,
+        "the connect left the device unacknowledged, so it will be "
+        "announced again on every sync",
+    )
+
+    # The second half is the one that costs a request if it regresses: the
+    # acknowledgement is durable, so a later sync must not repeat it.
+    # Nothing here is version-specific - every version but 2.5 carries the
     # element the same way, which is the whole point of the gate that was
     # removed with it.
-    #
-    # It says something on every account only because preflight clears the
-    # device and provision state first. An account that provisions skips
-    # this route outright on 14.1 and above, and would pass here without
-    # touching the acknowledgement at all - so if that override ever goes,
-    # this test quietly stops testing anything on half the accounts.
     s.mark()
     s.sync()
     harness.eq(device_information_sent(s), [], "DeviceInformation sent again")
