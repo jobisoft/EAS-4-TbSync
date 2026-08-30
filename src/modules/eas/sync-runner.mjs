@@ -1412,15 +1412,24 @@ async function pushPhase(ctx, userEdits) {
     if (r.commands) await applyServerCommands(ctx, r.commands);
     await mailAnsweredMeetings(ctx, built, failedItems);
 
-    // Modified masters are noted here rather than in applyResponses,
-    // which sees only the changes the server *refused* - a successful one
-    // is never visited there. So the test is the other way round: a
-    // ServerId named in <Responses> is one whose master did not land,
-    // whether it was rejected outright or conceded to the server's copy
-    // (Status 7 / 8), and its exceptions have nothing to attach to.
+    // Modified masters are noted here rather than in applyResponses, which
+    // acts on the changes the server refused. A master that did not land
+    // has nothing for its exceptions to attach to, so it is held back from
+    // the instance phase - but that is decided on the status, never on
+    // whether the server mentioned it.
+    //
+    // [MS-ASCMD] does not say a successful change goes unreported, and
+    // servers differ: Exchange lists only failures, Kerio Connect answers
+    // every <Change> with <ServerId> and <Status>1. Reading presence as
+    // failure meant every successfully-changed master on such a server was
+    // skipped, so a moved occurrence produced no instance command at all.
     if (instanceMasters) {
       const rejected = new Set(
         responses.changes
+          .filter((node) => {
+            const status = readPathFrom(node, ["Status"]);
+            return status && status !== STATUS_OK;
+          })
           .map((node) => readPathFrom(node, ["ServerId"]))
           .filter(Boolean),
       );
