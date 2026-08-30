@@ -55,6 +55,30 @@ PROMOTED_TEXT = "promoted again"
 
 SLUGS = ("body-plain-a", "body-rich-b", "body-plain-c")
 
+# Which items the server said it holds as HTML, recorded by 14.2 rather
+# than assumed. Storing a note as HTML is a server capability, not a
+# protocol guarantee: Kerio Connect converts one to text on the way in and
+# then reports NativeBodyType 1, which is the honest answer for what it
+# holds. Everything below 14.2 needs a genuinely rich note to judge, so it
+# is gated on this rather than failing where there is nothing to test.
+_RICH = None
+
+
+def _needs_rich():
+    if not _RICH:
+        raise harness.Skip(
+            "the server stores notes as plain text - it reported "
+            "NativeBodyType 1 for a body sent as HTML"
+        )
+
+
+def _needs_plain_only():
+    if _RICH:
+        raise harness.Skip(
+            "the server keeps the HTML it is given, so there is no "
+            "downgrade to judge"
+        )
+
 
 # ── wire reading ──────────────────────────────────────────────────────────
 # Parsed, never pattern-matched: `<Body>` and `<BodyPreference>` share a
@@ -313,23 +337,27 @@ def t_14_2(s):
         f"every Options block states BodyPreference Type 1, got {sorted(asked)}",
     )
 
-    for slug, native in ((SLUGS[0], "1"), (SLUGS[1], "2"), (SLUGS[2], "1")):
+    global _RICH
+    natives = {}
+    for slug in SLUGS:
         seen = _bodies(s, slug)
         harness.true(seen, f"{slug} came back in the pull")
         harness.eq(seen[0][0], "1", f"{slug} arrived as Type 1, as asked")
-        harness.eq(seen[0][1], native, f"{slug} is held by the server as {native}")
+        natives[slug] = seen[0][1]
+    # Recorded, not asserted: which notes are held as HTML is the server's
+    # to say. What must hold everywhere is that we believe it - one fetch
+    # per note it calls rich, and none at all when it calls none.
+    _RICH = [slug for slug, native in natives.items() if native == "2"]
 
-    # One item said NativeBodyType 2, so exactly one standalone fetch - the
-    # cost is bounded by how many notes are genuinely rich, not by how many
-    # items the folder holds.
     requests, blocks, types = _fetches(s)
-    harness.eq(requests, 1, "exactly one ItemOperations request")
-    harness.eq(blocks, 1, "carrying one Fetch, for the rich item alone")
-    harness.eq(types, ["2"], "and it asked for HTML")
+    harness.eq(requests, 1 if _RICH else 0, "one ItemOperations request per window with rich notes")
+    harness.eq(blocks, len(_RICH), "carrying one Fetch per rich item, and no others")
+    harness.eq(types, ["2"] * len(_RICH), "and each asked for HTML")
 
 
 @test("14.3", "each note lands in the right field, and an empty one invents nothing")
 def t_14_3(s):
+    _needs_rich()
     plain_a, rich, plain_c = (_find(s, slug) for slug in SLUGS)
 
     harness.eq(_description(plain_a), PLAIN_ONE, "plain note one is the value")
@@ -351,6 +379,7 @@ def t_14_3(s):
 
 @test("14.4", "an edit elsewhere leaves the note untouched - on all three")
 def t_14_4(s):
+    _needs_rich()
     # The trap this pins: a body we derived rather than received reads as an
     # edit to the server, so an unrelated change would rewrite the note and
     # bump the item's version. What goes back must be what we were given -
@@ -448,6 +477,7 @@ def t_14_4(s):
 
 @test("14.5", "demoting the rich note to plain sticks, on both sides")
 def t_14_5(s):
+    _needs_rich()
     # Idempotent, as `edit` requires: every DESCRIPTION and its folded
     # continuations are dropped first, then one constant line is put back,
     # so applying this to its own output yields the same body.
@@ -488,6 +518,7 @@ def t_14_5(s):
 
 @test("14.6", "promoting it back to HTML restores the editor's copy")
 def t_14_6(s):
+    _needs_rich()
     altrep = "data:text/html," + "".join(
         {"<": "%3C", ">": "%3E", "/": "%2F", " ": "%20"}.get(c, c)
         for c in PROMOTED_HTML
@@ -534,6 +565,7 @@ def t_14_6(s):
 
 @test("14.7", "several rich notes cost one request, not one each")
 def t_14_7(s):
+    _needs_rich()
     # The reason the fetch is batched at all: everything authored in
     # OWA/Outlook is natively HTML even when its text is plain, so a first
     # pull of a real calendar could otherwise approach one request per item
@@ -564,7 +596,41 @@ def t_14_7(s):
     s.settle("events")
 
 
-@test("14.8", "clean up - the section leaves the calendar as it found it")
+@test("14.8", "a downgraded note keeps its text, invents no ALTREP, and is not pushed back")
+def t_14_8(s):
+    # The mirror of everything above: a server that converts the HTML it is
+    # given to plain text. The words must survive the conversion, the editor
+    # must not be handed markup the server no longer holds, and - the part
+    # that would actually cost something - the converted body must not read
+    # as a local edit. That is #347's mechanism seen from the other side: we
+    # stored what the server generated and pushed it straight back, which
+    # bumped the item's version on every sync.
+    _needs_plain_only()
+    rich = _find(s, SLUGS[1])
+
+    note = _description(rich) or ""
+    harness.true("bold" in note and "italic" in note, f"the note lost its text: {note!r}")
+    harness.true(
+        "<b>" not in note and "</b>" not in note,
+        f"the markup was stored as text rather than converted: {note!r}",
+    )
+    harness.true(
+        _altrep(rich) is None,
+        "an ALTREP was invented for a note the server holds as plain text",
+    )
+
+    # Nothing changed locally, so the next sync must be silent about it.
+    s.mark()
+    s.sync()
+    harness.true(
+        not [w for w in s.wire() if w.startswith("SEND Change")],
+        "the server's own conversion was pushed back as an edit",
+    )
+    requests, _, _ = _fetches(s)
+    harness.eq(requests, 0, "HTML was fetched for an item the server holds as plain")
+
+
+@test("14.9", "clean up - the section leaves the calendar as it found it")
 def t_14_8(s):
     # Sections chain, and a leftover fixture is worse than a failure: the
     # next run matches whichever copy it finds first. Removing them through
