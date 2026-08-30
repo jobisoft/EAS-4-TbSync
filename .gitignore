@@ -20,3 +20,7 @@ __pycache__
 # only evidence an intermittent bug leaves, so they are kept, but they are
 # large and local.
 test/wire/
+
+# Suite run reports - one per run, written as it goes and read with
+# `tail -f`. The interesting ones are quoted into an issue or a commit.
+test/runs/

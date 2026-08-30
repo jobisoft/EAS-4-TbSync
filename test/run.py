@@ -7,6 +7,13 @@
     npm test -- 2 5          several
     npm test -- --list       what would run, and what gates each test
 
+A run is started in the background and writes its report to
+`test/runs/<timestamp>-<what>.log` as it goes. Starting one prints that
+path and the pid and returns at once - a run takes tens of minutes, so
+watching it is `tail -f` on the file, and stopping it is `kill <pid>`,
+which unwinds and puts the account's settings back. `--list` is instant
+and stays in the foreground.
+
 These drive a live account through TbSync's bridge, so they need Thunderbird
 running with the bridge switched on and pointed at an EAS account granting
 contacts, events and tasks. Anything missing there stops at preflight with a
@@ -19,6 +26,9 @@ failure, setup flow - are not covered here and are still done by hand.
 
 import json
 import os
+import re
+import signal
+import subprocess
 import sys
 import time
 
@@ -92,7 +102,164 @@ MODULES = [
 MODULE_BY_SECTION = {m.split("_")[1]: m for m in MODULES}
 
 
+def _start_in_background(argv, watch=True):
+    """Re-exec this run detached, and hand the caller its report.
+
+    A run takes tens of minutes and says nothing useful until it ends, so
+    it has no business holding a terminal. It is started, it names where it
+    is writing, and reading that file is the caller's job.
+
+    Unbuffered on purpose: a buffered stdout redirected to a file stays
+    empty until the process exits, which is exactly how an hour-long run
+    once produced no visible progress at all.
+
+    Everything goes to the file, preflight included. The run-level preflight
+    can refuse - a server that will not connect, an account missing a
+    resource - and that refusal is a result like any other, written where
+    the rest of the run is written.
+    """
+    runs = os.path.join(_HERE, "runs")
+    os.makedirs(runs, exist_ok=True)
+    what = "+".join(a for a in argv if not a.startswith("-")) or "all"
+    log = os.path.join(runs, f"{time.strftime('%Y%m%d-%H%M%S')}-{what}.log")
+    fh = open(log, "w", encoding="utf-8")
+    proc = subprocess.Popen(
+        [sys.executable, "-u", os.path.abspath(__file__), "--worker", *argv],
+        stdout=fh,
+        stderr=subprocess.STDOUT,
+        cwd=_HERE,
+        # Its own session, so it outlives the shell that started it and can
+        # be signalled as a group.
+        start_new_session=True,
+    )
+    print(f"\n  started in the background")
+    print(f"  log    {log}")
+    print(f"  pid    {proc.pid}")
+    print(f"  watch  tail -f {log}")
+    print(f"  stop   kill {proc.pid}   (cleans up; kill -9 does not)\n")
+    return _watch(log, proc.pid) if watch else 0
+
+
+# Colours only when someone is looking: a redirected or piped watch stays
+# plain, so grepping a captured watch is not an exercise in escape codes.
+_PAINT = {"PASS": "\033[32m", "FAIL": "\033[31m", "ERROR": "\033[31m",
+          "SKIP": "\033[33m"}
+
+
+def _paint(line):
+    colour = _PAINT.get(line.strip().split(" ", 1)[0]) if line.strip() else None
+    if not colour or not sys.stdout.isatty():
+        return line
+    return f"{colour}{line.rstrip(chr(10))}\033[0m\n"
+
+
+def _pid_of_run(path):
+    """The pid the run recorded in its own first line, if it is there."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            m = re.match(r"\s*pid (\d+)\b", fh.readline())
+    except OSError:
+        return None
+    return int(m.group(1)) if m else None
+
+
+def _alive(pid):
+    if pid is None:
+        return False
+    try:
+        os.kill(pid, 0)
+    except (ProcessLookupError, PermissionError):
+        return False
+    return True
+
+
+def _watch(path, pid=None):
+    """Follow a run's report until it ends, or until the reader gives up.
+
+    Opens with everything already written, so attaching to a run an hour in
+    reads the same as having watched it from the start.
+
+    Interrupting this stops the watching and nothing else: the run is in
+    its own session, so it neither sees the signal nor cares. That is the
+    point of watching rather than waiting - a run can be looked in on and
+    left alone again, and no Ctrl-C aimed at the watching can cost an hour
+    of syncing.
+    """
+    if pid is None:
+        pid = _pid_of_run(path)
+    print(f"  watching {path}")
+    print("  Ctrl-C stops watching - the run carries on\n")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            for line in fh.readlines():
+                sys.stdout.write(_paint(line))
+            sys.stdout.flush()
+            while True:
+                line = fh.readline()
+                if line:
+                    sys.stdout.write(_paint(line))
+                    sys.stdout.flush()
+                    continue
+                # Nothing more to read: done once the writer has gone, but
+                # only after one last look, or its closing lines are lost
+                # to the race between its exit and this check.
+                #
+                # Only when there is a writer to ask about. A log with no
+                # pid line - one written before runs recorded it - is
+                # followed until the reader stops, never abandoned on the
+                # strength of a question that could not be asked.
+                if pid is not None and not _alive(pid):
+                    line = fh.readline()
+                    if not line:
+                        break
+                    sys.stdout.write(_paint(line))
+                    continue
+                time.sleep(0.3)
+    except KeyboardInterrupt:
+        tip = f", stop it with: kill {pid}" if pid else ""
+        print(f"\n  detached - the run is still going{tip}\n")
+        return 0
+    print()
+    return 0
+
+
+def _stop_cleanly(_signum, _frame):
+    """SIGTERM, unwound rather than obeyed on the spot.
+
+    Python's default terminates without unwinding, so the `finally` that
+    puts the account's settings back would never run and a stopped run
+    would leave the log level, sync-after-change and device state as it
+    found them mid-flight. Raising instead lets that teardown happen, which
+    is what makes `kill <pid>` a clean stop.
+    """
+    raise SystemExit("\n  stopped on SIGTERM\n")
+
+
 def main(argv):
+    # `--list` is instant and exists to be read, so it stays in the
+    # foreground. Anything that actually syncs is backgrounded.
+    if "--watch" in argv:
+        rest = [a for a in argv if a != "--watch"]
+        if not rest:
+            print("\n  --watch needs the log file to follow\n")
+            return 2
+        return _watch(rest[0])
+
+    if "--worker" in argv:
+        argv = [a for a in argv if a != "--worker"]
+        signal.signal(signal.SIGTERM, _stop_cleanly)
+        # Written by the run itself, so a log found later says which
+        # process wrote it - whether to check that it is still alive, or
+        # to stop it without hunting for the id the launcher printed.
+        print(
+            f"  pid {os.getpid()}  started {time.strftime('%Y-%m-%d %H:%M:%S')}"
+            f"  -  stop with: kill {os.getpid()}"
+        )
+    elif "--list" not in argv:
+        return _start_in_background(
+            [a for a in argv if a != "--no-watch"], watch="--no-watch" not in argv
+        )
+
     selectors = [a for a in argv if not a.startswith("-")]
     listing = "--list" in argv
 
