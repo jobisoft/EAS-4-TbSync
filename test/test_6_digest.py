@@ -21,6 +21,11 @@ back, and applying that Change looks the ServerId up in the blob - the one
 place it is missing - and hands the codec a null. So 6.4 asserts the repair
 as well as the digest: the sync survives, and the item comes back stamped.
 
+6.5 is the other side of it. Being selective is wrong when the server has
+thrown the exceptions away by itself, which at 16.x it does whenever the
+series' pattern or its start or end times change - so that one is judged on
+what survives a clean pull, not on what went out on the wire.
+
 Self-contained: 6.1 clears and builds its own series.
 """
 
@@ -181,5 +186,77 @@ def t_5_4(s):
         "the item is still unstamped after a server change carrying its "
         "ServerId - nothing will repair it, and the next change to it fails "
         "the folder sync",
+    )
+    probes.reset(s)
+
+
+@test(
+    "6.5",
+    "changing the series' times keeps its exceptions - the server drops them",
+    VERSIONS,
+)
+def t_6_5(s):
+    # The other half of selectivity, and the case where being selective is
+    # wrong. [MS-ASCAL] 2.2.2.22 and 2.2.2.42: at 16.0 and 16.1 a server
+    # deletes every exception on the item when the series' recurrence
+    # pattern or its start/end times change. Exchange does exactly that, so
+    # a client that sends only what the user touched leaves the server
+    # holding a bare series.
+    #
+    # Silently, which is why this is judged on a clean pull: the local copy
+    # keeps all three until something re-reads the folder, and then they are
+    # gone for good.
+    #
+    # The end moves and the start does not, so the occurrence grid stays
+    # where it is. Moving the start would shift every occurrence while the
+    # overrides keep the RECURRENCE-IDs they were written with, and nothing
+    # could re-assert them under a key the series no longer has.
+    #
+    # On the outcome, not on the wire. Re-asserting cannot happen in the
+    # same pass as the edit - the server answers a change to an exception
+    # it has just deleted with Status 7 - so which sync carries the repair
+    # is the fix's business, not the test's.
+    ok("items.create", ical=_multi_override())
+    s.sync()
+    before = s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event")
+    harness.true(before is not None, "the series must be in the calendar")
+    harness.eq(
+        len(re.findall(r"^RECURRENCE-ID", before["item"], re.M)),
+        3,
+        "the fixture did not land with its three overrides",
+    )
+
+    master = next(
+        b
+        for b in re.findall(r"BEGIN:VEVENT(?:(?!BEGIN:VEVENT)[\s\S])*?END:VEVENT", before["item"])
+        if not re.search(r"^RECURRENCE-ID", b, re.M)
+    )
+    # No `$`: the body is CRLF, so the anchor never matches after the
+    # class has stopped at the carriage return.
+    line = re.search(r"^DTEND[^\r\n]*", master, re.M).group(0)
+    moved = line.replace("T110000", "T120000")
+    harness.true(moved != line, f"the master's end did not move: {line}")
+
+    s.edit(
+        lambda: s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event"),
+        # Idempotent: once the line is moved it is no longer there to find.
+        lambda body: body.replace(line, moved, 1),
+        missing="the series must still be there to edit",
+    )
+    # The repair rides on a later sync than the edit, so the pass that
+    # notices the loss is not the pass that can undo it.
+    s.sync()
+    s.sync()
+
+    # What the server actually kept. Without the repair this comes back as
+    # the master alone and the three occurrences are gone for good.
+    s.rebind("events")
+    after = s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event")
+    harness.true(after is not None, "the series did not survive the edit")
+    harness.eq(
+        len(re.findall(r"^RECURRENCE-ID", after["item"], re.M)),
+        3,
+        "the server dropped the exceptions when the series changed, and they "
+        "were never put back",
     )
     probes.reset(s)

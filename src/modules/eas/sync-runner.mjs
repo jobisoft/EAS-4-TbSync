@@ -3136,12 +3136,65 @@ async function applyChangeFromAd(
   if (masterServerId) {
     ctx.indexMap.set(existing.itemId, masterServerId);
   }
+  await noteExceptionsDroppedByServer(ctx, ad, existing, blob);
   if (blobHasRecurrence(blob) || blobHasRecurrence(existing.blob)) {
     logRecurrence(ctx, `pull update: itemId=${existing.itemId}`, {
       before: existing.blob,
       after: blob,
     });
   }
+}
+
+/** Queue a series whose exceptions the server has thrown away.
+ *
+ *  [MS-ASCAL] 2.2.2.22 and 2.2.2.42: at 16.0 and 16.1, changing a series'
+ *  recurrence pattern or its start or end times deletes every exception on
+ *  the item. Exchange does exactly that - one hour added to a master's end
+ *  left it holding neither the moved occurrences nor the cancelled one -
+ *  and it then restates the series with no `<Exceptions>` at all.
+ *
+ *  The merge above keeps ours, because an AD that does not mention
+ *  exceptions is the same shape as a partial echo that simply has nothing
+ *  to say about them. So the two copies disagree and nothing says so: the
+ *  local calendar still shows every override, and they are gone the moment
+ *  anything re-reads the folder.
+ *
+ *  Read from what the server sent rather than from a rule about when it
+ *  does this: a restated `<Recurrence>` with no `<Exceptions>` beside it is
+ *  a series the server holds bare. A partial echo carries neither and is
+ *  passed over.
+ *
+ *  Queued rather than sent. The push that caused this has already run, and
+ *  a command against an exception the server has just deleted is refused
+ *  with Status 7 - measured, every one of three. The entry names an empty
+ *  set as the baseline, which is what the server now holds, so the next
+ *  push re-asserts the lot. */
+export async function noteExceptionsDroppedByServer(ctx, ad, existing, blob) {
+  if (
+    ctx.asVersion !== "16.1" ||
+    !ctx.syncRecurrence ||
+    ctx.itemKind.changelogKind !== "event" ||
+    !childByTag(ad, "Recurrence") ||
+    childByTag(ad, "Exceptions") ||
+    !blobHasInstanceOverrides(blob)
+  ) {
+    return;
+  }
+  await ctx.queue.record({
+    parentId: ctx.targetID,
+    itemId: existing.itemId,
+    kind: ctx.itemKind.changelogKind,
+    op: "updated",
+    detail: { exceptions: { exdates: [], overrides: [] } },
+  });
+  ctx.provider.reportEventLog({
+    level: "debug",
+    accountId: ctx.accountId,
+    folderId: ctx.folderId,
+    message:
+      `[event-sync] ${existing.itemId}: the server restated the series ` +
+      `without the exceptions we hold; queued to re-assert them`,
+  });
 }
 
 async function applyDelete(ctx, delNode, noteBacklog = null) {
