@@ -1,4 +1,4 @@
-"""4. Timezones and all-day boundaries.
+"""5. Timezones and all-day boundaries.
 
 `fixtures/tz-test.ics` holds five independent cases - all-day single, all-day
 span, an all-day series with UNTIL, a series crossing the DST change, and a
@@ -12,7 +12,7 @@ it travels as midnight-in-zone expressed as UTC, so reading it in the wrong
 zone moves the event a whole day, which is a bug we have actually shipped.
 Confirming they *render* on the right day stays in the manual plan.
 
-Self-contained: 4.1 imports what 4.2 reads.
+Self-contained: 5.1 imports what 5.2 reads.
 
 Not version-gated: every case is behavioral - a boundary that holds on one
 generation and shifts on the other is exactly what this section exists to
@@ -32,7 +32,7 @@ from harness import test
 # sections need - binding one is a full download, and the suite has no
 # reason to pull an address book it never reads.
 NEEDS = ("events",)
-# Needs the account to sync recurrence - 4.2 asserts a DST-crossing series keeps its rule.
+# Needs the account to sync recurrence - 5.2 asserts a DST-crossing series keeps its rule.
 NEEDS_RECURRENCE = True
 
 
@@ -43,7 +43,7 @@ def _by_summary(s, summary):
     return None
 
 
-@test("4.1", "every case survives a clean pull unshifted")
+@test("5.1", "every case survives a clean pull unshifted")
 def t_4_1(s):
     s.mark()
     # One create per item: items.create takes a single parent item and
@@ -83,10 +83,10 @@ def t_4_1(s):
     harness.eq(len(wrong), 0, "shifted across the round trip:\n  " + "\n  ".join(wrong))
 
 
-@test("4.2", "the DST-crossing series keeps its rule and its named zone")
+@test("5.2", "the DST-crossing series keeps its rule and its named zone")
 def t_4_2(s):
     item = _by_summary(s, "TZ4")
-    harness.true(item is not None, "the TZ4 fixture is missing - 4.1 must run first")
+    harness.true(item is not None, "the TZ4 fixture is missing - 5.1 must run first")
     harness.true(
         probes.vevent_lines(item["item"], "RRULE"),
         "the series came back as a single event, not a series",

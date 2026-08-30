@@ -1,4 +1,4 @@
-"""13. Server-initiated resync - the identity map.
+"""19. Server-initiated resync - the identity map.
 
 A folder's `synckey` is the server's record of what we have. When it decides
 ours is stale - its own state rebuilt, a mailbox moved, a long absence - it
@@ -23,7 +23,7 @@ but never provokes a resync, and the deselect/reselect other sections use
 looks similar while testing the opposite thing - it deletes the local
 calendar first, so every Add really is new and nothing has to be matched.
 
-Events have a second net underneath, and 13.4 exists to stop it hiding a
+Events have a second net underneath, and 19.4 exists to stop it hiding a
 broken map: an EAS calendar payload carries the item's `UID`, so `applyAdd`
 would find the local twin and adopt it even if the map answered nothing.
 Contacts have no UID on the wire and no such net, which is why "the map
@@ -60,7 +60,7 @@ BOGUS_SYNCKEY = "999999999"
 # re-pull costs one small round trip.
 FIXTURE_ITEMS = 5
 
-# What the folder looked like before the resync, filled in by 13.1.
+# What the folder looked like before the resync, filled in by 19.1.
 _before = {}
 
 
@@ -97,10 +97,10 @@ def _custom(s):
 
 def _need_baseline():
     if not _before:
-        raise harness.Skip("13.1 did not run, so there is no baseline")
+        raise harness.Skip("19.1 did not run, so there is no baseline")
 
 
-@test("13.1", "a populated folder, with a sync key and an index to lose")
+@test("19.1", "a populated folder, with a sync key and an index to lose")
 def t_13_1(s):
     # An empty folder would satisfy every assertion below without exercising
     # anything, and a test account's folder can hold anything from nothing to
@@ -144,7 +144,7 @@ def t_13_1(s):
     _before["index_uids"] = {e.get("uid") for e in index}
 
 
-@test("13.2", "an unrecognised sync key: the server refuses it and we start over")
+@test("19.2", "an unrecognised sync key: the server refuses it and we start over")
 def t_13_2(s):
     _need_baseline()
 
@@ -179,7 +179,7 @@ def t_13_2(s):
 
     # And the folder came back down as <Add>s. Without this the section
     # would also pass against a server that refused the key and then sent
-    # nothing - no Adds means nothing to match, and 13.3 would be counting
+    # nothing - no Adds means nothing to match, and 19.3 would be counting
     # items no re-import ever touched.
     adds = sum(line.count("Add") for line in s.wire() if line.startswith("RECV"))
     harness.true(
@@ -199,7 +199,7 @@ def t_13_2(s):
     )
 
 
-@test("13.3", "every item was re-matched, not re-created")
+@test("19.3", "every item was re-matched, not re-created")
 def t_13_3(s):
     _need_baseline()
 
@@ -226,7 +226,7 @@ def t_13_3(s):
     )
 
 
-@test("13.4", "and it was the map that matched them, not the UID fallback")
+@test("19.4", "and it was the map that matched them, not the UID fallback")
 def t_13_4(s):
     _need_baseline()
 
@@ -242,7 +242,7 @@ def t_13_4(s):
         "entries were dropped and re-made rather than kept",
     )
 
-    # 13.3 would pass on events even with the map gone entirely, because
+    # 19.3 would pass on events even with the map gone entirely, because
     # `applyAdd` adopts a local twin by UID before creating anything. That
     # adopt logs, and here it must not have: a burst of it means the map
     # answered nothing and only the calendar-only net saved the folder.
@@ -263,7 +263,7 @@ def t_13_4(s):
     harness.eq(s.changelog("events"), [], "the resync left entries queued")
 
 
-@test("13.5", "and the sync after it is an ordinary incremental one")
+@test("19.5", "and the sync after it is an ordinary incremental one")
 def t_13_5(s):
     _need_baseline()
 

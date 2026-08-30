@@ -1,4 +1,4 @@
-"""9. Disconnect as a recovery path.
+"""20. Disconnect as a recovery path.
 
 The manager's Disconnect button is gated on nothing: not on the provider
 being alive, not on a sync being in flight. It is what a user reaches for
@@ -14,7 +14,7 @@ other check in this file.
 The sync is started from a second thread because `syncAccount` over the
 bridge waits for the sync to finish, which is exactly what is being
 interrupted. And the interruption is asserted, not assumed: the first
-version of 9.1 slept a fixed two seconds and passed - while the log showed
+version of 20.1 slept a fixed two seconds and passed - while the log showed
 the sync had finished in 1.5 and the disconnect had aborted nothing.
 """
 
@@ -65,9 +65,9 @@ def _syncing_now(s):
     return s.account_id in transient.get("syncingAccounts", [])
 
 
-@test("9.1", "disconnect while a sync is running - the sync stops with it")
+@test("20.1", "disconnect while a sync is running - the sync stops with it")
 def t_9_1(s):
-    # Read while the account is still connected: 9.4 compares against it.
+    # Read while the account is still connected: 20.4 compares against it.
     # The value differs legitimately between accounts - one that
     # provisions never acquires it by the Settings route at all - so the
     # test is that the disconnect left it alone, not what it holds.
@@ -113,7 +113,7 @@ def t_9_1(s):
     )
 
 
-@test("9.2", "nothing is left mid-sync, and a cancel is not an error")
+@test("20.2", "nothing is left mid-sync, and a cancel is not an error")
 def t_9_2(s):
     harness.eq(
         _account_row(s)["error"],
@@ -125,7 +125,7 @@ def t_9_2(s):
     harness.eq(stuck, [], "folders left mid-sync")
 
 
-@test("9.3", "connect and sync again - the account is usable, so nothing is stuck")
+@test("20.3", "connect and sync again - the account is usable, so nothing is stuck")
 def t_9_3(s):
     s.mark()
     ok("setAccountEnabled", accountId=s.account_id, enabled=True)
@@ -140,14 +140,14 @@ def t_9_3(s):
     harness.eq(_account_row(s)["error"], None, "account error after reconnect")
 
 
-@test("9.4", "the device stays introduced across a disconnect")
+@test("20.4", "the device stays introduced across a disconnect")
 def t_9_4(s):
     """Disconnecting is a client-side act, and the partnership it leaves
     alone lives on the server.
 
     So the record of it survives, and reconnecting must not re-announce
     the same device: that would be a request telling the server something
-    it already knows, on every reconnect, forever. This reads 9.3's
+    it already knows, on every reconnect, forever. This reads 20.3's
     window, where the account was re-enabled and synced.
 
     Neither carrier may do it - the standalone Settings command, nor a

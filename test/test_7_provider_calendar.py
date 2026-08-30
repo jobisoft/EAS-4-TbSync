@@ -1,20 +1,20 @@
-"""6. Provider-backed calendar.
+"""7. Provider-backed calendar.
 
 The calendars are ours: our own type, our own item hooks, and the host does
 not watch them. That buys a structural separation between a user edit and
 our own sync write, and hands us a set of failures that are ours alone.
 Each step guards one.
 
-6.2: the platform announces a removal for every one of our calendars
+7.2: the platform announces a removal for every one of our calendars
 whenever our type unregisters, which happens on each reload, update and
 disable. Something has to tell that apart from the user deleting one, or a
 reload silently deselects the folder.
 
-6.4: a pre-tag exists only to stop an observer logging a write we are about
+7.4: a pre-tag exists only to stop an observer logging a write we are about
 to make. Nothing observes a calendar we supply, so a tag left behind is
 never consumed and sits in the queue forever, one per synced item.
 
-6.8: the queue is ours and lives outside the folder row, so what ties it to
+7.8: the queue is ours and lives outside the folder row, so what ties it to
 a folder is the session id naming the current binding. If that stops moving,
 edits outlive the calendar they were made against.
 """
@@ -35,7 +35,7 @@ PROVIDER_TYPE = "ext-eas4tbsync@jobisoft.de"
 SLUG = "provider-cal"
 
 
-@test("6.1", "deselect and reselect - a new calendar of our type, all items pulled")
+@test("7.1", "deselect and reselect - a new calendar of our type, all items pulled")
 def t_6_1(s):
     before = len(s.items("events", "event"))
     s.rebind("events")
@@ -49,7 +49,7 @@ def t_6_1(s):
     )
 
 
-@test("6.2", "reloadProvider - folder stays selected; target and item count unchanged")
+@test("7.2", "reloadProvider - folder stays selected; target and item count unchanged")
 def t_6_2(s):
     import time
 
@@ -79,7 +79,7 @@ def t_6_2(s):
     harness.eq(len(s.items("events", "event")), count, "item count survived")
 
 
-@test("6.3", "edit an item - one changelog entry, modified_by_user, with detail")
+@test("7.3", "edit an item - one changelog entry, modified_by_user, with detail")
 def t_6_3(s):
     ok(
         "items.create",
@@ -117,7 +117,7 @@ def t_6_3(s):
     s.settle("events")
 
 
-@test("6.4", "full resync - no *_by_server entries left behind")
+@test("7.4", "full resync - no *_by_server entries left behind")
 def t_6_4(s):
     s.rebind("events")
     left = [e for e in s.changelog("events") if str(e.get("status", "")).endswith("_by_server")]
@@ -129,7 +129,7 @@ def t_6_4(s):
     )
 
 
-@test("6.5", "calendars.rename - targetName follows the new name")
+@test("7.5", "calendars.rename - targetName follows the new name")
 def t_6_5(s):
     was = s.folder("events").get("targetName")
     ok("calendars.rename", name="Renamed by test 4.5")
@@ -141,7 +141,7 @@ def t_6_5(s):
     time.sleep(2)
 
 
-@test("6.6", "calendars.remove - folder unselected, target cleared, sync state reset")
+@test("7.6", "calendars.remove - folder unselected, target cleared, sync state reset")
 def t_6_6(s):
     import time
 
@@ -155,7 +155,7 @@ def t_6_6(s):
     harness.eq(custom.get("indexMap") or [], [], "index map emptied")
 
 
-@test("6.7", "re-select and sync - all items return")
+@test("7.7", "re-select and sync - all items return")
 def t_6_7(s):
     import time
 
@@ -169,7 +169,7 @@ def t_6_7(s):
     s.sync()
     row = s.folder("events")
     harness.true(row["targetID"], "the folder rebound")
-    # The refill only happens because 6.6 reset the sync key - with a stale
+    # The refill only happens because 7.6 reset the sync key - with a stale
     # key the server answers "nothing has changed" and the calendar stays
     # empty.
     harness.true(
@@ -180,7 +180,7 @@ def t_6_7(s):
     probes.reset(s, ("events",))
 
 
-@test("6.8", "a binding that ends takes its queued edits with it")
+@test("7.8", "a binding that ends takes its queued edits with it")
 def t_6_8(s):
     """The queue for one of our calendars lives in the provider, and the only
     thing tying it to a folder is the session id the host mints for the
@@ -265,7 +265,7 @@ def t_6_8(s):
 
 
 # The occurrence tests below all edit the same series, so they build their
-# own rather than reuse SLUG's - 6.3 leaves it renamed.
+# own rather than reuse SLUG's - 7.3 leaves it renamed.
 OCC_SLUG = "provider-occurrence"
 
 
@@ -301,7 +301,7 @@ def _occurrence_series(s):
     return item
 
 
-@test("6.9", "editing one occurrence persists - the series keeps the rest")
+@test("7.9", "editing one occurrence persists - the series keeps the rest")
 def t_6_9(s):
     """A lone occurrence has no parent in it, and that used to be fatal.
 
@@ -339,14 +339,14 @@ def t_6_9(s):
     s.settle("events")
 
 
-@test("6.10", "an exception-only vcalendar is merged into the series it names")
+@test("7.10", "an exception-only vcalendar is merged into the series it names")
 def t_6_10(s):
-    """The other way in, one layer above 6.9: handed a vcalendar holding
+    """The other way in, one layer above 7.9: handed a vcalendar holding
     only an exception, the items API resolves the series itself rather
     than refusing. Same branch, different caller.
     """
     item = s.find("events", f"{probes.MARKER} {OCC_SLUG}", "event")
-    harness.true(item is not None, "6.9 left no series to edit")
+    harness.true(item is not None, "7.9 left no series to edit")
     ok(
         "items.update",
         id=item["id"],
@@ -364,12 +364,12 @@ def t_6_10(s):
     )
     stored = ok("items.get", id=item["id"])["item"]
     harness.contains(stored, "DTSTART:20261119T140000Z", "the second override was not stored")
-    harness.contains(stored, "DTSTART:20261118T113000Z", "6.9's override was lost")
+    harness.contains(stored, "DTSTART:20261118T113000Z", "7.9's override was lost")
     harness.contains(stored, "RRULE", "the series lost its recurrence rule")
     s.settle("events")
 
 
-@test("6.11", "create refuses an exception - that is what update is for")
+@test("7.11", "create refuses an exception - that is what update is for")
 def t_6_11(s):
     """Resolving the series is for the paths that modify it.
 
@@ -378,7 +378,7 @@ def t_6_11(s):
     silently edits an existing series instead is worse than a refusal.
     """
     item = s.find("events", f"{probes.MARKER} {OCC_SLUG}", "event")
-    harness.true(item is not None, "6.9 left no series to edit")
+    harness.true(item is not None, "7.9 left no series to edit")
     before = ok("items.get", id=item["id"])["item"]
 
     reply = rpc(

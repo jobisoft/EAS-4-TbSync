@@ -151,7 +151,7 @@ def t_2_6(s):
     # Touch ONLY the summary. A slug-wide replace also rewrites the UID line,
     # which re-keys the item - the later delete then cannot resolve a ServerId
     # and is (correctly) dropped, stranding the probe on the server. Found the
-    # hard way: section 6's re-pull resurrected it.
+    # hard way: section 7's re-pull resurrected it.
     def bump(body):
         # Idempotent: "-order" is a prefix of "-order v2", so a second pass
         # would otherwise append the suffix twice.

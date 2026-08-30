@@ -1,4 +1,4 @@
-"""19. An import whose recurrence one item cannot carry.
+"""18. An import whose recurrence one item cannot carry.
 
 Thunderbird stores shapes ActiveSync cannot: an .ics can hand it two
 RRULEs, an RRULE beside RDATEs, or a bare list of dates. None survives a
@@ -23,7 +23,7 @@ embeds the exceptions in the master's payload, 16.x sends them as
 per-instance commands, and the stored outcome must be the same either way.
 
 A task is restated the same way and then cannot be sent at all, [MS-ASTASK]
-declaring no exception element at any version, so 19.3 covers the refusal
+declaring no exception element at any version, so 18.3 covers the refusal
 rather than a round trip.
 """
 
@@ -112,7 +112,7 @@ def _instants(s):
     return sorted(out)
 
 
-@test("19.1", "an import one item cannot carry is split, and its dates restated")
+@test("18.1", "an import one item cannot carry is split, and its dates restated")
 def t_19_1(s):
     probes.reset(s, ("events",))
     ok("items.create", ical=probes.fixture("combined-series.ics"))
@@ -143,7 +143,7 @@ def t_19_1(s):
     )
 
 
-@test("19.2", "both pieces survive a clean pull with the same occurrences")
+@test("18.2", "both pieces survive a clean pull with the same occurrences")
 def t_19_2(s):
     s.sync()
     harness.eq(s.status("events"), "success", "the folder did not accept the pieces")
@@ -162,7 +162,7 @@ def t_19_2(s):
     )
 
 
-@test("19.3", "a task that moves an occurrence is refused, not sent short")
+@test("18.3", "a task that moves an occurrence is refused, not sent short")
 def t_19_3(s):
     probes.reset(s, ("tasks",))
     ok("items.create", ical=probes.fixture("moved-task.ics"), resource="tasks")

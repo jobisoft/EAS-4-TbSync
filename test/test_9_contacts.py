@@ -1,4 +1,4 @@
-"""10. Contact round trip.
+"""9. Contact round trip.
 
 The suite covered events and tasks in depth and contacts not at all - the
 contact codec (names, three emails, typed phones, two addresses, birthday,
@@ -35,9 +35,9 @@ ROUND_TRIP_FIELDS = [
     ("given name", r"^N:[^;\r\n]*;PROBE"),
     ("nickname", r"^NICKNAME:Probey"),
     ("organization", r"^ORG:Beispiel GmbH"),
-    # 10.2 edits the title before this runs, so the *edited* value is what
+    # 9.2 edits the title before this runs, so the *edited* value is what
     # must survive - which also proves the Change round-tripped.
-    ("title (as edited in 10.2)", r"^TITLE:Cheftester"),
+    ("title (as edited in 9.2)", r"^TITLE:Cheftester"),
     ("work email", rf"^EMAIL[^:\r\n]*:{re.escape(ANCHOR)}"),
     ("home email", rf"^EMAIL[^:\r\n]*:{re.escape(SLUG)}-home@probe\.invalid"),
     ("third email", rf"^EMAIL[^:\r\n]*:{re.escape(SLUG)}-third@probe\.invalid"),
@@ -83,7 +83,7 @@ def _server_id(card):
     return None
 
 
-@test("10.1", "contacts.create, sync - one <Add>; the card is stamped")
+@test("9.1", "contacts.create, sync - one <Add>; the card is stamped")
 def t_10_1(s):
     before = len(s.cards())
     s.mark()
@@ -103,10 +103,10 @@ def t_10_1(s):
     harness.eq(s.status("contacts"), "success", "folder status")
 
 
-@test("10.2", "contacts.update, sync - one <Change>; the edit sticks")
+@test("9.2", "contacts.update, sync - one <Change>; the edit sticks")
 def t_10_2(s):
     card = _probe_card(s)
-    harness.true(card is not None, "10.1 must have left a card to modify")
+    harness.true(card is not None, "9.1 must have left a card to modify")
     s.mark()
     # Edit the read-back vCard, never a rebuilt fixture: replacing the body
     # wholesale is a different scenario (the EAS event suite keeps one on
@@ -119,7 +119,7 @@ def t_10_2(s):
     harness.eq(s.changelog("contacts"), [], "changelog drained")
 
 
-@test("10.3", "clean re-pull - every mapped field comes back from the server")
+@test("9.3", "clean re-pull - every mapped field comes back from the server")
 def t_10_3(s):
     s.rebind("contacts")
     card = _probe_card(s)
@@ -142,10 +142,10 @@ def t_10_3(s):
 
 
 
-@test("10.4", "contacts.remove, sync - one <Delete>; gone and staying gone")
+@test("9.4", "contacts.remove, sync - one <Delete>; gone and staying gone")
 def t_10_4(s):
     card = _probe_card(s)
-    harness.true(card is not None, "10.3 must have left the card in place")
+    harness.true(card is not None, "9.3 must have left the card in place")
     before = len(s.cards())
     s.mark()
     ok("contacts.remove", id=card["id"])
@@ -160,12 +160,12 @@ def t_10_4(s):
 
 
 @test(
-    "10.7",
+    "9.7",
     "field removal - a cleared birthday, note, categories and nickname "
     "stay cleared on the server",
 )
 def t_10_7(s):
-    # The class of bug 10.6 caught for photos, tested for every other
+    # The class of bug 9.6 caught for photos, tested for every other
     # clearable field the probe card carries: ActiveSync keeps omitted
     # elements unchanged, so a writer that skips absent fields makes local
     # removals silently immortal.

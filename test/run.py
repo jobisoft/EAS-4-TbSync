@@ -2,8 +2,8 @@
 """Bridge test suite for EAS-4-TbSync.
 
     npm test                 every test that applies to the granted account
-    npm test -- 3            section 3
-    npm test -- 3.4          one step
+    npm test -- 4            section 4
+    npm test -- 4.3          one step
     npm test -- 2 5          several
     npm test -- --list       what would run, and what gates each test
 
@@ -48,44 +48,44 @@ from harness import REGISTRY, run, select
 MODULES = [
     "test_1_handshake",
     "test_2_round_trip",
-    "test_8_refresh",
-    "test_3_exceptions",
-    "test_4_timezones",
-    "test_5_digest",
-    "test_6_provider_calendar",
-    "test_7_task_recurrence",
-    "test_10_contacts",
-    # The contact photo, kept out of section 10 so a server that mishandles
+    "test_3_refresh",
+    "test_4_exceptions",
+    "test_5_timezones",
+    "test_6_digest",
+    "test_7_provider_calendar",
+    "test_8_task_recurrence",
+    "test_9_contacts",
+    # The contact photo, kept out of section 9 so a server that mishandles
     # one contact field cannot cost it its coverage.
-    "test_20_contact_photo",
+    "test_10_contact_photo",
     "test_11_regressions",
     "test_12_capability",
-    "test_14_body_format",
-    "test_15_task_identity",
-    # Split out of section 3: the move is where item 47 lives, so it fails
+    "test_13_body_format",
+    "test_14_task_identity",
+    # Split out of section 4: the move is where item 47 lives, so it fails
     # without costing the import tests or the all-day binding their run.
-    "test_16_exception_move",
+    "test_15_exception_move",
     # Version-agnostic, and the only exception coverage a 14.x account gets.
-    "test_17_allday_exceptions",
-    # Also version-agnostic, and for the same reason: sections 3, 5 and 16
+    "test_16_allday_exceptions",
+    # Also version-agnostic, and for the same reason: sections 4, 6 and 15
     # assert on a wire shape only 16.x produces, so the <=14.x path where
     # exceptions ride embedded in the master had no coverage at all.
-    "test_18_exception_outcomes",
+    "test_17_exception_outcomes",
     # The import path: a recurrence one item cannot carry, split and
     # restated. Version-agnostic - everything it sends is an ordinary
     # series - and it re-pulls the folder, so it sits with the sections
     # that do.
-    "test_19_recurrence_shapes",
+    "test_18_recurrence_shapes",
     # After everything that reads the folder, because it re-pulls the whole
     # thing: a section running behind it pays for a full download it did not
     # ask for.
-    "test_13_resync",
+    "test_19_resync",
     # Last, and not by number: disconnecting clears the account's folder
     # records, and a provider that mints fresh folder ids on reconnect (as
     # google does) leaves the bridge's folder-scoped grant pointing at ids
     # that no longer exist. Anything after this would run against a stale
     # grant.
-    "test_9_disconnect",
+    "test_20_disconnect",
 ]
 
 
@@ -222,7 +222,7 @@ def save_wire(session, selectors, rc):
 
     The wire is the only evidence there is for an intermittent failure, and
     preflight clears the buffer at the start of each run - so without this,
-    every run destroyed the previous one's. Two days of chasing section 3
+    every run destroyed the previous one's. Two days of chasing section 4
     were spent on failures whose wire had already been thrown away, and the
     one capture that survived long enough to be read is what finally showed
     the server sending an <Exceptions> block with an exception missing.

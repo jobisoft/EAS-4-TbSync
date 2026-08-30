@@ -4,7 +4,7 @@ Deliberately small: a decorator that records tests in declaration order, a
 selector, and a loop that prints one line per test. No dependency, no
 discovery magic beyond importing `test_*.py`.
 
-Ids are the numbers from the test plan (`2.1`, `3.11`), kept because they are
+Ids are the numbers from the test plan (`2.1`, `7.11`), kept because they are
 shared vocabulary - the code cites them, and so do we when talking about a
 failure. `npm test -- 3` runs a section, `npm test -- 3.4` one step.
 
@@ -62,10 +62,10 @@ def test(test_id, description, versions=None):
 
 
 def select(selectors):
-    """Filter the registry by `["3"]` (section) or `["3.4"]` (exact id).
+    """Filter the registry by `["7"]` (section) or `["7.4"]` (exact id).
 
-    An exact id wins over a section prefix, so `3.1` never also matches
-    `3.11` - which plain string prefixing would get wrong.
+    An exact id wins over a section prefix, so `7.1` never also matches
+    `7.11` - which plain string prefixing would get wrong.
     """
     if not selectors:
         return list(REGISTRY)
@@ -124,7 +124,7 @@ def run(tests, session, prepare=None, finish=None, stop_on_error=True):
     fixture that never reached the state they assume. Sections do not chain
     - each clears and builds what it needs - so the run carries on with the
     next one. Stopping the whole run instead let one defect hide every
-    section behind it: a contact failure in section 10 cost sections 11
+    section behind it: a contact failure in section 9 cost sections 11
     through 19 on a server nothing else was wrong with.
 
     A failing *preflight* still stops the run. It states the conditions a

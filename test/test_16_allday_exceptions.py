@@ -1,6 +1,6 @@
-"""17. All-day exceptions bind by VALUE TYPE - every protocol version.
+"""16. All-day exceptions bind by VALUE TYPE - every protocol version.
 
-Split out of section 3, where it sat behind five 16.x-gated tests and a
+Split out of section 4, where it sat behind five 16.x-gated tests and a
 chained fixture: on a 14.1 account it was the section's only running test,
 and on 16.x it never ran at all whenever the move before it failed.
 
@@ -22,7 +22,7 @@ from harness import test
 NEEDS = ("events",)
 
 
-@test("17.1", "all-day exceptions bind - DATE-valued on both wire forms")
+@test("16.1", "all-day exceptions bind - DATE-valued on both wire forms")
 def t_17_1(s):
     # Not version-gated: <=14.x carries these embedded in the master's
     # payload, 16.x as per-instance commands, and the stored form must be

@@ -1,12 +1,12 @@
-"""20. The contact photo.
+"""10. The contact photo.
 
-Split out of section 10, which ran the photo behind the field-fidelity
+Split out of section 9, which ran the photo behind the field-fidelity
 tests: a server that mishandles one contact field abandoned the section
 before the photo was ever pushed, so on Kerio Connect - the one server we
 have that v4 needed a photo-specific workaround for, `Picture` arriving as
 a container rather than a value - these two had never run at all.
 
-They share nothing with section 10 but the folder: the card is built here,
+They share nothing with section 9 but the folder: the card is built here,
 found by its own anchor, and removed at the end.
 
 Unlike Google, ActiveSync carries the bytes inline (<Picture>, base64 in
@@ -53,7 +53,7 @@ def _vcard(card):
     return (card.get("properties") or {}).get("vCard") or ""
 
 
-@test("20.1", "photo round trip - the Picture survives a clean re-pull")
+@test("10.1", "photo round trip - the Picture survives a clean re-pull")
 def t_20_1(s):
     s.mark()
     ok(
@@ -75,10 +75,10 @@ def t_20_1(s):
     )
 
 
-@test("20.2", "photo removal - stripping the PHOTO reaches the server")
+@test("10.2", "photo removal - stripping the PHOTO reaches the server")
 def t_20_2(s):
     card = s.find_card(PHOTO_ANCHOR)
-    harness.true(card is not None, "20.1 must have left the card in place")
+    harness.true(card is not None, "10.1 must have left the card in place")
     kept = [
         line
         for line in _unfold(_vcard(card)).splitlines()

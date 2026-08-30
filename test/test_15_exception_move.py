@@ -1,12 +1,12 @@
-"""16. Moving a recurrence exception - AS 16.x only.
+"""15. Moving a recurrence exception - AS 16.x only.
 
-Split out of section 3, which chained six tests through one fixture: when the
-move failed the harness stopped the section, so the two tests after it never
-ran at all. 3.5 had therefore never executed once, and 3.6 only twice. A test
-that fails should cost its own coverage and nobody else's.
+Split out of section 4, which chained six tests through one fixture: when the
+move failed the harness stopped the whole run, so the two tests after it
+never ran at all - one had never executed once, the other only twice. A
+failure should cost its own coverage and nobody else's.
 
 What is under test is the *second* edit to a series that already has
-exceptions. Importing them works (section 3); moving one afterwards is where
+exceptions. Importing them works (section 4); moving one afterwards is where
 an override and the master's EXDATE were seen to vanish - item 47, found here
 and traced on the wire to two separate causes:
 
@@ -22,7 +22,7 @@ and traced on the wire to two separate causes:
     under server-wins drops the override. Nothing to fix - the tests absorb
     it, which is what `conflict_retry` is for.
 
-Imports its own fixture rather than inheriting section 3's, because sections
+Imports its own fixture rather than inheriting section 4's, because sections
 no longer share state.
 """
 
@@ -72,7 +72,7 @@ def _series(s):
     return None
 
 
-@test("16.1", "import the series with its two exceptions", VERSIONS)
+@test("15.1", "import the series with its two exceptions", VERSIONS)
 def t_16_1(s):
     # Section 3 asserts what this sends; here it is only the fixture the
     # move needs, so it checks just that the series arrived intact.
@@ -101,11 +101,11 @@ def t_16_1(s):
     harness.true(
         _override_block(_series(s)["item"]) is not None,
         "the 9 Sep override did not survive the import - the server did not "
-        "keep it, so there is nothing for 16.2 to move",
+        "keep it, so there is nothing for 15.2 to move",
     )
 
 
-@test("16.2", "move the override - exactly one <Change>, no <Delete>", VERSIONS)
+@test("15.2", "move the override - exactly one <Change>, no <Delete>", VERSIONS)
 def t_16_2(s):
     # Re-read inside the attempt, never above it. On a server-wins conflict
     # the server replaces the item with its own copy, so a body captured
@@ -131,11 +131,11 @@ def _move_the_override(s):
     # the same instant in the default timezone - Europe/Berlin 19:00. So
     # find the override COMPONENT by its RECURRENCE-ID and move whatever
     # DTSTART it carries one hour later; both forms land on the same UTC
-    # instant, which is what 16.3 verifies after the clean pull.
+    # instant, which is what 15.3 verifies after the clean pull.
     block = _override_block(body)
     harness.true(
         block is not None,
-        "the 9 Sep override is not in the local item, and 16.1 asserted it "
+        "the 9 Sep override is not in the local item, and 15.1 asserted it "
         "was there - so it was lost between the import and this move. Read "
         "the saved wire for an inbound <Exceptions> block that does not "
         "carry it",
@@ -163,7 +163,7 @@ def _move_the_override(s):
     s.sync()
 
 
-@test("16.3", "clean resync - one EXDATE, the move and the cancellation intact", VERSIONS)
+@test("15.3", "clean resync - one EXDATE, the move and the cancellation intact", VERSIONS)
 def t_16_3(s):
     s.rebind("events")
     item = _series(s)

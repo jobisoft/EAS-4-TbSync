@@ -867,7 +867,7 @@ def isolate(session, kinds, indent="  "):
     whatever the last one left - fixtures, queued edits, a sync key, an
     identity map - and every one of those has produced a failure that looked
     like a defect in the add-on and was not. The 2.1 wire assertion reading
-    `SEND Add,Change`; section 3.4 passing or failing by history rather than
+    `SEND Add,Change`; an exception test passing or failing by history rather than
     by code; a whole night's tally counted against the wrong cause.
 
     Disconnecting is what makes it cheap to state: the provider clears
@@ -911,7 +911,7 @@ def drain_queues(session, kinds, tries=4, indent="  "):
     `<Change>` nobody asked for, which is exactly what those assertions
     exist to catch.
 
-    Measured before it was written, as section 16: with one unrelated edit
+    Measured before it was written, as section 15: with one unrelated edit
     deliberately left queued the mixed request happens on every server and
     every attempt, and draining first makes the strict assertion hold on
     every server and every attempt.

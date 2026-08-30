@@ -1,4 +1,4 @@
-"""14. Note formats: what the server holds vs what it hands us.
+"""13. Note formats: what the server holds vs what it hands us.
 
 A note lives in two places on the item: the DESCRIPTION value, which the
 tooltip and list views read, and its ALTREP parameter, which the editor
@@ -55,11 +55,11 @@ PROMOTED_TEXT = "promoted again"
 
 SLUGS = ("body-plain-a", "body-rich-b", "body-plain-c")
 
-# Which items the server said it holds as HTML, recorded by 14.2 rather
+# Which items the server said it holds as HTML, recorded by 13.2 rather
 # than assumed. Storing a note as HTML is a server capability, not a
 # protocol guarantee: Kerio Connect converts one to text on the way in and
 # then reports NativeBodyType 1, which is the honest answer for what it
-# holds. Everything below 14.2 needs a genuinely rich note to judge, so it
+# holds. Everything below 13.2 needs a genuinely rich note to judge, so it
 # is gated on this rather than failing where there is nothing to test.
 _RICH = None
 
@@ -299,7 +299,7 @@ def _find(s, slug):
 # ── the tests ─────────────────────────────────────────────────────────────
 
 
-@test("14.1", "seed three notes - plain, rich, plain - and push them")
+@test("13.1", "seed three notes - plain, rich, plain - and push them")
 def t_14_1(s):
     # Setup, and an assertion in its own right: the editor field decides the
     # wire format. A note carrying an ALTREP is HTML and says so; one
@@ -322,10 +322,10 @@ def t_14_1(s):
     harness.eq(rich_data, RICH_HTML, "and carried the HTML the user authored")
 
 
-@test("14.2", "the fresh pull asks for plain everywhere and fetches only the rich item")
+@test("13.2", "the fresh pull asks for plain everywhere and fetches only the rich item")
 def t_14_2(s):
     # The first pull that takes the three items back from the server rather
-    # than from the local copies 14.1 created - which is the only state the
+    # than from the local copies 13.1 created - which is the only state the
     # rest of the section is allowed to judge.
     s.mark()
     s.rebind("events")
@@ -355,7 +355,7 @@ def t_14_2(s):
     harness.eq(types, ["2"] * len(_RICH), "and each asked for HTML")
 
 
-@test("14.3", "each note lands in the right field, and an empty one invents nothing")
+@test("13.3", "each note lands in the right field, and an empty one invents nothing")
 def t_14_3(s):
     _needs_rich()
     plain_a, rich, plain_c = (_find(s, slug) for slug in SLUGS)
@@ -371,13 +371,13 @@ def t_14_3(s):
     # Kopano returns the fragment untouched. Both are the item's native form,
     # which is what the ALTREP is for; demanding the author's exact bytes
     # would pin one server's habit rather than the contract. That the
-    # normalisation settles instead of accumulating is 14.4's job.
+    # normalisation settles instead of accumulating is 13.4's job.
     harness.contains(
         _altrep(rich) or "", RICH_HTML, "the ALTREP carries the authored markup"
     )
 
 
-@test("14.4", "an edit elsewhere leaves the note untouched - on all three")
+@test("13.4", "an edit elsewhere leaves the note untouched - on all three")
 def t_14_4(s):
     _needs_rich()
     # The trap this pins: a body we derived rather than received reads as an
@@ -475,7 +475,7 @@ def t_14_4(s):
         )
 
 
-@test("14.5", "demoting the rich note to plain sticks, on both sides")
+@test("13.5", "demoting the rich note to plain sticks, on both sides")
 def t_14_5(s):
     _needs_rich()
     # Idempotent, as `edit` requires: every DESCRIPTION and its folded
@@ -516,7 +516,7 @@ def t_14_5(s):
     harness.true(_altrep(after) is None, "and the old HTML is gone from the editor field")
 
 
-@test("14.6", "promoting it back to HTML restores the editor's copy")
+@test("13.6", "promoting it back to HTML restores the editor's copy")
 def t_14_6(s):
     _needs_rich()
     altrep = "data:text/html," + "".join(
@@ -556,14 +556,14 @@ def t_14_6(s):
     harness.eq(_fetches(s)[:2], (1, 1), "so the item is fetched as HTML once more")
     after = _find(s, SLUGS[1])
     harness.eq(_description(after), PROMOTED_TEXT, "the tooltip field is the plain text")
-    # Containment, for the reason 14.3 gives: Exchange returns the markup
+    # Containment, for the reason 13.3 gives: Exchange returns the markup
     # inside a complete document of its own, Kopano returns it as authored.
     harness.contains(
         _altrep(after) or "", PROMOTED_HTML, "the editor field carries the markup"
     )
 
 
-@test("14.7", "several rich notes cost one request, not one each")
+@test("13.7", "several rich notes cost one request, not one each")
 def t_14_7(s):
     _needs_rich()
     # The reason the fetch is batched at all: everything authored in
@@ -582,7 +582,7 @@ def t_14_7(s):
 
     requests, blocks, types = _fetches(s)
     harness.eq(requests, 1, "one ItemOperations request for the whole window")
-    harness.eq(blocks, 3, "carrying a Fetch per rich note - the two new and 14.6's promotion")
+    harness.eq(blocks, 3, "carrying a Fetch per rich note - the two new and 13.6's promotion")
     harness.true(set(types) == {"2"}, "all asking for HTML")
 
     for i, slug in enumerate(extra):
@@ -596,7 +596,7 @@ def t_14_7(s):
     s.settle("events")
 
 
-@test("14.8", "a downgraded note keeps its text, invents no ALTREP, and is not pushed back")
+@test("13.8", "a downgraded note keeps its text, invents no ALTREP, and is not pushed back")
 def t_14_8(s):
     # The mirror of everything above: a server that converts the HTML it is
     # given to plain text. The words must survive the conversion, the editor
@@ -630,7 +630,7 @@ def t_14_8(s):
     harness.eq(requests, 0, "HTML was fetched for an item the server holds as plain")
 
 
-@test("14.9", "clean up - the section leaves the calendar as it found it")
+@test("13.9", "clean up - the section leaves the calendar as it found it")
 def t_14_8(s):
     # Sections chain, and a leftover fixture is worse than a failure: the
     # next run matches whichever copy it finds first. Removing them through

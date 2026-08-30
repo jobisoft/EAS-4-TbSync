@@ -1,4 +1,4 @@
-"""7. Task recurrence.
+"""8. Task recurrence.
 
 `[MS-ASTASK]` 2.2.2.31 qualifies each recurrence type with further elements -
 DayOfWeek for weekly, DayOfMonth for monthly, DayOfMonth + MonthOfYear for
@@ -84,47 +84,47 @@ def _push(s, slug, extra_checks=()):
     )
 
 
-@test("7.1", "FREQ=DAILY - Type 0, no qualifying element")
+@test("8.1", "FREQ=DAILY - Type 0, no qualifying element")
 def t_7_1(s):
     _push(s, "daily")
 
 
-@test("7.2", "FREQ=WEEKLY - Type 1 + DayOfWeek 4, filled from DTSTART")
+@test("8.2", "FREQ=WEEKLY - Type 1 + DayOfWeek 4, filled from DTSTART")
 def t_7_2(s):
     _push(s, "weekly", ["<DayOfWeek>4</DayOfWeek>"])
 
 
-@test("7.3", "FREQ=WEEKLY;BYDAY=MO,WE - Type 1 + DayOfWeek 10 (2|8)")
+@test("8.3", "FREQ=WEEKLY;BYDAY=MO,WE - Type 1 + DayOfWeek 10 (2|8)")
 def t_7_3(s):
     _push(s, "weekly-byday", ["<DayOfWeek>10</DayOfWeek>"])
 
 
-@test("7.4", "FREQ=WEEKLY;INTERVAL=2 - Interval 2 survives")
+@test("8.4", "FREQ=WEEKLY;INTERVAL=2 - Interval 2 survives")
 def t_7_4(s):
     _push(s, "weekly-int2", ["<Interval>2</Interval>"])
 
 
-@test("7.5", "FREQ=MONTHLY - Type 2 + DayOfMonth 1")
+@test("8.5", "FREQ=MONTHLY - Type 2 + DayOfMonth 1")
 def t_7_5(s):
     _push(s, "monthly", ["<DayOfMonth>1</DayOfMonth>"])
 
 
-@test("7.6", "FREQ=MONTHLY;BYDAY=2TU - Type 3 + DayOfWeek + WeekOfMonth 2")
+@test("8.6", "FREQ=MONTHLY;BYDAY=2TU - Type 3 + DayOfWeek + WeekOfMonth 2")
 def t_7_6(s):
     _push(s, "monthly-nth", ["<WeekOfMonth>2</WeekOfMonth>"])
 
 
-@test("7.7", "FREQ=YEARLY - Type 5 + DayOfMonth 1 + MonthOfYear 9")
+@test("8.7", "FREQ=YEARLY - Type 5 + DayOfMonth 1 + MonthOfYear 9")
 def t_7_7(s):
     _push(s, "yearly", ["<MonthOfYear>9</MonthOfYear>"])
 
 
-@test("7.8", "FREQ=YEARLY;BYDAY=1MO;BYMONTH=9 - Type 6 + WeekOfMonth as well")
+@test("8.8", "FREQ=YEARLY;BYDAY=1MO;BYMONTH=9 - Type 6 + WeekOfMonth as well")
 def t_7_8(s):
     _push(s, "yearly-nth", ["<WeekOfMonth>1</WeekOfMonth>"])
 
 
-@test("7.9", "FREQ=DAILY;UNTIL - Until instead of Occurrences")
+@test("8.9", "FREQ=DAILY;UNTIL - Until instead of Occurrences")
 def t_7_9(s):
     _push(s, "daily-until")
     sent = _sent_recurrence(s, "daily-until")
@@ -134,7 +134,7 @@ def t_7_9(s):
     )
 
 
-@test("7.10", "clean pull - each rule comes back semantically unchanged")
+@test("8.10", "clean pull - each rule comes back semantically unchanged")
 def t_7_10(s):
     # The only step that proves the server *stored* the rules rather than
     # merely accepting them. Match by SUMMARY: a pulled task has no UID

@@ -1,27 +1,27 @@
-"""5. Digest selectivity - AS 16.x only.
+"""6. Digest selectivity - AS 16.x only.
 
 A series with three overrides, so the question can be asked at all: when the
 user edits one occurrence, is only that one re-sent?
 
 The digest covers the whole serialised VEVENT, so anything that restamps
 untouched overrides - a DTSTAMP refresh, a re-serialisation - makes every one
-of them read as changed. 5.3 is where that shows up, and 5.4 is the wire
+of them read as changed. 6.3 is where that shows up, and 6.4 is the wire
 proof: exactly one occurrence, identified by its InstanceId.
 
-5.3 edits by re-importing the fixture rather than by editing the item it read
+6.3 edits by re-importing the fixture rather than by editing the item it read
 back, and that is deliberate - every other `items.update` in this suite does
 the opposite. A re-import replaces the whole body, so the `X-EAS-SERVERID`
-the provider stamped on after 5.1's push is gone, while the index still maps
+the provider stamped on after 6.1's push is gone, while the index still maps
 the item to its ServerId. That is what a real import, or another add-on
 writing through the calendar API, does to an item.
 
 That missing stamp is a folder-sync killer if the repair is not there: the
-server answers 5.4's instance change with Status 7 and echoes its own copy
+server answers 6.4's instance change with Status 7 and echoes its own copy
 back, and applying that Change looks the ServerId up in the blob - the one
-place it is missing - and hands the codec a null. So 5.4 asserts the repair
+place it is missing - and hands the codec a null. So 6.4 asserts the repair
 as well as the digest: the sync survives, and the item comes back stamped.
 
-Self-contained: 5.1 clears and builds its own series.
+Self-contained: 6.1 clears and builds its own series.
 """
 
 import re
@@ -89,7 +89,7 @@ def _stamps(body):
     return out
 
 
-@test("5.1", "create with overrides - master <Add>, one instance command each", VERSIONS)
+@test("6.1", "create with overrides - master <Add>, one instance command each", VERSIONS)
 def t_5_1(s):
     def attempt():
         # Re-runnable: a rejected override leaves the master on the server,
@@ -109,16 +109,16 @@ def t_5_1(s):
     harness.eq(s.changelog("events"), [], "changelog drained")
 
 
-@test("5.2", "read the item - each override carries its own stamps", VERSIONS)
+@test("6.2", "read the item - each override carries its own stamps", VERSIONS)
 def t_5_2(s):
     item = s.find("events", f"{probes.MARKER} {DIGEST_SLUG}", "event")
-    harness.true(item is not None, "5.1 must have left the series in place")
+    harness.true(item is not None, "6.1 must have left the series in place")
     stamps = _stamps(item["item"])
     harness.eq(len(stamps), 3, f"expected three overrides, found {len(stamps)}")
 
 
 @test(
-    "5.3",
+    "6.3",
     "re-import the fixture - one override moves, the other two keep their "
     "stamps (and the item loses its ServerId stamp, on purpose)",
     VERSIONS,
@@ -139,15 +139,15 @@ def t_5_3(s):
 
 
 @test(
-    "5.4",
-    "sync - one master <Change>, one instance <Change>, and the stamp 5.3 "
+    "6.4",
+    "sync - one master <Change>, one instance <Change>, and the stamp 6.3 "
     "dropped is restored rather than failing the folder",
     VERSIONS,
 )
 def t_5_4(s):
     # Deliberately NOT wrapped in `conflict_retry`, unlike every other push
     # in this suite: the Status 7 this sync receives is the subject, not an
-    # interruption. 5.3 dropped the ServerId stamp on purpose, the server
+    # interruption. 6.3 dropped the ServerId stamp on purpose, the server
     # answers with its own copy, and applying that copy is what walks the
     # repair path asserted below. Retrying would re-apply the edit until the
     # server accepted it and never exercise the repair at all.
@@ -169,7 +169,7 @@ def t_5_4(s):
     )
     harness.eq(s.changelog("events"), [], "changelog drained")
 
-    # The repair. 5.3 removed the stamp; the server's reply to this sync
+    # The repair. 6.3 removed the stamp; the server's reply to this sync
     # carries the ServerId, so applying it must put the stamp back. Without
     # the repair, reading the blob for an id it does not hold takes the whole
     # folder down - `s.sync()` above would already have raised.

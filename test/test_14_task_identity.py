@@ -1,4 +1,4 @@
-"""15. What a task carries that nobody can see.
+"""14. What a task carries that nobody can see.
 
 Every other section asserts that a sync *succeeded* and that visible fields
 survive a round trip. None of them looks at the bookkeeping stored on the
@@ -23,7 +23,7 @@ sending a weekly rule, changing it to daily, and finding the omitted
 therefore destroyed by an edit that had nothing to do with recurrence.
 
 16.x states `Regenerate` and `DeadOccur` on every task recurrence it sends,
-which is what 15.3 uses: no hand-made regenerating task is needed, the
+which is what 14.3 uses: no hand-made regenerating task is needed, the
 server volunteers the values and the test checks they come home again. On
 14.x the server states neither, so that test is gated.
 """
@@ -37,7 +37,7 @@ from harness import test
 
 # Resources this section touches.
 NEEDS = ("tasks",)
-# 15.3 and 15.4 are about recurrence, and with the account option off no
+# 14.3 and 14.4 are about recurrence, and with the account option off no
 # rule reaches the wire at all.
 NEEDS_RECURRENCE = True
 
@@ -86,7 +86,7 @@ def _reread(s):
     s.sync()
 
 
-@test("15.1", "a synced task carries the server's identity in its own blob")
+@test("14.1", "a synced task carries the server's identity in its own blob")
 def t_15_1(s):
     s.mark()
     ok("items.create", resource="tasks", type="task", ical=probes.task(SLUG))
@@ -99,7 +99,7 @@ def t_15_1(s):
     )
 
 
-@test("15.2", "an edit that has nothing to do with it leaves the stamp alone")
+@test("14.2", "an edit that has nothing to do with it leaves the stamp alone")
 def t_15_2(s):
     # The regression: the guard stripped every X-EAS-* from a VTODO and then
     # restored none of them. Nothing downstream complained, because the push
@@ -130,13 +130,13 @@ def t_15_2(s):
         rename,
         resource="tasks",
         after_write=stamp_is_back,
-        missing="15.1 did not leave its task behind",
+        missing="14.1 did not leave its task behind",
     )
     harness.eq(s.changelog("tasks"), [], "the renamed task was not accepted")
 
 
 @test(
-    "15.3",
+    "14.3",
     "what the server says about a recurrence comes back on the next push",
     versions=("16",),
 )
@@ -198,7 +198,7 @@ def t_15_3(s):
     )
 
 
-@test("15.4", "clean up - the section leaves the folder as it found it")
+@test("14.4", "clean up - the section leaves the folder as it found it")
 def t_15_4(s):
     s.mark()
     for slug in (SLUG, RECURRING):

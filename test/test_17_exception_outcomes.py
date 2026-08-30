@@ -1,4 +1,4 @@
-"""18. Exception outcomes, on every protocol version.
+"""17. Exception outcomes, on every protocol version.
 
 Sections 3, 5 and 16 assert on the wire - "exactly one <Change>, keyed by
 this InstanceId" - which is inherently 16.x, so all three are gated to it.
@@ -75,7 +75,7 @@ def _override_start(body):
     return None
 
 
-@test("18.1", "import a series that already carries its exceptions")
+@test("17.1", "import a series that already carries its exceptions")
 def t_18_1(s):
     # One create, exceptions included - the shape that reaches
     # `followUpPhase` on <=14.x and the instance phase on 16.x. Every other
@@ -126,7 +126,7 @@ def t_18_1(s):
     harness.contains(body, "TZ6 moved occurrence", "the override's own content")
 
 
-@test("18.2", "move the override - the new time survives a clean pull")
+@test("17.2", "move the override - the new time survives a clean pull")
 def t_18_2(s):
     # The second edit to a series that already has exceptions, which is
     # where an override has been seen to vanish. Asserted on the stored
@@ -165,7 +165,7 @@ def t_18_2(s):
         )
         return body.replace(block, new_block)
 
-    s.edit(lambda: _series(s), shift, missing="18.1 must have left the series")
+    s.edit(lambda: _series(s), shift, missing="17.1 must have left the series")
 
     s.rebind("events")
     item = _series(s)

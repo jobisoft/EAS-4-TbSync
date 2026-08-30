@@ -1,4 +1,4 @@
-"""3. Importing recurrence exceptions - AS 16.x only.
+"""4. Importing recurrence exceptions - AS 16.x only.
 
 One series, one cancelled occurrence and one moved one, from
 `fixtures/tz-test-exdate.ics`. On 16.x each exception travels as its own
@@ -8,15 +8,15 @@ the same behaviour on 14.1 is correct while looking completely different on
 the wire.
 
 Only the import and the two quiet syncs after it live here. Moving an
-exception is section 16 and the all-day binding is section 17: both used to
+exception is section 15 and the all-day binding is section 16: both used to
 chain off this fixture, so a failure in the move stopped the section and
 cost the tests behind it their run.
 
-3.3 is the regression test for the re-assertion bug: before the exception
+4.3 is the regression test for the re-assertion bug: before the exception
 fingerprint landed, touching the master re-sent every occurrence and Exchange
 rejected each one it already had.
 
-Self-contained - 3.1 imports - so `npm test -- 3` is a complete run. The
+Self-contained - 4.1 imports - so `npm test -- 3` is a complete run. The
 three steps chain, because re-importing the series per step would mean two
 more full syncs against a server that throttles.
 """
@@ -46,7 +46,7 @@ def _series(s):
     return None
 
 
-@test("3.1", "import - Delete 20260916T130000Z and Change 20260909T130000Z", VERSIONS)
+@test("4.1", "import - Delete 20260916T130000Z and Change 20260909T130000Z", VERSIONS)
 def t_3_1(s):
     def attempt():
         # Re-runnable, which a bare create is not: a server-wins rejection
@@ -69,14 +69,14 @@ def t_3_1(s):
     harness.eq(s.changelog("events"), [], "changelog drained")
 
 
-@test("3.2", "sync again with no edit - no instance commands", VERSIONS)
+@test("4.2", "sync again with no edit - no instance commands", VERSIONS)
 def t_3_2(s):
     s.mark()
     s.sync()
     harness.eq(s.instance_commands(), [], "an unchanged series must send nothing")
 
 
-@test("3.3", "edit only the master's title - no instance commands", VERSIONS)
+@test("4.3", "edit only the master's title - no instance commands", VERSIONS)
 def t_3_3(s):
     def attempt():
         # Read inside: a rejected push leaves the server's own copy in
@@ -84,7 +84,7 @@ def t_3_3(s):
         # copy carries the original title back, which is what makes the
         # same replacement work a second time.
         item = _series(s)
-        harness.true(item is not None, "3.1 must have left the series in place")
+        harness.true(item is not None, "4.1 must have left the series in place")
         s.mark()
         ok(
             "items.update",

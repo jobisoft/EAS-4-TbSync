@@ -1,4 +1,4 @@
-"""8. The calendar's own refresh path.
+"""3. The calendar's own refresh path.
 
 Thunderbird arms a refresh timer for every calendar that says it can refresh,
 and ours does. When it fires it calls `provider.onSync`, which we forward to
@@ -14,7 +14,7 @@ folder for. The success case is what these tests pin down.
 runs `calCachedCalendar.refresh()`, the same entry point as the Reload button
 and the platform's timer.
 
-Kept out of sections 6 and 7 deliberately - both are heavy enough to draw a
+Kept out of sections 7 and 8 deliberately - both are heavy enough to draw a
 503 out of a throttled account, and this needs to be able to run on its own.
 """
 
@@ -57,7 +57,7 @@ def _failed_requests(s):
     ]
 
 
-@test("8.1", "calendars.synchronize - the refresh reaches the provider and syncs")
+@test("3.1", "calendars.synchronize - the refresh reaches the provider and syncs")
 def t_8_1(s):
     _before["items"] = len(s.items("events"))
     s.mark()
@@ -85,9 +85,9 @@ def t_8_1(s):
     )
 
 
-@test("8.2", "the refresh leaves the folder green and the store unchanged")
+@test("3.2", "the refresh leaves the folder green and the store unchanged")
 def t_8_2(s):
-    # Settle first: the refresh is still running when 8.1 returns, and a
+    # Settle first: the refresh is still running when 3.1 returns, and a
     # folder mid-sync is not a verdict on anything.
     s.sync()
     harness.eq(s.status("events"), "success", "folder status after a refresh")
