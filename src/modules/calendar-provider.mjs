@@ -37,6 +37,7 @@ import ICAL from "../vendor/ical.min.js";
 import {
   announceableOf,
   differingPropertyNames,
+  easStampsAgree,
   exceptionFingerprint,
   isReceivedMeeting,
   pinEasStamps,
@@ -472,7 +473,11 @@ async function guardStamps(item, priorIcal) {
   const ical = item?.item;
   if (typeof ical !== "string") return item;
   const guarded = pinEasStamps({ builtIcal: ical, priorIcal });
-  if (guarded === ical) return item;
+  // Whether a stamp changed, not whether the document did. The repair
+  // re-serialises what it touches and puts a stamp back at the end of its
+  // component rather than where it found it, so the two strings differ over
+  // things no writer is answerable for.
+  if (easStampsAgree(ical, guarded)) return item;
   report?.({
     level: "info",
     message:

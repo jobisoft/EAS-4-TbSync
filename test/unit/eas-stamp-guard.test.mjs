@@ -19,7 +19,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { pinEasStamps } from "../../src/modules/eas/calendar-codec.mjs";
+import {
+  easStampsAgree,
+  pinEasStamps,
+} from "../../src/modules/eas/calendar-codec.mjs";
 
 /** A VEVENT carrying whatever stamps a test needs. */
 function event(stamps = [], { uid = "u-1", summary = "probe" } = {}) {
@@ -170,4 +173,140 @@ test("a task keeps its stamps too", () => {
     "X-EAS-DEADOCCUR:1",
     "X-EAS-SERVERID:sid-1",
   ]);
+});
+
+/* ------------------------------------------------------------------ *
+ * What counts as somebody writing to a stamp.
+ *
+ * The guard has one question: does the incoming item carry the stamps we
+ * stored for it. `pinEasStamps` cannot answer it - it discards the incoming
+ * stamps unread and writes the stored ones over the top, so what it returns
+ * is a function of the stored copy alone. Reading the answer out of it
+ * instead compares the two documents, and a document differs for reasons
+ * that are not stamps: how it is serialised, where in a component a stamp
+ * sits, the order two of them are held in, which components exist.
+ *
+ * Each of those is a writer reported for something they did not do, so each
+ * is pinned here.
+ * ------------------------------------------------------------------ */
+
+const SERVERID = "X-EAS-SERVERID:U2f1ad:57a543ff";
+const MEETING = "X-EAS-MEETINGSTATUS:0";
+
+/** What the guard does: repair, then ask whether a stamp moved. */
+function agree(incoming, stored) {
+  return easStampsAgree(
+    incoming,
+    pinEasStamps({ builtIcal: incoming, priorIcal: stored }),
+  );
+}
+
+/** A VEVENT whose properties come out in the order given, so a test can put
+ *  a stamp somewhere other than last. */
+function ordered(lines, { uid = "u-1" } = {}) {
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    "DTSTART:20260901T100000Z",
+    ...lines,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+/** A series, optionally with an occurrence override, and stamps placed on
+ *  whichever of the two the test names. */
+function series({ masterStamps = [], overrideStamps = null } = {}) {
+  const master = [
+    "BEGIN:VEVENT",
+    "UID:u-r",
+    "DTSTART:20260901T100000Z",
+    "RRULE:FREQ=DAILY;COUNT=3",
+    ...masterStamps,
+    "END:VEVENT",
+  ];
+  const override =
+    overrideStamps === null
+      ? []
+      : [
+          "BEGIN:VEVENT",
+          "UID:u-r",
+          "RECURRENCE-ID:20260902T100000Z",
+          "DTSTART:20260902T110000Z",
+          ...overrideStamps,
+          "END:VEVENT",
+        ];
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", ...master, ...override, "END:VCALENDAR"].join(
+    "\r\n",
+  );
+}
+
+test("serialisation is not a stamp", () => {
+  const stored = event([SERVERID]);
+  for (const [name, incoming] of [
+    ["LF line endings", stored.replace(/\r\n/g, "\n")],
+    [
+      "a long line left unfolded",
+      stored.replace(
+        "SUMMARY:probe",
+        "ORGANIZER;RSVP=FALSE;CN=John Bieling;PARTSTAT=ACCEPTED;ROLE=CHAIR:mailto:john.bieling@ekir.de",
+      ),
+    ],
+  ]) {
+    assert.ok(agree(incoming, stored), name);
+  }
+});
+
+test("where a stamp sits in its component is not a stamp", () => {
+  const stored = ordered(["SUMMARY:probe", SERVERID]);
+  const incoming = ordered([SERVERID, "SUMMARY:probe"]);
+  assert.ok(agree(incoming, stored));
+});
+
+test("the order two stamps are held in is not a stamp", () => {
+  const stored = ordered(["SUMMARY:probe", MEETING, SERVERID]);
+  const incoming = ordered(["SUMMARY:probe", SERVERID, MEETING]);
+  assert.ok(agree(incoming, stored));
+});
+
+test("a component appearing or disappearing is not a stamp", () => {
+  const withoutOverride = series({ masterStamps: [SERVERID] });
+  const withOverride = series({ masterStamps: [SERVERID], overrideStamps: [] });
+  assert.ok(agree(withOverride, withoutOverride), "an override was added");
+  assert.ok(agree(withoutOverride, withOverride), "an override was removed");
+});
+
+test("a stamp altered, removed or invented is a stamp", () => {
+  const stored = event([SERVERID]);
+  const cases = {
+    altered: event(["X-EAS-SERVERID:U2f1ad:somebody-elses"]),
+    removed: event([]),
+    invented: event([SERVERID, "X-EAS-RESPONSETYPE:3"]),
+  };
+  for (const [name, incoming] of Object.entries(cases)) {
+    assert.equal(agree(incoming, stored), false, name);
+  }
+});
+
+test("a stamp moving between a series and an occurrence is a stamp", () => {
+  const onMaster = series({ masterStamps: [SERVERID], overrideStamps: [] });
+  const onOverride = series({ masterStamps: [], overrideStamps: [SERVERID] });
+  assert.equal(agree(onOverride, onMaster), false);
+});
+
+test("with nothing stored, any stamp is one it has no claim to", () => {
+  assert.ok(agree(event([]), null));
+  assert.equal(agree(event([SERVERID]), null), false);
+});
+
+test("a document with nothing to guard is left alone", () => {
+  assert.ok(agree("not a calendar", event([SERVERID])));
+  assert.ok(
+    agree(
+      ["BEGIN:VCALENDAR", "VERSION:2.0", "END:VCALENDAR"].join("\r\n"),
+      event([SERVERID]),
+    ),
+  );
 });

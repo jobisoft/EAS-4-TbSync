@@ -2038,6 +2038,52 @@ function easStampsOf(comp) {
     .filter((p) => p.name.toLowerCase().startsWith("x-eas-"));
 }
 
+/** The `X-EAS-*` each event or task in a document carries, one entry per
+ *  component in document order, each component's own sorted.
+ *
+ *  Sorted because the order two stamps are held in is not a fact about
+ *  them, and read as properties rather than as text so that where in a
+ *  component one sits, and how the document is serialised, are not either.
+ *
+ *  Null when the document will not parse. */
+function easStampsPerComponent(ical) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return null;
+  return vcal
+    .getAllSubcomponents()
+    .filter((comp) => comp.name === "vevent" || comp.name === "vtodo")
+    .map((comp) =>
+      easStampsOf(comp)
+        .map((prop) => `${prop.name}=${prop.getFirstValue()}`)
+        .sort()
+        .join(","),
+    );
+}
+
+/** Whether the repair changed a stamp, asked of what went in and what came
+ *  out of it.
+ *
+ *  The question the stamp guard exists to ask. Our own sync writes go to
+ *  `<id>#cache` and fire no item hooks, so a stamp the repair had to put
+ *  right is one somebody else wrote to.
+ *
+ *  It is asked of those two rather than of the incoming and stored copies
+ *  because `pinEasStamps` adds and removes no component: what it returns
+ *  holds the same ones in the same order, so they line up without anything
+ *  here having to know which is a series and which an occurrence of one.
+ *  Matching the stored copy up instead would mean keying components by
+ *  their `RECURRENCE-ID`, which is to say restating the repair's own rule
+ *  beside it and hoping the two never part company.
+ *
+ *  Neither document being readable is agreement: the repair leaves such a
+ *  document alone, so there is nothing to report. */
+export function easStampsAgree(before, after) {
+  const had = easStampsPerComponent(before);
+  const has = easStampsPerComponent(after);
+  if (!had || !has) return true;
+  return had.length === has.length && had.every((s, i) => s === has[i]);
+}
+
 /** Hold our own stamps to what they were, on an item somebody else wrote.
  *
  *  `X-EAS-SERVERID` and its siblings are the item's identity on the server
