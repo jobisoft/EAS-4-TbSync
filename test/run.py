@@ -297,23 +297,6 @@ def main(argv):
     try:
         try:
             s = session_mod.preflight(require=tuple(sorted(needed)) or ("events",))
-            # Sections that test recurrence need the account to sync it. A
-            # module says so with NEEDS_RECURRENCE; the check is here rather
-            # than per-section so the run refuses before touching anything.
-            recurring = sorted(
-                {
-                    t["section"]
-                    for t in tests
-                    if getattr(
-                        sys.modules[MODULE_BY_SECTION[t["section"]]],
-                        "NEEDS_RECURRENCE",
-                        False,
-                    )
-                },
-                key=int,
-            )
-            if recurring:
-                session_mod.ensure_recurrence(s, recurring)
         except session_mod.PreflightError as e:
             print(f"\n  Cannot run: {e}\n")
             return 2

@@ -19,7 +19,6 @@ from harness import test
 # Resources this section touches.
 NEEDS = ("events", "tasks")
 # 11.5 pushes a yearly rule, so the account has to sync recurrence.
-NEEDS_RECURRENCE = True
 
 DAY = "20260916"
 NEXT_DAY = "20260917"

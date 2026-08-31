@@ -161,7 +161,6 @@ function meetingStatusFor(ics, userEmail) {
     ical: ics,
     asVersion: "14.1",
     defaultTimezone: "UTC",
-    syncRecurrence: true,
     userEmail,
   });
   w.switchpage("AirSync");
@@ -216,7 +215,6 @@ test("the self-attendee's PARTSTAT falls back to ResponseType by address", async
     serverID: "srv-meeting",
     asVersion: "14.1",
     defaultTimezone: "UTC",
-    syncRecurrence: true,
     uid: null,
     userEmail: "john@example.org",
   });

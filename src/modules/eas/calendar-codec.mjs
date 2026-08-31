@@ -12,7 +12,6 @@
  * (outbound on 2.5/14.x only). Per-instance: one `<Change>` or `<Delete>`
  * per occurrence carrying `<InstanceId>`, handled by `applyInstanceChange`
  * / `applyInstanceDelete` and built by `listInstanceCommands` (16.1
- * only). All of it is gated on the account's `syncRecurrence` option.
  *
  * The TimeZone blob (every version, but not for all-day events on 16.1,
  * which are floating dates) is encoded / decoded via `TimeZoneBlob` in
@@ -110,7 +109,6 @@ export async function applicationDataToIcal({
   serverID,
   asVersion,
   defaultTimezone,
-  syncRecurrence,
   uid,
   userEmail,
   eventLog,
@@ -149,10 +147,10 @@ export async function applicationDataToIcal({
     nativePlainText,
   });
 
-  // Recurrence + 2.5/14.x exceptions. Gated on the account-level
-  // syncRecurrence flag. Only touch RRULE / exceptions when the AD
-  // mentions them; otherwise leave whatever the existing blob carried.
-  if (syncRecurrence) {
+  // Recurrence + 2.5/14.x exceptions. Only touch RRULE / exceptions when
+  // the AD mentions them; otherwise leave whatever the existing blob
+  // carried.
+  {
     const recNode = childByTag(adNode, "Recurrence");
     if (recNode) {
       vevent.removeAllProperties("rrule");
@@ -482,7 +480,6 @@ export function listInstanceCommands({
   serverID,
   asVersion,
   defaultTimezone,
-  syncRecurrence,
   userEmail,
   fallbackOrganizerName,
   eventLog,
@@ -575,7 +572,6 @@ export function listInstanceCommands({
           ical: override,
           asVersion,
           defaultTimezone,
-          syncRecurrence,
           isException: true,
           userEmail,
           fallbackOrganizerName,
@@ -694,7 +690,6 @@ export function appendApplicationDataFromIcal({
   ical,
   asVersion,
   defaultTimezone,
-  syncRecurrence,
   isException = false,
   // ≤14.x only: leave the embedded <Exceptions> wrapper out of this
   // payload. Used by an <Add> whose blob carries exceptions - they are
@@ -947,11 +942,10 @@ export function appendApplicationDataFromIcal({
     }
   }
 
-  // Recurrence + 2.5/14.x <Exceptions> block. Master only; gated on
-  // syncRecurrence. 16.1 sends exceptions as separate <Change> commands
-  // at the orchestrator level, so the master payload itself never
-  // carries an <Exceptions> wrapper on 16.1.
-  if (syncRecurrence && !isException) {
+  // Recurrence + 2.5/14.x <Exceptions> block. Master only. 16.1 sends
+  // exceptions as separate <Change> commands at the orchestrator level, so
+  // the master payload itself never carries an <Exceptions> wrapper there.
+  if (!isException) {
     const rrule = vevent.getFirstProperty("rrule");
     if (rrule) {
       appendRecurrence(
@@ -969,7 +963,6 @@ export function appendApplicationDataFromIcal({
         vevent,
         asVersion,
         defaultTimezone,
-        syncRecurrence,
         userEmail,
         fallbackOrganizerName,
         eventLog,
@@ -1012,13 +1005,11 @@ export function serverRejectReason({ adNode }) {
  *  sub-daily frequencies, so an HOURLY/MINUTELY/SECONDLY rule would
  *  silently sync as DAILY - the runner holds such an item as a
  *  client-side rejection instead (warned, counted, retried every sync
- *  until the user changes or removes it). Gated on `syncRecurrence`:
- *  with the flag off no recurrence is emitted at all, so nothing is
- *  misrepresented. The regex pre-filter is safe - VTIMEZONE transition
- *  rules are only ever yearly. */
+ *  until the user changes or removes it). The regex pre-filter is safe -
+ *  VTIMEZONE transition rules are only ever yearly. */
 const SUB_DAILY_FREQ = /FREQ=(HOURLY|MINUTELY|SECONDLY)/;
 
-export function clientRejectReason({ blob, syncRecurrence }) {
+export function clientRejectReason({ blob }) {
   if (typeof blob !== "string") return null;
   const vcal = parseVCalendar(blob);
   const master = vcal ? pickMasterVevent(vcal) : null;
@@ -1029,7 +1020,7 @@ export function clientRejectReason({ blob, syncRecurrence }) {
   // calendar day: no daily rule sits under both, and EAS has no finer
   // frequency. Sending it anyway means the server storing the item
   // without its dates, which is the occurrences lost in silence.
-  if (syncRecurrence && master.getFirstProperty("rdate")) {
+  if (master.getFirstProperty("rdate")) {
     return (
       "this event has two occurrences on the same day, and ActiveSync " +
       "can state occurrences only as a rule, which has no interval " +
@@ -1037,7 +1028,7 @@ export function clientRejectReason({ blob, syncRecurrence }) {
     );
   }
 
-  if (syncRecurrence && SUB_DAILY_FREQ.test(blob)) {
+  if (SUB_DAILY_FREQ.test(blob)) {
     const freq = String(
       master.getFirstProperty("rrule")?.getFirstValue()?.freq ?? "",
     ).toUpperCase();
@@ -1588,7 +1579,6 @@ function appendOutboundExceptions({
   vevent,
   asVersion,
   defaultTimezone,
-  syncRecurrence,
   userEmail,
   fallbackOrganizerName,
   eventLog,
@@ -1628,7 +1618,6 @@ function appendOutboundExceptions({
       ical: override,
       asVersion,
       defaultTimezone,
-      syncRecurrence,
       isException: true,
       userEmail,
       fallbackOrganizerName,

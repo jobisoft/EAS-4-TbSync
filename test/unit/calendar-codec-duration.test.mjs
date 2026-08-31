@@ -62,7 +62,6 @@ const emit = (ics, asVersion = "16.1") =>
       ical: ics,
       asVersion,
       defaultTimezone: "UTC",
-      syncRecurrence: true,
       userEmail: null,
     }),
   );
@@ -115,7 +114,6 @@ test("an inbound exception delta on a DURATION master seeds the override with a 
     serverID: "srv-duration-series",
     asVersion: "14.1",
     defaultTimezone: "UTC",
-    syncRecurrence: true,
     uid: null,
     userEmail: null,
   });
@@ -178,7 +176,7 @@ test("an override carrying its own DURATION emits a derived EndTime in the embed
 
 test("clientRejectReason holds endless and backwards events, passes representable ones", () => {
   const reject = (lines) =>
-    clientRejectReason({ blob: vcal(lines), syncRecurrence: true });
+    clientRejectReason({ blob: vcal(lines) });
 
   assert.match(
     String(reject(["DTSTART:20260810T140000Z"])),
@@ -251,7 +249,7 @@ test("an override with a start but no derivable end is held, like a bad master",
     "END:VCALENDAR",
     "",
   ].join("\r\n");
-  const reason = clientRejectReason({ blob: ics, syncRecurrence: true });
+  const reason = clientRejectReason({ blob: ics });
   assert.match(String(reason), /occurrence/, "the reason names the occurrence");
   assert.match(String(reason), /no end/);
 });
@@ -267,7 +265,6 @@ test("inbound: a Change carrying EndTime drops a stale DURATION from the blob", 
     serverID: "srv-duration",
     asVersion: "16.1",
     defaultTimezone: "UTC",
-    syncRecurrence: true,
     uid: null,
     userEmail: null,
   });
@@ -283,7 +280,6 @@ test("an all-day event whose DTEND equals its DTSTART is a day, not nothing", ()
   assert.equal(
     clientRejectReason({
       blob: vcal(["DTSTART;VALUE=DATE:20260810", "DTEND;VALUE=DATE:20260810"]),
-      syncRecurrence: true,
     }),
     null,
     "it must not be held as unrepresentable",
@@ -304,7 +300,7 @@ test("a timed zero-length event goes out as StartTime == EndTime", () => {
   // their data. Measured on Exchange 16.1: Status 1 on the Add, the
   // Change accepted, and the times unchanged on the next pull.
   const blob = vcal(["DTSTART:20260810T140000Z", "DTEND:20260810T140000Z"]);
-  assert.equal(clientRejectReason({ blob, syncRecurrence: true }), null);
+  assert.equal(clientRejectReason({ blob }), null);
   const node = emit(blob);
   assert.equal(readPathFrom(node, ["StartTime"]), "20260810T140000Z");
   assert.equal(readPathFrom(node, ["EndTime"]), "20260810T140000Z");

@@ -281,12 +281,6 @@
   "config.calendar.syncLimit.6months": {
     "message": "Viimased 6 kuud"
   },
-  "config.calendar.syncRecurrence": {
-    "message": "Sünkrooni korduvad sündmused ja ülesanded ning erandid"
-  },
-  "config.calendar.syncRecurrence.hint": {
-    "message": "Kui see on sisse lülitatud, käivad kordumisreeglid ja üksikjuhtude erandid serveriga edasi-tagasi."
-  },
   "config.calendar.syncOnChange": {
     "message": "Sünkrooni kalender pärast muudatust"
   },
@@ -403,9 +397,6 @@
         "example": "3"
       }
     }
-  },
-  "eas.sync.warning.recurrenceDisabled": {
-    "message": "Korduste sünkroonimine on välja lülitatud. See oli ettevaatusabinõu varastes beetaversioonides ja pole enam vajalik. Soovitatav on see konto seadetes sisse lülitada."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server lükkas sünkroonimispäringu sobimatuna tagasi (kood $STATUS$)",

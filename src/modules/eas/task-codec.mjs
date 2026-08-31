@@ -49,7 +49,6 @@ export async function applicationDataToIcal({
   serverID,
   asVersion,
   defaultTimezone,
-  syncRecurrence,
   msTodoCompat,
   uid,
   nativePlainText = null,
@@ -204,7 +203,7 @@ export async function applicationDataToIcal({
   }
 
   // Recurrence (RRULE only; tasks have no exceptions in EAS).
-  if (syncRecurrence) {
+  {
     const recNode = childByTag(adNode, "Recurrence");
     if (recNode) {
       vtodo.removeAllProperties("rrule");
@@ -228,7 +227,6 @@ export function appendApplicationDataFromIcal({
   ical,
   asVersion,
   defaultTimezone,
-  syncRecurrence,
 }) {
   const vtodo = parseFirstVtodo(ical);
   if (!vtodo) return;
@@ -286,7 +284,7 @@ export function appendApplicationDataFromIcal({
   // rule with NEITHER anchor never gets here: `clientRejectReason` holds
   // the item before the push.
   const anchorProp = startProp ?? rawDueProp;
-  if (syncRecurrence && anchorProp) {
+  if (anchorProp) {
     const rrule = vtodo.getFirstProperty("rrule");
     if (rrule) {
       const anchorLocal =
@@ -344,10 +342,9 @@ export function appendApplicationDataFromIcal({
  *  or null when it can. Two cases: EAS has no sub-daily recurrence
  *  frequencies, and a recurring task needs an anchor - the series is
  *  emitted against DTSTART or, failing that, DUE. Only when a rule has
- *  neither is the item held. Gated on `syncRecurrence` like the
- *  emission itself. */
-export function clientRejectReason({ blob, syncRecurrence }) {
-  if (!syncRecurrence || typeof blob !== "string") return null;
+ *  neither is the item held. */
+export function clientRejectReason({ blob }) {
+  if (typeof blob !== "string") return null;
 
   // A moved occurrence, which a task cannot carry. [MS-ASTASK] declares no
   // exception element at any version and this codec neither writes nor

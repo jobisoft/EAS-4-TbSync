@@ -281,12 +281,6 @@
   "config.calendar.syncLimit.6months": {
     "message": "Últimos 6 meses"
   },
-  "config.calendar.syncRecurrence": {
-    "message": "Sincronizar eventos/tareas recurrentes y excepciones"
-  },
-  "config.calendar.syncRecurrence.hint": {
-    "message": "Cuando está activado, las reglas de recurrencia y las excepciones por instancia se sincronizan en ambos sentidos con el servidor."
-  },
   "config.calendar.syncOnChange": {
     "message": "Sincronizar un calendario tras un cambio"
   },
@@ -403,9 +397,6 @@
         "example": "3"
       }
     }
-  },
-  "eas.sync.warning.recurrenceDisabled": {
-    "message": "La sincronización de recurrencias está desactivada. Fue una precaución en las primeras versiones beta y ya no es necesaria. Se recomienda activarla en la configuración de la cuenta."
   },
   "eas.sync.error.protocolFault": {
     "message": "El servidor rechazó la solicitud de sincronización como malformada (código $STATUS$)",

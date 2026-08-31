@@ -281,12 +281,6 @@
   "config.calendar.syncLimit.6months": {
     "message": "Ultimele 6 luni"
   },
-  "config.calendar.syncRecurrence": {
-    "message": "Sincronizează evenimentele/activitățile recurente și excepțiile"
-  },
-  "config.calendar.syncRecurrence.hint": {
-    "message": "Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
-  },
   "config.calendar.syncOnChange": {
     "message": "Sincronizează calendarul după o modificare"
   },
@@ -403,9 +397,6 @@
         "example": "3"
       }
     }
-  },
-  "eas.sync.warning.recurrenceDisabled": {
-    "message": "Sincronizarea recurențelor este dezactivată. A fost o măsură de precauție în versiunile beta timpurii și nu mai este necesară. Se recomandă activarea ei în setările contului."
   },
   "eas.sync.error.protocolFault": {
     "message": "Serverul a respins cererea de sincronizare ca fiind incorectă (cod $STATUS$)",

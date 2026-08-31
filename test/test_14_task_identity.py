@@ -39,7 +39,6 @@ from harness import test
 NEEDS = ("tasks",)
 # 14.3 and 14.4 are about recurrence, and with the account option off no
 # rule reaches the wire at all.
-NEEDS_RECURRENCE = True
 
 FOLDERS_KEY = "tbsync.folders"
 

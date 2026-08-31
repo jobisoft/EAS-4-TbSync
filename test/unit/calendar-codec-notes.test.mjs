@@ -35,7 +35,6 @@ const COMMON = {
   serverID: "srv-note",
   asVersion: "16.1",
   defaultTimezone: "UTC",
-  syncRecurrence: true,
   uid: null,
   userEmail: null,
 };
@@ -146,7 +145,6 @@ test("outbound: an ALTREP note goes out as Type 2 HTML, a plain note as Type 1",
       ical: ics,
       asVersion: "16.1",
       defaultTimezone: "UTC",
-      syncRecurrence: true,
       userEmail: null,
     });
     w.switchpage("AirSync");
@@ -271,7 +269,6 @@ test("#262: a CRLF server gets its line endings back, once", async () => {
       ical: ics,
       asVersion: "16.1",
       defaultTimezone: "UTC",
-      syncRecurrence: true,
       userEmail: null,
     });
     w.switchpage("AirSync");

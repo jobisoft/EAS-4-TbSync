@@ -56,7 +56,6 @@ function readerArgs(adNode) {
     serverID: "srv-1",
     asVersion: "14.1",
     defaultTimezone: "UTC",
-    syncRecurrence: true,
     uid: null,
     userEmail: null,
     eventLog: null,
@@ -218,7 +217,6 @@ test("fingerprint and instance commands agree on DATE rows", async () => {
     serverID: "srv-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
-    syncRecurrence: true,
     previous: fp,
   });
   assert.deepEqual(
@@ -238,7 +236,6 @@ test("an unknown DATE exdate becomes a 16.1 delete with a fake-local InstanceId"
     serverID: "srv-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
-    syncRecurrence: true,
     previous: { exdates: [], overrides: [] },
   });
   assert.equal(commands.length, 1);
@@ -305,7 +302,6 @@ function writeArgs(builder, asVersion) {
     ical: ALLDAY_WITH_EXCEPTIONS,
     asVersion,
     defaultTimezone: "Europe/Berlin",
-    syncRecurrence: true,
     userEmail: null,
     fallbackOrganizerName: null,
     eventLog: null,

@@ -164,7 +164,6 @@ async function load() {
 
   // ── Calendar section ───────────────────────────────────────────────────
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
-  $("sync-recurrence").checked = !!account.syncRecurrence;
   $("sync-on-change").value = String(account.syncOnChange ?? "15");
 
   // ── Server lookups ─────────────────────────────────────────────────────
@@ -334,7 +333,6 @@ async function onSave() {
     contactsDisplayOverride: $("contacts-display-override").checked,
     contactsNameSeparator: $("contacts-name-separator").value,
     calendarSyncLimit: $("calendar-sync-limit").value,
-    syncRecurrence: $("sync-recurrence").checked,
     syncOnChange: $("sync-on-change").value,
   };
 

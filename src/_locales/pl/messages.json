@@ -281,12 +281,6 @@
   "config.calendar.syncLimit.6months": {
     "message": "Ostatnie 6 miesięcy"
   },
-  "config.calendar.syncRecurrence": {
-    "message": "Synchronizuj cykliczne wydarzenia/zadania i wyjątki"
-  },
-  "config.calendar.syncRecurrence.hint": {
-    "message": "Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
-  },
   "config.calendar.syncOnChange": {
     "message": "Synchronizuj kalendarz po zmianie"
   },
@@ -403,9 +397,6 @@
         "example": "3"
       }
     }
-  },
-  "eas.sync.warning.recurrenceDisabled": {
-    "message": "Synchronizacja powtórzeń jest wyłączona. Było to zabezpieczenie we wczesnych wersjach beta i nie jest już potrzebne. Zalecane jest włączenie jej w ustawieniach konta."
   },
   "eas.sync.error.protocolFault": {
     "message": "Serwer odrzucił żądanie synchronizacji jako nieprawidłowe (kod $STATUS$)",

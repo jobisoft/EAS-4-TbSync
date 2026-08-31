@@ -187,7 +187,6 @@ function appendCommands(
     asVersion,
     codec,
     defaultTimezone,
-    syncRecurrence,
     userEmail,
     fallbackOrganizerName,
     eventLog,
@@ -206,14 +205,11 @@ function appendCommands(
       asVersion,
       separator,
       defaultTimezone,
-      syncRecurrence,
       // An Add never carries embedded exceptions on ≤14.x - they follow
       // as a <Change> once the ack yields a ServerId (followUpPhase).
       // On 16.1 the writer never embeds them anyway.
       suppressExceptions:
-        asVersion !== "16.1" &&
-        syncRecurrence &&
-        blobHasInstanceOverrides(a.item.blob),
+        asVersion !== "16.1" && blobHasInstanceOverrides(a.item.blob),
       userEmail,
       fallbackOrganizerName,
       eventLog,
@@ -233,7 +229,6 @@ function appendCommands(
       asVersion,
       separator,
       defaultTimezone,
-      syncRecurrence,
       userEmail,
       fallbackOrganizerName,
       eventLog,

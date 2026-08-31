@@ -26,7 +26,7 @@
  * The rest fall into three groups: the OPTIONS probe cache
  * (`allowedEasVersions`, `allowedEasCommands`, `lastEasOptionsUpdate`), the
  * config-popup options (`asversionselected`, `provision`, `conflict`,
- * `syncrecurrence`, `synclimit`, `displayoverride`, `seperator` - spelled
+ * `synclimit`, `displayoverride`, `seperator` - spelled
  * that way on disk), and GAL state (`galenabled`, `galName`).
  *
  * Credentials sit in that account row in `storage.local`, unencrypted. A
@@ -1680,7 +1680,6 @@ export class EasProvider extends TbSyncProviderImplementation {
           // but don't return 449 (e.g. Kerio).
           provision: false,
           conflict: "1",
-          syncrecurrence: true,
           syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
@@ -1709,7 +1708,6 @@ export class EasProvider extends TbSyncProviderImplementation {
           foldersynckey: "0",
           provision: false,
           conflict: "1",
-          syncrecurrence: true,
           syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
@@ -1741,7 +1739,6 @@ export class EasProvider extends TbSyncProviderImplementation {
         foldersynckey: "0",
         provision: false,
         conflict: "1",
-        syncrecurrence: true,
         syncOnChange: DEFAULT_SYNC_ON_CHANGE,
       },
     };
@@ -1786,7 +1783,6 @@ export class EasProvider extends TbSyncProviderImplementation {
       contactsNameSeparator: c.seperator || "10",
       // Calendar section.
       calendarSyncLimit: c.synclimit || "7",
-      syncRecurrence: !!c.syncrecurrence,
       // Anything unrecognised, including the absent value of an account
       // that predates the setting, reads as the default - the popup must
       // never render a select with no option selected.
@@ -2068,9 +2064,6 @@ export class EasProvider extends TbSyncProviderImplementation {
         );
       }
       customPatch.syncOnChange = v;
-    }
-    if ("syncRecurrence" in patch) {
-      customPatch.syncrecurrence = !!patch.syncRecurrence;
     }
     if ("galEnabled" in patch) {
       customPatch.galenabled = !!patch.galEnabled;

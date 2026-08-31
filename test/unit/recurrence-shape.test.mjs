@@ -389,7 +389,7 @@ test("dates the guard keeps are refused by the codec, not sent short", async () 
     "the guard found a rule for a same-day set after all",
   );
   assert.match(
-    clientRejectReason({ blob: stored, syncRecurrence: true }) ?? "",
+    clientRejectReason({ blob: stored }) ?? "",
     /same day/,
   );
 });

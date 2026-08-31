@@ -494,7 +494,6 @@ async function runOneSync({
     separator,
     asVersion,
     defaultTimezone,
-    syncRecurrence: account.custom?.syncrecurrence === true,
     msTodoCompat,
     conflict: conflictPolicyOf(account),
     itemKind,
@@ -761,21 +760,6 @@ async function runOneSync({
     );
     return await finishWith(ctx, { status: warningStatus(msg) });
   }
-  // Nothing failed, but the folder is not carrying everything it looks like
-  // it is: with the option off, an RRULE and its exceptions are ignored in
-  // both directions, so a series reads as a single entry on whichever side
-  // did not author it. The switch is off on these accounts because early
-  // betas advised it, which is a reason that has expired - so the message
-  // asks for it back rather than only describing the effect. Said on every
-  // sync because the state is permanent (a setting, not an incident), and
-  // the resource row is where someone looks when an occurrence is missing.
-  if (!ctx.syncRecurrence && ctx.itemKind.changelogKind !== "contact") {
-    return await finishWith(ctx, {
-      status: warningStatus(
-        browser.i18n.getMessage("eas.sync.warning.recurrenceDisabled"),
-      ),
-    });
-  }
   return await finishWith(ctx, { status: ok() });
 }
 
@@ -933,7 +917,6 @@ async function revertLocalChanges(ctx) {
       asVersion: ctx.asVersion,
       separator: ctx.separator,
       defaultTimezone: ctx.defaultTimezone,
-      syncRecurrence: ctx.syncRecurrence,
       msTodoCompat: ctx.msTodoCompat,
       uid: e.itemId,
       userEmail: accountUserAddress(ctx.account),
@@ -1260,9 +1243,7 @@ async function pushPhase(ctx, userEdits) {
   // Recurring masters pushed in this pass whose blob carries overrides.
   // Only 16.1 needs them, and only the calendar codec can express them.
   const instanceMasters =
-    ctx.asVersion === "16.1" &&
-    ctx.syncRecurrence &&
-    ctx.itemKind.codec.listInstanceCommands
+    ctx.asVersion === "16.1" && ctx.itemKind.codec.listInstanceCommands
       ? []
       : null;
   // The ≤14.x counterpart: masters ADDED this pass whose blob carries
@@ -1273,8 +1254,7 @@ async function pushPhase(ctx, userEdits) {
   // ack has assigned a ServerId, followUpPhase re-sends each as one full
   // <Change>, exceptions embedded - the ordinary modify payload, which
   // the same servers keep.
-  const followUpMasters =
-    ctx.asVersion !== "16.1" && ctx.syncRecurrence ? [] : null;
+  const followUpMasters = ctx.asVersion !== "16.1" ? [] : null;
   let batchSize = ctx.maxItems;
   let pending = userEdits.slice();
   let itemsDone = 0;
@@ -1302,7 +1282,7 @@ async function pushPhase(ctx, userEdits) {
     // server responses with the iCal we just sent. 16.1 sends each
     // exception as its own request afterwards, from the instance phase -
     // the master's log entry here is the anchor for those.
-    if (ctx.syncRecurrence) {
+    {
       for (const a of built.adds) {
         if (blobHasRecurrence(a.item.blob)) {
           logRecurrence(
@@ -1337,7 +1317,6 @@ async function pushPhase(ctx, userEdits) {
           asVersion: ctx.asVersion,
           codec: ctx.itemKind.codec,
           defaultTimezone: ctx.defaultTimezone,
-          syncRecurrence: ctx.syncRecurrence,
           userEmail: accountUserAddress(ctx.account),
           fallbackOrganizerName:
             ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
@@ -1982,7 +1961,6 @@ async function instancePhase(ctx, masters) {
       previous: m.previous ?? null,
       asVersion: ctx.asVersion,
       defaultTimezone: ctx.defaultTimezone,
-      syncRecurrence: ctx.syncRecurrence,
       userEmail: accountUserAddress(ctx.account),
       fallbackOrganizerName:
         ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
@@ -2031,7 +2009,6 @@ async function followUpPhase(ctx, masters) {
           asVersion: ctx.asVersion,
           separator: ctx.separator,
           defaultTimezone: ctx.defaultTimezone,
-          syncRecurrence: ctx.syncRecurrence,
           userEmail: accountUserAddress(ctx.account),
           fallbackOrganizerName:
             ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
@@ -2202,7 +2179,6 @@ async function dropUnsatisfiableEntry(ctx, entry, reason) {
 async function holdIfUnrepresentable(ctx, entry, it, operation, failedItems) {
   const reason = ctx.itemKind.codec.clientRejectReason?.({
     blob: it.blob,
-    syncRecurrence: ctx.syncRecurrence,
     asVersion: ctx.asVersion,
   });
   if (!reason) return false;
@@ -2767,7 +2743,6 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
     asVersion: ctx.asVersion,
     separator: ctx.separator,
     defaultTimezone: ctx.defaultTimezone,
-    syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: newId,
     userEmail: accountUserAddress(ctx.account),
@@ -2817,11 +2792,7 @@ async function applyChange(ctx, changeNode, noteBacklog = null) {
   // ServerId. Route to the codec's exception path; bail back to the
   // normal master update if the codec doesn't support it.
   const instanceId = readPathFrom(ad, ["InstanceId"]);
-  if (
-    instanceId &&
-    ctx.syncRecurrence &&
-    ctx.itemKind.codec.applyInstanceChange
-  ) {
+  if (instanceId && ctx.itemKind.codec.applyInstanceChange) {
     return applyExceptionChange(ctx, ad, existing, instanceId, serverID);
   }
   return applyChangeFromAd(ctx, ad, existing, serverID, null, noteBacklog);
@@ -3103,7 +3074,6 @@ async function applyChangeFromAd(
     asVersion: ctx.asVersion,
     separator: ctx.separator,
     defaultTimezone: ctx.defaultTimezone,
-    syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: existing.itemId,
     userEmail: accountUserAddress(ctx.account),
@@ -3172,7 +3142,6 @@ async function applyChangeFromAd(
 export async function noteExceptionsDroppedByServer(ctx, ad, existing, blob) {
   if (
     ctx.asVersion !== "16.1" ||
-    !ctx.syncRecurrence ||
     ctx.itemKind.changelogKind !== "event" ||
     !childByTag(ad, "Recurrence") ||
     childByTag(ad, "Exceptions") ||

@@ -281,12 +281,6 @@
   "config.calendar.syncLimit.6months": {
     "message": "Ultimi 6 mesi"
   },
-  "config.calendar.syncRecurrence": {
-    "message": "Sincronizza eventi/attività ricorrenti ed eccezioni"
-  },
-  "config.calendar.syncRecurrence.hint": {
-    "message": "Quando è attivo, le regole di ricorrenza e le eccezioni per singola istanza vengono sincronizzate in entrambi i sensi con il server."
-  },
   "config.calendar.syncOnChange": {
     "message": "Sincronizza un calendario dopo una modifica"
   },
@@ -403,9 +397,6 @@
         "example": "3"
       }
     }
-  },
-  "eas.sync.warning.recurrenceDisabled": {
-    "message": "La sincronizzazione delle ricorrenze è disattivata. Era una precauzione nelle prime versioni beta e non è più necessaria. Si consiglia di attivarla nelle impostazioni dell’account."
   },
   "eas.sync.error.protocolFault": {
     "message": "Il server ha rifiutato la richiesta di sincronizzazione come non valida (codice $STATUS$)",
