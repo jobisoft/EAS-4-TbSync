@@ -281,12 +281,6 @@
   "config.calendar.syncLimit.6months": {
     "message": "Last 6 months"
   },
-  "config.calendar.syncRecurrence": {
-    "message": "Sync recurring events / tasks and exceptions"
-  },
-  "config.calendar.syncRecurrence.hint": {
-    "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
-  },
   "config.calendar.syncOnChange": {
     "message": "Synchronize a calendar after a change"
   },
@@ -403,9 +397,6 @@
         "example": "3"
       }
     }
-  },
-  "eas.sync.warning.recurrenceDisabled": {
-    "message": "Recurrence sync is disabled. That was a precaution in early beta versions and is no longer needed. Switching it on in the account settings is now recommended."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server rejected the sync request as invalid (code $STATUS$)",
