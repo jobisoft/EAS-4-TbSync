@@ -281,12 +281,6 @@
   "config.calendar.syncLimit.6months": {
     "message": "Utolsó 6 hónap"
   },
-  "config.calendar.syncRecurrence": {
-    "message": "Ismétlődő események / feladatok és kivételek szinkronizálása"
-  },
-  "config.calendar.syncRecurrence.hint": {
-    "message": "Ha bekapcsolja, az ismétlési szabályok és a példányonkénti kivételek eljutnak a kiszolgálóra."
-  },
   "config.calendar.syncOnChange": {
     "message": "Synchronize a calendar after a change"
   },
@@ -403,9 +397,6 @@
         "example": "3"
       }
     }
-  },
-  "eas.sync.warning.recurrenceDisabled": {
-    "message": "Recurrence sync is disabled. That was a precaution in early beta versions and is no longer needed. Switching it on in the account settings is now recommended."
   },
   "eas.sync.error.protocolFault": {
     "message": "A kiszolgáló érvénytelenként elutasította a szinkronizálási kérést (kód: $STATUS$)",
