@@ -1196,12 +1196,14 @@ async function pullPhase(ctx) {
   let itemsTotal = estimate ?? 0;
   reportProgress(ctx, itemsDone, itemsTotal);
 
-  // Unbounded MoreAvailable loop, matching legacy sync.js:445. The server
-  // controls termination via the absent <MoreAvailable/> tag; we trust it
-  // to converge. Initial syncs of large folders (10k+ items) hit dozens
-  // of iterations and any cap risks a spurious abort mid-pull.
+  // The server controls termination via the absent <MoreAvailable/> tag,
+  // and it is trusted to converge: initial syncs of large folders (10k+
+  // items) hit dozens of iterations, so any cap on the count risks a
+  // spurious abort mid-pull. Bounded instead by whether the round trip
+  // achieved anything - see the check at the foot of the loop.
   for (;;) {
     throwIfCancelled(ctx);
+    const sentKey = ctx.synckey;
     const body = buildSyncBody({
       synckey: ctx.synckey,
       collectionId: ctx.collectionId,
@@ -1225,9 +1227,10 @@ async function pullPhase(ctx) {
       return { code: "BUSY", topStatus: r.topStatus, collStatus: r.collStatus };
     if (r.error) return { status: errorStatus(r.error) };
 
+    let applied = 0;
     if (r.commands) {
-      const processed = await applyServerCommands(ctx, r.commands);
-      itemsDone += processed;
+      applied = await applyServerCommands(ctx, r.commands);
+      itemsDone += applied;
       if (itemsDone > itemsTotal) itemsTotal = itemsDone;
       reportProgress(ctx, itemsDone, itemsTotal);
     }
@@ -1246,6 +1249,41 @@ async function pullPhase(ctx) {
       });
     }
     if (!r.moreAvailable) return {};
+
+    // "More available" and yet nothing arrived and the sync key did not
+    // move: the next request would be byte-for-byte the one just sent,
+    // against state the server says is unchanged, so the answer can only
+    // be the same again. Measured on Exchange Online (#356): 362 items
+    // estimated, one delivered, then sixty identical empty windows until
+    // the mailbox was answered HTTP 503 with x-ms-asthrottle: SyncCommands
+    // for the rest of the hour - a budget counted in commands, so a loop
+    // that fetches nothing still spends it all.
+    //
+    // Both halves are required. An empty window on its own is not a fault:
+    // a server walking a change set whose items all fall outside the
+    // FilterType can legitimately send nothing while advancing the key,
+    // and stopping there would turn one sync of a large folder into many.
+    //
+    // Treated as the pull being over, exactly like the absent tag: there is
+    // nothing more to be had this pass. Nothing is reset either - the key we
+    // hold is the one the server last stated, so the next sync resumes from
+    // here, costs two requests instead of sixty, and delivers the rest the
+    // moment the server starts sending again.
+    //
+    // Said out loud all the same. A folder that stops short this way looks
+    // from the outside like one that finished, and the difference - 362
+    // items estimated against one delivered - would otherwise exist nowhere
+    // a bug report could reach.
+    if (applied === 0 && (r.synckey == null || r.synckey === sentKey)) {
+      ctx.eventLog(
+        "warning",
+        `[${ctx.itemKind.changelogKind}-sync] the server says more items are ` +
+          `available for collection ${ctx.collectionId} but sent none, and ` +
+          `left the sync key at ${sentKey}; stopping this folder after ` +
+          `${itemsDone} of ${itemsTotal} - asking again cannot change the answer`,
+      );
+      return {};
+    }
   }
 }
 
