@@ -84,6 +84,10 @@ import {
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "../vendor/tbsync/address-book.mjs";
 import * as calendarStore from "../vendor/tbsync/calendar.mjs";
+import {
+  armSyncAfterChange,
+  quietSecondsFor,
+} from "./sync-after-change.mjs";
 import { readOof, writeOof } from "./eas/oof.mjs";
 import {
   primeAuth,
@@ -184,9 +188,10 @@ const ALLOWED_CALENDAR_SYNC_LIMITS = ["0", "4", "5", "6", "7"];
  *  wins. */
 const ALLOWED_CONFLICT_VALUES = ["0", "1"];
 
-/** How long a calendar must stay quiet before an edit in it is synced, in
- *  seconds. "0" is off, and then an edit waits for the scheduled sync.
- *  Read by the calendar provider's item hooks - see `armSyncAfterChange`. */
+/** How long a calendar or address book must stay quiet before an edit in
+ *  it is synced, in seconds. "0" is off, and then an edit waits for the
+ *  scheduled sync. Read from the calendar's item hooks and from the address
+ *  book watcher's user-edit callback - see `armSyncAfterChange`. */
 const ALLOWED_SYNC_ON_CHANGE_VALUES = ["0", "5", "15", "30", "60"];
 const DEFAULT_SYNC_ON_CHANGE = "15";
 
@@ -358,6 +363,18 @@ export class EasProvider extends TbSyncProviderImplementation {
     addressBook.installContactsObserver({
       provider: this,
       report: (args) => this.reportEventLog(args),
+      // A card or list the user changed, which this account may want synced
+      // without waiting for its scheduled run - the same setting and the
+      // same timer the calendars use.
+      onUserEdit: async ({ accountId, parentId }) => {
+        armSyncAfterChange(
+          this,
+          (args) => this.reportEventLog(args),
+          parentId,
+          await quietSecondsFor(this, accountId),
+          "contact",
+        );
+      },
     });
     return null;
   }

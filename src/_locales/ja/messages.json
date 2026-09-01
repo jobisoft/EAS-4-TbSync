@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "直近 6 か月"
   },
-  "config.calendar.syncOnChange": {
-    "message": "変更後にカレンダーを同期する"
+  "config.account.syncOnChange": {
+    "message": "変更後にカレンダーとアドレス帳を同期する"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync はアカウントマネージャーで設定したスケジュールに従って、このアカウントを同期します。さらに、カレンダーで何かを変更した少し後にそのカレンダーを同期し、次の定期実行を待たずにローカルの変更をサーバーへ届けることもできます。これが最も重要なのは会議です。サーバーは変更を見てはじめて出席者を招待し、更新を送り、あなたの返答を伝えるからです。"
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync はアカウントマネージャーで設定したスケジュールに従って、このアカウントを同期します。さらに、カレンダーやアドレス帳で何かを変更した少し後にそれを同期し、次の定期実行を待たずにローカルの変更をサーバーへ届けることもできます。カレンダーの場合は、サーバーが出席者を招待し、更新を送り、あなたの返答を伝えるまでの早さもこれで決まります。サーバーは変更を見てはじめてそれができるからです。"
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "オフ"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "5 秒後"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "15 秒後"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "30 秒後"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "60 秒後"
   },
   "config.section.lookups": {

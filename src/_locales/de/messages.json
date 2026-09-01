@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "Letzte 6 Monate"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Kalender nach einer Änderung synchronisieren"
+  "config.account.syncOnChange": {
+    "message": "Kalender und Adressbücher nach einer Änderung synchronisieren"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync synchronisiert dieses Konto nach dem im Kontenmanager eingestellten Zeitplan. Ein Kalender kann zusätzlich kurz nach einer Änderung synchronisiert werden, damit lokale Änderungen den Server erreichen, ohne auf den nächsten geplanten Durchlauf zu warten. Am wichtigsten ist das für Termine, denn der Server lädt die Teilnehmer erst ein, verschickt Aktualisierungen und leitet Ihre Antwort erst weiter, wenn er Ihre Änderungen gesehen hat."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync synchronisiert dieses Konto nach dem im Kontenmanager eingestellten Zeitplan. Ein Kalender oder Adressbuch kann zusätzlich kurz nach einer Änderung synchronisiert werden, damit lokale Änderungen den Server erreichen, ohne auf den nächsten geplanten Durchlauf zu warten. Bei einem Kalender bestimmt das auch, wie schnell der Server die Teilnehmer einlädt, Aktualisierungen verschickt und Ihre Antwort weiterleitet, denn er kann das erst tun, wenn er die Änderung gesehen hat."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "Aus"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Nach 5 Sekunden"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Nach 15 Sekunden"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Nach 30 Sekunden"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Nach 60 Sekunden"
   },
   "config.section.lookups": {

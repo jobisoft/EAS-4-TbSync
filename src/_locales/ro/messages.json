@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "Ultimele 6 luni"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Sincronizează calendarul după o modificare"
+  "config.account.syncOnChange": {
+    "message": "Sincronizează calendarele și agendele după o modificare"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync sincronizează acest cont conform programului stabilit în managerul de conturi. În plus, un calendar poate fi sincronizat la scurt timp după ce modificați ceva în el, astfel încât modificările locale să ajungă la server fără a aștepta următoarea rulare programată. Acest lucru contează cel mai mult pentru întâlniri, deoarece serverul invită participanții, trimite actualizările și transmite răspunsul dumneavoastră abia după ce v-a văzut modificările."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync sincronizează acest cont conform programului stabilit în managerul de conturi. În plus, un calendar sau o agendă poate fi sincronizat la scurt timp după ce modificați ceva în el, astfel încât modificările locale să ajungă la server fără a aștepta următoarea rulare programată. Pentru un calendar, aceasta determină și cât de repede invită serverul participanții, trimite actualizările și transmite răspunsul dumneavoastră, fiindcă o poate face abia după ce a văzut modificarea."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "Dezactivat"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "După 5 secunde"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "După 15 secunde"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "După 30 de secunde"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "După 60 de secunde"
   },
   "config.section.lookups": {

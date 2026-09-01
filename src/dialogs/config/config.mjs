@@ -135,6 +135,7 @@ async function load() {
     $("oauth-identity-row").hidden = false;
     $("oauth-identity").textContent = account.authenticatedUserEmail;
   }
+  $("sync-on-change").value = String(account.syncOnChange ?? "15");
 
   // ── Connection section ─────────────────────────────────────────────────
   // Visible for custom EAS and auto-detect accounts. For auto-detect, the
@@ -164,7 +165,6 @@ async function load() {
 
   // ── Calendar section ───────────────────────────────────────────────────
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
-  $("sync-on-change").value = String(account.syncOnChange ?? "15");
 
   // ── Server lookups ─────────────────────────────────────────────────────
   // Each checkbox is forced off + disabled when the server's OPTIONS probe

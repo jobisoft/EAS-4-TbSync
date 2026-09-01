@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "Ultimi 6 mesi"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Sincronizza un calendario dopo una modifica"
+  "config.account.syncOnChange": {
+    "message": "Sincronizza calendari e rubriche dopo una modifica"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync sincronizza questo account secondo la pianificazione definita nella gestione degli account. Un calendario può inoltre essere sincronizzato poco dopo che vi si è modificato qualcosa, così che le modifiche locali raggiungano il server senza attendere la successiva esecuzione programmata. Questo conta soprattutto per le riunioni, perché il server invita i partecipanti, invia gli aggiornamenti e inoltra la risposta solo quando ha visto le modifiche."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync sincronizza questo account secondo la pianificazione definita nella gestione degli account. Un calendario o una rubrica può inoltre essere sincronizzato poco dopo che vi si è modificato qualcosa, così che le modifiche locali raggiungano il server senza attendere la successiva esecuzione programmata. Per un calendario questo determina anche quanto presto il server invita i partecipanti, invia gli aggiornamenti e inoltra la risposta, perché può farlo solo dopo aver visto la modifica."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "Disattivato"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Dopo 5 secondi"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Dopo 15 secondi"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Dopo 30 secondi"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Dopo 60 secondi"
   },
   "config.section.lookups": {

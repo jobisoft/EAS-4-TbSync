@@ -668,13 +668,16 @@ def _ensure_no_sync_after_change(account):
     Seen before this existed: preflight's own writes armed the timer,
     preflight then rebound the calendar, and the timer fired at a target
     that no longer existed.
+
+    One setting covers calendars and address books alike, so clearing it
+    here covers both.
     """
     value = (account.get("custom") or {}).get("syncOnChange")
     if value == "0":
         return
     shown = "the default" if value is None else f"{value} seconds"
     print(
-        f"  {account['accountName']} syncs a calendar after every change "
+        f"  {account['accountName']} syncs a resource after every change "
         f"({shown}); switching it off for this run."
     )
     _override_account_custom(account, "syncOnChange", "0", "sync-after-change")

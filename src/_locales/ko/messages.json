@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "지난 6개월"
   },
-  "config.calendar.syncOnChange": {
-    "message": "변경 후 캘린더 동기화"
+  "config.account.syncOnChange": {
+    "message": "변경 후 캘린더와 주소록 동기화"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync는 계정 관리자에서 설정한 일정에 따라 이 계정을 동기화합니다. 여기에 더해, 캘린더에서 무언가를 변경한 직후 해당 캘린더를 동기화하여 다음 예약 실행을 기다리지 않고 로컬 변경 사항을 서버로 보낼 수 있습니다. 이는 회의에서 가장 중요합니다. 서버는 변경 사항을 확인한 뒤에야 참석자를 초대하고 업데이트를 보내며 답변을 전달하기 때문입니다."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync는 계정 관리자에서 설정한 일정에 따라 이 계정을 동기화합니다. 여기에 더해, 캘린더나 주소록에서 무언가를 변경한 직후 해당 항목을 동기화하여 다음 예약 실행을 기다리지 않고 로컬 변경 사항을 서버로 보낼 수 있습니다. 캘린더의 경우 서버가 참석자를 초대하고 업데이트를 보내며 답변을 전달하는 시점도 이에 따라 정해집니다. 서버는 변경 사항을 확인한 뒤에야 그렇게 할 수 있기 때문입니다."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "끄기"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "5초 후"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "15초 후"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "30초 후"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "60초 후"
   },
   "config.section.lookups": {

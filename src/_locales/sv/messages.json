@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "Senaste 6 månaderna"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Synkronisera en kalender efter en ändring"
+  "config.account.syncOnChange": {
+    "message": "Synkronisera kalendrar och adressböcker efter en ändring"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync synkroniserar det här kontot enligt schemat som ställts in i kontohanteraren. En kalender kan dessutom synkroniseras kort efter att du ändrat något i den, så att lokala ändringar når servern utan att invänta nästa schemalagda körning. Det spelar störst roll för möten, eftersom servern bjuder in deltagarna, skickar uppdateringar och vidarebefordrar ditt svar först när den har sett dina ändringar."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync synkroniserar det här kontot enligt schemat som ställts in i kontohanteraren. En kalender eller adressbok kan dessutom synkroniseras kort efter att du ändrat något i den, så att lokala ändringar når servern utan att invänta nästa schemalagda körning. För en kalender avgör det också hur snart servern bjuder in deltagarna, skickar uppdateringar och vidarebefordrar ditt svar, eftersom den kan göra det först när den har sett ändringen."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "Av"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Efter 5 sekunder"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Efter 15 sekunder"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Efter 30 sekunder"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Efter 60 sekunder"
   },
   "config.section.lookups": {

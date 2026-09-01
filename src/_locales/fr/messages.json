@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "6 derniers mois"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Synchroniser un agenda après une modification"
+  "config.account.syncOnChange": {
+    "message": "Synchroniser les agendas et les carnets d’adresses après une modification"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync synchronise ce compte selon la planification définie dans le gestionnaire de comptes. Un agenda peut en outre être synchronisé peu après que vous y avez modifié quelque chose, afin que les modifications locales parviennent au serveur sans attendre la prochaine exécution planifiée. Cela compte surtout pour les rendez-vous, car le serveur n’invite les participants, n’envoie les mises à jour et ne transmet votre réponse qu’une fois qu’il a vu vos modifications."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync synchronise ce compte selon la planification définie dans le gestionnaire de comptes. Un agenda ou un carnet d’adresses peut en outre être synchronisé peu après que vous y avez modifié quelque chose, afin que les modifications locales parviennent au serveur sans attendre la prochaine exécution planifiée. Pour un agenda, cela détermine aussi la rapidité avec laquelle le serveur invite les participants, envoie les mises à jour et transmet votre réponse, car il ne peut le faire qu’une fois qu’il a vu la modification."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "Désactivé"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Après 5 secondes"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Après 15 secondes"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Après 30 secondes"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Après 60 secondes"
   },
   "config.section.lookups": {

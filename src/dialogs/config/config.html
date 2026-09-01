@@ -174,6 +174,18 @@
         <label data-i18n-content="config.account.signedInAs"></label>
         <div id="oauth-identity" class="display"></div>
       </div>
+
+      <div class="field">
+        <label for="sync-on-change" data-i18n-content="config.account.syncOnChange"></label>
+        <select id="sync-on-change">
+          <option value="0" data-i18n-content="config.account.syncOnChange.off"></option>
+          <option value="5" data-i18n-content="config.account.syncOnChange.5seconds"></option>
+          <option value="15" data-i18n-content="config.account.syncOnChange.15seconds"></option>
+          <option value="30" data-i18n-content="config.account.syncOnChange.30seconds"></option>
+          <option value="60" data-i18n-content="config.account.syncOnChange.60seconds"></option>
+        </select>
+        <span class="hint" data-i18n-content="config.account.syncOnChange.hint"></span>
+      </div>
     </div>
 
     <!-- ── Connection (basic auth only) ────────────────────────────────── -->
@@ -260,18 +272,6 @@
           <option value="6" data-i18n-content="config.calendar.syncLimit.3months"></option>
           <option value="7" data-i18n-content="config.calendar.syncLimit.6months"></option>
         </select>
-      </div>
-
-      <div class="field">
-        <label for="sync-on-change" data-i18n-content="config.calendar.syncOnChange"></label>
-        <select id="sync-on-change">
-          <option value="0" data-i18n-content="config.calendar.syncOnChange.off"></option>
-          <option value="5" data-i18n-content="config.calendar.syncOnChange.5seconds"></option>
-          <option value="15" data-i18n-content="config.calendar.syncOnChange.15seconds"></option>
-          <option value="30" data-i18n-content="config.calendar.syncOnChange.30seconds"></option>
-          <option value="60" data-i18n-content="config.calendar.syncOnChange.60seconds"></option>
-        </select>
-        <span class="hint" data-i18n-content="config.calendar.syncOnChange.hint"></span>
       </div>
     </div>
 

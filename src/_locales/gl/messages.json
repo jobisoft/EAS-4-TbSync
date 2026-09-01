@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "Últimos 6 meses"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Sincronizar un calendario tras un cambio"
+  "config.account.syncOnChange": {
+    "message": "Sincronizar calendarios e cadernos de enderezos tras un cambio"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync sincroniza esta conta segundo a programación definida no xestor de contas. Ademais, un calendario pode sincronizarse pouco despois de que cambies algo nel, para que os cambios locais cheguen ao servidor sen agardar pola seguinte execución programada. Isto importa sobre todo nas reunións, porque o servidor só convida os asistentes, envía as actualizacións e transmite a túa resposta cando viu os teus cambios."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync sincroniza esta conta segundo a programación definida no xestor de contas. Ademais, un calendario ou un caderno de enderezos pode sincronizarse pouco despois de que cambies algo neles, para que os cambios locais cheguen ao servidor sen agardar pola seguinte execución programada. Nun calendario isto tamén determina a rapidez coa que o servidor convida os asistentes, envía as actualizacións e transmite a túa resposta, porque só pode facelo cando viu o cambio."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "Desactivado"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Tras 5 segundos"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Tras 15 segundos"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Tras 30 segundos"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Tras 60 segundos"
   },
   "config.section.lookups": {

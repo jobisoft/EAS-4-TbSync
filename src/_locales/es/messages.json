@@ -281,25 +281,25 @@
   "config.calendar.syncLimit.6months": {
     "message": "Últimos 6 meses"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Sincronizar un calendario tras un cambio"
+  "config.account.syncOnChange": {
+    "message": "Sincronizar calendarios y libretas de direcciones tras un cambio"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync sincroniza esta cuenta según la programación definida en el gestor de cuentas. Además, un calendario puede sincronizarse poco después de que cambie algo en él, para que los cambios locales lleguen al servidor sin esperar a la siguiente ejecución programada. Esto importa sobre todo en las reuniones, porque el servidor solo invita a los asistentes, envía las actualizaciones y transmite su respuesta cuando ha visto sus cambios."
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync sincroniza esta cuenta según la programación definida en el gestor de cuentas. Además, un calendario o una libreta de direcciones puede sincronizarse poco después de que cambie algo en ellos, para que los cambios locales lleguen al servidor sin esperar a la siguiente ejecución programada. En un calendario esto también determina con qué rapidez el servidor invita a los asistentes, envía las actualizaciones y transmite su respuesta, porque solo puede hacerlo cuando ha visto el cambio."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange.off": {
     "message": "Desactivado"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Tras 5 segundos"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Tras 15 segundos"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Tras 30 segundos"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Tras 60 segundos"
   },
   "config.section.lookups": {
