@@ -744,6 +744,12 @@ async function runOneSync({
   // dropped.
   const pull = await pullPhase(ctx);
   if (pull.code) return await finishWith(ctx, pull);
+  // Both halves, as the instance and follow-up phases above already do: a
+  // rerun is asked for through `code`, and a failure the user has to see -
+  // the transport error the pull returns - comes back through `status`.
+  // Reading only `code` let that error through as a clean sync, leaving a
+  // folder that never pulled looking like one that had nothing to pull.
+  if (pull.status) return await finishWith(ctx, pull);
 
   // 5) Answers to invitations, after the pull because that is what gives
   // an item its ServerId - MeetingResponse addresses one by RequestId, and
