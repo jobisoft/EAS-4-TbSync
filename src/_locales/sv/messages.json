@@ -369,7 +369,7 @@
     "message": "Objekt per synkroniseringsbatch"
   },
   "options.maxitems.hint": {
-    "message": "Maximalt antal objekt som servern får returnera per synkroniseringsförfrågan (EAS WindowSize). Större värden synkroniserar snabbare på stabila anslutningar, mindre värden är mer pålitliga på instabila och använder mindre minne. Standard: 25."
+    "message": "Största antal poster som servern får returnera per synkroniseringsbegäran. Större värden synkroniserar snabbare på bra anslutningar, mindre värden är mer tillförlitliga på ostadiga, använder mindre minne och ger bättre återkoppling i gränssnittet. Minsta tillåtna värde är 5, eftersom lägre gör att serverns förfrågningsbudget går åt enbart till att bläddra. Standard: 25."
   },
   "options.mstodo": {
     "message": "Kompatibilitetsläge för Microsoft To Do"

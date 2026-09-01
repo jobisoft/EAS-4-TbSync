@@ -369,7 +369,7 @@
     "message": "Položek na dávku synchronizace"
   },
   "options.maxitems.hint": {
-    "message": "Maximální počet položek, které server může vrátit na jeden synchronizační požadavek (EAS WindowSize). Vyšší hodnoty zrychlují synchronizaci na stabilních připojeních, nižší hodnoty jsou spolehlivější na nestabilních a využívají méně paměti. Výchozí: 25."
+    "message": "Maximální počet položek, které server může vrátit na jeden synchronizační požadavek. Vyšší hodnoty synchronizují rychleji na spolehlivém připojení, nižší jsou odolnější na nestabilním, spotřebují méně paměti a dávají lepší zpětnou vazbu v rozhraní. Nejnižší možná hodnota je 5, protože menší utratí limit serveru za pouhé stránkování. Výchozí: 25."
   },
   "options.mstodo": {
     "message": "Režim kompatibility s Microsoft To Do"

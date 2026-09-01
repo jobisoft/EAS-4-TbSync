@@ -369,7 +369,7 @@
     "message": "Elem szinkronizációs kötegenként"
   },
   "options.maxitems.hint": {
-    "message": "Az elemek maximális száma, amelyet a kiszolgáló egy szinkronizációs kérésre visszaadhat (az EAS WindowSize értéke). A nagyobb értékek stabil kapcsolaton gyorsabban szinkronizálnak, a kisebbek megbízhatóbbak instabil kapcsolaton, és kevesebb memóriát használnak. Alapértelmezett: 25."
+    "message": "A kiszolgáló által szinkronizálási kérésenként visszaadható elemek legnagyobb száma. A nagyobb értékek jó kapcsolat mellett gyorsabban szinkronizálnak, a kisebbek instabil kapcsolaton megbízhatóbbak, kevesebb memóriát használnak és jobb visszajelzést adnak a felületen. A legkisebb megadható érték 5, mert ez alatt a kiszolgáló kéréskerete pusztán a lapozásra megy el. Alapértelmezés: 25."
   },
   "options.mstodo": {
     "message": "Microsoft To Do kompatibilitási mód"

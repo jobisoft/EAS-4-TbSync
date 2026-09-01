@@ -369,7 +369,7 @@
     "message": "Kirjeid ühes sünkroonimispartiis"
   },
   "options.maxitems.hint": {
-    "message": "Suurim kirjete arv, mille server võib ühe sünkroonimispäringuga tagastada. Suuremad väärtused sünkroonivad korralikus ühenduses kiiremini, väiksemad on ebastabiilses ühenduses töökindlamad, kasutavad vähem mälu ja annavad liideses paremat tagasisidet. Vaikimisi: 25."
+    "message": "Suurim arv kirjeid, mida server võib ühe sünkroonimispäringu kohta tagastada. Suuremad väärtused sünkroonivad hea ühenduse korral kiiremini, väiksemad on ebastabiilse puhul töökindlamad, kasutavad vähem mälu ja annavad liideses parema tagasiside. Väikseim lubatud väärtus on 5, sest sellest väiksem kulutab serveri päringulimiidi ainuüksi lehitsemisele. Vaikimisi: 25."
   },
   "options.mstodo": {
     "message": "Microsoft To Do ühilduvusrežiim"

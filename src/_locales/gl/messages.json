@@ -369,7 +369,7 @@
     "message": "Elementos por lote de sincronización"
   },
   "options.maxitems.hint": {
-    "message": "Número máximo de elementos que o servidor pode devolver por solicitude de sincronización (a WindowSize de EAS). Valores maiores sincronizan máis rápido en conexións estables, valores menores son máis fiables en conexións inestables e usan menos memoria. Predeterminado: 25."
+    "message": "Número máximo de elementos que o servidor pode devolver por solicitude de sincronización. Os valores maiores sincronizan máis rápido con conexións boas, os menores son máis fiables coas inestables, usan menos memoria e dan mellor información na interface. O valor mínimo é 5, porque por debaixo gástase o orzamento de peticións do servidor só en paxinar. Predeterminado: 25."
   },
   "options.mstodo": {
     "message": "Modo de compatibilidade con Microsoft To Do"

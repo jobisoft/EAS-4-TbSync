@@ -240,11 +240,24 @@ function logRecurrence(ctx, message, details) {
 
 /** Pull WindowSize + initial push batch size. Migrated from the legacy
  *  `extensions.eas4tbsync.maxitems` pref (default 50) into
- *  `browser.storage.local["maxItems"]`; default 25 when unset. */
+ *  `browser.storage.local["maxItems"]`; default 25 when unset.
+ *
+ *  Never below `MIN_MAX_ITEMS`. A window of one or two asks a throttled
+ *  service for the same folder in hundreds of requests where a handful
+ *  would do, and Exchange Online budgets Sync commands by count: an account
+ *  configured that low spends its allowance on paging alone and is answered
+ *  HTTP 503 for the rest of the hour. The floor is applied here rather than
+ *  in the options page because a value can also arrive from the v4
+ *  migration, which no dialog ever sees. It does not constrain the push's
+ *  own shrink after a rejected batch - going down to a single item is how
+ *  that isolates the item the server refused. */
+const MIN_MAX_ITEMS = 5;
+
 async function readMaxItems() {
   const { maxItems } = await browser.storage.local.get({ maxItems: 25 });
   const n = Number(maxItems);
-  return Number.isFinite(n) && n > 0 ? n : 25;
+  if (!Number.isFinite(n) || n <= 0) return 25;
+  return Math.max(MIN_MAX_ITEMS, n);
 }
 
 async function readMsTodoCompat() {

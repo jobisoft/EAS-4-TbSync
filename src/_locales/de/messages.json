@@ -369,7 +369,7 @@
     "message": "Elemente pro Synchronisationsschritt"
   },
   "options.maxitems.hint": {
-    "message": "Maximale Anzahl an Elementen, die der Server pro Synchronisationsanfrage zurückgeben darf (die EAS WindowSize). Größere Werte synchronisieren bei stabilen Verbindungen schneller, kleinere Werte sind bei unzuverlässigen Verbindungen robuster und benötigen weniger Speicher. Standard: 25."
+    "message": "Maximale Anzahl an Elementen, die der Server pro Synchronisationsanfrage zurückgeben darf. Größere Werte synchronisieren bei guter Verbindung schneller, kleinere sind bei instabiler zuverlässiger, brauchen weniger Speicher und geben eine bessere Rückmeldung in der Oberfläche. Der kleinste Wert ist 5, denn darunter wird das Anfragekontingent des Servers allein fürs Blättern verbraucht. Standard: 25."
   },
   "options.mstodo": {
     "message": "Microsoft-To-Do-Kompatibilitätsmodus"

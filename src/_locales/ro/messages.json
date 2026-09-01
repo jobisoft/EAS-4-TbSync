@@ -369,7 +369,7 @@
     "message": "Elemente per lot de sincronizare"
   },
   "options.maxitems.hint": {
-    "message": "Numărul maxim de elemente pe care serverul le poate returna pentru o cerere de sincronizare (EAS WindowSize). Valorile mai mari sincronizează mai rapid pe conexiuni stabile, cele mai mici sunt mai fiabile pe conexiuni instabile și folosesc mai puțină memorie. Implicit: 25."
+    "message": "Numărul maxim de elemente pe care serverul le poate returna per cerere de sincronizare. Valorile mari sincronizează mai repede pe conexiuni bune, cele mici sunt mai fiabile pe conexiuni instabile, folosesc mai puțină memorie și oferă un feedback mai bun în interfață. Cea mai mică valoare permisă este 5, fiindcă sub ea bugetul de cereri al serverului se duce doar pe paginare. Implicit: 25."
   },
   "options.mstodo": {
     "message": "Mod de compatibilitate Microsoft To Do"

@@ -369,7 +369,7 @@
     "message": "Items per sync batch"
   },
   "options.maxitems.hint": {
-    "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. Default: 25."
+    "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. The smallest allowed value is 5, because below that a folder spends the server's request budget on paging alone. Default: 25."
   },
   "options.mstodo": {
     "message": "Microsoft To Do compatibility mode"

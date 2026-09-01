@@ -369,7 +369,7 @@
     "message": "Elementy na partię synchronizacji"
   },
   "options.maxitems.hint": {
-    "message": "Maksymalna liczba elementów, które serwer może zwrócić w jednym żądaniu synchronizacji (EAS WindowSize). Większe wartości synchronizują się szybciej przy stabilnych połączeniach, mniejsze są bardziej niezawodne przy słabych i zużywają mniej pamięci. Domyślnie: 25."
+    "message": "Maksymalna liczba elementów, które serwer może zwrócić na jedno żądanie synchronizacji. Większe wartości synchronizują szybciej przy dobrym połączeniu, mniejsze są pewniejsze przy niestabilnym, zużywają mniej pamięci i lepiej pokazują postęp. Najmniejsza dozwolona wartość to 5, ponieważ poniżej limit żądań serwera idzie wyłącznie na stronicowanie. Domyślnie: 25."
   },
   "options.mstodo": {
     "message": "Tryb zgodności z Microsoft To Do"

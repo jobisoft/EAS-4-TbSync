@@ -369,7 +369,7 @@
     "message": "Éléments par lot de synchronisation"
   },
   "options.maxitems.hint": {
-    "message": "Nombre maximal d’éléments que le serveur peut renvoyer par requête de synchronisation (la WindowSize EAS). Des valeurs plus grandes synchronisent plus rapidement sur des connexions saines, des valeurs plus petites sont plus fiables sur des connexions instables et utilisent moins de mémoire. Par défaut : 25."
+    "message": "Nombre maximal d'éléments que le serveur peut renvoyer par requête de synchronisation. Les valeurs élevées synchronisent plus vite sur une bonne connexion, les faibles sont plus fiables sur une connexion instable, utilisent moins de mémoire et donnent un meilleur retour dans l'interface. La plus petite valeur autorisée est 5, car en dessous le quota de requêtes du serveur passe entièrement dans la pagination. Par défaut : 25."
   },
   "options.mstodo": {
     "message": "Mode de compatibilité Microsoft To Do"
