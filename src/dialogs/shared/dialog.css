@@ -1,0 +1,103 @@
+/* What an EAS dialog looks like: its colours, and the controls drawn with
+ * them. Anything that adds either adds it here, so all five dialogs stay
+ * the same thing - and so a shared stylesheet like `dropdown.css` can name
+ * a token knowing every page that links this one has it.
+ *
+ * Deliberately not a dialog's layout, which stays in its own page. What
+ * looks shared there mostly is not: `body`, `.field`, `.actions` and
+ * `.checkbox-row` each differ in at least one dialog, and the differences
+ * are wanted.
+ */
+
+:root {
+  --bg-page: #fff;
+  --bg-card: #fff;
+  --bg-card-hover: #f6f9fd;
+  --bg-card-active: #e6efff;
+  --bg-input-disabled: #f4f4f6;
+  --bg-display: #f8f8f9;
+
+  --text-primary: #222;
+  --text-secondary: #555;
+  --text-tertiary: #666;
+  --text-body: #333;
+
+  --border-input: #ccc;
+  --border-subtle: #ececee;
+  --border-card: #d0d4d9;
+  --border-card-active: #2a7fd4;
+
+  --accent: #2a7fd4;
+  --accent-hover: #1a6fc4;
+  --btn-secondary-bg: #e5e5e7;
+
+  --warning-bg: #fff6d9;
+  --warning-accent: #e8b923;
+  --warning-text: #5a4200;
+
+  --error-bg: #ffe0e0;
+  --error-accent: #c43b3b;
+  --error-text: #7a2222;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #1e1f21;
+    --bg-card: #2b2d30;
+    --bg-card-hover: #34373d;
+    --bg-card-active: #2a3e5a;
+    --bg-input-disabled: #2a2c2f;
+    --bg-display: #26282b;
+
+    --text-primary: #e8e9eb;
+    --text-secondary: #b3b5ba;
+    --text-tertiary: #9498a0;
+    --text-body: #d6d8dc;
+
+    --border-input: #4a4d52;
+    --border-subtle: #3a3c40;
+    --border-card: #4a4d52;
+    --border-card-active: #5fa6e8;
+
+    --accent: #5fa6e8;
+    --accent-hover: #7ab5ec;
+    --btn-secondary-bg: #3a3c40;
+
+    --warning-bg: #3d3319;
+    --warning-accent: #d9b74e;
+    --warning-text: #e6c76c;
+
+    --error-bg: #3f1f1f;
+    --error-accent: #e66a6a;
+    --error-text: #f3a5a5;
+  }
+}
+
+button.primary {
+  padding: 6px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+button.primary:hover {
+  background: var(--accent-hover);
+}
+button.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button.secondary {
+  padding: 6px 14px;
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+button[hidden] {
+  display: none;
+}
