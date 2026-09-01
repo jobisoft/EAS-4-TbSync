@@ -494,15 +494,22 @@ export class EasProvider extends TbSyncProviderImplementation {
     // The mailbox address goes too: an account re-pointed at a different
     // login or server would otherwise keep naming the old mailbox as its
     // calendars' owner, and a wrong owner is worse than none.
-    // The device acknowledgement deliberately stays. Disconnecting is a
-    // client-side act: the partnership it created lives on the server and
-    // is still there when the account comes back, so re-announcing the
-    // same device would be a request that tells nobody anything.
+    // The handshake state goes back to zero with it: the policy key, so
+    // the next connect runs Provision again, and the device
+    // acknowledgement, so the device introduces itself again - inside that
+    // Provision on the versions that carry it there, standalone otherwise.
+    // A partnership the server has dropped is invisible from here, because
+    // a server that has forgotten a device says so by answering every
+    // folder empty rather than by failing, so reconnecting is the only
+    // move a user has against it. `provision` stays: it is a setting the
+    // user (or a 449) chose, not state this sync produced.
     await this.updateAccount({
       accountId,
       patch: {
         custom: {
           foldersynckey: "0",
+          policykey: "0",
+          deviceInfoAcked: false,
           lastEasOptionsUpdate: 0,
           userSmtpAddress: "",
           userDisplayName: "",
