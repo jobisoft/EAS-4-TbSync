@@ -19,6 +19,7 @@ a folder is the session id naming the current binding. If that stops moving,
 edits outlive the calendar they were made against.
 """
 
+import bridge
 import harness
 import probes
 from bridge import ok, rpc
@@ -48,32 +49,23 @@ def t_6_1(s):
     )
 
 
-@test("7.2", "reloadProvider - folder stays selected; target and item count unchanged")
+@test("7.2", "restarting the provider - folder stays selected, target and items unchanged")
 def t_6_2(s):
-    import time
-
     row = s.folder("events")
     target, count = row["targetID"], len(s.items("events", "event"))
     synckey = (row.get("custom") or {}).get("synckey")
 
-    ok("reloadProvider", accountId=s.account_id)
-    # The provider needs a moment to come back, and the bridge with it.
-    for _ in range(20):
-        time.sleep(3)
-        try:
-            rpc("getState", timeout=10)
-            break
-        except Exception:
-            continue
-    time.sleep(3)
+    # Reloads where the profile allows it, installs the built xpi over itself
+    # where it does not, and waits for the provider either way.
+    bridge.restart_provider(s.account_id)
 
     row = s.folder("events")
     harness.true(
         row["selected"],
-        "the folder was deselected by a reload - the platform's removal "
+        "the folder was deselected by the restart - the platform's removal "
         "announcement for our own unregistering type was taken for a deletion",
     )
-    harness.eq(row["targetID"], target, "targetID survived the reload")
+    harness.eq(row["targetID"], target, "targetID survived the restart")
     harness.eq((row.get("custom") or {}).get("synckey"), synckey, "sync key survived")
     harness.eq(len(s.items("events", "event")), count, "item count survived")
 
