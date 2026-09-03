@@ -1,18 +1,31 @@
 #!/usr/bin/env python3
 """Bridge test suite for EAS-4-TbSync.
 
-    npm test                 every test that applies to the granted account
-    npm test -- 4            section 4
-    npm test -- 4.3          one step
-    npm test -- 2 5          several
+    npm test                 whether a run is going, and how to start one
+    npm test -- --run        every test that applies to the granted account
+    npm test -- --run 4      section 4
+    npm test -- --run 4.3    one step
+    npm test -- --run 2 5    several
     npm test -- --list       what would run, and what gates each test
+    npm test -- --watch      follow the run that is going
+    npm test -- --stop       stop it, unwinding so the account goes back
+
+**The bare command starts nothing.** It reports, and says how to start a
+run. A run takes tens of minutes and reconfigures a live account, which is
+more than the most reflexive command in the repo should do by reflex, so
+starting is asked for by name - `--run`, beside `--list`.
+
+**One run at a time**, because every run owns the same account: it changes
+settings, disconnects resources and puts them back. Two at once interleave
+that, and what comes out is not a result about the code - a full run and a
+section re-run overlapped once and produced three failures that meant
+nothing. A second start is refused and says which run holds the account.
 
 A run is started in the background and writes its report to
 `test/runs/<timestamp>-<what>.log` as it goes. Starting one prints that
-path and the pid and returns at once - a run takes tens of minutes, so
-watching it is `tail -f` on the file, and stopping it is `kill <pid>`,
-which unwinds and puts the account's settings back. `--list` is instant
-and stays in the foreground.
+path and the pid and returns at once, so watching it is `tail -f` on the
+file, and stopping it is `kill <pid>`, which unwinds and puts the account's
+settings back. `--list` is instant and stays in the foreground.
 
 These drive a live account through TbSync's bridge, so they need Thunderbird
 running with the bridge switched on and pointed at an EAS account granting
@@ -102,6 +115,158 @@ MODULES = [
 MODULE_BY_SECTION = {m.split("_")[1]: m for m in MODULES}
 
 
+# One run at a time, because every run owns the same account: it changes
+# settings, disconnects resources and puts them back. Two at once interleave
+# those, and what comes out is not a result about the code - a full run and a
+# section re-run overlapped once and produced three failures that meant
+# nothing at all.
+#
+# The pid is the lock. A file only records it, and is checked against the
+# process rather than trusted: a run killed with -9 leaves the file behind,
+# and a file that outlived its process must not hold the account hostage.
+_LOCK = os.path.join(_HERE, "runs", ".running")
+
+
+def _is_worker(pid):
+    """True when that pid is a worker of this suite, rather than whatever
+    unrelated process has since been given the same number."""
+    if pid is None:
+        return False
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as fh:
+            cmdline = fh.read().decode("utf-8", "replace")
+    except OSError:
+        return False
+    return "run.py" in cmdline and "--worker" in cmdline
+
+
+def _find_worker():
+    """A run of this suite that is going but holds no record - started
+    before the lock existed, or from another checkout, or with the file
+    since removed. The process is the truth; the file only remembers it.
+
+    Without this, the one case that matters most - a run already going -
+    would report nothing at all, which is what made two runs collide."""
+    try:
+        pids = [int(e) for e in os.listdir("/proc") if e.isdigit()]
+    except OSError:
+        return None
+    for pid in sorted(pids, reverse=True):
+        if not _is_worker(pid):
+            continue
+        # Its log says so itself, in its own first line.
+        runs = os.path.join(_HERE, "runs")
+        for name in sorted(os.listdir(runs), reverse=True):
+            log = os.path.join(runs, name)
+            if name.endswith(".log") and _pid_of_run(log) == pid:
+                return {"pid": pid, "log": log, "started": os.path.getmtime(log)}
+        return {"pid": pid, "log": "(unknown)", "started": 0}
+    return None
+
+
+def _running():
+    """The run in progress, or None. Forgets a record whose process is gone,
+    and finds a process that left no record."""
+    try:
+        with open(_LOCK, encoding="utf-8") as fh:
+            held = json.load(fh)
+    except (OSError, ValueError):
+        held = None
+    if held and _is_worker(held.get("pid")):
+        return held
+    if held:
+        _release()
+    return _find_worker()
+
+
+def _claim(pid, log):
+    with open(_LOCK, "w", encoding="utf-8") as fh:
+        json.dump({"pid": pid, "log": log, "started": time.time()}, fh)
+
+
+def _release():
+    try:
+        os.remove(_LOCK)
+    except OSError:
+        pass
+
+
+def _stop():
+    """Stop the run in progress, and wait for it to finish stopping.
+
+    SIGTERM rather than a kill: the run traps it and unwinds - the account's
+    settings go back, the event log is saved. Waiting is the point of doing
+    this here rather than telling a person to kill a pid, because "stopped"
+    should mean the account is free, not that the signal was delivered.
+    """
+    held = _running()
+    if not held:
+        print("\n  no run in progress - nothing to stop\n")
+        return 0
+    print(f"\n  stopping the run at pid {held['pid']}")
+    try:
+        os.kill(held["pid"], signal.SIGTERM)
+    except OSError as e:
+        print(f"  could not signal it: {e}\n")
+        return 2
+    for _ in range(60):
+        if not _is_worker(held["pid"]):
+            print("  stopped - the account has been put back as it was\n")
+            return 0
+        time.sleep(1)
+    print(
+        f"  it has not stopped after 60s. It unwinds before exiting, so give "
+        f"it longer, or `kill -9 {held['pid']}` and put the account back by "
+        f"hand\n"
+    )
+    return 2
+
+
+def _describe_running(held):
+    ago = max(0, int(time.time() - (held.get("started") or 0)))
+    started = time.strftime("%H:%M:%S", time.localtime(held.get("started") or 0))
+    print("\n  a run is in progress")
+    print(f"    pid    {held['pid']}")
+    print(f"    since  {started}  ({ago // 60}m {ago % 60}s ago)")
+    print(f"    log    {held['log']}")
+    print()
+    print("    watch  npm test -- --watch")
+    print("    stop   npm test -- --stop    (unwinds and restores the account)")
+    print()
+
+
+def _status():
+    """What `npm test` does. It starts nothing.
+
+    Starting a run is a decision with consequences for a live account, and
+    it used to be what the most reflexive command in the repo did. So the
+    bare command reports instead, and says how to start one.
+    """
+    held = _running()
+    if held:
+        _describe_running(held)
+        print("  one run at a time - stop that one before starting another\n")
+        return 0
+    print("\n  no run in progress\n")
+    ways = [
+        ("npm test -- --run", "every test that applies to the granted account"),
+        ("npm test -- --run 7 11 13", "only those sections"),
+        ("npm test -- --run 7.2", "only that test"),
+        ("npm test -- --list", "what would run, without running it"),
+    ]
+    ways += [("", ""), ("npm test -- --watch", "follow the run that is going")]
+    ways += [("npm test -- --stop", "stop it, putting the account back")]
+    width = max(len(cmd) for cmd, _ in ways)
+    for i, (cmd, what) in enumerate(ways):
+        if not cmd:
+            print()
+            continue
+        label = "start" if i == 0 else ""
+        print(f"  {label:<7} {cmd:<{width}}  {what}".rstrip())
+    print()
+    return 0
+
+
 def _start_in_background(argv, watch=True):
     """Re-exec this run detached, and hand the caller its report.
 
@@ -118,6 +283,12 @@ def _start_in_background(argv, watch=True):
     resource - and that refusal is a result like any other, written where
     the rest of the run is written.
     """
+    held = _running()
+    if held:
+        _describe_running(held)
+        print("  one run at a time - this one was not started\n")
+        return 2
+
     runs = os.path.join(_HERE, "runs")
     os.makedirs(runs, exist_ok=True)
     what = "+".join(a for a in argv if not a.startswith("-")) or "all"
@@ -132,11 +303,12 @@ def _start_in_background(argv, watch=True):
         # be signalled as a group.
         start_new_session=True,
     )
+    _claim(proc.pid, log)
     print(f"\n  started in the background")
     print(f"  log    {log}")
     print(f"  pid    {proc.pid}")
-    print(f"  watch  tail -f {log}")
-    print(f"  stop   kill {proc.pid}   (cleans up; kill -9 does not)\n")
+    print(f"  watch  npm test -- --watch")
+    print(f"  stop   npm test -- --stop   (unwinds; kill -9 does not)\n")
     return _watch(log, proc.pid) if watch else 0
 
 
@@ -238,12 +410,21 @@ def _stop_cleanly(_signum, _frame):
 def main(argv):
     # `--list` is instant and exists to be read, so it stays in the
     # foreground. Anything that actually syncs is backgrounded.
+    if "--stop" in argv:
+        return _stop()
+
     if "--watch" in argv:
         rest = [a for a in argv if a != "--watch"]
-        if not rest:
-            print("\n  --watch needs the log file to follow\n")
+        if rest:
+            return _watch(rest[0])
+        # No path: follow whatever is going, which is what a person means
+        # by "watch" nine times in ten. Naming a log is for reading an old
+        # one back.
+        held = _running()
+        if not held:
+            print("\n  no run in progress - nothing to watch\n")
             return 2
-        return _watch(rest[0])
+        return _watch(held["log"], held["pid"])
 
     if "--worker" in argv:
         argv = [a for a in argv if a != "--worker"]
@@ -253,9 +434,16 @@ def main(argv):
         # to stop it without hunting for the id the launcher printed.
         print(
             f"  pid {os.getpid()}  started {time.strftime('%Y-%m-%d %H:%M:%S')}"
-            f"  -  stop with: kill {os.getpid()}"
+            f"  -  stop with: npm test -- --stop"
         )
     elif "--list" not in argv:
+        # Bare `npm test` reports and starts nothing. A run takes tens of
+        # minutes and reconfigures a live account, which is more than the
+        # most reflexive command in the repo should do by reflex - and while
+        # one is already going, a second is not a slow command but a wrong
+        # answer. So starting is asked for by name, beside `--list`.
+        if "--run" not in argv:
+            return _status()
         return _start_in_background(
             [a for a in argv if a != "--no-watch"], watch="--no-watch" not in argv
         )
@@ -365,6 +553,9 @@ def main(argv):
         return rc
     finally:
         session_mod.restore_overrides()
+        # However this ended - a pass, a failure, a refusal in preflight, or
+        # the SIGTERM `kill` sends - the account is free for the next run.
+        _release()
 
 
 def save_wire(session, selectors, rc):
