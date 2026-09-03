@@ -1903,6 +1903,63 @@ export function isReceivedMeeting(ical, userEmail = null) {
   return stripMailto(stringOf(orgProp.getFirstValue())).toLowerCase() !== self;
 }
 
+/** The same event, as something this mailbox may actually hold.
+ *
+ *  For an invitation the server has no copy of, which can therefore never be
+ *  answered: `invitationPhase` holds such an entry waiting for a ServerId
+ *  that is not coming, and after long enough the honest thing is to stop
+ *  calling it a meeting.
+ *
+ *  The guest list goes, and that is the load-bearing part. On 16.x a client
+ *  may state neither the organizer nor an attendee's status, so an `<Add>`
+ *  still carrying attendees would have the server make the user the
+ *  organizer and invite every one of them in the user's name - which is the
+ *  bug the whole diversion exists to prevent. The organizer becomes the
+ *  mailbox, because after this the appointment is the user's own; the marker
+ *  goes, or the item still reads as an invitation to `isReceivedMeeting` and
+ *  is diverted straight back out of the push; and the summary says `[Copy]`,
+ *  which is the whole of what the user is told. Nothing else is touched -
+ *  the note in particular is left exactly as it came.
+ *
+ *  Every component, not just the master: an override carries its own
+ *  attendee block, and `selfUserResponses` reads each one on its own, so a
+ *  master-only strip would leave the item answerable.
+ *
+ *  `summaryPrefix` is passed in rather than looked up, because nothing in
+ *  this module may reach for `browser.i18n`.
+ *
+ *  Returns the input unchanged when there is nothing to work with, as every
+ *  transform here does: a blob we cannot read is not one to rewrite. */
+export function plainCopyOfInvitation(ical, { summaryPrefix, organizer } = {}) {
+  try {
+    const vcal = parseVCalendar(ical);
+    if (!vcal) return ical;
+    const comps = vcal.getAllSubcomponents("vevent");
+    if (!comps.length) return ical;
+
+    // Stated the way the rest of the document states an address, whichever
+    // form the caller holds it in - the calendar declares its owner as a
+    // `mailto:` URI, an account states a bare address.
+    const owner = stripMailto(stringOf(organizer));
+
+    for (const comp of comps) {
+      comp.removeAllProperties("attendee");
+      comp.removeAllProperties("x-moz-invited-attendee");
+      comp.removeAllProperties("organizer");
+      if (owner) {
+        comp.updatePropertyWithValue("organizer", `mailto:${owner}`);
+      }
+      const summary = stringOf(comp.getFirstPropertyValue("summary"));
+      if (summaryPrefix && summary && !summary.startsWith(summaryPrefix)) {
+        comp.updatePropertyWithValue("summary", `${summaryPrefix} ${summary}`);
+      }
+    }
+    return vcal.toString();
+  } catch {
+    return ical;
+  }
+}
+
 /** The self attendee of one component, by address. */
 function selfAttendeeOf(comp, self) {
   return comp

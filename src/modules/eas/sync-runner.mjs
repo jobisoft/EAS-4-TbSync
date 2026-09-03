@@ -50,6 +50,7 @@ import {
   announceableOf,
   droppedAttendees,
   isReceivedMeeting,
+  plainCopyOfInvitation,
   sameAnnounceable,
   preserveSelfPartstat,
   repliedPartstatOf,
@@ -166,6 +167,14 @@ const INSTANCE_RETRY_DELAY_MS = Object.freeze({
   [STATUS_TEMP_SERVER]: 1000,
   [STATUS_RETRY]: 1000,
 });
+
+// How long an answer to an invitation waits for the server to name the
+// meeting before we stop expecting it to. `invitationPhase` runs after the
+// pull, so every hold is one full sync that asked and came back without it -
+// but a mailbox can be a little behind its own inbox, and this is the room
+// that gives it. Long, because what follows is not reversible: the meeting
+// becomes the user's own event and the guest list is gone.
+const INVITATION_HOLD_MS = 2 * 60 * 60 * 1000;
 
 /* ── DEV: fixture injection ─────────────────────────────────────────────
  *
@@ -1637,14 +1646,30 @@ async function invitationPhase(ctx, entries) {
     }
     const serverID = ctx.itemKind.codec.readEasServerIdFromBlob(item.blob);
     if (!serverID) {
-      // The user answered before we had ever seen the server's copy. It
-      // will arrive, be adopted onto this item, and bring an id with it -
-      // so this stays queued and goes on the next sync.
-      ctx.eventLog(
-        "info",
-        `[event-sync] holding the answer to ${entry.itemId}: the server has not ` +
-          `named this meeting yet, so there is nothing to address a response to`,
-      );
+      // The user answered before we had ever seen the server's copy. Usually
+      // it arrives, is adopted onto this item and brings an id with it, so
+      // waiting is right and this stays queued for the next sync.
+      //
+      // But it may never come: an invitation addressed to somebody else and
+      // only redirected here was never created in this mailbox, so there is
+      // no copy to wait for and no id will ever exist. Nothing readable on
+      // the item says which of the two this is - Thunderbird repairs the
+      // guest list when it files such an invitation - and only time can
+      // tell them apart.
+      const heldMs = Date.now() - (entry.timestamp ?? 0);
+      if (heldMs < INVITATION_HOLD_MS) {
+        const leftMin = Math.max(
+          1,
+          Math.round((INVITATION_HOLD_MS - heldMs) / 60_000),
+        );
+        ctx.eventLog(
+          "info",
+          `[event-sync] holding the answer to ${entry.itemId}: the server has not ` +
+            `named this meeting yet - ${leftMin} min before it becomes a plain event`,
+        );
+        continue;
+      }
+      await convertHeldInvitation(ctx, entry, item, heldMs);
       continue;
     }
 
@@ -1779,6 +1804,50 @@ async function invitationPhase(ctx, entries) {
         `(${status ? `Status ${status}` : "no response"}); leaving it queued`,
     );
   }
+}
+
+/**
+ * Stop waiting for a meeting the server is never going to name, and let the
+ * user keep the appointment as their own.
+ *
+ * Reached only after `INVITATION_HOLD_MS` of holding, which - because
+ * `invitationPhase` runs after the pull - is that many syncs that asked the
+ * server and came back without this meeting.
+ *
+ * The queue entry is deliberately left alone. It is an `added_by_user` and
+ * stays one, and the rewrite is what releases it: with the mailbox as
+ * `ORGANIZER` the item is no longer a received meeting, so the next sync's
+ * push dispatcher does not divert it, and it goes out through `pushPhase`
+ * as an ordinary `<Add>` - the only command that could work, there being no
+ * ServerId to address a `<Change>` to.
+ *
+ * The write goes through the store like every other write this file makes,
+ * which means `<id>#cache` and therefore no item hook: the rewrite cannot
+ * come back as a fresh user edit.
+ */
+async function convertHeldInvitation(ctx, entry, item, heldMs) {
+  const heldHours = Math.max(1, Math.round(heldMs / 3_600_000));
+  const plain = plainCopyOfInvitation(item.blob, {
+    summaryPrefix: browser.i18n.getMessage(
+      "calendar.invitationCopy.summaryPrefix",
+    ),
+    // The address the diversion compares against, so that this is certain
+    // to stop looking like somebody else's meeting.
+    organizer: accountUserAddress(ctx.account),
+  });
+  await ctx.queue.markServerWrite({
+    parentId: ctx.targetID,
+    itemId: entry.itemId,
+    status: SERVER_TAG_STATUSES[1],
+    kind: ctx.itemKind.changelogKind,
+  });
+  await ctx.store.update(entry.itemId, plain);
+  ctx.eventLog(
+    "warning",
+    `[event-sync] the answer to ${entry.itemId} could not be sent for ` +
+      `${heldHours} h - this mailbox holds no copy of the meeting, so it has ` +
+      `been kept as a plain event and the guest list dropped`,
+  );
 }
 
 /** Take a queued edit out of the queue, having established that nothing

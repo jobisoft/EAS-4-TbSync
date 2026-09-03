@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Papierkorb"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Kopie]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Globale Adressliste"
   },
