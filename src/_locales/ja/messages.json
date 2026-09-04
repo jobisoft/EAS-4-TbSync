@@ -285,6 +285,12 @@
   "config.calendar.syncLimit.6months": {
     "message": "直近 6 か月"
   },
+  "config.calendar.syncRecurrence": {
+    "message": "繰り返しイベント/タスクと例外を同期"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "有効にすると、繰り返しルールとインスタンスごとの例外がサーバーと双方向で同期されます。"
+  },
   "config.account.syncOnChange": {
     "message": "変更後にカレンダーとアドレス帳を同期する"
   },
@@ -401,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "繰り返しの同期を有効にしました: このアカウントのリソースをサーバーから再構築しています。"
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "繰り返しの同期が無効になっています。これは初期のベータ版での予防措置であり、現在は不要です。アカウント設定で有効にすることをおすすめします。"
   },
   "eas.sync.error.protocolFault": {
     "message": "サーバーは同期要求を不正な形式として拒否しました (コード $STATUS$)",

@@ -285,6 +285,12 @@
   "config.calendar.syncLimit.6months": {
     "message": "Senaste 6 månaderna"
   },
+  "config.calendar.syncRecurrence": {
+    "message": "Synkronisera återkommande händelser/uppgifter och undantag"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "När aktiverat synkroniseras upprepningsregler och instans-specifika undantag fram och tillbaka med servern."
+  },
   "config.account.syncOnChange": {
     "message": "Synkronisera kalendrar och adressböcker efter en ändring"
   },
@@ -401,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Synkronisering av återkommande händelser aktiverad: kontots resurser byggs om från servern."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Synkronisering av upprepningar är avstängd. Det var en försiktighetsåtgärd i tidiga betaversioner och behövs inte längre. Det rekommenderas att slå på den i kontoinställningarna."
   },
   "eas.sync.error.protocolFault": {
     "message": "Servern avvisade synkroniseringsbegäran som ogiltig (kod $STATUS$)",

@@ -86,6 +86,7 @@ END:VCALENDAR
         ical: noStartEndIcs,
         asVersion: "16.1",
         defaultTimezone: "UTC",
+        syncRecurrence: false,
         userEmail: "user@example.invalid",
       }),
     );
@@ -117,6 +118,7 @@ test("single event: appendApplicationDataFromIcal emits the rescheduled Start/En
       ical: SINGLE_EVENT_ICS,
       asVersion: "16.1",
       defaultTimezone: "UTC",
+      syncRecurrence: false,
       userEmail: "user@example.invalid",
     }),
   );
@@ -150,6 +152,7 @@ END:VCALENDAR
         ical: withOrganizerIcs,
         asVersion: "16.1",
         defaultTimezone: "UTC",
+        syncRecurrence: false,
         userEmail: "user@example.invalid",
       }),
     );
@@ -164,6 +167,7 @@ END:VCALENDAR
         ical: withOrganizerIcs,
         asVersion: "14.1",
         defaultTimezone: "UTC",
+        syncRecurrence: false,
         userEmail: "user@example.invalid",
       }),
     );
@@ -195,6 +199,7 @@ test("whole series: appendApplicationDataFromIcal emits a Recurrence block for t
       ical: RECURRING_SERIES_ICS,
       asVersion: "16.1",
       defaultTimezone: "UTC",
+      syncRecurrence: true,
       userEmail: "user@example.invalid",
     }),
   );
@@ -250,6 +255,7 @@ test("16.1: a cancelled occurrence becomes one <Delete> with InstanceId as a SIB
     serverID: "server-id-series",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     previous: { exdates: [], overrides: [] },
   });
   assert.equal(commands.length, 1);
@@ -272,6 +278,7 @@ test("16.1: a moved occurrence becomes one <Change> whose ApplicationData does N
     serverID: "server-id-series",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     previous: { exdates: ["20260808T100000Z"], overrides: [] },
   });
   assert.equal(commands.length, 1, "the known EXDATE must not re-send");

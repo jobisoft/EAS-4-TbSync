@@ -41,6 +41,7 @@ from harness import test
 # reason to pull an address book it never reads.
 NEEDS = ("events",)
 # Needs the account to sync recurrence - the digest fixtures are a series with three overrides.
+NEEDS_RECURRENCE = True
 
 DIGEST_SLUG = "digest"
 VERSIONS = ("16",)

@@ -285,6 +285,12 @@
   "config.calendar.syncLimit.6months": {
     "message": "Últimos 6 meses"
   },
+  "config.calendar.syncRecurrence": {
+    "message": "Sincronizar eventos/tarefas recorrentes e exceções"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Quando ativado, as regras de recorrência e as exceções por instância são sincronizadas nos dois sentidos com o servidor."
+  },
   "config.account.syncOnChange": {
     "message": "Sincronizar agendas e catálogos de endereços após uma alteração"
   },
@@ -401,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Sincronização de recorrências ativada: os recursos desta conta estão sendo reconstruídos a partir do servidor."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "A sincronização de recorrências está desativada. Isso era uma precaução nas primeiras versões beta e não é mais necessário. Recomenda-se ativá-la nas configurações da conta."
   },
   "eas.sync.error.protocolFault": {
     "message": "O servidor rejeitou a solicitação de sincronização como malformada (código $STATUS$)",

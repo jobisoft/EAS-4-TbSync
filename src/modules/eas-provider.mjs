@@ -26,7 +26,7 @@
  * The rest fall into three groups: the OPTIONS probe cache
  * (`allowedEasVersions`, `allowedEasCommands`, `lastEasOptionsUpdate`), the
  * config-popup options (`asversionselected`, `provision`, `conflict`,
- * `synclimit`, `displayoverride`, `seperator` - spelled
+ * `syncrecurrence`, `synclimit`, `displayoverride`, `seperator` - spelled
  * that way on disk), and GAL state (`galenabled`, `galName`).
  *
  * Credentials sit in that account row in `storage.local`, unencrypted. A
@@ -550,6 +550,34 @@ export class EasProvider extends TbSyncProviderImplementation {
     await disableGal({ provider: this, accountId });
     forgetFreeBusyCache(accountId);
     await refreshFreeBusyListener(this);
+    return null;
+  }
+
+  /**
+   * The account is being migrated in place: its resources are about to be
+   * rebuilt from the server.
+   *
+   * `syncrecurrence` off means recurrence rules and their exceptions are
+   * left off the wire in both directions, which a v4 profile can carry in
+   * and which the rebuild would otherwise preserve - pulling every series
+   * back as a single entry. Switching it on here, before the first folder
+   * is touched, is what makes the rebuild's own pull bring the recurrence
+   * with it. Nothing else is corrected, and no other path writes this: an
+   * account that is not being migrated keeps whatever it has.
+   */
+  async onMigrateLegacyAccount({ accountId }) {
+    const { account } = (await this.getAccount(accountId)) ?? {};
+    if (account?.custom?.syncrecurrence === true) return null;
+    await this.updateAccount({
+      accountId,
+      patch: { custom: { syncrecurrence: true } },
+    });
+    this.reportEventLog({
+      accountId,
+      folderId: null,
+      level: "info",
+      message: browser.i18n.getMessage("eas.migration.recurrenceEnabled"),
+    });
     return null;
   }
 
@@ -1704,6 +1732,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           // but don't return 449 (e.g. Kerio).
           provision: false,
           conflict: "1",
+          syncrecurrence: true,
           syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
@@ -1732,6 +1761,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           foldersynckey: "0",
           provision: false,
           conflict: "1",
+          syncrecurrence: true,
           syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
@@ -1763,6 +1793,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         foldersynckey: "0",
         provision: false,
         conflict: "1",
+        syncrecurrence: true,
         syncOnChange: DEFAULT_SYNC_ON_CHANGE,
       },
     };
@@ -1807,6 +1838,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       contactsNameSeparator: c.seperator || "10",
       // Calendar section.
       calendarSyncLimit: c.synclimit || "7",
+      syncRecurrence: !!c.syncrecurrence,
       // Anything unrecognised, including the absent value of an account
       // that predates the setting, reads as the default - the popup must
       // never render a select with no option selected.
@@ -2088,6 +2120,9 @@ export class EasProvider extends TbSyncProviderImplementation {
         );
       }
       customPatch.syncOnChange = v;
+    }
+    if ("syncRecurrence" in patch) {
+      customPatch.syncrecurrence = !!patch.syncRecurrence;
     }
     if ("galEnabled" in patch) {
       customPatch.galenabled = !!patch.galEnabled;

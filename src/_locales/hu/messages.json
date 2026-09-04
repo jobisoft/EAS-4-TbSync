@@ -285,6 +285,12 @@
   "config.calendar.syncLimit.6months": {
     "message": "Utolsó 6 hónap"
   },
+  "config.calendar.syncRecurrence": {
+    "message": "Ismétlődő események/feladatok és kivételek szinkronizálása"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
+  },
   "config.account.syncOnChange": {
     "message": "Naptárak és címjegyzékek szinkronizálása módosítás után"
   },
@@ -401,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Ismétlődések szinkronizálása bekapcsolva: a fiók erőforrásai újraépülnek a kiszolgálóról."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Az ismétlődések szinkronizálása ki van kapcsolva. Ez a korai béta verziókban óvintézkedés volt, és már nem szükséges. Javasolt bekapcsolni a fiók beállításaiban."
   },
   "eas.sync.error.protocolFault": {
     "message": "A szerver helytelennek nyilvánította a szinkronizálási kérést (kód: $STATUS$)",

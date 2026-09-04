@@ -78,12 +78,13 @@ const PARTIAL_ECHO = parseAdNode(`
     <Subject>PROBE digest</Subject>
   </ApplicationData>`);
 
-function contextFor({ asVersion = "16.1", kind = "event" } = {}) {
+function contextFor({ asVersion = "16.1", syncRecurrence = true, kind = "event" } = {}) {
   const recorded = [];
   return {
     recorded,
     ctx: {
       asVersion,
+      syncRecurrence,
       itemKind: { changelogKind: kind },
       targetID: "cal-1",
       accountId: "1",
@@ -130,6 +131,10 @@ test("a series we hold no exceptions for queues nothing", async () => {
 
 test("below 16.1 queues nothing - exceptions travel embedded there", async () => {
   assert.deepEqual(await run(RESTATED, BLOB, { asVersion: "14.1" }), []);
+});
+
+test("an account that does not sync recurrence queues nothing", async () => {
+  assert.deepEqual(await run(RESTATED, BLOB, { syncRecurrence: false }), []);
 });
 
 test("a task queues nothing - only a calendar has exceptions", async () => {

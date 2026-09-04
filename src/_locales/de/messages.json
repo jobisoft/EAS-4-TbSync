@@ -285,6 +285,12 @@
   "config.calendar.syncLimit.6months": {
     "message": "Letzte 6 Monate"
   },
+  "config.calendar.syncRecurrence": {
+    "message": "Wiederkehrende Termine/Aufgaben und Ausnahmen synchronisieren"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
+  },
   "config.account.syncOnChange": {
     "message": "Kalender und Adressbücher nach einer Änderung synchronisieren"
   },
@@ -401,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Synchronisation von Wiederholungen aktiviert: Die Ressourcen dieses Kontos werden vom Server neu aufgebaut."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Die Synchronisation von Wiederholungen ist deaktiviert. Das war eine Vorsichtsmaßnahme in frühen Beta-Versionen und ist nicht mehr nötig. Es wird empfohlen, sie in den Kontoeinstellungen zu aktivieren."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server hat die Synchronisationsanfrage als ungültig abgelehnt (Code $STATUS$)",

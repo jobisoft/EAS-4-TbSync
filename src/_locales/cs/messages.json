@@ -285,6 +285,12 @@
   "config.calendar.syncLimit.6months": {
     "message": "Posledních 6 měsíců"
   },
+  "config.calendar.syncRecurrence": {
+    "message": "Synchronizovat opakující se události/úkoly a výjimky"
+  },
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
+  },
   "config.account.syncOnChange": {
     "message": "Synchronizovat kalendáře a adresáře po změně"
   },
@@ -401,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Synchronizace opakování zapnuta: zdroje tohoto účtu se znovu sestavují ze serveru."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Synchronizace opakování je vypnutá. V raných beta verzích šlo o preventivní opatření, které už není potřeba. Doporučujeme ji v nastavení účtu zapnout."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server odmítl požadavek synchronizace jako vadný (kód $STATUS$)",

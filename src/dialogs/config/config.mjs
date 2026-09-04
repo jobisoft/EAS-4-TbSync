@@ -165,6 +165,10 @@ async function load() {
 
   // ── Calendar section ───────────────────────────────────────────────────
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
+  $("sync-recurrence").checked = !!account.syncRecurrence;
+  // One way only. The row is offered while the setting is off, so it can be
+  // switched on, and withheld once it is on, so it cannot be switched back.
+  $("sync-recurrence-row").hidden = !!account.syncRecurrence;
 
   // ── Server lookups ─────────────────────────────────────────────────────
   // Each checkbox is forced off + disabled when the server's OPTIONS probe
@@ -335,6 +339,13 @@ async function onSave() {
     calendarSyncLimit: $("calendar-sync-limit").value,
     syncOnChange: $("sync-on-change").value,
   };
+
+  // Withheld rows say nothing. `syncRecurrence` is only offered while it is
+  // off, so a hidden row means it is on and must stay on - and `custom` is
+  // merged host-side, so leaving the key out keeps the stored value.
+  if (!$("sync-recurrence-row").hidden) {
+    patch.syncRecurrence = $("sync-recurrence").checked;
+  }
 
   // Only thread `galEnabled` through when the field is actually
   // interactive - sending a forced-off value for an unsupported server

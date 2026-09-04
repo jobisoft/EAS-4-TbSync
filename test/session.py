@@ -471,6 +471,31 @@ def _clear_event_log():
     ok("clearEventLog")
 
 
+def ensure_recurrence(session, sections):
+    """Switch recurrence sync on for the run, for sections that need it.
+
+    With `syncrecurrence` false the codec emits no recurrence at all -
+    deliberately, and the client-side rejection for sub-daily rules is
+    gated on the same flag, because nothing can be misrepresented if
+    nothing is sent. Every assertion about a series then fails, or worse
+    passes vacuously: section 12's "the hourly event must not be pushed"
+    reads as a code regression when it is an account setting.
+
+    Only asked for when a selected section declares `NEEDS_RECURRENCE`, so
+    a run that never touches a series leaves the flag alone.
+    """
+    if (session.account.get("custom") or {}).get("syncrecurrence"):
+        return
+    print(
+        f"  {session.account['accountName']} has recurrence sync off and "
+        f"section(s) {', '.join(sections)} test recurrence; switching it on "
+        f"for this run."
+    )
+    _override_account_custom(
+        session.account, "syncrecurrence", True, "recurrence sync"
+    )
+
+
 # TbSync's own account record, which is where `custom` lives.
 ACCOUNTS_KEY = "tbsync.accounts"
 

@@ -29,6 +29,7 @@ const COMMON = {
   serverID: "server-id-1",
   asVersion: "16.1",
   defaultTimezone: "UTC",
+  syncRecurrence: true,
   uid: null,
   userEmail: "user@example.invalid",
 };
