@@ -61,6 +61,39 @@ export const DEFAULT_OAUTH_CLIENT_ID = "2980deeb-7460-4723-864a-f9b0f10cd992";
 const CUSTOM_OAUTH_CLIENT_ID_STORAGE_KEY = "oauth.clientID";
 
 /**
+ * Global storage.local key that routes consent through the system browser
+ * instead of the popup below. Absent or anything but `true` means the
+ * popup, which is the right answer for almost everybody: it keeps the
+ * sign-in inside Thunderbird and needs no copying and pasting.
+ *
+ * The popup is a Thunderbird content window, and Thunderbird's chrome
+ * implements no WebAuthn prompt, so a tenant that requires a passkey or a
+ * security key cannot finish consent there - the ceremony waits for a UI
+ * nobody shows, and the page falls back to asking for a password the
+ * tenant has disabled. Thunderbird's own mail accounts escape the same
+ * trap through `mailnews.oauth.useExternalBrowser`, but that pref is read
+ * by `OAuth2.sys.mjs`, which serves accounts this add-on does not own;
+ * setting it changes nothing here. This option is the equivalent for EAS
+ * accounts, deliberately separate so that a profile can keep the smoother
+ * popup for mail while an EAS account that needs a passkey goes out.
+ */
+const USE_EXTERNAL_BROWSER_STORAGE_KEY = "oauth.useExternalBrowser";
+
+/** True iff the user asked for the external-browser route. Storage being
+ *  unreachable answers "no": the popup is the route that always works, and
+ *  an unreadable option is not a reason to demand a paste. */
+async function useExternalBrowser() {
+  try {
+    const rv = await browser.storage.local.get({
+      [USE_EXTERNAL_BROWSER_STORAGE_KEY]: false,
+    });
+    return rv[USE_EXTERNAL_BROWSER_STORAGE_KEY] === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Resolve the OAuth client ID. Reads `oauth.clientID` from
  * `browser.storage.local`; falls back to DEFAULT_OAUTH_CLIENT_ID when missing
  * or empty. Called from every call site that builds a Microsoft request.
@@ -206,7 +239,9 @@ export async function startAuth({ loginHint, servertype, onWindowCreated }) {
   authUrl.searchParams.set("state", state);
   if (loginHint) authUrl.searchParams.set("login_hint", loginHint);
 
-  const responseUrl = await runConsentPopup(authUrl.toString(), onWindowCreated);
+  const responseUrl = (await useExternalBrowser())
+    ? await runExternalConsent(authUrl.toString(), state, onWindowCreated)
+    : await runConsentPopup(authUrl.toString(), onWindowCreated);
 
   // Parse the redirect URL - Microsoft echoes the code back as a query
   // string on the nativeclient page.
@@ -439,4 +474,180 @@ async function runConsentPopup(authUrl, onWindowCreated) {
     browser.tabs.onUpdated.addListener(onUpdated);
     browser.windows.onRemoved.addListener(onClosed);
   });
+}
+
+// ── External-browser consent (the paste dance) ────────────────────────────
+
+/**
+ * The other route, for tenants whose sign-in the popup above cannot
+ * perform - see USE_EXTERNAL_BROWSER_STORAGE_KEY. The authorization page
+ * goes to the system browser, where a passkey works because the browser
+ * has the WebAuthn UI Thunderbird lacks, and where the user may already
+ * hold a session and never be asked anything.
+ *
+ * What that costs is the watcher. `tabs.onUpdated` sees Thunderbird's own
+ * tabs and nothing else, so the redirect - a blank `…/nativeclient?code=…`
+ * page in a foreign application - has to come back by hand: the user
+ * copies the address bar into a Thunderbird dialog. Thunderbird's own
+ * external flow avoids the paste by listening on a loopback socket and
+ * redirecting there instead, which needs `http://localhost` registered on
+ * the Azure application; the community client ID this add-on ships is
+ * registered for `nativeclient` only, so that door is shut for anyone who
+ * cannot register an application of their own.
+ *
+ * The dialog is not trusted to be right, only to be the user's. Whether a
+ * pasted URL may end a sign-in is decided here, in the same terms
+ * `runConsentPopup` decides it for a navigation, and a URL that may not is
+ * refused with a reason rather than an exception - the dialog stays up and
+ * the user tries again.
+ */
+const PASTE_DIALOG_PATH = "dialogs/oauth-paste/oauth-paste.html";
+
+/** handoff token → the sign-in waiting on it. One entry per live external
+ *  consent; the token is what the dialog quotes back, so a window left
+ *  over from an abandoned attempt cannot answer for the current one. */
+const pendingExternal = new Map();
+
+async function runExternalConsent(authUrl, state, onWindowCreated) {
+  const token = crypto.randomUUID();
+  // Registered before the window exists. The dialog can message us the
+  // moment it loads, and a handoff we have not recorded yet reads as
+  // expired - which would strand a sign-in that is perfectly fine.
+  const entry = { state, authUrl, windowId: null, resolve: null, reject: null };
+  pendingExternal.set(token, entry);
+
+  let resolveResult;
+  let rejectResult;
+  const result = new Promise((resolve, reject) => {
+    resolveResult = resolve;
+    rejectResult = reject;
+  });
+
+  // One settlement per handoff, whoever gets there first: the paste, the
+  // Cancel button, the window closing, or a browser that would not open.
+  let done = false;
+  const onClosed = (windowId) => {
+    if (windowId !== entry.windowId) return;
+    entry.reject(withCode(new Error("Sign-in cancelled"), ERR.CANCELLED));
+  };
+  const settle = (fn, value) => {
+    if (done) return;
+    done = true;
+    pendingExternal.delete(token);
+    browser.windows.onRemoved.removeListener(onClosed);
+    if (entry.windowId != null) {
+      // Already gone when the user is the one who closed it; that is the
+      // common case, not a fault.
+      Promise.resolve(browser.windows.remove(entry.windowId)).catch((err) =>
+        console.debug(
+          `[eas] OAuth paste dialog windows.remove(${entry.windowId}) failed:`,
+          err,
+        ),
+      );
+    }
+    fn(value);
+  };
+  entry.resolve = (responseUrl) => settle(resolveResult, responseUrl);
+  entry.reject = (err) => settle(rejectResult, err);
+  browser.windows.onRemoved.addListener(onClosed);
+
+  try {
+    const url = new URL(browser.runtime.getURL(PASTE_DIALOG_PATH));
+    url.searchParams.set("token", token);
+    // The dialog goes up first. It is the only way back from a browser
+    // Thunderbird cannot see, so a failure to open it must not leave the
+    // user signing in with nowhere to put the result.
+    const dialog = await browser.windows.create({
+      url: url.toString(),
+      type: "popup",
+      width: 560,
+      height: 480,
+    });
+    entry.windowId = dialog.id;
+    // Reported before the browser opens, so a caller tracking this window
+    // has it for the whole time it is up. Never let a failing callback take
+    // down a sign-in that is otherwise fine.
+    try {
+      onWindowCreated?.(dialog.id);
+    } catch (err) {
+      console.debug("[eas] onWindowCreated callback failed:", err);
+    }
+    await browser.windows.openDefaultBrowser(authUrl);
+  } catch (err) {
+    entry.reject(
+      withCode(
+        new Error(
+          `Could not start sign-in in your default browser: ${err?.message ?? String(err)}`,
+        ),
+        ERR.AUTH,
+      ),
+    );
+  }
+
+  return result;
+}
+
+/**
+ * The paste dialog offering a URL as the end of its sign-in. Returns a
+ * verdict rather than throwing: everything a user can get wrong here is
+ * ordinary - the wrong window copied, a link from an attempt they
+ * abandoned, the page copied before sign-in finished - and each deserves
+ * its own sentence in the dialog rather than a failed sign-in.
+ *
+ * `accepted` means the URL was handed to the waiting sign-in, not that the
+ * sign-in succeeded: a redirect carrying Microsoft's own `error` is
+ * accepted here and fails there, where the message it carries can be
+ * reported properly.
+ */
+export async function completeExternalConsent({ token, url } = {}) {
+  const entry = pendingExternal.get(token);
+  if (!entry) return { accepted: false, reason: "expired" };
+
+  let parsed;
+  try {
+    parsed = new URL(String(url ?? "").trim());
+  } catch {
+    return { accepted: false, reason: "notAUrl" };
+  }
+  if (!parsed.href.startsWith(REDIRECT_URI)) {
+    return { accepted: false, reason: "notRedirect" };
+  }
+  if (!parsed.searchParams.get("code") && !parsed.searchParams.get("error")) {
+    return { accepted: false, reason: "noCode" };
+  }
+  // The same CSRF check `startAuth` makes, made early so a link from an
+  // earlier attempt is a sentence in the dialog rather than a dead sign-in.
+  if (parsed.searchParams.get("state") !== entry.state) {
+    return { accepted: false, reason: "staleLink" };
+  }
+
+  entry.resolve(parsed.href);
+  return { accepted: true };
+}
+
+/** Send the user to the authorization page again - the browser did not
+ *  come up, or they closed the tab before finishing. The URL is the one
+ *  handed out the first time on purpose: a freshly built one would carry a
+ *  new `state`, and the paste the user is midway through would be refused
+ *  as stale. */
+export async function reopenExternalConsent({ token } = {}) {
+  const entry = pendingExternal.get(token);
+  if (!entry) return { accepted: false, reason: "expired" };
+  try {
+    await browser.windows.openDefaultBrowser(entry.authUrl);
+  } catch (err) {
+    console.debug("[eas] could not reopen the default browser:", err);
+    return { accepted: false, reason: "noBrowser" };
+  }
+  return { accepted: true };
+}
+
+/** The dialog's Cancel button. Closing the window does the same thing;
+ *  this is the deterministic way, since a content page is not always
+ *  allowed to close the window it lives in. */
+export async function cancelExternalConsent({ token } = {}) {
+  const entry = pendingExternal.get(token);
+  if (!entry) return { accepted: false, reason: "expired" };
+  entry.reject(withCode(new Error("Sign-in cancelled"), ERR.CANCELLED));
+  return { accepted: true };
 }
