@@ -405,19 +405,32 @@ async function guardStamps(item, priorIcal) {
   const ical = item?.item;
   if (typeof ical !== "string") return item;
   const guarded = pinEasStamps({ builtIcal: ical, priorIcal });
-  // Whether a stamp changed, not whether the document did. The repair
-  // re-serialises what it touches and puts a stamp back at the end of its
-  // component rather than where it found it, so the two strings differ over
-  // things no writer is answerable for.
-  if (easStampsAgree(ical, guarded)) return item;
-  report?.({
-    level: "info",
-    message:
-      `[event-sync] restored the EAS stamps on ${item.id}: the incoming ` +
-      `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}` +
-      alsoChanges(ical, priorIcal),
-  });
-  reportOverwrite(item.id, ical, priorIcal);
+  if (guarded === ical) return item;
+
+  // Only a stamp that moved is a violation. The repair re-serialises what
+  // it touches and puts a stamp back at the end of its component rather
+  // than where it found it, so the two strings differ over things no
+  // writer is answerable for - reporting on that told the user somebody
+  // had written to our fields when nobody had.
+  //
+  // What is NOT conditional is handing the rewritten item back. The
+  // platform parses what a provider returns and hands back what it was
+  // given otherwise, and that parse is what merges a lone occurrence into
+  // its series: an edit to one occurrence arrives as a single vevent
+  // carrying a recurrence-id, and returning the caller's own object sends
+  // it onward unparsed, where the calendar refuses it as an updated item
+  // that should not have a recurrence id (#354). That the two were ever
+  // one decision was an accident of the check being a string comparison.
+  if (!easStampsAgree(ical, guarded)) {
+    report?.({
+      level: "info",
+      message:
+        `[event-sync] restored the EAS stamps on ${item.id}: the incoming ` +
+        `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}` +
+        alsoChanges(ical, priorIcal),
+    });
+    reportOverwrite(item.id, ical, priorIcal);
+  }
   return { ...item, item: guarded };
 }
 
