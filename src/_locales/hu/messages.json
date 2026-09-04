@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Kuka"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Copy]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Globális címlista"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Utolsó 6 hónap"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Synchronize a calendar after a change"
+  "config.calendar.syncRecurrence": {
+    "message": "Sync recurring events / tasks and exceptions"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync synchronizes this account on the schedule set in the account manager. A calendar can additionally be synchronized shortly after you change anything in it, so local changes reach the server without waiting for the next scheduled run. That matters most for meetings, because the server only invites attendees, sends updates and passes on your response once it has seen your changes."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Synchronize calendars and address books after a change"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync synchronizes this account on the schedule set in the account manager. A calendar or address book can additionally be synchronized shortly after you change anything in it, so local changes reach the server without waiting for the next scheduled run. For a calendar it also decides how soon the server invites attendees, sends updates and passes on your response, because it can only do so once it has seen the change."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Off"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "After 5 seconds"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "After 15 seconds"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "After 30 seconds"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "After 60 seconds"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Elemek száma szinkronizálási szakaszonként"
   },
   "options.maxitems.hint": {
-    "message": "Legfeljebb hány elemet adhat vissza a kiszolgáló szinkronizálási kérésenként. Nagyobb értékek esetén gyorsabban szinkronizál, ha a kapcsolat egészséges, de rosszabb kapcsolat esetén a kisebb értékek megbízhatóbbak, kevesebb memóriát fogyasztanak és jobb visszajelzést adnak a felületen. Alapértelmezés: 25."
+    "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. The smallest allowed value is 5, because below that a folder spends the server's request budget on paging alone. Default: 25."
   },
   "options.mstodo": {
     "message": "Microsoft To Do kompatibilitási mód"
@@ -397,6 +407,13 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Recurrence synchronization switched on: this account's resources are being rebuilt from the server.",
+    "description": "Event log line, written once when a carried-over account is migrated in place and its recurrence synchronization is switched on, because its resources are being rebuilt from the server."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Recurrence sync is disabled. That was a precaution in early beta versions and is no longer needed. Switching it on in the account settings is now recommended."
   },
   "eas.sync.error.protocolFault": {
     "message": "A kiszolgáló érvénytelenként elutasította a szinkronizálási kérést (kód: $STATUS$)",
