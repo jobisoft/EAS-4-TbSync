@@ -399,6 +399,12 @@
   "options.clientid.hint": {
     "message": "Microsoft Entra Client ID used when signing in to Microsoft accounts. Leave empty to use the default client ID registered by John Bieling (author of the EAS provider)."
   },
+  "options.useExternalBrowser": {
+    "message": "Sign in using your default browser"
+  },
+  "options.useExternalBrowser.hint": {
+    "message": "Runs Microsoft sign-in in your system browser instead of a Thunderbird window, then asks you to paste the address the browser ends on. Thunderbird's built-in sign-in window cannot perform passkey, security-key or other WebAuthn sign-ins, so enable this if your organisation requires one, or if sign-in keeps asking for a password your organisation has disabled. This is the EAS equivalent of Thunderbird's own mailnews.oauth.useExternalBrowser preference, which applies to mail accounts only and has no effect on EAS accounts."
+  },
   "eas.sync.warning.serverRejectedSomeItems": {
     "message": "The EAS server did not accept $COUNT$ elements.",
     "placeholders": {
@@ -647,5 +653,62 @@
   },
   "config.protocol.asVersion.unknownHint": {
     "message": "The server did not say which versions it supports, so all are offered."
+  },
+  "oauthPaste.title": {
+    "message": "Finish signing in"
+  },
+  "oauthPaste.intro": {
+    "message": "Microsoft sign-in has been opened in your default browser. Thunderbird cannot see what happens there, so the result has to be brought back by hand."
+  },
+  "oauthPaste.step.signIn": {
+    "message": "Complete the sign-in in your browser."
+  },
+  "oauthPaste.step.blankPage": {
+    "message": "Your browser will end up on a blank page at login.microsoftonline.com."
+  },
+  "oauthPaste.step.paste": {
+    "message": "Copy that page's full address from the address bar and paste it below."
+  },
+  "oauthPaste.label": {
+    "message": "Address your browser ended on"
+  },
+  "oauthPaste.placeholder": {
+    "message": "https://login.microsoftonline.com/common/oauth2/nativeclient?code=…"
+  },
+  "oauthPaste.button.reopen": {
+    "message": "Open the sign-in page again"
+  },
+  "oauthPaste.button.cancel": {
+    "message": "Cancel"
+  },
+  "oauthPaste.button.continue": {
+    "message": "Continue"
+  },
+  "oauthPaste.error.empty": {
+    "message": "Paste the address your browser ended up on."
+  },
+  "oauthPaste.error.notAUrl": {
+    "message": "That does not look like a web address. Copy the whole address from your browser's address bar."
+  },
+  "oauthPaste.error.notRedirect": {
+    "message": "That is not the page sign-in ends on. Finish signing in, wait for the blank page, and copy the address from there."
+  },
+  "oauthPaste.error.noCode": {
+    "message": "That address carries no sign-in result. It was probably copied before sign-in finished."
+  },
+  "oauthPaste.error.staleLink": {
+    "message": "That address is from an earlier sign-in attempt. Use “Open the sign-in page again”, then copy the new address."
+  },
+  "oauthPaste.error.expired": {
+    "message": "This sign-in is no longer waiting for an answer. Close this window and start again from TbSync."
+  },
+  "oauthPaste.error.noBrowser": {
+    "message": "Could not open your default browser."
+  },
+  "oauthPaste.error.missingToken": {
+    "message": "Missing handoff token. Open this window through TbSync."
+  },
+  "oauthPaste.error.generic": {
+    "message": "That address could not be used."
   }
 }

@@ -1,5 +1,10 @@
 import { EasProvider } from "./modules/eas-provider.mjs";
-import { startAuth } from "./modules/eas/oauth.mjs";
+import {
+  startAuth,
+  completeExternalConsent,
+  reopenExternalConsent,
+  cancelExternalConsent,
+} from "./modules/eas/oauth.mjs";
 import { discoverEasServer } from "./modules/eas/autodiscover.mjs";
 import { installAnchorMailboxInjector } from "./modules/anchor-mailbox.mjs";
 import {
@@ -55,6 +60,18 @@ setSyncHandlers({
 const MESSAGE_HANDLERS = {
   "eas.startOAuth": (msg) =>
     startAuth({ loginHint: msg.loginHint, servertype: msg.servertype }),
+
+  // The paste dialog, when consent runs in the system browser. All three
+  // answer a verdict rather than throwing: the dialog stays up and says
+  // what was wrong. See oauth.mjs::runExternalConsent.
+  "eas.completeExternalOAuth": (msg) =>
+    completeExternalConsent({ token: msg.token, url: msg.url }),
+
+  "eas.reopenExternalOAuth": (msg) =>
+    reopenExternalConsent({ token: msg.token }),
+
+  "eas.cancelExternalOAuth": (msg) =>
+    cancelExternalConsent({ token: msg.token }),
 
   "eas.discoverServer": async (msg) => {
     const controller = new AbortController();

@@ -24,6 +24,7 @@ async function load() {
   const keys = STRING_FIELDS.map((f) => f.key).concat(
     "msTodoCompat",
     "showItemsInTrash",
+    "oauth.useExternalBrowser",
   );
   const stored = await browser.storage.local.get(keys);
 
@@ -37,6 +38,8 @@ async function load() {
   $("opt-deviceos").placeholder = await getDefaultDeviceOs();
   $("opt-mstodo").checked = stored.msTodoCompat === true;
   $("opt-show-trash").checked = stored.showItemsInTrash === true;
+  $("opt-external-browser").checked =
+    stored["oauth.useExternalBrowser"] === true;
 }
 
 function bindStringField({ key, inputId, type }) {
@@ -78,4 +81,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   for (const f of STRING_FIELDS) bindStringField(f);
   bindCheckbox("opt-mstodo", "msTodoCompat");
   bindCheckbox("opt-show-trash", "showItemsInTrash");
+  bindCheckbox("opt-external-browser", "oauth.useExternalBrowser");
 });
