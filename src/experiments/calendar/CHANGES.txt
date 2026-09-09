@@ -52,7 +52,8 @@ Items 0-4 are in child/ext-calendar-timezones.js, item 5 in
 parent/ext-calendar-timezones.js, item 6 in schema/calendar-calendars.json,
 ext-calendar-utils.sys.mjs and parent/ext-calendar-calendars.js, items 7 and
 8 in parent/ext-calendar-provider.js, item 9 in ext-calendar-utils.sys.mjs,
-parent/ext-calendar-provider.js and parent/ext-calendar-items.js.
+parent/ext-calendar-provider.js and parent/ext-calendar-items.js, item 10
+in parent/ext-calendar-provider.js.
 
 0. Priming the timezone service. This runs in the child process, where the
    service is a fresh instance Thunderbird's own startup never touched -
@@ -286,6 +287,60 @@ parent/ext-calendar-provider.js and parent/ext-calendar-items.js.
 
    Upstream's own gap rather than a deviation we want, like item 8, and
    worth offering there.
+
+10. A hidden calendar stays hidden across a restart. Registering and
+   unregistering the provider type each carry calendar-main-in-composite
+   over the swap they cause; without that, every calendar this add-on
+   supplies comes back visible on every start, reload, update and disable.
+
+   Hidden is the *absence* of that property, not a false: hiding a calendar
+   calls CalCompositeCalendar.removeCalendar, which deleteProperty's it.
+   Registering the type calls updateCalendarRegistration, which replaces
+   each force-disabled placeholder with a real calendar - and along the way
+   the composite deletes the property for every one of them (its guard,
+   `newCalendars.length != this.mCalendars`, compares a number with an
+   array and so is always true), then cal.view's manager observer runs
+
+       const inComposite = calendar.getProperty(prefix + "-in-composite");
+       if (inComposite === null && !calendar.getProperty("disabled")) {
+         comp.addCalendar(calendar);
+       }
+
+   and reads the absence it was just handed as a calendar nobody has an
+   opinion about yet. auto-enabled has cleared `disabled` by then, so this
+   fires for all of them and writes the property back as true. The user's
+   answer and a manufactured one are the same value by the time anything
+   looks, which is why the snapshot has to be taken before
+   registerCalendarProvider and applied after it.
+
+   The restore goes through the composite, not through the property: the
+   calendar is in the composite by then, so writing the property alone
+   would uncheck the box in the calendar list and leave the calendar's
+   events on the view until the next restart. unregister() is the mirror
+   image and needs the property written directly instead - the placeholder
+   is force-disabled and nothing put it in a composite, so adding it would
+   put a calendar that cannot answer anything onto the view. Without that
+   half, register() would find every calendar looking hidden and hide the
+   lot on the next reload.
+
+   Nothing in this add-on or in TbSync ever wrote `visible`, and the
+   property is a complete store on its own - all it needed was to survive
+   re-registration. Thunderbird's own re-registration path already knows
+   this: changeCalendarCache copies calendar-main-in-composite in its
+   propsToCopy list, while updateCalendarRegistration preserves only
+   initialSortOrderPos.
+
+   Measured on Thunderbird 153.2.0esr with an Exchange account: before, all
+   ten calendar.registry.<id>.calendar-main-in-composite prefs of type
+   ext-eas4tbsync@jobisoft.de read true however many were hidden, while
+   hidden gdata and caldav calendars in the same profile had no such pref
+   and stayed hidden.
+
+   Reported as TbSync#817. This hits every WebExtension calendar provider,
+   not just this one - registration is always deferred to
+   background-script-started, so the composite always exists by then - so
+   it is upstream's bug as much as item 8 and item 9, and worth offering
+   both there and to Thunderbird.
 
 Verified against Thunderbird 153.0.2 (esr153), 154.0 (beta) and 155.0a1:
 every other member these files touch - defaultTimezone, timezoneIds and

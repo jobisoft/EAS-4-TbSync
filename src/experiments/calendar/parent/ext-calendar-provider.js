@@ -76,11 +76,51 @@ function stackContains(part) {
 }
 
 
+// The calendars of one provider type, as the calendar manager currently
+// holds them. That includes the force-disabled placeholders standing in for
+// them while the type is unregistered - which is exactly when this is asked.
+function calendarsOfType(type) {
+  return cal.manager.getCalendars().filter(calendar => calendar.type == type);
+}
+
+// The composite calendars that already exist. cal.view.getCompositeCalendar
+// builds one for a window that has none and installs its manager observer,
+// which is the last thing wanted here, so only windows already holding one
+// are considered. A window with no composite has no opinion to correct.
+function liveComposites() {
+  const composites = [];
+  for (const win of Services.wm.getEnumerator(null)) {
+    if (win._compositeCalendar) {
+      composites.push(win._compositeCalendar);
+    }
+  }
+  return composites;
+}
+
 class ExtCalendarProvider {
   QueryInterface = ChromeUtils.generateQI(["calICalendarProvider"]);
 
   static register(extension) {
     const type = "ext-" + extension.id;
+
+    // Which of ours the user had hidden, asked before anything moves.
+    //
+    // Hiding a calendar *deletes* its calendar-main-in-composite property -
+    // hidden is the absence of the property, not a false. Registering the
+    // type below replaces every placeholder with a real calendar, and that
+    // swap puts the property through two hands: the composite deletes it
+    // when the placeholder unregisters, and cal.view's manager observer
+    // then reads the absence as "a calendar nobody has an opinion about
+    // yet" and shows it. By then an absence the user asked for and one
+    // manufactured a moment ago look identical, so the answer has to be
+    // taken now and put back afterwards.
+    //
+    // Registration is deferred to background-script-started, so this always
+    // runs long after the main window built its composite - there is no
+    // startup order in which the swap goes unobserved.
+    const hidden = calendarsOfType(type)
+      .filter(calendar => !calendar.getProperty("calendar-main-in-composite"))
+      .map(calendar => calendar.id);
 
     cal.manager.registerCalendarProvider(
       type,
@@ -91,14 +131,46 @@ class ExtCalendarProvider {
       }
     );
 
+    // Through the composite rather than by deleting the property again: the
+    // calendar is in the composite by now, and a property nobody acted on
+    // would uncheck the box in the calendar list while the calendar's events
+    // stayed on the view until the next restart. removeCalendar deletes the
+    // property itself, which is what hidden is.
+    for (const id of hidden) {
+      const calendar = cal.manager.getCalendarById(id);
+      if (!calendar) {
+        continue;
+      }
+      for (const composite of liveComposites()) {
+        composite.removeCalendar(calendar);
+      }
+    }
+
     const provider = new ExtCalendarProvider(extension);
     cal.provider.register(provider);
   }
 
   static unregister(extension) {
     const type = "ext-" + extension.id;
+
+    // The same property, lost the other way round: unregistering hands each
+    // calendar to the composite to be removed, and that deletes it. Left
+    // alone, every calendar would look hidden to the register() above, so a
+    // reload, an update or a disable would hide the lot.
+    const visible = calendarsOfType(type)
+      .filter(calendar => calendar.getProperty("calendar-main-in-composite"))
+      .map(calendar => calendar.id);
+
     cal.manager.unregisterCalendarProvider(type, true);
     cal.provider.unregister(type);
+
+    // Writing the property is enough here, and going through the composite
+    // would be wrong: the placeholder that replaced the calendar is
+    // force-disabled, nothing added it to a composite, and adding it would
+    // put a calendar that cannot answer anything onto the view.
+    for (const id of visible) {
+      cal.manager.getCalendarById(id)?.setProperty("calendar-main-in-composite", true);
+    }
   }
 
   constructor(extension) {
