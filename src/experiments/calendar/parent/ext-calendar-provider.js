@@ -76,11 +76,32 @@ function stackContains(part) {
 }
 
 
+// Our own calendars, including the force-disabled placeholders that stand in
+// for them while our calendar type is not registered.
+function calendarsOfType(type) {
+  return cal.manager.getCalendars().filter(calendar => calendar.type == type);
+}
+
+// Calendars of ours the user had hidden when our type was registered. Both
+// hiding a calendar and registering the type delete the property that says
+// so, so without this record the two cannot be told apart afterwards. Read
+// by ExtCalendar.getProperty; see item 10 in CHANGES.txt.
+const hiddenAtRegistration = new Set();
+
 class ExtCalendarProvider {
   QueryInterface = ChromeUtils.generateQI(["calICalendarProvider"]);
 
   static register(extension) {
     const type = "ext-" + extension.id;
+
+    // Note what is hidden before registering, because registering deletes
+    // the property that records it.
+    hiddenAtRegistration.clear();
+    for (const calendar of calendarsOfType(type)) {
+      if (!calendar.getProperty("calendar-main-in-composite")) {
+        hiddenAtRegistration.add(calendar.id);
+      }
+    }
 
     cal.manager.registerCalendarProvider(
       type,
@@ -97,8 +118,20 @@ class ExtCalendarProvider {
 
   static unregister(extension) {
     const type = "ext-" + extension.id;
+
+    // Unregistering deletes the property too, so note which calendars were
+    // visible and write it back below. Otherwise the register() above would
+    // take them all for hidden ones and hide them on the next reload.
+    const visible = calendarsOfType(type)
+      .filter(calendar => calendar.getProperty("calendar-main-in-composite"))
+      .map(calendar => calendar.id);
+
     cal.manager.unregisterCalendarProvider(type, true);
     cal.provider.unregister(type);
+
+    for (const id of visible) {
+      cal.manager.getCalendarById(id)?.setProperty("calendar-main-in-composite", true);
+    }
   }
 
   constructor(extension) {
@@ -221,6 +254,26 @@ class ExtCalendar extends cal.provider.BaseClass {
       case "cache.enabled":
       case "cache.always":
         return true;
+
+      // A hidden calendar has no calendar-main-in-composite property, and
+      // registering our type deletes it for all of our calendars anyway.
+      // Thunderbird then treats a missing property as a calendar it has
+      // never seen and shows it, which is why a hidden calendar used to come
+      // back on every start. Reporting false instead keeps it hidden:
+      // readers treat false and missing alike, but only missing means "new".
+      // As soon as anything writes the property - ticking the box in the
+      // calendar list writes true - the stored value answers again.
+      case "calendar-main-in-composite": {
+        if (!hiddenAtRegistration.has(this.id)) {
+          break;
+        }
+        const stored = super.getProperty(name);
+        if (stored !== null) {
+          hiddenAtRegistration.delete(this.id);
+          return stored;
+        }
+        return false;
+      }
 
       case "organizerId":
         if (this.capabilities.organizer) {
