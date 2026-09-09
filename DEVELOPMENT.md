@@ -88,7 +88,7 @@ npm test -- --run 7.3       one step
 npm test -- --run 2 5       several
 npm test -- --list          what would run, and what gates each  (instant)
 npm test -- --watch         follow the run that is going
-npm test -- --watch <log>   read an older run back: last 20 lines, then follow
+npm test -- --watch <log>   read an older run back from the top, then follow
 npm test -- --no-watch      with --run: start it and return, without attaching
 npm test -- --stop          stop the run, unwinding so the account goes back
 ```
@@ -146,8 +146,8 @@ A run is started in the background and writes its report as it goes:
 `--run` then attaches to that log, unless you passed `--no-watch`.
 **Ctrl-C stops the watching, not the run** - the run is in its own session
 and never sees the signal. Come back to it with `npm test -- --watch`,
-which prints the last 20 lines before following, so attaching an hour in
-tells you where it has got to; name a log to read an older run back.
+which prints the log from the start before following, so attaching an hour
+in shows the whole run so far; name a log to read an older run back.
 
 `npm test -- --stop` is the clean stop: the run unwinds, puts the account's
 settings back, and says so in the log. `kill <pid>` does the same - the run
