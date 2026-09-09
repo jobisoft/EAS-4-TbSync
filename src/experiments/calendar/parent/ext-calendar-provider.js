@@ -76,69 +76,17 @@ function stackContains(part) {
 }
 
 
-// The calendars of one provider type, as the calendar manager currently
-// holds them. That includes the force-disabled placeholders standing in for
-// them while the type is unregistered - which is exactly when this is asked.
+// Our own calendars, including the force-disabled placeholders that stand in
+// for them while our calendar type is not registered.
 function calendarsOfType(type) {
   return cal.manager.getCalendars().filter(calendar => calendar.type == type);
 }
 
-// The composite calendars that already exist. cal.view.getCompositeCalendar
-// builds one for a window that has none and installs its manager observer,
-// which is the last thing wanted here, so only windows already holding one
-// are considered. A window with no composite has no opinion to correct.
-function liveComposites() {
-  const composites = [];
-  for (const win of Services.wm.getEnumerator(null)) {
-    if (win._compositeCalendar) {
-      composites.push(win._compositeCalendar);
-    }
-  }
-  return composites;
-}
-
-// The calendars of ours the user had hidden when the type was registered.
-//
-// This is what makes the answer to "is it hidden" survive registration
-// without depending on finding anything: while an id is in here and the
-// stored property is still absent, ExtCalendar.getProperty answers false
-// rather than null, and the observer that would otherwise take the absence
-// for a brand new calendar and show it leaves the calendar alone. Every
-// reader treats false and the absence identically, so nothing else changes.
+// Calendars of ours the user had hidden when our type was registered. Both
+// hiding a calendar and registering the type delete the property that says
+// so, so without this record the two cannot be told apart afterwards. Read
+// by ExtCalendar.getProperty; see item 10 in CHANGES.txt.
 const hiddenAtRegistration = new Set();
-
-// How many times that answer was actually given, for the debug pref below.
-let visibilityGuardHits = 0;
-
-// The stored property, read straight out of the pref rather than through the
-// calendar, so it reports the absence the calendar is hiding.
-function storedInComposite(id) {
-  const name = `calendar.registry.${id}.calendar-main-in-composite`;
-  if (Services.prefs.getPrefType(name) == Ci.nsIPrefBranch.PREF_INVALID) {
-    return "absent";
-  }
-  return String(Services.prefs.getBoolPref(name, false));
-}
-
-// TEMPORARY, for TbSync#817: leave behind what the carry-over saw, so a
-// failure can be read out of prefs.js after a restart instead of guessed at.
-// Delete this and its two call sites once the fix is confirmed.
-function recordVisibilityDebug(type, hidden, composites) {
-  try {
-    const after = calendarsOfType(type)
-      .map(calendar => `${calendar.id.slice(0, 4)}:${storedInComposite(calendar.id)}`)
-      .join(" ");
-    Services.prefs.setStringPref(
-      "extensions.eas4tbsync.debug.calendarVisibility",
-      `at=${new Date().toTimeString().slice(0, 8)} ours=${calendarsOfType(type).length} ` +
-        `hidden=[${[...hidden].map(id => id.slice(0, 4)).join(" ")}] ` +
-        `composites=${composites} guardHits=${visibilityGuardHits} after=[${after}]`
-    );
-    Services.prefs.savePrefFile(null);
-  } catch (e) {
-    console.error("[ext-calendar] could not record visibility debug", e);
-  }
-}
 
 class ExtCalendarProvider {
   QueryInterface = ChromeUtils.generateQI(["calICalendarProvider"]);
@@ -146,33 +94,13 @@ class ExtCalendarProvider {
   static register(extension) {
     const type = "ext-" + extension.id;
 
-    // Which of ours the user had hidden, asked before anything moves.
-    //
-    // Hiding a calendar *deletes* its calendar-main-in-composite property -
-    // hidden is the absence of the property, not a false. Registering the
-    // type below replaces every placeholder with a real calendar, and that
-    // swap puts the property through two hands: the composite deletes it
-    // when the placeholder unregisters, and cal.view's manager observer
-    // then reads the absence as "a calendar nobody has an opinion about
-    // yet" and shows it. By then an absence the user asked for and one
-    // manufactured a moment ago look identical, so the answer has to be
-    // taken now and put back afterwards.
-    //
-    // Registration is deferred to background-script-started, so this always
-    // runs long after the main window built its composite - there is no
-    // startup order in which the swap goes unobserved.
-    //
-    // Answering the swap is what hiddenAtRegistration does, and it needs
-    // nothing else to be true: the calendar itself reports false for as long
-    // as the absence lasts, so no observer ever sees a null to act on. The
-    // sweep below is the second line, for a reader that got there first.
+    // Note what is hidden before registering, because registering deletes
+    // the property that records it.
     hiddenAtRegistration.clear();
-    visibilityGuardHits = 0;
-    const hidden = calendarsOfType(type)
-      .filter(calendar => !calendar.getProperty("calendar-main-in-composite"))
-      .map(calendar => calendar.id);
-    for (const id of hidden) {
-      hiddenAtRegistration.add(id);
+    for (const calendar of calendarsOfType(type)) {
+      if (!calendar.getProperty("calendar-main-in-composite")) {
+        hiddenAtRegistration.add(calendar.id);
+      }
     }
 
     cal.manager.registerCalendarProvider(
@@ -184,27 +112,6 @@ class ExtCalendarProvider {
       }
     );
 
-    // Through the composite rather than by deleting the property again: if
-    // anything did add the calendar, the property alone would uncheck the box
-    // in the calendar list while the calendar's events stayed on the view
-    // until the next restart. removeCalendar deletes the property itself,
-    // which is what hidden is. A no-op when the guard above did its job.
-    let composites = 0;
-    for (const id of hidden) {
-      const calendar = cal.manager.getCalendarById(id);
-      if (!calendar) {
-        continue;
-      }
-      for (const composite of liveComposites()) {
-        composites++;
-        if (composite.getCalendarById(id)) {
-          composite.removeCalendar(calendar);
-        }
-      }
-    }
-
-    recordVisibilityDebug(type, hidden, composites);
-
     const provider = new ExtCalendarProvider(extension);
     cal.provider.register(provider);
   }
@@ -212,10 +119,9 @@ class ExtCalendarProvider {
   static unregister(extension) {
     const type = "ext-" + extension.id;
 
-    // The same property, lost the other way round: unregistering hands each
-    // calendar to the composite to be removed, and that deletes it. Left
-    // alone, every calendar would look hidden to the register() above, so a
-    // reload, an update or a disable would hide the lot.
+    // Unregistering deletes the property too, so note which calendars were
+    // visible and write it back below. Otherwise the register() above would
+    // take them all for hidden ones and hide them on the next reload.
     const visible = calendarsOfType(type)
       .filter(calendar => calendar.getProperty("calendar-main-in-composite"))
       .map(calendar => calendar.id);
@@ -223,10 +129,6 @@ class ExtCalendarProvider {
     cal.manager.unregisterCalendarProvider(type, true);
     cal.provider.unregister(type);
 
-    // Writing the property is enough here, and going through the composite
-    // would be wrong: the placeholder that replaced the calendar is
-    // force-disabled, nothing added it to a composite, and adding it would
-    // put a calendar that cannot answer anything onto the view.
     for (const id of visible) {
       cal.manager.getCalendarById(id)?.setProperty("calendar-main-in-composite", true);
     }
@@ -353,23 +255,15 @@ class ExtCalendar extends cal.provider.BaseClass {
       case "cache.always":
         return true;
 
+      // A hidden calendar has no calendar-main-in-composite property, and
+      // registering our type deletes it for all of our calendars anyway.
+      // Thunderbird then treats a missing property as a calendar it has
+      // never seen and shows it, which is why a hidden calendar used to come
+      // back on every start. Reporting false instead keeps it hidden:
+      // readers treat false and missing alike, but only missing means "new".
+      // As soon as anything writes the property - ticking the box in the
+      // calendar list writes true - the stored value answers again.
       case "calendar-main-in-composite": {
-        // False rather than null, for a calendar the user had hidden when
-        // the type was registered and that nothing has shown since.
-        //
-        // Hidden is the absence of this property, and registering the type
-        // deletes it for every calendar of the type on the way past. Whoever
-        // reads it next - cal.view's manager observer, on the registration
-        // this add-on just caused - takes that absence for a calendar nobody
-        // has an opinion about yet and shows it, which is how a hidden
-        // calendar came back on every start. False is an opinion, and every
-        // reader treats it exactly as it treats the absence, so answering it
-        // here settles the question before anyone can get it wrong.
-        //
-        // The answer lasts exactly as long as the absence. The moment
-        // anything writes the property - the user ticking the box in the
-        // calendar list, which goes through the composite and writes true -
-        // this stops answering and the stored value speaks for itself.
         if (!hiddenAtRegistration.has(this.id)) {
           break;
         }
@@ -378,7 +272,6 @@ class ExtCalendar extends cal.provider.BaseClass {
           hiddenAtRegistration.delete(this.id);
           return stored;
         }
-        visibilityGuardHits++;
         return false;
       }
 

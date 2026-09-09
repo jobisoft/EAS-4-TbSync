@@ -288,40 +288,33 @@ in parent/ext-calendar-provider.js.
    Upstream's own gap rather than a deviation we want, like item 8, and
    worth offering there.
 
-10. A hidden calendar stays hidden across a restart. Registering and
-   unregistering the provider type each carry calendar-main-in-composite
-   over the swap they cause; without that, every calendar this add-on
-   supplies comes back visible on every start, reload, update and disable.
+10. A hidden calendar stays hidden across a restart. Without this, every
+   calendar this add-on supplies comes back visible on every start, reload,
+   update and disable, however many times the user hides it.
 
-   Hidden is the *absence* of that property, not a false: hiding a calendar
-   calls CalCompositeCalendar.removeCalendar, which deleteProperty's it.
-   Registering the type calls updateCalendarRegistration, which replaces
-   each force-disabled placeholder with a real calendar - and along the way
-   the composite deletes the property for every one of them (its guard,
-   `newCalendars.length != this.mCalendars`, compares a number with an
-   array and so is always true), then cal.view's manager observer runs
+   A hidden calendar has no calendar-main-in-composite property: hiding one
+   calls CalCompositeCalendar.removeCalendar, which deletes it rather than
+   writing false. Registering our calendar type then deletes the property
+   for all of our calendars in passing, because it replaces each
+   force-disabled placeholder with a real calendar and the composite is
+   handed each placeholder to remove on the way. cal.view's manager observer
+   sees a calendar with no such property, takes it for one it has never seen
+   and shows it - so the user's answer and a freshly deleted property are
+   the same thing by the time anything looks.
 
-       const inComposite = calendar.getProperty(prefix + "-in-composite");
-       if (inComposite === null && !calendar.getProperty("disabled")) {
-         comp.addCalendar(calendar);
-       }
+   Rather than put the property back afterwards, ExtCalendar.getProperty
+   reports false for the calendars that were hidden when the type was
+   registered, for as long as the stored property stays missing. Nothing
+   then ever reads the missing property that would be mistaken for a new
+   calendar, and false and missing mean the same to every reader. A first
+   attempt did correct the state afterwards, by removing the calendar from
+   each window's composite once registration was over; that did not work,
+   and it needed to find the composites, which this does not.
 
-   and reads the absence it was just handed as a calendar nobody has an
-   opinion about yet. auto-enabled has cleared `disabled` by then, so this
-   fires for all of them and writes the property back as true. The user's
-   answer and a manufactured one are the same value by the time anything
-   looks, which is why the snapshot has to be taken before
-   registerCalendarProvider and applied after it.
-
-   The restore goes through the composite, not through the property: the
-   calendar is in the composite by then, so writing the property alone
-   would uncheck the box in the calendar list and leave the calendar's
-   events on the view until the next restart. unregister() is the mirror
-   image and needs the property written directly instead - the placeholder
-   is force-disabled and nothing put it in a composite, so adding it would
-   put a calendar that cannot answer anything onto the view. Without that
-   half, register() would find every calendar looking hidden and hide the
-   lot on the next reload.
+   unregister() is the other half. It deletes the property as well, so the
+   ids that were visible are written back after the swap - otherwise the
+   next register() would find every calendar looking hidden and hide the
+   lot.
 
    Nothing in this add-on or in TbSync ever wrote `visible`, and the
    property is a complete store on its own - all it needed was to survive
@@ -330,17 +323,16 @@ in parent/ext-calendar-provider.js.
    propsToCopy list, while updateCalendarRegistration preserves only
    initialSortOrderPos.
 
-   Measured on Thunderbird 153.2.0esr with an Exchange account: before, all
-   ten calendar.registry.<id>.calendar-main-in-composite prefs of type
+   Measured on Thunderbird 153.2.0esr with an Exchange account: before,
+   every calendar.registry.<id>.calendar-main-in-composite pref of type
    ext-eas4tbsync@jobisoft.de read true however many were hidden, while
    hidden gdata and caldav calendars in the same profile had no such pref
-   and stayed hidden.
+   and stayed hidden. After, hiding four of them and restarting left those
+   four without the pref and the other five reading true.
 
    Reported as TbSync#817. This hits every WebExtension calendar provider,
-   not just this one - registration is always deferred to
-   background-script-started, so the composite always exists by then - so
-   it is upstream's bug as much as item 8 and item 9, and worth offering
-   both there and to Thunderbird.
+   not just this one, so it is upstream's bug as much as item 8 and item 9
+   and is worth offering both there and to Thunderbird.
 
 Verified against Thunderbird 153.0.2 (esr153), 154.0 (beta) and 155.0a1:
 every other member these files touch - defaultTimezone, timezoneIds and
