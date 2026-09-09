@@ -97,6 +97,49 @@ function liveComposites() {
   return composites;
 }
 
+// The calendars of ours the user had hidden when the type was registered.
+//
+// This is what makes the answer to "is it hidden" survive registration
+// without depending on finding anything: while an id is in here and the
+// stored property is still absent, ExtCalendar.getProperty answers false
+// rather than null, and the observer that would otherwise take the absence
+// for a brand new calendar and show it leaves the calendar alone. Every
+// reader treats false and the absence identically, so nothing else changes.
+const hiddenAtRegistration = new Set();
+
+// How many times that answer was actually given, for the debug pref below.
+let visibilityGuardHits = 0;
+
+// The stored property, read straight out of the pref rather than through the
+// calendar, so it reports the absence the calendar is hiding.
+function storedInComposite(id) {
+  const name = `calendar.registry.${id}.calendar-main-in-composite`;
+  if (Services.prefs.getPrefType(name) == Ci.nsIPrefBranch.PREF_INVALID) {
+    return "absent";
+  }
+  return String(Services.prefs.getBoolPref(name, false));
+}
+
+// TEMPORARY, for TbSync#817: leave behind what the carry-over saw, so a
+// failure can be read out of prefs.js after a restart instead of guessed at.
+// Delete this and its two call sites once the fix is confirmed.
+function recordVisibilityDebug(type, hidden, composites) {
+  try {
+    const after = calendarsOfType(type)
+      .map(calendar => `${calendar.id.slice(0, 4)}:${storedInComposite(calendar.id)}`)
+      .join(" ");
+    Services.prefs.setStringPref(
+      "extensions.eas4tbsync.debug.calendarVisibility",
+      `at=${new Date().toTimeString().slice(0, 8)} ours=${calendarsOfType(type).length} ` +
+        `hidden=[${[...hidden].map(id => id.slice(0, 4)).join(" ")}] ` +
+        `composites=${composites} guardHits=${visibilityGuardHits} after=[${after}]`
+    );
+    Services.prefs.savePrefFile(null);
+  } catch (e) {
+    console.error("[ext-calendar] could not record visibility debug", e);
+  }
+}
+
 class ExtCalendarProvider {
   QueryInterface = ChromeUtils.generateQI(["calICalendarProvider"]);
 
@@ -118,9 +161,19 @@ class ExtCalendarProvider {
     // Registration is deferred to background-script-started, so this always
     // runs long after the main window built its composite - there is no
     // startup order in which the swap goes unobserved.
+    //
+    // Answering the swap is what hiddenAtRegistration does, and it needs
+    // nothing else to be true: the calendar itself reports false for as long
+    // as the absence lasts, so no observer ever sees a null to act on. The
+    // sweep below is the second line, for a reader that got there first.
+    hiddenAtRegistration.clear();
+    visibilityGuardHits = 0;
     const hidden = calendarsOfType(type)
       .filter(calendar => !calendar.getProperty("calendar-main-in-composite"))
       .map(calendar => calendar.id);
+    for (const id of hidden) {
+      hiddenAtRegistration.add(id);
+    }
 
     cal.manager.registerCalendarProvider(
       type,
@@ -131,20 +184,26 @@ class ExtCalendarProvider {
       }
     );
 
-    // Through the composite rather than by deleting the property again: the
-    // calendar is in the composite by now, and a property nobody acted on
-    // would uncheck the box in the calendar list while the calendar's events
-    // stayed on the view until the next restart. removeCalendar deletes the
-    // property itself, which is what hidden is.
+    // Through the composite rather than by deleting the property again: if
+    // anything did add the calendar, the property alone would uncheck the box
+    // in the calendar list while the calendar's events stayed on the view
+    // until the next restart. removeCalendar deletes the property itself,
+    // which is what hidden is. A no-op when the guard above did its job.
+    let composites = 0;
     for (const id of hidden) {
       const calendar = cal.manager.getCalendarById(id);
       if (!calendar) {
         continue;
       }
       for (const composite of liveComposites()) {
-        composite.removeCalendar(calendar);
+        composites++;
+        if (composite.getCalendarById(id)) {
+          composite.removeCalendar(calendar);
+        }
       }
     }
+
+    recordVisibilityDebug(type, hidden, composites);
 
     const provider = new ExtCalendarProvider(extension);
     cal.provider.register(provider);
@@ -293,6 +352,35 @@ class ExtCalendar extends cal.provider.BaseClass {
       case "cache.enabled":
       case "cache.always":
         return true;
+
+      case "calendar-main-in-composite": {
+        // False rather than null, for a calendar the user had hidden when
+        // the type was registered and that nothing has shown since.
+        //
+        // Hidden is the absence of this property, and registering the type
+        // deletes it for every calendar of the type on the way past. Whoever
+        // reads it next - cal.view's manager observer, on the registration
+        // this add-on just caused - takes that absence for a calendar nobody
+        // has an opinion about yet and shows it, which is how a hidden
+        // calendar came back on every start. False is an opinion, and every
+        // reader treats it exactly as it treats the absence, so answering it
+        // here settles the question before anyone can get it wrong.
+        //
+        // The answer lasts exactly as long as the absence. The moment
+        // anything writes the property - the user ticking the box in the
+        // calendar list, which goes through the composite and writes true -
+        // this stops answering and the stored value speaks for itself.
+        if (!hiddenAtRegistration.has(this.id)) {
+          break;
+        }
+        const stored = super.getProperty(name);
+        if (stored !== null) {
+          hiddenAtRegistration.delete(this.id);
+          return stored;
+        }
+        visibilityGuardHits++;
+        return false;
+      }
 
       case "organizerId":
         if (this.capabilities.organizer) {
