@@ -81,18 +81,31 @@ and the version model against fixtures. Fast enough to run on every edit.
 ## The live suite
 
 ```
-npm test                    every test that applies to the granted account
-npm test -- 7               one section
-npm test -- 7.3             one step
-npm test -- 2 5             several
+npm test                    whether a run is going, and how to start one
+npm test -- --run           every test that applies to the granted account
+npm test -- --run 7         one section
+npm test -- --run 7.3       one step
+npm test -- --run 2 5       several
 npm test -- --list          what would run, and what gates each  (instant)
-npm test -- --watch <log>   attach to a run: last 20 lines, then follow
-npm test -- --no-watch      start it and return, without attaching
+npm test -- --watch         follow the run that is going
+npm test -- --watch <log>   read an older run back from the top, then follow
+npm test -- --no-watch      with --run: start it and return, without attaching
+npm test -- --stop          stop the run, unwinding so the account goes back
 ```
 
 This one drives a real account against a real server. It is the only thing
 that can tell you what a server actually stored, and it is slow - a full
 run is roughly an hour, most of it deliberate pacing.
+
+**The bare command starts nothing.** It reports, and says how to start a
+run. A run takes tens of minutes and reconfigures a live account, which is
+more than the most reflexive command in the repo should do by reflex, so
+starting is asked for by name - `--run`, beside `--list`.
+
+**One run at a time**, because every run owns the same account: it changes
+settings, disconnects resources and puts them back. Two at once interleave
+that, and what comes out is not a result about the code. A second start is
+refused and says which run holds the account.
 
 ### What it needs
 
@@ -126,18 +139,21 @@ A run is started in the background and writes its report as it goes:
   started in the background
   log    /path/to/test/runs/20260830-095945-all.log
   pid    1550474
-  watch  tail -f /path/to/test/runs/20260830-095945-all.log
-  stop   kill 1550474   (cleans up; kill -9 does not)
+  watch  npm test -- --watch
+  stop   npm test -- --stop   (unwinds; kill -9 does not)
 ```
 
-`npm test` then attaches to that log. **Ctrl-C stops the watching, not the
-run** - the run is in its own session and never sees the signal. Come back
-to it with `npm test -- --watch <log>`, which prints the last 20 lines
-before following, so attaching an hour in tells you where it has got to.
+`--run` then attaches to that log, unless you passed `--no-watch`.
+**Ctrl-C stops the watching, not the run** - the run is in its own session
+and never sees the signal. Come back to it with `npm test -- --watch`,
+which prints the log from the start before following, so attaching an hour
+in shows the whole run so far; name a log to read an older run back.
 
-`kill <pid>` is the clean stop: the run unwinds, puts the account's
-settings back, and says so in the log. `kill -9` cannot be caught, so it
-skips all of that and leaves the account as the run had it.
+`npm test -- --stop` is the clean stop: the run unwinds, puts the account's
+settings back, and says so in the log. `kill <pid>` does the same - the run
+catches the signal in order to unwind - but has you find the id first.
+`kill -9` cannot be caught, so it skips all of that and leaves the account
+as the run had it.
 
 Each run also writes an event-log capture to `test/wire/` - the wire for a
 failing run is usually the only thing that says what really happened.
