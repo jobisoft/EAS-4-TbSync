@@ -334,6 +334,12 @@ in parent/ext-calendar-provider.js.
    not just this one, so it is upstream's bug as much as item 8 and item 9
    and is worth offering both there and to Thunderbird.
 
+   The one item TbSync's copy does not carry, so `diff -r` between the two
+   copies reports this file and parent/ext-calendar-provider.js. TbSync
+   declares the calendar_provider experiment API but not the manifest key
+   that registers a calendar type, so neither register() nor unregister()
+   ever runs there and the change would sit inert.
+
 Verified against Thunderbird 153.0.2 (esr153), 154.0 (beta) and 155.0a1:
 every other member these files touch - defaultTimezone, timezoneIds and
 calITimezoneDatabase.getTimezoneDefinition - is present unchanged in all
