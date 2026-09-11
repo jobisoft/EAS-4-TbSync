@@ -295,7 +295,7 @@
     "message": "Naptárok és címjegyzékek szinkronizálása a változtatások után"
   },
   "config.account.syncOnChange.hint": {
-    "message": "TbSync synchronizes this account on the schedule set in the account manager. A calendar or address book can additionally be synchronized shortly after you change anything in it, so local changes reach the server without waiting for the next scheduled run. For a calendar it also decides how soon the server invites attendees, sends updates and passes on your response, because it can only do so once it has seen the change."
+    "message": "A TbSync a fiókkezelőben beállított ütemezés szerint szinkronizálja ezt a fiókot. A naptár vagy a címjegyzék emellett röviddel azután is szinkronizálható, hogy bármilyen módosítást végezne benne, így a helyi változtatások a következő ütemezett futtatásra való várakozás nélkül eljutnak a kiszolgálóra. A naptár esetében ez határozza meg azt is, hogy a kiszolgáló milyen hamar küldi ki a meghívókat a résztvevőknek, továbbítja a frissítéseket és a válaszát, mivel mindezt csak akkor teheti meg, ha már észlelte a változást."
   },
   "config.account.syncOnChange.off": {
     "message": "Ki"
@@ -379,7 +379,7 @@
     "message": "Elemek száma szinkronizálási szakaszonként"
   },
   "options.maxitems.hint": {
-    "message": "Maximum number of items the server may return per sync request. Larger values sync faster on healthy connections, smaller values are more reliable on flaky ones, use less memory and give a better feedback in the UI. The smallest allowed value is 5, because below that a folder spends the server's request budget on paging alone. Default: 25."
+    "message": "A kiszolgáló által szinkronizálási kérésenként visszaadható elemek legnagyobb száma. Nagyobb értékek esetén a szinkronizálás stabil kapcsolatok esetén gyorsabb, míg kisebb értékek esetén instabil kapcsolatok esetén megbízhatóbb, kevesebb memóriát igényel, és jobb visszajelzést nyújt a felhasználói felületen. A legkisebb megengedett érték 5, mivel ennél alacsonyabb érték esetén a mappa a kiszolgáló kéréskeretét kizárólag a lapozásra fordítja. Alapértelmezett: 25."
   },
   "options.mstodo": {
     "message": "Microsoft To Do kompatibilitási mód"
@@ -513,40 +513,40 @@
     "message": "Jelenlegi beállítások olvasása…"
   },
   "services.oof.section": {
-    "message": "Out of office"
+    "message": "Házon kívül"
   },
   "services.oof.intro": {
-    "message": "An automatic reply to people who write to you while you are away. The server sends it, so it does not matter whether Thunderbird is running."
+    "message": "Automatikus válasz, hogy az Önnek író emberek tudják, hogy házon kívül van. A kiszolgáló küldi el, így nem számít, hogy a Thunderbird fut-e."
   },
   "services.oof.state": {
-    "message": "Automatic replies"
+    "message": "Automatikus válaszok"
   },
   "services.oof.state.off": {
     "message": "Ki"
   },
   "services.oof.state.on": {
-    "message": "On"
+    "message": "Be"
   },
   "services.oof.state.scheduled": {
-    "message": "Between two dates"
+    "message": "Két dátum között"
   },
   "services.oof.from": {
-    "message": "From"
+    "message": "Ettől:"
   },
   "services.oof.until": {
-    "message": "Until"
+    "message": "Eddig:"
   },
   "services.oof.internal": {
-    "message": "Reply to people in my organisation"
+    "message": "Válasz a szervezeten belüli embereknek"
   },
   "services.oof.externalOn": {
-    "message": "Also reply to people outside my organisation"
+    "message": "Válasz a szervezeten kívüli embereknek is"
   },
   "services.oof.externalOn.hint": {
-    "message": "Their replies are sent to anyone who writes to you, including mailing lists."
+    "message": "A válaszok mindenkinek el lesznek küldve, akik Önnek írnak, beleértve a levelezőlistákat is."
   },
   "services.oof.external": {
-    "message": "Reply to people outside my organisation"
+    "message": "Válasz a szervezeten kívüli embereknek"
   },
   "services.cancel": {
     "message": "Mégse"
@@ -555,67 +555,67 @@
     "message": "Mentés"
   },
   "services.oof.htmlWarning": {
-    "message": "This message is formatted on the server. Saving here replaces it with plain text."
+    "message": "Ez az üzenet a kiszolgálón van formázva. Ha itt menti, akkor egyszerű szövegre cseréli."
   },
   "services.oof.unsupported": {
-    "message": "This server does not offer an out-of-office reply."
+    "message": "Ez a kiszolgáló nem biztosít „házon kívül” választ."
   },
   "services.error.loadFailed": {
-    "message": "Could not read the settings."
+    "message": "A beállítások nem olvashatók."
   },
   "services.error.saveFailed": {
-    "message": "Could not save the settings."
+    "message": "A beállítások nem menthetők."
   },
   "duplicates.title": {
-    "message": "TbSync found duplicate items on the server"
+    "message": "A TbSync duplikált elemeket talált a kiszolgálón"
   },
   "duplicates.intro": {
-    "message": "The server holds some of these items more than once. This was most probably caused by a bug in an earlier version of TbSync. Thunderbird keeps only one copy of each, so the extra copies are invisible here but stay on the server and come back with every full synchronisation. Removing them changes nothing you can see. The copy Thunderbird is using is kept."
+    "message": "A kiszolgálón ezen elemek közül néhány többször is megtalálható. Ez valószínűleg a TbSync egy korábbi verziójában található hiba miatt történt. A Thunderbird mindegyikből csak egy példányt tart meg, így a felesleges példányok itt nem láthatók, de a kiszolgálón maradnak, és minden teljes szinkronizáláskor újra megjelennek. Ezek eltávolítása látható változást nem okoz. A Thunderbird által használt példány megmarad."
   },
   "duplicates.loading": {
-    "message": "Reading the findings…"
+    "message": "Eredmények olvasása…"
   },
   "duplicates.empty": {
-    "message": "Nothing is duplicated any more."
+    "message": "Már semmi sincs duplikálva."
   },
   "duplicates.item.untitled": {
-    "message": "(no title)"
+    "message": "(nincs cím)"
   },
   "duplicates.column.selectAll": {
-    "message": "Select all"
+    "message": "Összes kijelölése"
   },
   "duplicates.column.calendar": {
     "message": "Naptár"
   },
   "duplicates.column.item": {
-    "message": "Item"
+    "message": "Elem"
   },
   "duplicates.column.uid": {
     "message": "UID"
   },
   "duplicates.column.copies": {
-    "message": "Extra copies"
+    "message": "További másolatok"
   },
   "duplicates.button.delete": {
-    "message": "Remove the extra copies"
+    "message": "További másolatok eltávolítása"
   },
   "duplicates.button.deleting": {
-    "message": "Removing…"
+    "message": "Eltávolítás…"
   },
   "duplicates.button.later": {
     "message": "Bezárás"
   },
   "duplicates.error.loadFailed": {
-    "message": "Could not read the findings."
+    "message": "Az eredmények nem olvashatók."
   },
   "duplicates.error.deleteFailed": {
-    "message": "Could not remove the copies."
+    "message": "A másolatok nem távolíthatók el."
   },
   "duplicates.error.partial": {
-    "message": "Some copies could not be removed. The event log says what the server answered."
+    "message": "Egyes másolatok nem távolíthatók el. Az eseménynapló azt mondja, amit a kiszolgáló válaszolt."
   },
   "duplicates.progress": {
-    "message": "Removed $DONE$ of $TOTAL$.",
+    "message": "$DONE$/$TOTAL$ elem eltávolítva.",
     "placeholders": {
       "done": {
         "content": "$1",
@@ -628,16 +628,16 @@
     }
   },
   "duplicates.footnote": {
-    "message": "If you close this window, the extra copies stay on the server. This list is only shown again after a full synchronisation of the account."
+    "message": "Ha bezárja ezt az ablakot, akkor a további másolat a kiszolgálón marad. Ez a lista csak a fiók teljes szinkronizálása után jelenik meg újra."
   },
   "eas.connect.error.optionsUnavailable": {
-    "message": "The server did not answer the ActiveSync version probe."
+    "message": "A kiszolgáló nem válaszolt az ActiveSync-verzió ellenőrzésére."
   },
   "eas.connect.error.chooseVersion": {
-    "message": "The server did not say which ActiveSync versions it supports. Choose one yourself in the account settings, under ActiveSync version."
+    "message": "A kiszolgáló nem mondta meg, hogy az ActiveSync melyik verzióját támogatja. Válasszon egyet a fiókbeállításokban, az ActiveSync-verzió alatt."
   },
   "eas.connect.warning.optionsFallback": {
-    "message": "The server did not answer the ActiveSync version probe. Continuing with version $VERSION$.",
+    "message": "A kiszolgáló nem válaszolt az ActiveSync-verzió ellenőrzésére. Folytatása ezzel a verzióval: $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -646,6 +646,6 @@
     }
   },
   "config.protocol.asVersion.unknownHint": {
-    "message": "The server did not say which versions it supports, so all are offered."
+    "message": "A kiszolgáló nem mondta meg, hogy az ActiveSync melyik verzióját támogatja, így mindet felajánljuk."
   }
 }
