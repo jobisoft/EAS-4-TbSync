@@ -151,7 +151,7 @@
     "message": "Exchange-fiók beállításai"
   },
   "config.intro": {
-    "message": "These settings are stored by TbSync, not on the server, and can only be changed while the account is disconnected. What you change here affects this Thunderbird only."
+    "message": "Ezeket a beállításokat a TbSync tárolja, nem a kiszolgáló, és csak akkor lehet őket megváltoztatni, ha a fiók bontotta a kapcsolatot. Amit itt megváltoztat, csak erre a Thunderbirdre vonatkozik."
   },
   "config.label": {
     "message": "Fiókcímke"
@@ -217,7 +217,7 @@
     "message": "Automatikus (kiszolgáló által előnyben részesített verzió)"
   },
   "config.protocol.asVersion.usingHint": {
-    "message": "Currently in use: $VERSION$",
+    "message": "Jelenleg használatban: $VERSION$",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -226,7 +226,7 @@
     }
   },
   "config.protocol.asVersion.suggestedHint": {
-    "message": "The server suggests $VERSION$.",
+    "message": "A kiszolgáló ezt javasolja: $VERSION$.",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -247,7 +247,7 @@
     "message": "Ütköző változások"
   },
   "config.protocol.conflict.hint": {
-    "message": "If an item was changed both here and on the server, the server decides which copy wins. The losing change is replaced during the synchronization."
+    "message": "Ha egy elem megváltozott itt is, és a kiszolgálón is, akkor a kiszolgáló dönti el, hogy melyik másolat nyer. A vesztes változás a szinkronizálás során elvész."
   },
   "config.protocol.conflict.serverWins": {
     "message": "A kiszolgáló nyer (javasolt)"
@@ -313,7 +313,7 @@
     "message": "60 másodperc után"
   },
   "config.section.lookups": {
-    "message": "Server lookups"
+    "message": "Kiszolgálólekérések"
   },
   "config.gal.enabled": {
     "message": "A kiszolgáló Globális címjegyzékének megjelenítése írásvédett címjegyzékként"
@@ -413,7 +413,7 @@
     "description": "Event log line, written once when a carried-over account is migrated in place and its recurrence synchronization is switched on, because its resources are being rebuilt from the server."
   },
   "eas.sync.warning.recurrenceDisabled": {
-    "message": "Recurrence sync is disabled. That was a precaution in early beta versions and is no longer needed. Switching it on in the account settings is now recommended."
+    "message": "Az ismétlődő szinkronizálás kikapcsolva. Ez egy elővigyázatosság volt a korai béta verziókban, és már nincs rá szükség. Most már a fiókbeállításokban való bekapcsolás javasolt."
   },
   "eas.sync.error.protocolFault": {
     "message": "A kiszolgáló érvénytelenként elutasította a szinkronizálási kérést (kód: $STATUS$)",
@@ -504,13 +504,13 @@
     "message": "A kiszolgáló 451-et adott vissza X-MS-Location fejléc nélkül"
   },
   "services.title": {
-    "message": "Exchange Server Services"
+    "message": "Exchange kiszolgálószolgáltatások"
   },
   "services.intro": {
-    "message": "These settings are stored on the server, not by TbSync, and can only be reached while the account is connected. What you change here applies everywhere, not only in Thunderbird."
+    "message": "Ezeket a beállításokat a kiszolgáló tárolja, nem a TbSync, és csak akkor lehet őket megváltoztatni, ha a fiók kapcsolódik. Amit itt megváltoztat, mindenhol érvényesül, nem csak a Thunderbirdben."
   },
   "services.loading": {
-    "message": "Reading the current settings…"
+    "message": "Jelenlegi beállítások olvasása…"
   },
   "services.oof.section": {
     "message": "Out of office"
