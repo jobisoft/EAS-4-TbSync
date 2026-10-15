@@ -26,7 +26,7 @@
  * The rest fall into three groups: the OPTIONS probe cache
  * (`allowedEasVersions`, `allowedEasCommands`, `lastEasOptionsUpdate`), the
  * config-popup options (`asversionselected`, `provision`, `conflict`,
- * `synclimit`, `displayoverride`, `seperator` - spelled
+ * `syncrecurrence`, `synclimit`, `displayoverride`, `seperator` - spelled
  * that way on disk), and GAL state (`galenabled`, `galName`).
  *
  * Credentials sit in that account row in `storage.local`, unencrypted. A
@@ -84,6 +84,10 @@ import {
 } from "../vendor/tbsync/provider.mjs";
 import * as addressBook from "../vendor/tbsync/address-book.mjs";
 import * as calendarStore from "../vendor/tbsync/calendar.mjs";
+import {
+  armSyncAfterChange,
+  quietSecondsFor,
+} from "./sync-after-change.mjs";
 import { readOof, writeOof } from "./eas/oof.mjs";
 import {
   primeAuth,
@@ -184,9 +188,10 @@ const ALLOWED_CALENDAR_SYNC_LIMITS = ["0", "4", "5", "6", "7"];
  *  wins. */
 const ALLOWED_CONFLICT_VALUES = ["0", "1"];
 
-/** How long a calendar must stay quiet before an edit in it is synced, in
- *  seconds. "0" is off, and then an edit waits for the scheduled sync.
- *  Read by the calendar provider's item hooks - see `armSyncAfterChange`. */
+/** How long a calendar or address book must stay quiet before an edit in
+ *  it is synced, in seconds. "0" is off, and then an edit waits for the
+ *  scheduled sync. Read from the calendar's item hooks and from the address
+ *  book watcher's user-edit callback - see `armSyncAfterChange`. */
 const ALLOWED_SYNC_ON_CHANGE_VALUES = ["0", "5", "15", "30", "60"];
 const DEFAULT_SYNC_ON_CHANGE = "15";
 
@@ -358,6 +363,18 @@ export class EasProvider extends TbSyncProviderImplementation {
     addressBook.installContactsObserver({
       provider: this,
       report: (args) => this.reportEventLog(args),
+      // A card or list the user changed, which this account may want synced
+      // without waiting for its scheduled run - the same setting and the
+      // same timer the calendars use.
+      onUserEdit: async ({ accountId, parentId }) => {
+        armSyncAfterChange(
+          this,
+          (args) => this.reportEventLog(args),
+          parentId,
+          await quietSecondsFor(this, accountId),
+          "contact",
+        );
+      },
     });
     return null;
   }
@@ -494,15 +511,22 @@ export class EasProvider extends TbSyncProviderImplementation {
     // The mailbox address goes too: an account re-pointed at a different
     // login or server would otherwise keep naming the old mailbox as its
     // calendars' owner, and a wrong owner is worse than none.
-    // The device acknowledgement deliberately stays. Disconnecting is a
-    // client-side act: the partnership it created lives on the server and
-    // is still there when the account comes back, so re-announcing the
-    // same device would be a request that tells nobody anything.
+    // The handshake state goes back to zero with it: the policy key, so
+    // the next connect runs Provision again, and the device
+    // acknowledgement, so the device introduces itself again - inside that
+    // Provision on the versions that carry it there, standalone otherwise.
+    // A partnership the server has dropped is invisible from here, because
+    // a server that has forgotten a device says so by answering every
+    // folder empty rather than by failing, so reconnecting is the only
+    // move a user has against it. `provision` stays: it is a setting the
+    // user (or a 449) chose, not state this sync produced.
     await this.updateAccount({
       accountId,
       patch: {
         custom: {
           foldersynckey: "0",
+          policykey: "0",
+          deviceInfoAcked: false,
           lastEasOptionsUpdate: 0,
           userSmtpAddress: "",
           userDisplayName: "",
@@ -526,6 +550,34 @@ export class EasProvider extends TbSyncProviderImplementation {
     await disableGal({ provider: this, accountId });
     forgetFreeBusyCache(accountId);
     await refreshFreeBusyListener(this);
+    return null;
+  }
+
+  /**
+   * The account is being migrated in place: its resources are about to be
+   * rebuilt from the server.
+   *
+   * `syncrecurrence` off means recurrence rules and their exceptions are
+   * left off the wire in both directions, which a v4 profile can carry in
+   * and which the rebuild would otherwise preserve - pulling every series
+   * back as a single entry. Switching it on here, before the first folder
+   * is touched, is what makes the rebuild's own pull bring the recurrence
+   * with it. Nothing else is corrected, and no other path writes this: an
+   * account that is not being migrated keeps whatever it has.
+   */
+  async onMigrateLegacyAccount({ accountId }) {
+    const { account } = (await this.getAccount(accountId)) ?? {};
+    if (account?.custom?.syncrecurrence === true) return null;
+    await this.updateAccount({
+      accountId,
+      patch: { custom: { syncrecurrence: true } },
+    });
+    this.reportEventLog({
+      accountId,
+      folderId: null,
+      level: "info",
+      message: browser.i18n.getMessage("eas.migration.recurrenceEnabled"),
+    });
     return null;
   }
 
@@ -1680,6 +1732,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           // but don't return 449 (e.g. Kerio).
           provision: false,
           conflict: "1",
+          syncrecurrence: true,
           syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
@@ -1708,6 +1761,7 @@ export class EasProvider extends TbSyncProviderImplementation {
           foldersynckey: "0",
           provision: false,
           conflict: "1",
+          syncrecurrence: true,
           syncOnChange: DEFAULT_SYNC_ON_CHANGE,
         },
       };
@@ -1739,6 +1793,7 @@ export class EasProvider extends TbSyncProviderImplementation {
         foldersynckey: "0",
         provision: false,
         conflict: "1",
+        syncrecurrence: true,
         syncOnChange: DEFAULT_SYNC_ON_CHANGE,
       },
     };
@@ -1783,6 +1838,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       contactsNameSeparator: c.seperator || "10",
       // Calendar section.
       calendarSyncLimit: c.synclimit || "7",
+      syncRecurrence: !!c.syncrecurrence,
       // Anything unrecognised, including the absent value of an account
       // that predates the setting, reads as the default - the popup must
       // never render a select with no option selected.
@@ -2064,6 +2120,9 @@ export class EasProvider extends TbSyncProviderImplementation {
         );
       }
       customPatch.syncOnChange = v;
+    }
+    if ("syncRecurrence" in patch) {
+      customPatch.syncrecurrence = !!patch.syncRecurrence;
     }
     if ("galEnabled" in patch) {
       customPatch.galenabled = !!patch.galEnabled;

@@ -54,6 +54,7 @@ const inbound = (extra) =>
     serverID: "1:9",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     uid: "regen@eas-test.invalid",
   });
 
@@ -66,6 +67,7 @@ function pushedRecurrence(ical) {
     ical,
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
   });
   w.switchpage("AirSync");
   w.ctag();
@@ -127,6 +129,7 @@ test("a stamp the server stops sending is dropped, not re-asserted", async () =>
     serverID: "1:9",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     uid: "regen@eas-test.invalid",
   });
   assert.doesNotMatch(without, /X-EAS-REGENERATE/i);
@@ -229,6 +232,7 @@ test("an event round-trips them through the same shared helper", async () => {
     serverID: "e:1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     uid: "recur@eas-test.invalid",
   });
   assert.match(ical, /X-EAS-CALENDARTYPE:1/i);
@@ -241,6 +245,7 @@ test("an event round-trips them through the same shared helper", async () => {
     ical,
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
   });
   w.switchpage("AirSync");
   w.ctag();

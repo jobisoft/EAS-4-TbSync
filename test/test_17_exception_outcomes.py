@@ -33,6 +33,7 @@ from bridge import ok
 from harness import test
 
 NEEDS = ("events",)
+NEEDS_RECURRENCE = True
 
 # Matched on the SUMMARY, never the UID: a clean pull mints fresh UIDs.
 MARK = "SUMMARY:TZ6 weekly"

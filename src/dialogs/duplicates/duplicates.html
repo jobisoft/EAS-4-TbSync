@@ -3,45 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <title data-i18n-content="duplicates.title"></title>
+    <link rel="stylesheet" href="../shared/dialog.css" />
     <script type="module" src="duplicates.mjs"></script>
     <style>
-      :root {
-        --bg-page: #fff;
-        --bg-card: #fff;
-        --bg-input-disabled: #f4f4f6;
-        --text-primary: #222;
-        --text-secondary: #555;
-        --text-tertiary: #666;
-        --text-body: #333;
-        --border-input: #ccc;
-        --border-subtle: #ececee;
-        --accent: #2a7fd4;
-        --accent-hover: #1a6fc4;
-        --btn-secondary-bg: #e5e5e7;
-        --error-bg: #ffe0e0;
-        --error-accent: #c43b3b;
-        --error-text: #7a2222;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg-page: #1e1f21;
-          --bg-card: #2b2d30;
-          --bg-input-disabled: #2a2c2f;
-          --text-primary: #e8e9eb;
-          --text-secondary: #b3b5ba;
-          --text-tertiary: #9498a0;
-          --text-body: #d6d8dc;
-          --border-input: #4a4d52;
-          --border-subtle: #3a3c40;
-          --accent: #5fa6e8;
-          --accent-hover: #7ab5ec;
-          --btn-secondary-bg: #3a3c40;
-          --error-bg: #3f1f1f;
-          --error-accent: #e66a6a;
-          --error-text: #f3a5a5;
-        }
-      }
-
+      /* This dialog's own layout. Its colours and the controls drawn
+         with them come from `../shared/dialog.css`, which the page
+         links first - see the note there. */
       :root {
         /* One place, because the bar's height and the room the page has to
            leave for it have to agree. */
@@ -160,34 +127,6 @@
         display: flex;
         gap: 8px;
         margin-left: auto;
-      }
-      button.primary {
-        padding: 6px 14px;
-        background: var(--accent);
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 13px;
-      }
-      button.primary:hover {
-        background: var(--accent-hover);
-      }
-      button.primary:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      button.secondary {
-        padding: 6px 14px;
-        background: var(--btn-secondary-bg);
-        color: var(--text-primary);
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 13px;
-      }
-      button[hidden] {
-        display: none;
       }
 
       .error {

@@ -57,6 +57,7 @@ test("applicationDataToIcal: maps Subject/Body/Importance/Sensitivity/Start/Due/
     serverID: "server-id-task-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: false,
     msTodoCompat: false,
     uid: null,
   });
@@ -89,6 +90,7 @@ test("applicationDataToIcal: Complete=1 sets STATUS/PERCENT-COMPLETE/COMPLETED",
     serverID: "server-id-task-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: false,
     msTodoCompat: false,
     uid: null,
   });
@@ -106,6 +108,7 @@ test("applicationDataToIcal: Complete is merge-aware - clears a prior COMPLETED 
     serverID: "server-id-task-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: false,
     msTodoCompat: false,
     uid: null,
   };
@@ -137,6 +140,7 @@ test("applicationDataToIcal: a delta without <Complete> leaves an existing compl
     serverID: "server-id-task-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: false,
     msTodoCompat: false,
     uid: null,
   };
@@ -169,6 +173,7 @@ test("stampEasServerId / readEasServerIdFromIcal round-trip", async () => {
     serverID: "original-id",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: false,
     msTodoCompat: false,
     uid: null,
   });
@@ -200,6 +205,7 @@ END:VCALENDAR
     ical,
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: false,
   });
   w.switchpage("AirSync");
   w.ctag();

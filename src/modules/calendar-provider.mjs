@@ -51,6 +51,10 @@ import {
 } from "../vendor/tbsync/change-queue.mjs";
 import * as calendarStore from "../vendor/tbsync/calendar.mjs";
 import { conformRecurrence } from "./recurrence-shape.mjs";
+import {
+  armSyncAfterChange,
+  quietSecondsFor,
+} from "./sync-after-change.mjs";
 
 /** Every folder of ours that is bound to a calendar, as
  *  `targetID -> {accountId, folderId, targetName, targetColor}`. The host owns
@@ -197,6 +201,21 @@ async function record(
     });
     return;
   }
+  // A reminder being snoozed or dismissed reaches us as an ordinary edit,
+  // because that is how Thunderbird stores the answer. Queueing it would
+  // push a change the wire cannot express, and a server that schedules for
+  // us would mail every attendee to say so. Nothing below this line should
+  // happen for it: no queue entry, no pending count, no sync armed.
+  if (op === "updated" && onlyAlarmBookkeeping(oldIcal, ical)) {
+    report?.({
+      level: "debug",
+      message:
+        `[${type === "task" ? "task" : "event"}-sync] not queueing ${itemId}: ` +
+        `only the reminder's snoozed/dismissed state changed, which the ` +
+        `server does not keep`,
+    });
+    return;
+  }
   const before = oldIcal ? exceptionFingerprint(oldIcal) : null;
   // One calendar type serves both, so the item says which it is - a task
   // folder's edits must not be queued as events.
@@ -274,83 +293,11 @@ async function record(
     );
 
   armSyncAfterChange(
+    host,
+    report,
     calendarId,
-    await quietSecondsFor(binding.accountId),
+    await quietSecondsFor(host, binding.accountId),
     kind,
-  );
-}
-
-/** The window an account that predates the setting keeps, and what an
- *  unreadable one falls back to. Matches the provider's
- *  `DEFAULT_SYNC_ON_CHANGE`. */
-const DEFAULT_QUIET_SECONDS = 15;
-
-/** Pending sync per calendar, keyed by target id, so edits in one calendar
- *  never postpone another's. */
-const syncAfterChangeTimers = new Map();
-
-/** How long this account wants a calendar to stay quiet before its edits
- *  are synced, in seconds, `0` meaning never. Read rather than remembered:
- *  `record` is already asking the host to store the pending count, so this
- *  is a second call beside one we make anyway, and it means a change to the
- *  setting takes effect on the very next edit. */
-async function quietSecondsFor(accountId) {
-  try {
-    const { account } = (await host?.getAccount(accountId)) ?? {};
-    const stored = Number(account?.custom?.syncOnChange);
-    return Number.isFinite(stored) ? stored : DEFAULT_QUIET_SECONDS;
-  } catch {
-    return DEFAULT_QUIET_SECONDS;
-  }
-}
-
-/**
- * Sync a calendar shortly after the user stops editing it.
- *
- * Without this an edit waits for the next scheduled sync, which since the
- * calendars declare `scheduling: "server"` is also how long an invitation
- * waits: Thunderbird no longer mails the attendees, the server does, and
- * the server only learns of the meeting when we push it.
- *
- * Armed from `record` and nowhere else, which is what keeps it from feeding
- * itself: our own sync writes go to `<id>#cache` and raise no item hook, so
- * every call here is a person editing something.
- *
- * Re-arming on each edit rather than syncing on the first is the whole
- * point - a burst of writes is one sync at the end of it.
- *
- * Scoped to the calendar that changed. `requestSync` takes a target id and
- * the host resolves it to that one folder, so a change in one calendar does
- * not drag the account's other resources along.
- *
- * Nothing here can fail a save: the edit is already durable by the time
- * this is called, and the worst case is that it waits for the scheduled
- * sync exactly as it did before this existed.
- */
-function armSyncAfterChange(targetID, seconds, kind) {
-  clearTimeout(syncAfterChangeTimers.get(targetID));
-  if (!seconds) return;
-  syncAfterChangeTimers.set(
-    targetID,
-    setTimeout(async () => {
-      syncAfterChangeTimers.delete(targetID);
-      try {
-        if (!host) return;
-        report?.({
-          level: "debug",
-          message: `[${kind}-sync] syncing ${targetID}, ${seconds}s after the edits stopped`,
-        });
-        await host.requestSync({ parentId: targetID });
-      } catch (err) {
-        // Includes the ordinary cases: the account was disconnected while
-        // the timer ran, or a sync is already going and the host refused
-        // this one. Neither loses anything - the edit stays queued.
-        report?.({
-          level: "debug",
-          message: `[${kind}-sync] sync after change of ${targetID} did not run: ${err?.message ?? String(err)}`,
-        });
-      }
-    }, seconds * 1000),
   );
 }
 
@@ -473,19 +420,32 @@ async function guardStamps(item, priorIcal) {
   const ical = item?.item;
   if (typeof ical !== "string") return item;
   const guarded = pinEasStamps({ builtIcal: ical, priorIcal });
-  // Whether a stamp changed, not whether the document did. The repair
-  // re-serialises what it touches and puts a stamp back at the end of its
-  // component rather than where it found it, so the two strings differ over
-  // things no writer is answerable for.
-  if (easStampsAgree(ical, guarded)) return item;
-  report?.({
-    level: "info",
-    message:
-      `[event-sync] restored the EAS stamps on ${item.id}: the incoming ` +
-      `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}` +
-      alsoChanges(ical, priorIcal),
-  });
-  reportOverwrite(item.id, ical, priorIcal);
+  if (guarded === ical) return item;
+
+  // Only a stamp that moved is a violation. The repair re-serialises what
+  // it touches and puts a stamp back at the end of its component rather
+  // than where it found it, so the two strings differ over things no
+  // writer is answerable for - reporting on that told the user somebody
+  // had written to our fields when nobody had.
+  //
+  // What is NOT conditional is handing the rewritten item back. The
+  // platform parses what a provider returns and hands back what it was
+  // given otherwise, and that parse is what merges a lone occurrence into
+  // its series: an edit to one occurrence arrives as a single vevent
+  // carrying a recurrence-id, and returning the caller's own object sends
+  // it onward unparsed, where the calendar refuses it as an updated item
+  // that should not have a recurrence id (#354). That the two were ever
+  // one decision was an accident of the check being a string comparison.
+  if (!easStampsAgree(ical, guarded)) {
+    report?.({
+      level: "info",
+      message:
+        `[event-sync] restored the EAS stamps on ${item.id}: the incoming ` +
+        `item ${priorIcal ? "did not carry the ones it was stored with" : "carried stamps it has no claim to"}` +
+        alsoChanges(ical, priorIcal),
+    });
+    reportOverwrite(item.id, ical, priorIcal);
+  }
   return { ...item, item: guarded };
 }
 
@@ -619,6 +579,66 @@ function alsoChanges(ical, priorIcal) {
     console.debug("[eas] could not diff an incoming item:", err);
     return "";
   }
+}
+
+/** Names a write moves without the user having changed anything.
+ *
+ *  `dtstamp` and `last-modified` are rewritten on every save, and
+ *  `x-moz-generation` is Thunderbird's own per-item write counter. They are
+ *  here so the alarm properties can be the only thing left: without them no
+ *  diff is ever confined to the alarm, and the test below never fires.
+ *
+ *  `sequence` and `created` are deliberately absent. Neither moves when an
+ *  alarm is acknowledged, and leaving them out keeps this a statement about
+ *  alarm bookkeeping rather than a general list of what we consider
+ *  uninteresting. */
+const WRITE_BUMPED = new Set(["dtstamp", "last-modified", "x-moz-generation"]);
+
+/** Where Thunderbird keeps the answer to "has this reminder been dealt
+ *  with", both of them per item rather than per alarm. The snooze name
+ *  carries the recurrence id when a single occurrence is snoozed
+ *  (`x-moz-snooze-time-1793558400000000`), so it is matched by prefix. */
+const ALARM_ACK = "x-moz-lastack";
+const ALARM_SNOOZE = "x-moz-snooze-time";
+
+/**
+ * True when the only thing this write changed is whether a reminder has
+ * been snoozed or dismissed.
+ *
+ * Thunderbird stores that in the item - `snoozeAlarm` sets
+ * `X-MOZ-SNOOZE-TIME`, `dismissAlarm` sets `X-MOZ-LASTACK` and clears the
+ * snooze - and then saves it like any other edit, on the *parent*, so
+ * dealing with one occurrence's reminder rewrites the series. Nothing in
+ * the outbound codec carries either property, so pushing such a write tells
+ * the server that something changed while changing nothing, and a server
+ * that does the scheduling mails every attendee about it.
+ *
+ * Answers on names alone, which is enough: whatever the new value is, a
+ * property in this set cannot be a user's edit.
+ *
+ * Deliberately false for anything it cannot read. A false positive here
+ * drops a real edit and the user never learns, so an unparseable item, a
+ * create, a delete and a diff carrying one unexpected name all go to the
+ * queue exactly as before.
+ */
+export function onlyAlarmBookkeeping(oldIcal, ical) {
+  if (!oldIcal || !ical) return false;
+  let names;
+  try {
+    names = differingPropertyNames(oldIcal, ical);
+  } catch {
+    return false;
+  }
+  // `null` is "one of them would not parse", and an empty list is a write
+  // that changed nothing at all - neither is an alarm being acknowledged,
+  // and neither is ours to swallow.
+  if (!names?.length) return false;
+  return names.every(
+    (name) =>
+      name === ALARM_ACK ||
+      name.startsWith(ALARM_SNOOZE) ||
+      WRITE_BUMPED.has(name),
+  );
 }
 
 /** Register the item hooks. Safe to call more than once.

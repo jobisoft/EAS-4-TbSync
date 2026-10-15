@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Kosz"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Kopia]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Globalna lista adresów"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Ostatnie 6 miesięcy"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Synchronizuj kalendarz po zmianie"
+  "config.calendar.syncRecurrence": {
+    "message": "Synchronizuj cykliczne wydarzenia/zadania i wyjątki"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync synchronizuje to konto zgodnie z harmonogramem ustawionym w menedżerze kont. Kalendarz może dodatkowo zostać zsynchronizowany wkrótce po tym, jak coś w nim zmienisz, tak aby zmiany lokalne trafiły na serwer bez czekania na następne zaplanowane uruchomienie. Ma to największe znaczenie przy spotkaniach, ponieważ serwer zaprasza uczestników, wysyła aktualizacje i przekazuje Twoją odpowiedź dopiero wtedy, gdy zobaczy Twoje zmiany."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Synchronizuj kalendarze i książki adresowe po zmianie"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync synchronizuje to konto zgodnie z harmonogramem ustawionym w menedżerze kont. Kalendarz lub książka adresowa może dodatkowo zostać zsynchronizowana wkrótce po tym, jak coś w niej zmienisz, tak aby zmiany lokalne trafiły na serwer bez czekania na następne zaplanowane uruchomienie. W przypadku kalendarza decyduje to również o tym, jak szybko serwer zaprosi uczestników, wyśle aktualizacje i przekaże Twoją odpowiedź, ponieważ może to zrobić dopiero wtedy, gdy zobaczy zmianę."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Wyłączone"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Po 5 sekundach"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Po 15 sekundach"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Po 30 sekundach"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Po 60 sekundach"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Elementy na partię synchronizacji"
   },
   "options.maxitems.hint": {
-    "message": "Maksymalna liczba elementów, które serwer może zwrócić w jednym żądaniu synchronizacji (EAS WindowSize). Większe wartości synchronizują się szybciej przy stabilnych połączeniach, mniejsze są bardziej niezawodne przy słabych i zużywają mniej pamięci. Domyślnie: 25."
+    "message": "Maksymalna liczba elementów, które serwer może zwrócić na jedno żądanie synchronizacji. Większe wartości synchronizują szybciej przy dobrym połączeniu, mniejsze są pewniejsze przy niestabilnym, zużywają mniej pamięci i lepiej pokazują postęp. Najmniejsza dozwolona wartość to 5, ponieważ poniżej limit żądań serwera idzie wyłącznie na stronicowanie. Domyślnie: 25."
   },
   "options.mstodo": {
     "message": "Tryb zgodności z Microsoft To Do"
@@ -397,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Synchronizacja powtórzeń włączona: zasoby tego konta są odbudowywane z serwera."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Synchronizacja powtórzeń jest wyłączona. Było to zabezpieczenie we wczesnych wersjach beta i nie jest już potrzebne. Zalecane jest włączenie jej w ustawieniach konta."
   },
   "eas.sync.error.protocolFault": {
     "message": "Serwer odrzucił żądanie synchronizacji jako nieprawidłowe (kod $STATUS$)",

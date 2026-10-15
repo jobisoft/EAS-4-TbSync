@@ -26,6 +26,7 @@ Runs on every version - AirSyncBase Body exists from 12.0, and 2.5 has no
 BodyPreference at all, which the codec handles separately.
 """
 
+import re
 import xml.etree.ElementTree as ET
 from urllib.parse import unquote
 
@@ -233,22 +234,52 @@ def _preferences(s):
     return asked
 
 
-def _fetches(s):
-    """(requests, fetch_blocks, [Type asked]) for the ItemOperations traffic.
+def _server_ids(s, slugs):
+    """The ServerIds of this section's own notes, read from their stamps."""
+    ids = set()
+    for slug in slugs:
+        item = _find(s, slug)
+        m = re.search(
+            r"^X-EAS-SERVERID:(.*)$",
+            (item.get("item") or "").replace("\r\n", "\n"),
+            re.M,
+        )
+        if m:
+            ids.add(m.group(1).strip())
+    return ids
+
+
+def _fetches(s, mine):
+    """(requests, fetch_blocks, [Type asked]) for this section's own notes.
 
     Requests and Fetch blocks are counted separately because the whole point
     of the batching is that they differ: N rich notes in one window must cost
     one request carrying N <Fetch> elements, not N requests.
+
+    Counted for `mine` only, and this is not fussiness. The calendar is a
+    real one and holds whatever else is in it - another test's leftovers, or
+    an event a person made - and a rich note among them is fetched too,
+    correctly. Counting those made this read as a fetch-too-much bug that
+    the released build reproduced, because what was wrong was the sum, not
+    the behaviour: five items came back, three were rich, three were
+    fetched.
     """
     types = []
     requests = 0
     fetch_blocks = 0
     for doc in _docs(s, "send", "ItemOperations"):
-        requests += 1
-        fetch_blocks += len(_descendants(doc, "Fetch"))
-        for preference in _descendants(doc, "BodyPreference"):
-            type_el = _child(preference, "Type")
-            types.append(type_el.text if type_el is not None else None)
+        ours = 0
+        for fetch in _descendants(doc, "Fetch"):
+            sid = _child(fetch, "ServerId")
+            if sid is None or unquote(sid.text or "") not in mine:
+                continue
+            ours += 1
+            for preference in _descendants(fetch, "BodyPreference"):
+                type_el = _child(preference, "Type")
+                types.append(type_el.text if type_el is not None else None)
+        if ours:
+            requests += 1
+            fetch_blocks += ours
     return requests, fetch_blocks, types
 
 
@@ -349,7 +380,7 @@ def t_14_2(s):
     # per note it calls rich, and none at all when it calls none.
     _RICH = [slug for slug, native in natives.items() if native == "2"]
 
-    requests, blocks, types = _fetches(s)
+    requests, blocks, types = _fetches(s, _server_ids(s, SLUGS))
     harness.eq(requests, 1 if _RICH else 0, "one ItemOperations request per window with rich notes")
     harness.eq(blocks, len(_RICH), "carrying one Fetch per rich item, and no others")
     harness.eq(types, ["2"] * len(_RICH), "and each asked for HTML")
@@ -437,7 +468,7 @@ def t_14_4(s):
         )
 
     # And the rich item is still the only one worth a second request.
-    harness.eq(_fetches(s)[:2], (1, 1), "one request, one Fetch - the rich item alone")
+    harness.eq(_fetches(s, _server_ids(s, SLUGS))[:2], (1, 1), "one request, one Fetch - the rich item alone")
 
     # Idempotence, which is what makes storing a server-normalised body safe
     # at all. Exchange rewrites HTML it is handed into a complete document,
@@ -510,7 +541,7 @@ def t_14_5(s):
         ["1"],
         "the server now holds it as plain text",
     )
-    harness.eq(_fetches(s)[:2], (0, 0), "nothing is rich any more, so nothing is re-fetched")
+    harness.eq(_fetches(s, _server_ids(s, SLUGS))[:2], (0, 0), "nothing is rich any more, so nothing is re-fetched")
     after = _find(s, SLUGS[1])
     harness.eq(_description(after), PLAIN_ONE, "the demoted note is the plain text")
     harness.true(_altrep(after) is None, "and the old HTML is gone from the editor field")
@@ -553,7 +584,7 @@ def t_14_6(s):
         ["2"],
         "the server holds it as HTML again",
     )
-    harness.eq(_fetches(s)[:2], (1, 1), "so the item is fetched as HTML once more")
+    harness.eq(_fetches(s, _server_ids(s, SLUGS))[:2], (1, 1), "so the item is fetched as HTML once more")
     after = _find(s, SLUGS[1])
     harness.eq(_description(after), PROMOTED_TEXT, "the tooltip field is the plain text")
     # Containment, for the reason 13.3 gives: Exchange returns the markup
@@ -580,7 +611,7 @@ def t_14_7(s):
     s.rebind("events")
     s.settle("events")
 
-    requests, blocks, types = _fetches(s)
+    requests, blocks, types = _fetches(s, _server_ids(s, (*SLUGS, *extra)))
     harness.eq(requests, 1, "one ItemOperations request for the whole window")
     harness.eq(blocks, 3, "carrying a Fetch per rich note - the two new and 13.6's promotion")
     harness.true(set(types) == {"2"}, "all asking for HTML")
@@ -626,7 +657,7 @@ def t_14_8(s):
         not [w for w in s.wire() if w.startswith("SEND Change")],
         "the server's own conversion was pushed back as an edit",
     )
-    requests, _, _ = _fetches(s)
+    requests, _, _ = _fetches(s, _server_ids(s, SLUGS))
     harness.eq(requests, 0, "HTML was fetched for an item the server holds as plain")
 
 

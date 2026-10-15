@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Papelera"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Copia]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Lista global de direcciones"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Últimos 6 meses"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Sincronizar un calendario tras un cambio"
+  "config.calendar.syncRecurrence": {
+    "message": "Sincronizar eventos/tareas recurrentes y excepciones"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync sincroniza esta cuenta según la programación definida en el gestor de cuentas. Además, un calendario puede sincronizarse poco después de que cambie algo en él, para que los cambios locales lleguen al servidor sin esperar a la siguiente ejecución programada. Esto importa sobre todo en las reuniones, porque el servidor solo invita a los asistentes, envía las actualizaciones y transmite su respuesta cuando ha visto sus cambios."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Cuando está activado, las reglas de recurrencia y las excepciones por instancia se sincronizan en ambos sentidos con el servidor."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Sincronizar calendarios y libretas de direcciones tras un cambio"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync sincroniza esta cuenta según la programación definida en el gestor de cuentas. Además, un calendario o una libreta de direcciones puede sincronizarse poco después de que cambie algo en ellos, para que los cambios locales lleguen al servidor sin esperar a la siguiente ejecución programada. En un calendario esto también determina con qué rapidez el servidor invita a los asistentes, envía las actualizaciones y transmite su respuesta, porque solo puede hacerlo cuando ha visto el cambio."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Desactivado"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Tras 5 segundos"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Tras 15 segundos"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Tras 30 segundos"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Tras 60 segundos"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Elementos por lote de sincronización"
   },
   "options.maxitems.hint": {
-    "message": "Número máximo de elementos que el servidor puede devolver por solicitud de sincronización (el WindowSize de EAS). Valores mayores sincronizan más rápido en conexiones estables, valores menores son más fiables en conexiones inestables y consumen menos memoria. Predeterminado: 25."
+    "message": "Número máximo de elementos que el servidor puede devolver por solicitud de sincronización. Los valores mayores sincronizan más rápido con conexiones buenas, los menores son más fiables con conexiones inestables, usan menos memoria y dan mejor información en la interfaz. El valor mínimo es 5, porque por debajo se gasta el presupuesto de peticiones del servidor solo en paginar. Predeterminado: 25."
   },
   "options.mstodo": {
     "message": "Modo de compatibilidad con Microsoft To Do"
@@ -397,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Sincronización de recurrencias activada: los recursos de esta cuenta se reconstruyen desde el servidor."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "La sincronización de recurrencias está desactivada. Fue una precaución en las primeras versiones beta y ya no es necesaria. Se recomienda activarla en la configuración de la cuenta."
   },
   "eas.sync.error.protocolFault": {
     "message": "El servidor rechazó la solicitud de sincronización como malformada (código $STATUS$)",

@@ -70,6 +70,7 @@ test("applicationDataToIcal: fresh Add maps Subject/Organizer/Attendee/times", a
     serverID: "server-id-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     uid: null,
     userEmail: "user@example.invalid",
   });
@@ -103,6 +104,7 @@ test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fie
     serverID: "server-id-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     uid: null,
     userEmail: "user@example.invalid",
   });
@@ -116,6 +118,7 @@ test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fie
     serverID: "server-id-1",
     asVersion: "16.1",
     defaultTimezone: "UTC",
+    syncRecurrence: true,
     uid: null,
     userEmail: "user@example.invalid",
   });

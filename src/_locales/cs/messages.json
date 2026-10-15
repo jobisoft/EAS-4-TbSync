@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Koš"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Kopie]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Globální seznam adres"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Posledních 6 měsíců"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Synchronizovat kalendář po změně"
+  "config.calendar.syncRecurrence": {
+    "message": "Synchronizovat opakující se události/úkoly a výjimky"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync synchronizuje tento účet podle plánu nastaveného ve správci účtů. Kalendář lze navíc synchronizovat krátce poté, co v něm něco změníte, aby se místní změny dostaly na server bez čekání na další plánované spuštění. Nejdůležitější je to u schůzek, protože server pozve účastníky, rozešle aktualizace a předá vaši odpověď až poté, co vaše změny uvidí."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Pokud je zapnuto, pravidla opakování i jednotlivé výjimky se synchronizují obousměrně se serverem."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Synchronizovat kalendáře a adresáře po změně"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync synchronizuje tento účet podle plánu nastaveného ve správci účtů. Kalendář nebo adresář lze navíc synchronizovat krátce poté, co v něm něco změníte, aby se místní změny dostaly na server bez čekání na další plánované spuštění. U kalendáře to také určuje, jak brzy server pozve účastníky, rozešle aktualizace a předá vaši odpověď, protože to může udělat až poté, co změnu uvidí."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Vypnuto"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Po 5 sekundách"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Po 15 sekundách"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Po 30 sekundách"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Po 60 sekundách"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Položek na dávku synchronizace"
   },
   "options.maxitems.hint": {
-    "message": "Maximální počet položek, které server může vrátit na jeden synchronizační požadavek (EAS WindowSize). Vyšší hodnoty zrychlují synchronizaci na stabilních připojeních, nižší hodnoty jsou spolehlivější na nestabilních a využívají méně paměti. Výchozí: 25."
+    "message": "Maximální počet položek, které server může vrátit na jeden synchronizační požadavek. Vyšší hodnoty synchronizují rychleji na spolehlivém připojení, nižší jsou odolnější na nestabilním, spotřebují méně paměti a dávají lepší zpětnou vazbu v rozhraní. Nejnižší možná hodnota je 5, protože menší utratí limit serveru za pouhé stránkování. Výchozí: 25."
   },
   "options.mstodo": {
     "message": "Režim kompatibility s Microsoft To Do"
@@ -397,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Synchronizace opakování zapnuta: zdroje tohoto účtu se znovu sestavují ze serveru."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Synchronizace opakování je vypnutá. V raných beta verzích šlo o preventivní opatření, které už není potřeba. Doporučujeme ji v nastavení účtu zapnout."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server odmítl požadavek synchronizace jako vadný (kód $STATUS$)",

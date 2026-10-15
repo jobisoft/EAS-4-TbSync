@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Papierkorb"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Kopie]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Globale Adressliste"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Letzte 6 Monate"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Kalender nach einer Änderung synchronisieren"
+  "config.calendar.syncRecurrence": {
+    "message": "Wiederkehrende Termine/Aufgaben und Ausnahmen synchronisieren"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync synchronisiert dieses Konto nach dem im Kontenmanager eingestellten Zeitplan. Ein Kalender kann zusätzlich kurz nach einer Änderung synchronisiert werden, damit lokale Änderungen den Server erreichen, ohne auf den nächsten geplanten Durchlauf zu warten. Am wichtigsten ist das für Termine, denn der Server lädt die Teilnehmer erst ein, verschickt Aktualisierungen und leitet Ihre Antwort erst weiter, wenn er Ihre Änderungen gesehen hat."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Wenn aktiviert, werden Wiederholungsregeln und einzelne Ausnahmen mit dem Server hin und zurück synchronisiert."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Kalender und Adressbücher nach einer Änderung synchronisieren"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync synchronisiert dieses Konto nach dem im Kontenmanager eingestellten Zeitplan. Ein Kalender oder Adressbuch kann zusätzlich kurz nach einer Änderung synchronisiert werden, damit lokale Änderungen den Server erreichen, ohne auf den nächsten geplanten Durchlauf zu warten. Bei einem Kalender bestimmt das auch, wie schnell der Server die Teilnehmer einlädt, Aktualisierungen verschickt und Ihre Antwort weiterleitet, denn er kann das erst tun, wenn er die Änderung gesehen hat."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Aus"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Nach 5 Sekunden"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Nach 15 Sekunden"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Nach 30 Sekunden"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Nach 60 Sekunden"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Elemente pro Synchronisationsschritt"
   },
   "options.maxitems.hint": {
-    "message": "Maximale Anzahl an Elementen, die der Server pro Synchronisationsanfrage zurückgeben darf (die EAS WindowSize). Größere Werte synchronisieren bei stabilen Verbindungen schneller, kleinere Werte sind bei unzuverlässigen Verbindungen robuster und benötigen weniger Speicher. Standard: 25."
+    "message": "Maximale Anzahl an Elementen, die der Server pro Synchronisationsanfrage zurückgeben darf. Größere Werte synchronisieren bei guter Verbindung schneller, kleinere sind bei instabiler zuverlässiger, brauchen weniger Speicher und geben eine bessere Rückmeldung in der Oberfläche. Der kleinste Wert ist 5, denn darunter wird das Anfragekontingent des Servers allein fürs Blättern verbraucht. Standard: 25."
   },
   "options.mstodo": {
     "message": "Microsoft-To-Do-Kompatibilitätsmodus"
@@ -397,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Synchronisation von Wiederholungen aktiviert: Die Ressourcen dieses Kontos werden vom Server neu aufgebaut."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Die Synchronisation von Wiederholungen ist deaktiviert. Das war eine Vorsichtsmaßnahme in frühen Beta-Versionen und ist nicht mehr nötig. Es wird empfohlen, sie in den Kontoeinstellungen zu aktivieren."
   },
   "eas.sync.error.protocolFault": {
     "message": "Server hat die Synchronisationsanfrage als ungültig abgelehnt (Code $STATUS$)",

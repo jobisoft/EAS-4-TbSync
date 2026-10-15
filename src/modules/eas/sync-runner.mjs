@@ -50,7 +50,9 @@ import {
   announceableOf,
   droppedAttendees,
   isReceivedMeeting,
+  plainCopyOfInvitation,
   sameAnnounceable,
+  preserveAlarmAck,
   preserveSelfPartstat,
   repliedPartstatOf,
   stampRepliedPartstat,
@@ -167,6 +169,14 @@ const INSTANCE_RETRY_DELAY_MS = Object.freeze({
   [STATUS_RETRY]: 1000,
 });
 
+// How long an answer to an invitation waits for the server to name the
+// meeting before we stop expecting it to. `invitationPhase` runs after the
+// pull, so every hold is one full sync that asked and came back without it -
+// but a mailbox can be a little behind its own inbox, and this is the room
+// that gives it. Long, because what follows is not reversible: the meeting
+// becomes the user's own event and the guest list is gone.
+const INVITATION_HOLD_MS = 2 * 60 * 60 * 1000;
+
 /* ── DEV: fixture injection ─────────────────────────────────────────────
  *
  * Set DEV_FIXTURE_ADD_XML to inject it as part of every inbound Sync.
@@ -240,11 +250,24 @@ function logRecurrence(ctx, message, details) {
 
 /** Pull WindowSize + initial push batch size. Migrated from the legacy
  *  `extensions.eas4tbsync.maxitems` pref (default 50) into
- *  `browser.storage.local["maxItems"]`; default 25 when unset. */
+ *  `browser.storage.local["maxItems"]`; default 25 when unset.
+ *
+ *  Never below `MIN_MAX_ITEMS`. A window of one or two asks a throttled
+ *  service for the same folder in hundreds of requests where a handful
+ *  would do, and Exchange Online budgets Sync commands by count: an account
+ *  configured that low spends its allowance on paging alone and is answered
+ *  HTTP 503 for the rest of the hour. The floor is applied here rather than
+ *  in the options page because a value can also arrive from the v4
+ *  migration, which no dialog ever sees. It does not constrain the push's
+ *  own shrink after a rejected batch - going down to a single item is how
+ *  that isolates the item the server refused. */
+const MIN_MAX_ITEMS = 5;
+
 async function readMaxItems() {
   const { maxItems } = await browser.storage.local.get({ maxItems: 25 });
   const n = Number(maxItems);
-  return Number.isFinite(n) && n > 0 ? n : 25;
+  if (!Number.isFinite(n) || n <= 0) return 25;
+  return Math.max(MIN_MAX_ITEMS, n);
 }
 
 async function readMsTodoCompat() {
@@ -494,6 +517,7 @@ async function runOneSync({
     separator,
     asVersion,
     defaultTimezone,
+    syncRecurrence: account.custom?.syncrecurrence === true,
     msTodoCompat,
     conflict: conflictPolicyOf(account),
     itemKind,
@@ -731,6 +755,12 @@ async function runOneSync({
   // dropped.
   const pull = await pullPhase(ctx);
   if (pull.code) return await finishWith(ctx, pull);
+  // Both halves, as the instance and follow-up phases above already do: a
+  // rerun is asked for through `code`, and a failure the user has to see -
+  // the transport error the pull returns - comes back through `status`.
+  // Reading only `code` let that error through as a clean sync, leaving a
+  // folder that never pulled looking like one that had nothing to pull.
+  if (pull.status) return await finishWith(ctx, pull);
 
   // 5) Answers to invitations, after the pull because that is what gives
   // an item its ServerId - MeetingResponse addresses one by RequestId, and
@@ -759,6 +789,21 @@ async function runOneSync({
       [String(failedCount)],
     );
     return await finishWith(ctx, { status: warningStatus(msg) });
+  }
+  // Nothing failed, but the folder is not carrying everything it looks like
+  // it is: with the option off, an RRULE and its exceptions are ignored in
+  // both directions, so a series reads as a single entry on whichever side
+  // did not author it. The switch is off on these accounts because early
+  // betas advised it, which is a reason that has expired - so the message
+  // asks for it back rather than only describing the effect. Said on every
+  // sync because the state is permanent (a setting, not an incident), and
+  // the resource row is where someone looks when an occurrence is missing.
+  if (!ctx.syncRecurrence && ctx.itemKind.changelogKind !== "contact") {
+    return await finishWith(ctx, {
+      status: warningStatus(
+        browser.i18n.getMessage("eas.sync.warning.recurrenceDisabled"),
+      ),
+    });
   }
   return await finishWith(ctx, { status: ok() });
 }
@@ -917,6 +962,7 @@ async function revertLocalChanges(ctx) {
       asVersion: ctx.asVersion,
       separator: ctx.separator,
       defaultTimezone: ctx.defaultTimezone,
+      syncRecurrence: ctx.syncRecurrence,
       msTodoCompat: ctx.msTodoCompat,
       uid: e.itemId,
       userEmail: accountUserAddress(ctx.account),
@@ -1183,12 +1229,14 @@ async function pullPhase(ctx) {
   let itemsTotal = estimate ?? 0;
   reportProgress(ctx, itemsDone, itemsTotal);
 
-  // Unbounded MoreAvailable loop, matching legacy sync.js:445. The server
-  // controls termination via the absent <MoreAvailable/> tag; we trust it
-  // to converge. Initial syncs of large folders (10k+ items) hit dozens
-  // of iterations and any cap risks a spurious abort mid-pull.
+  // The server controls termination via the absent <MoreAvailable/> tag,
+  // and it is trusted to converge: initial syncs of large folders (10k+
+  // items) hit dozens of iterations, so any cap on the count risks a
+  // spurious abort mid-pull. Bounded instead by whether the round trip
+  // achieved anything - see the check at the foot of the loop.
   for (;;) {
     throwIfCancelled(ctx);
+    const sentKey = ctx.synckey;
     const body = buildSyncBody({
       synckey: ctx.synckey,
       collectionId: ctx.collectionId,
@@ -1212,9 +1260,10 @@ async function pullPhase(ctx) {
       return { code: "BUSY", topStatus: r.topStatus, collStatus: r.collStatus };
     if (r.error) return { status: errorStatus(r.error) };
 
+    let applied = 0;
     if (r.commands) {
-      const processed = await applyServerCommands(ctx, r.commands);
-      itemsDone += processed;
+      applied = await applyServerCommands(ctx, r.commands);
+      itemsDone += applied;
       if (itemsDone > itemsTotal) itemsTotal = itemsDone;
       reportProgress(ctx, itemsDone, itemsTotal);
     }
@@ -1233,6 +1282,41 @@ async function pullPhase(ctx) {
       });
     }
     if (!r.moreAvailable) return {};
+
+    // "More available" and yet nothing arrived and the sync key did not
+    // move: the next request would be byte-for-byte the one just sent,
+    // against state the server says is unchanged, so the answer can only
+    // be the same again. Measured on Exchange Online (#356): 362 items
+    // estimated, one delivered, then sixty identical empty windows until
+    // the mailbox was answered HTTP 503 with x-ms-asthrottle: SyncCommands
+    // for the rest of the hour - a budget counted in commands, so a loop
+    // that fetches nothing still spends it all.
+    //
+    // Both halves are required. An empty window on its own is not a fault:
+    // a server walking a change set whose items all fall outside the
+    // FilterType can legitimately send nothing while advancing the key,
+    // and stopping there would turn one sync of a large folder into many.
+    //
+    // Treated as the pull being over, exactly like the absent tag: there is
+    // nothing more to be had this pass. Nothing is reset either - the key we
+    // hold is the one the server last stated, so the next sync resumes from
+    // here, costs two requests instead of sixty, and delivers the rest the
+    // moment the server starts sending again.
+    //
+    // Said out loud all the same. A folder that stops short this way looks
+    // from the outside like one that finished, and the difference - 362
+    // items estimated against one delivered - would otherwise exist nowhere
+    // a bug report could reach.
+    if (applied === 0 && (r.synckey == null || r.synckey === sentKey)) {
+      ctx.eventLog(
+        "warning",
+        `[${ctx.itemKind.changelogKind}-sync] the server says more items are ` +
+          `available for collection ${ctx.collectionId} but sent none, and ` +
+          `left the sync key at ${sentKey}; stopping this folder after ` +
+          `${itemsDone} of ${itemsTotal} - asking again cannot change the answer`,
+      );
+      return {};
+    }
   }
 }
 
@@ -1243,7 +1327,9 @@ async function pushPhase(ctx, userEdits) {
   // Recurring masters pushed in this pass whose blob carries overrides.
   // Only 16.1 needs them, and only the calendar codec can express them.
   const instanceMasters =
-    ctx.asVersion === "16.1" && ctx.itemKind.codec.listInstanceCommands
+    ctx.asVersion === "16.1" &&
+    ctx.syncRecurrence &&
+    ctx.itemKind.codec.listInstanceCommands
       ? []
       : null;
   // The ≤14.x counterpart: masters ADDED this pass whose blob carries
@@ -1254,7 +1340,8 @@ async function pushPhase(ctx, userEdits) {
   // ack has assigned a ServerId, followUpPhase re-sends each as one full
   // <Change>, exceptions embedded - the ordinary modify payload, which
   // the same servers keep.
-  const followUpMasters = ctx.asVersion !== "16.1" ? [] : null;
+  const followUpMasters =
+    ctx.asVersion !== "16.1" && ctx.syncRecurrence ? [] : null;
   let batchSize = ctx.maxItems;
   let pending = userEdits.slice();
   let itemsDone = 0;
@@ -1282,7 +1369,7 @@ async function pushPhase(ctx, userEdits) {
     // server responses with the iCal we just sent. 16.1 sends each
     // exception as its own request afterwards, from the instance phase -
     // the master's log entry here is the anchor for those.
-    {
+    if (ctx.syncRecurrence) {
       for (const a of built.adds) {
         if (blobHasRecurrence(a.item.blob)) {
           logRecurrence(
@@ -1317,6 +1404,7 @@ async function pushPhase(ctx, userEdits) {
           asVersion: ctx.asVersion,
           codec: ctx.itemKind.codec,
           defaultTimezone: ctx.defaultTimezone,
+          syncRecurrence: ctx.syncRecurrence,
           userEmail: accountUserAddress(ctx.account),
           fallbackOrganizerName:
             ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
@@ -1580,14 +1668,30 @@ async function invitationPhase(ctx, entries) {
     }
     const serverID = ctx.itemKind.codec.readEasServerIdFromBlob(item.blob);
     if (!serverID) {
-      // The user answered before we had ever seen the server's copy. It
-      // will arrive, be adopted onto this item, and bring an id with it -
-      // so this stays queued and goes on the next sync.
-      ctx.eventLog(
-        "info",
-        `[event-sync] holding the answer to ${entry.itemId}: the server has not ` +
-          `named this meeting yet, so there is nothing to address a response to`,
-      );
+      // The user answered before we had ever seen the server's copy. Usually
+      // it arrives, is adopted onto this item and brings an id with it, so
+      // waiting is right and this stays queued for the next sync.
+      //
+      // But it may never come: an invitation addressed to somebody else and
+      // only redirected here was never created in this mailbox, so there is
+      // no copy to wait for and no id will ever exist. Nothing readable on
+      // the item says which of the two this is - Thunderbird repairs the
+      // guest list when it files such an invitation - and only time can
+      // tell them apart.
+      const heldMs = Date.now() - (entry.timestamp ?? 0);
+      if (heldMs < INVITATION_HOLD_MS) {
+        const leftMin = Math.max(
+          1,
+          Math.round((INVITATION_HOLD_MS - heldMs) / 60_000),
+        );
+        ctx.eventLog(
+          "info",
+          `[event-sync] holding the answer to ${entry.itemId}: the server has not ` +
+            `named this meeting yet - ${leftMin} min before it becomes a plain event`,
+        );
+        continue;
+      }
+      await convertHeldInvitation(ctx, entry, item, heldMs);
       continue;
     }
 
@@ -1722,6 +1826,50 @@ async function invitationPhase(ctx, entries) {
         `(${status ? `Status ${status}` : "no response"}); leaving it queued`,
     );
   }
+}
+
+/**
+ * Stop waiting for a meeting the server is never going to name, and let the
+ * user keep the appointment as their own.
+ *
+ * Reached only after `INVITATION_HOLD_MS` of holding, which - because
+ * `invitationPhase` runs after the pull - is that many syncs that asked the
+ * server and came back without this meeting.
+ *
+ * The queue entry is deliberately left alone. It is an `added_by_user` and
+ * stays one, and the rewrite is what releases it: with the mailbox as
+ * `ORGANIZER` the item is no longer a received meeting, so the next sync's
+ * push dispatcher does not divert it, and it goes out through `pushPhase`
+ * as an ordinary `<Add>` - the only command that could work, there being no
+ * ServerId to address a `<Change>` to.
+ *
+ * The write goes through the store like every other write this file makes,
+ * which means `<id>#cache` and therefore no item hook: the rewrite cannot
+ * come back as a fresh user edit.
+ */
+async function convertHeldInvitation(ctx, entry, item, heldMs) {
+  const heldHours = Math.max(1, Math.round(heldMs / 3_600_000));
+  const plain = plainCopyOfInvitation(item.blob, {
+    summaryPrefix: browser.i18n.getMessage(
+      "calendar.invitationCopy.summaryPrefix",
+    ),
+    // The address the diversion compares against, so that this is certain
+    // to stop looking like somebody else's meeting.
+    organizer: accountUserAddress(ctx.account),
+  });
+  await ctx.queue.markServerWrite({
+    parentId: ctx.targetID,
+    itemId: entry.itemId,
+    status: SERVER_TAG_STATUSES[1],
+    kind: ctx.itemKind.changelogKind,
+  });
+  await ctx.store.update(entry.itemId, plain);
+  ctx.eventLog(
+    "warning",
+    `[event-sync] the answer to ${entry.itemId} could not be sent for ` +
+      `${heldHours} h - this mailbox holds no copy of the meeting, so it has ` +
+      `been kept as a plain event and the guest list dropped`,
+  );
 }
 
 /** Take a queued edit out of the queue, having established that nothing
@@ -1961,6 +2109,7 @@ async function instancePhase(ctx, masters) {
       previous: m.previous ?? null,
       asVersion: ctx.asVersion,
       defaultTimezone: ctx.defaultTimezone,
+      syncRecurrence: ctx.syncRecurrence,
       userEmail: accountUserAddress(ctx.account),
       fallbackOrganizerName:
         ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
@@ -2009,6 +2158,7 @@ async function followUpPhase(ctx, masters) {
           asVersion: ctx.asVersion,
           separator: ctx.separator,
           defaultTimezone: ctx.defaultTimezone,
+          syncRecurrence: ctx.syncRecurrence,
           userEmail: accountUserAddress(ctx.account),
           fallbackOrganizerName:
             ctx.account?.custom?.fallbackOrganizerNames?.[ctx.collectionId],
@@ -2179,6 +2329,7 @@ async function dropUnsatisfiableEntry(ctx, entry, reason) {
 async function holdIfUnrepresentable(ctx, entry, it, operation, failedItems) {
   const reason = ctx.itemKind.codec.clientRejectReason?.({
     blob: it.blob,
+    syncRecurrence: ctx.syncRecurrence,
     asVersion: ctx.asVersion,
   });
   if (!reason) return false;
@@ -2743,6 +2894,7 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
     asVersion: ctx.asVersion,
     separator: ctx.separator,
     defaultTimezone: ctx.defaultTimezone,
+    syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: newId,
     userEmail: accountUserAddress(ctx.account),
@@ -2792,7 +2944,11 @@ async function applyChange(ctx, changeNode, noteBacklog = null) {
   // ServerId. Route to the codec's exception path; bail back to the
   // normal master update if the codec doesn't support it.
   const instanceId = readPathFrom(ad, ["InstanceId"]);
-  if (instanceId && ctx.itemKind.codec.applyInstanceChange) {
+  if (
+    instanceId &&
+    ctx.syncRecurrence &&
+    ctx.itemKind.codec.applyInstanceChange
+  ) {
     return applyExceptionChange(ctx, ad, existing, instanceId, serverID);
   }
   return applyChangeFromAd(ctx, ad, existing, serverID, null, noteBacklog);
@@ -3074,6 +3230,7 @@ async function applyChangeFromAd(
     asVersion: ctx.asVersion,
     separator: ctx.separator,
     defaultTimezone: ctx.defaultTimezone,
+    syncRecurrence: ctx.syncRecurrence,
     msTodoCompat: ctx.msTodoCompat,
     uid: existing.itemId,
     userEmail: accountUserAddress(ctx.account),
@@ -3091,6 +3248,12 @@ async function applyChangeFromAd(
       priorIcal: existing.blob,
       userEmail: accountUserAddress(ctx.account),
     });
+    // Same shape, different local state: a <Reminder> in the answer makes
+    // the merge rebuild the alarm, and the user's snooze or dismissal of it
+    // would go with the alarm it answered. Kept when the alarm came back
+    // unchanged, which is every Change provoked by something else about the
+    // meeting.
+    blob = preserveAlarmAck({ builtIcal: blob, priorIcal: existing.blob });
   }
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
@@ -3142,6 +3305,7 @@ async function applyChangeFromAd(
 export async function noteExceptionsDroppedByServer(ctx, ad, existing, blob) {
   if (
     ctx.asVersion !== "16.1" ||
+    !ctx.syncRecurrence ||
     ctx.itemKind.changelogKind !== "event" ||
     !childByTag(ad, "Recurrence") ||
     childByTag(ad, "Exceptions") ||

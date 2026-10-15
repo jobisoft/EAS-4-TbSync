@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Kuka"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Másolat]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Globális címlista"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Utolsó 6 hónap"
   },
-  "config.calendar.syncOnChange": {
-    "message": "A naptár szinkronizálása módosítás után"
+  "config.calendar.syncRecurrence": {
+    "message": "Ismétlődő események/feladatok és kivételek szinkronizálása"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "A TbSync a fiókkezelőben beállított ütemezés szerint szinkronizálja ezt a fiókot. Egy naptár ezen felül röviddel azután is szinkronizálható, hogy módosított benne valamit, így a helyi módosítások a következő ütemezett futás bevárása nélkül jutnak el a kiszolgálóra. Ez az értekezleteknél számít a leginkább, mert a kiszolgáló csak akkor hívja meg a résztvevőket, küldi el a frissítéseket és továbbítja a válaszát, ha már látta a módosításait."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Bekapcsolva az ismétlődési szabályok és az egyedi kivételek mindkét irányban szinkronizálódnak a kiszolgálóval."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Naptárak és címjegyzékek szinkronizálása módosítás után"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "A TbSync a fiókkezelőben beállított ütemezés szerint szinkronizálja ezt a fiókot. Egy naptár vagy címjegyzék ezen felül röviddel azután is szinkronizálható, hogy módosított benne valamit, így a helyi módosítások a következő ütemezett futás bevárása nélkül jutnak el a kiszolgálóra. Naptár esetén ez azt is meghatározza, milyen hamar hívja meg a kiszolgáló a résztvevőket, küldi el a frissítéseket és továbbítja a válaszát, mert erre csak akkor képes, ha már látta a módosítást."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Ki"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "5 másodperc után"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "15 másodperc után"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "30 másodperc után"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "60 másodperc után"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Elem szinkronizációs kötegenként"
   },
   "options.maxitems.hint": {
-    "message": "Az elemek maximális száma, amelyet a kiszolgáló egy szinkronizációs kérésre visszaadhat (az EAS WindowSize értéke). A nagyobb értékek stabil kapcsolaton gyorsabban szinkronizálnak, a kisebbek megbízhatóbbak instabil kapcsolaton, és kevesebb memóriát használnak. Alapértelmezett: 25."
+    "message": "A kiszolgáló által szinkronizálási kérésenként visszaadható elemek legnagyobb száma. A nagyobb értékek jó kapcsolat mellett gyorsabban szinkronizálnak, a kisebbek instabil kapcsolaton megbízhatóbbak, kevesebb memóriát használnak és jobb visszajelzést adnak a felületen. A legkisebb megadható érték 5, mert ez alatt a kiszolgáló kéréskerete pusztán a lapozásra megy el. Alapértelmezés: 25."
   },
   "options.mstodo": {
     "message": "Microsoft To Do kompatibilitási mód"
@@ -397,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Ismétlődések szinkronizálása bekapcsolva: a fiók erőforrásai újraépülnek a kiszolgálóról."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Az ismétlődések szinkronizálása ki van kapcsolva. Ez a korai béta verziókban óvintézkedés volt, és már nem szükséges. Javasolt bekapcsolni a fiók beállításaiban."
   },
   "eas.sync.error.protocolFault": {
     "message": "A szerver helytelennek nyilvánította a szinkronizálási kérést (kód: $STATUS$)",

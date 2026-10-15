@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Корзина"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Копия]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Глобальный список адресов"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Последние 6 месяцев"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Синхронизировать календарь после изменения"
+  "config.calendar.syncRecurrence": {
+    "message": "Синхронизировать повторяющиеся события/задачи и исключения"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync синхронизирует эту учётную запись по расписанию, заданному в менеджере учётных записей. Кроме того, календарь можно синхронизировать вскоре после того, как вы в нём что-то измените, чтобы локальные изменения попали на сервер, не дожидаясь следующего запланированного запуска. Больше всего это важно для встреч, потому что сервер приглашает участников, рассылает обновления и передаёт ваш ответ только после того, как увидит ваши изменения."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "При включении правила повторения и исключения для отдельных экземпляров синхронизируются с сервером в обе стороны."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Синхронизировать календари и адресные книги после изменения"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync синхронизирует эту учётную запись по расписанию, заданному в менеджере учётных записей. Кроме того, календарь или адресную книгу можно синхронизировать вскоре после того, как вы в них что-то измените, чтобы локальные изменения попали на сервер, не дожидаясь следующего запланированного запуска. Для календаря это определяет и то, как скоро сервер пригласит участников, разошлёт обновления и передаст ваш ответ, потому что сделать это он может только после того, как увидит изменение."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Выключено"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "Через 5 секунд"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "Через 15 секунд"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "Через 30 секунд"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "Через 60 секунд"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Элементов в пакете синхронизации"
   },
   "options.maxitems.hint": {
-    "message": "Максимальное количество элементов, которые сервер может вернуть за один запрос синхронизации (EAS WindowSize). Большие значения ускоряют синхронизацию при стабильных подключениях, меньшие надёжнее при нестабильных и используют меньше памяти. По умолчанию: 25."
+    "message": "Максимальное число элементов, которые сервер может вернуть на один запрос синхронизации. Большие значения синхронизируют быстрее при хорошем соединении, меньшие надёжнее при нестабильном, экономят память и лучше показывают ход работы. Наименьшее допустимое значение - 5, потому что меньше расходует лимит запросов сервера на одно только перелистывание. По умолчанию: 25."
   },
   "options.mstodo": {
     "message": "Режим совместимости с Microsoft To Do"
@@ -397,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Синхронизация повторений включена: ресурсы этой учётной записи перестраиваются с сервера."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Синхронизация повторений отключена. Это была мера предосторожности в ранних бета-версиях и больше не требуется. Рекомендуется включить её в настройках учётной записи."
   },
   "eas.sync.error.protocolFault": {
     "message": "Сервер отклонил запрос синхронизации как некорректный (код $STATUS$)",

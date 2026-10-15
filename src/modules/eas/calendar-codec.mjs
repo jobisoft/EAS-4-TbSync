@@ -12,6 +12,7 @@
  * (outbound on 2.5/14.x only). Per-instance: one `<Change>` or `<Delete>`
  * per occurrence carrying `<InstanceId>`, handled by `applyInstanceChange`
  * / `applyInstanceDelete` and built by `listInstanceCommands` (16.1
+ * only). All of it is gated on the account's `syncRecurrence` option.
  *
  * The TimeZone blob (every version, but not for all-day events on 16.1,
  * which are floating dates) is encoded / decoded via `TimeZoneBlob` in
@@ -109,6 +110,7 @@ export async function applicationDataToIcal({
   serverID,
   asVersion,
   defaultTimezone,
+  syncRecurrence,
   uid,
   userEmail,
   eventLog,
@@ -147,10 +149,10 @@ export async function applicationDataToIcal({
     nativePlainText,
   });
 
-  // Recurrence + 2.5/14.x exceptions. Only touch RRULE / exceptions when
-  // the AD mentions them; otherwise leave whatever the existing blob
-  // carried.
-  {
+  // Recurrence + 2.5/14.x exceptions. Gated on the account-level
+  // syncRecurrence flag. Only touch RRULE / exceptions when the AD
+  // mentions them; otherwise leave whatever the existing blob carried.
+  if (syncRecurrence) {
     const recNode = childByTag(adNode, "Recurrence");
     if (recNode) {
       vevent.removeAllProperties("rrule");
@@ -480,6 +482,7 @@ export function listInstanceCommands({
   serverID,
   asVersion,
   defaultTimezone,
+  syncRecurrence,
   userEmail,
   fallbackOrganizerName,
   eventLog,
@@ -572,6 +575,7 @@ export function listInstanceCommands({
           ical: override,
           asVersion,
           defaultTimezone,
+          syncRecurrence,
           isException: true,
           userEmail,
           fallbackOrganizerName,
@@ -690,6 +694,7 @@ export function appendApplicationDataFromIcal({
   ical,
   asVersion,
   defaultTimezone,
+  syncRecurrence,
   isException = false,
   // ≤14.x only: leave the embedded <Exceptions> wrapper out of this
   // payload. Used by an <Add> whose blob carries exceptions - they are
@@ -942,10 +947,11 @@ export function appendApplicationDataFromIcal({
     }
   }
 
-  // Recurrence + 2.5/14.x <Exceptions> block. Master only. 16.1 sends
-  // exceptions as separate <Change> commands at the orchestrator level, so
-  // the master payload itself never carries an <Exceptions> wrapper there.
-  if (!isException) {
+  // Recurrence + 2.5/14.x <Exceptions> block. Master only; gated on
+  // syncRecurrence. 16.1 sends exceptions as separate <Change> commands
+  // at the orchestrator level, so the master payload itself never
+  // carries an <Exceptions> wrapper on 16.1.
+  if (syncRecurrence && !isException) {
     const rrule = vevent.getFirstProperty("rrule");
     if (rrule) {
       appendRecurrence(
@@ -963,6 +969,7 @@ export function appendApplicationDataFromIcal({
         vevent,
         asVersion,
         defaultTimezone,
+        syncRecurrence,
         userEmail,
         fallbackOrganizerName,
         eventLog,
@@ -1005,11 +1012,13 @@ export function serverRejectReason({ adNode }) {
  *  sub-daily frequencies, so an HOURLY/MINUTELY/SECONDLY rule would
  *  silently sync as DAILY - the runner holds such an item as a
  *  client-side rejection instead (warned, counted, retried every sync
- *  until the user changes or removes it). The regex pre-filter is safe -
- *  VTIMEZONE transition rules are only ever yearly. */
+ *  until the user changes or removes it). Gated on `syncRecurrence`:
+ *  with the flag off no recurrence is emitted at all, so nothing is
+ *  misrepresented. The regex pre-filter is safe - VTIMEZONE transition
+ *  rules are only ever yearly. */
 const SUB_DAILY_FREQ = /FREQ=(HOURLY|MINUTELY|SECONDLY)/;
 
-export function clientRejectReason({ blob }) {
+export function clientRejectReason({ blob, syncRecurrence }) {
   if (typeof blob !== "string") return null;
   const vcal = parseVCalendar(blob);
   const master = vcal ? pickMasterVevent(vcal) : null;
@@ -1020,7 +1029,7 @@ export function clientRejectReason({ blob }) {
   // calendar day: no daily rule sits under both, and EAS has no finer
   // frequency. Sending it anyway means the server storing the item
   // without its dates, which is the occurrences lost in silence.
-  if (master.getFirstProperty("rdate")) {
+  if (syncRecurrence && master.getFirstProperty("rdate")) {
     return (
       "this event has two occurrences on the same day, and ActiveSync " +
       "can state occurrences only as a rule, which has no interval " +
@@ -1028,7 +1037,7 @@ export function clientRejectReason({ blob }) {
     );
   }
 
-  if (SUB_DAILY_FREQ.test(blob)) {
+  if (syncRecurrence && SUB_DAILY_FREQ.test(blob)) {
     const freq = String(
       master.getFirstProperty("rrule")?.getFirstValue()?.freq ?? "",
     ).toUpperCase();
@@ -1579,6 +1588,7 @@ function appendOutboundExceptions({
   vevent,
   asVersion,
   defaultTimezone,
+  syncRecurrence,
   userEmail,
   fallbackOrganizerName,
   eventLog,
@@ -1618,6 +1628,7 @@ function appendOutboundExceptions({
       ical: override,
       asVersion,
       defaultTimezone,
+      syncRecurrence,
       isException: true,
       userEmail,
       fallbackOrganizerName,
@@ -1901,6 +1912,63 @@ export function isReceivedMeeting(ical, userEmail = null) {
   const self = selfAddress(master, userEmail);
   if (!self) return false;
   return stripMailto(stringOf(orgProp.getFirstValue())).toLowerCase() !== self;
+}
+
+/** The same event, as something this mailbox may actually hold.
+ *
+ *  For an invitation the server has no copy of, which can therefore never be
+ *  answered: `invitationPhase` holds such an entry waiting for a ServerId
+ *  that is not coming, and after long enough the honest thing is to stop
+ *  calling it a meeting.
+ *
+ *  The guest list goes, and that is the load-bearing part. On 16.x a client
+ *  may state neither the organizer nor an attendee's status, so an `<Add>`
+ *  still carrying attendees would have the server make the user the
+ *  organizer and invite every one of them in the user's name - which is the
+ *  bug the whole diversion exists to prevent. The organizer becomes the
+ *  mailbox, because after this the appointment is the user's own; the marker
+ *  goes, or the item still reads as an invitation to `isReceivedMeeting` and
+ *  is diverted straight back out of the push; and the summary says `[Copy]`,
+ *  which is the whole of what the user is told. Nothing else is touched -
+ *  the note in particular is left exactly as it came.
+ *
+ *  Every component, not just the master: an override carries its own
+ *  attendee block, and `selfUserResponses` reads each one on its own, so a
+ *  master-only strip would leave the item answerable.
+ *
+ *  `summaryPrefix` is passed in rather than looked up, because nothing in
+ *  this module may reach for `browser.i18n`.
+ *
+ *  Returns the input unchanged when there is nothing to work with, as every
+ *  transform here does: a blob we cannot read is not one to rewrite. */
+export function plainCopyOfInvitation(ical, { summaryPrefix, organizer } = {}) {
+  try {
+    const vcal = parseVCalendar(ical);
+    if (!vcal) return ical;
+    const comps = vcal.getAllSubcomponents("vevent");
+    if (!comps.length) return ical;
+
+    // Stated the way the rest of the document states an address, whichever
+    // form the caller holds it in - the calendar declares its owner as a
+    // `mailto:` URI, an account states a bare address.
+    const owner = stripMailto(stringOf(organizer));
+
+    for (const comp of comps) {
+      comp.removeAllProperties("attendee");
+      comp.removeAllProperties("x-moz-invited-attendee");
+      comp.removeAllProperties("organizer");
+      if (owner) {
+        comp.updatePropertyWithValue("organizer", `mailto:${owner}`);
+      }
+      const summary = stringOf(comp.getFirstPropertyValue("summary"));
+      if (summaryPrefix && summary && !summary.startsWith(summaryPrefix)) {
+        comp.updatePropertyWithValue("summary", `${summaryPrefix} ${summary}`);
+      }
+    }
+    return vcal.toString();
+  } catch {
+    return ical;
+  }
 }
 
 /** The self attendee of one component, by address. */
@@ -2188,6 +2256,98 @@ export function preserveSelfPartstat({ builtIcal, priorIcal, userEmail }) {
     if (!builtSelf) continue;
     builtSelf.setParameter("partstat", partstat);
     touched = true;
+  }
+  return touched ? vcal.toString() : builtIcal;
+}
+
+/** How Thunderbird records that a reminder was answered: `X-MOZ-LASTACK`
+ *  for both a snooze and a dismiss, and `X-MOZ-SNOOZE-TIME` beside it to say
+ *  when to return - suffixed with the recurrence id when one occurrence was
+ *  snoozed, hence the prefix rather than an exact name. Local throughout:
+ *  ActiveSync carries neither. */
+const ALARM_ANSWER = /^x-moz-(lastack|snooze-time)/i;
+
+/** The alarms of one component, as the only thing that distinguishes them
+ *  here: when each fires, and how many there are.
+ *
+ *  `TRIGGER` is compared as it stands rather than converted back to EAS
+ *  minutes. `alarmMinutes` would do the conversion, but it exists for the
+ *  outbound path and logs about alarms it has to rewrite - explanations a
+ *  pull has no business producing. */
+function alarmTriggers(comp) {
+  return comp
+    .getAllSubcomponents("valarm")
+    .map((alarm) => {
+      const trig = alarm.getFirstProperty("trigger");
+      return trig ? canonicalPropertyString(trig) : "";
+    })
+    .sort();
+}
+
+/** Whether an alarm the user has already answered is still the same alarm.
+ *
+ *  Both sides are ours - the server sends one offset and the previous sync
+ *  wrote it the same way - so equal strings mean equal alarms, and a set
+ *  that grew or shrank is a change whatever the offsets say. */
+function sameAlarms(a, b) {
+  return a.length === b.length && a.every((t, i) => t === b[i]);
+}
+
+/**
+ * Carry a snoozed or dismissed reminder across a merge that did not change
+ * the reminder.
+ *
+ * `<Reminder>` in the ApplicationData is the server's authority over the
+ * alarm, so the merge clears the VALARMs before re-adding it - otherwise a
+ * partial Change stacks a second alarm on the item. The user's answer to
+ * that alarm was being cleared with them, and the server re-sends the
+ * element whenever anything else about the meeting changes, so an organiser
+ * moving a room resurrected every attendee's dismissed reminder. Thunderbird
+ * reads a missing `X-MOZ-LASTACK` as "not answered" and fires again.
+ *
+ * The answer is two properties that mean one thing. `X-MOZ-LASTACK` says the
+ * alarm was answered and suppresses it, `X-MOZ-SNOOZE-TIME` only adds when
+ * to come back - Thunderbird writes the first for a snooze *and* a dismiss.
+ * Carrying one without the other would leave a snoozed alarm with its
+ * suppression gone, firing at once instead of at the snooze time, so they
+ * move together or not at all.
+ *
+ * Only when the alarm is unchanged. A reminder the organiser moved is one
+ * the user has not seen, and it should ring.
+ *
+ * Per component, because an alarm answered on a single occurrence is
+ * recorded on that override and nowhere else.
+ */
+export function preserveAlarmAck({ builtIcal, priorIcal }) {
+  const priorCal = parseVCalendar(priorIcal);
+  if (!priorCal) return builtIcal;
+
+  const keep = new Map();
+  for (const comp of priorCal.getAllSubcomponents("vevent")) {
+    const marks = comp
+      .getAllProperties()
+      .filter((p) => ALARM_ANSWER.test(p.name));
+    if (!marks.length) continue;
+    const ridValue = comp.getFirstPropertyValue("recurrence-id");
+    keep.set(ridValue ? instanceKey(ridValue) : null, {
+      triggers: alarmTriggers(comp),
+      marks: marks.map((p) => [p.name, p.getFirstValue()]),
+    });
+  }
+  if (!keep.size) return builtIcal;
+
+  const vcal = parseVCalendar(builtIcal);
+  if (!vcal) return builtIcal;
+  let touched = false;
+  for (const comp of vcal.getAllSubcomponents("vevent")) {
+    const ridValue = comp.getFirstPropertyValue("recurrence-id");
+    const prior = keep.get(ridValue ? instanceKey(ridValue) : null);
+    if (!prior) continue;
+    if (!sameAlarms(prior.triggers, alarmTriggers(comp))) continue;
+    for (const [name, value] of prior.marks) {
+      comp.updatePropertyWithValue(name, value);
+      touched = true;
+    }
   }
   return touched ? vcal.toString() : builtIcal;
 }

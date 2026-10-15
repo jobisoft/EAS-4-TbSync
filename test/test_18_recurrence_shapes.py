@@ -35,6 +35,7 @@ from bridge import ok
 from harness import test
 
 NEEDS = ("events", "tasks")
+NEEDS_RECURRENCE = True
 
 MARK = "PROBE combined series"
 

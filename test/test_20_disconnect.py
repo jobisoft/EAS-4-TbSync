@@ -68,9 +68,9 @@ def _syncing_now(s):
 @test("20.1", "disconnect while a sync is running - the sync stops with it")
 def t_9_1(s):
     # Read while the account is still connected: 20.4 compares against it.
-    # The value differs legitimately between accounts - one that
-    # provisions never acquires it by the Settings route at all - so the
-    # test is that the disconnect left it alone, not what it holds.
+    # The value differs legitimately between accounts - one that provisions
+    # never acquires it by the Settings route at all - so what 20.4 asks is
+    # that the reconnect ended where it began, not what that is.
     s.device_ack_before = (_account_row(s).get("custom") or {}).get(
         "deviceInfoAcked"
     )
@@ -140,18 +140,22 @@ def t_9_3(s):
     harness.eq(_account_row(s)["error"], None, "account error after reconnect")
 
 
-@test("20.4", "the device stays introduced across a disconnect")
+@test("20.4", "the device introduces itself again after a reconnect")
 def t_9_4(s):
-    """Disconnecting is a client-side act, and the partnership it leaves
-    alone lives on the server.
+    """A disconnect drops the handshake, so reconnecting rebuilds it.
 
-    So the record of it survives, and reconnecting must not re-announce
-    the same device: that would be a request telling the server something
-    it already knows, on every reconnect, forever. This reads 20.3's
-    window, where the account was re-enabled and synced.
+    The partnership the acknowledgement records lives on the server, and
+    for a long time this was read as a reason to keep it: re-announcing
+    would tell the server something it already knew. That holds only while
+    the server still remembers. One that has forgotten a device says so by
+    answering every folder empty rather than by failing, which leaves
+    reconnecting as the only move a user has against it - so the disconnect
+    now clears the acknowledgement with the folder sync key, and the next
+    connect introduces the device again.
 
-    Neither carrier may do it - the standalone Settings command, nor a
-    Provision body, which embeds the same element on 14.1 and above.
+    Read from 20.3's window, where the account was re-enabled and synced.
+    Either carrier counts: the standalone Settings command, or a Provision
+    body, which embeds the same element on 14.1 and above.
     """
     announced = []
     for entry in s.log():
@@ -162,9 +166,17 @@ def t_9_4(s):
         if "<DeviceInformation" in details and "<Set" in details:
             announced.append(message)
 
-    harness.eq(announced, [], "device details re-announced after reconnect")
+    harness.eq(
+        len(announced),
+        1,
+        f"device announcements after the reconnect, want exactly one: "
+        f"{announced}",
+    )
+    # And it ends where it began. The reconnect is only worth anything if
+    # the server answered, so a run that re-announced but was not
+    # acknowledged has bought the user nothing.
     harness.eq(
         (_account_row(s).get("custom") or {}).get("deviceInfoAcked"),
         s.device_ack_before,
-        "the record of the acknowledgement changed across the disconnect",
+        "the acknowledgement did not come back after the reconnect",
     )

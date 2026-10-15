@@ -19,6 +19,7 @@ from harness import test
 # Resources this section touches.
 NEEDS = ("events", "tasks")
 # 11.5 pushes a yearly rule, so the account has to sync recurrence.
+NEEDS_RECURRENCE = True
 
 DAY = "20260916"
 NEXT_DAY = "20260917"
@@ -244,3 +245,140 @@ def t_11_5(s):
     # untidy - the push is answered with HTTP 500 and the folder goes red.
     harness.eq(s.status("events"), "success", "events folder status")
     s.settle("events")
+
+
+@test("11.6", "acknowledging a reminder is not an edit (TbSync #816)")
+def t_11_6(s):
+    """Thunderbird keeps whether a reminder has been snoozed or dismissed
+    inside the item, and saves it through the ordinary write path - on the
+    parent, so dealing with one occurrence's alarm rewrites the series.
+    Queued as a user edit it leaves as a <Change>, and a server that
+    schedules for us then mails every attendee to say the meeting changed.
+
+    Nothing on the wire carries either property, so that <Change> announced
+    a change that was not there. The assertion is therefore the queue and
+    not the server: an item whose only difference is the acknowledgement
+    must not be queued at all.
+
+    The second half is the one that matters most. A filter this close to the
+    user's save is one wrong predicate away from swallowing real edits in
+    silence, so a title change through the same path has to still arrive.
+    """
+    ok(
+        "items.create",
+        type="event",
+        ical=probes.event(
+            "alarm-ack",
+            lines=[
+                "DTSTART:20260916T090000Z",
+                "DTEND:20260916T093000Z",
+                "BEGIN:VALARM",
+                "ACTION:DISPLAY",
+                "TRIGGER:-PT15M",
+                "DESCRIPTION:Reminder",
+                "END:VALARM",
+            ],
+        ),
+    )
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained before the test")
+
+    # What `dismissAlarm` writes: the acknowledgement, and nothing else.
+    item = _event_body(s, "alarm-ack")
+    dismissed = item["item"].replace(
+        "END:VALARM", "END:VALARM\r\nX-MOZ-LASTACK:20260916T084500Z"
+    )
+    harness.true(dismissed != item["item"], "the fixture did not gain the stamp")
+    ok("items.update", id=item["id"], ical=dismissed)
+    harness.eq(
+        s.changelog("events"),
+        [],
+        "a dismissed reminder was queued as a user edit",
+    )
+
+    # ...and a real edit through the very same path still is.
+    item = _event_body(s, "alarm-ack")
+    ok(
+        "items.update",
+        id=item["id"],
+        ical=item["item"].replace("alarm-ack", "alarm-ack renamed"),
+    )
+    harness.eq(
+        len(s.changelog("events")),
+        1,
+        "a title change was swallowed with the alarm bookkeeping",
+    )
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained")
+
+    ok("items.remove", id=_event_body(s, "alarm-ack renamed")["id"])
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained after cleanup")
+
+
+@test("11.7", "a reminder answered stays answered across a resync (TbSync #816)")
+def t_11_7(s):
+    """The other half of 11.6. `<Reminder>` in the server's answer is its
+    authority over the alarm, so the merge rebuilds the VALARM - and used to
+    drop the user's dismissal with it. Exchange re-sends that element
+    whenever anything else about the meeting changes, so an organiser moving
+    a room resurrected every attendee's dismissed reminder.
+
+    Driven by a resync rather than a real server-side edit, because that is
+    the same code: an inbound <Add> for an item we already hold by ServerId
+    is routed into `applyChangeFromAd` with the prior blob, so the merge runs
+    exactly as it would on a Change. Nothing else in the suite can make a
+    server send a Change carrying an unchanged Reminder on demand.
+    """
+    ok(
+        "items.create",
+        type="event",
+        ical=probes.event(
+            "ack-resync",
+            lines=[
+                "DTSTART:20260916T110000Z",
+                "DTEND:20260916T113000Z",
+                "BEGIN:VALARM",
+                "ACTION:DISPLAY",
+                "TRIGGER:-PT15M",
+                "DESCRIPTION:Reminder",
+                "END:VALARM",
+            ],
+        ),
+    )
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained before the test")
+
+    # Answer the reminder, the way a dismissal reaches the item. 11.6 proves
+    # this is not queued, so the server never hears about it - which is
+    # exactly why the local copy is the only place it exists.
+    item = _event_body(s, "ack-resync")
+    ok(
+        "items.update",
+        id=item["id"],
+        ical=item["item"].replace(
+            "END:VALARM", "END:VALARM\r\nX-MOZ-LASTACK:20260916T104500Z"
+        ),
+    )
+    harness.true(
+        "X-MOZ-LASTACK" in _event_body(s, "ack-resync")["item"],
+        "the dismissal did not reach the stored item",
+    )
+
+    # A sync key nobody issued: the server refuses it and re-sends the folder,
+    # each item as an <Add> that finds its existing twin. Written straight
+    # into host storage the way 19.2 does - there is no verb for this.
+    snap = ok("storage.snapshot")
+    folders = snap["tbsync.folders"]
+    folders[s.account_id][s.folders["events"]]["custom"]["synckey"] = "999999999"
+    ok("storage.restore", data={"tbsync.folders": folders})
+    s.sync()
+
+    harness.true(
+        "X-MOZ-LASTACK" in _event_body(s, "ack-resync")["item"],
+        "the resync cleared the dismissal - the reminder will ring again",
+    )
+
+    ok("items.remove", id=_event_body(s, "ack-resync")["id"])
+    s.sync()
+    harness.eq(s.changelog("events"), [], "changelog drained after cleanup")

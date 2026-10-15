@@ -8,6 +8,10 @@
   "folder.trashPrefix": {
     "message": "Coș de gunoi"
   },
+  "calendar.invitationCopy.summaryPrefix": {
+    "message": "[Copie]",
+    "description": "Marks an event kept as a plain copy because the invitation it came from was addressed to somebody else and this mailbox holds no copy of the meeting, so it can never be synchronized as one. Prefixed to the event's own title, ahead of a space."
+  },
   "gal.addressBookSuffix": {
     "message": "Listă globală de adrese"
   },
@@ -281,25 +285,31 @@
   "config.calendar.syncLimit.6months": {
     "message": "Ultimele 6 luni"
   },
-  "config.calendar.syncOnChange": {
-    "message": "Sincronizează calendarul după o modificare"
+  "config.calendar.syncRecurrence": {
+    "message": "Sincronizează evenimentele/activitățile recurente și excepțiile"
   },
-  "config.calendar.syncOnChange.hint": {
-    "message": "TbSync sincronizează acest cont conform programului stabilit în managerul de conturi. În plus, un calendar poate fi sincronizat la scurt timp după ce modificați ceva în el, astfel încât modificările locale să ajungă la server fără a aștepta următoarea rulare programată. Acest lucru contează cel mai mult pentru întâlniri, deoarece serverul invită participanții, trimite actualizările și transmite răspunsul dumneavoastră abia după ce v-a văzut modificările."
+  "config.calendar.syncRecurrence.hint": {
+    "message": "Când e activat, regulile de recurență și excepțiile pe instanță sunt sincronizate în ambele direcții cu serverul."
   },
-  "config.calendar.syncOnChange.off": {
+  "config.account.syncOnChange": {
+    "message": "Sincronizează calendarele și agendele după o modificare"
+  },
+  "config.account.syncOnChange.hint": {
+    "message": "TbSync sincronizează acest cont conform programului stabilit în managerul de conturi. În plus, un calendar sau o agendă poate fi sincronizat la scurt timp după ce modificați ceva în el, astfel încât modificările locale să ajungă la server fără a aștepta următoarea rulare programată. Pentru un calendar, aceasta determină și cât de repede invită serverul participanții, trimite actualizările și transmite răspunsul dumneavoastră, fiindcă o poate face abia după ce a văzut modificarea."
+  },
+  "config.account.syncOnChange.off": {
     "message": "Dezactivat"
   },
-  "config.calendar.syncOnChange.5seconds": {
+  "config.account.syncOnChange.5seconds": {
     "message": "După 5 secunde"
   },
-  "config.calendar.syncOnChange.15seconds": {
+  "config.account.syncOnChange.15seconds": {
     "message": "După 15 secunde"
   },
-  "config.calendar.syncOnChange.30seconds": {
+  "config.account.syncOnChange.30seconds": {
     "message": "După 30 de secunde"
   },
-  "config.calendar.syncOnChange.60seconds": {
+  "config.account.syncOnChange.60seconds": {
     "message": "După 60 de secunde"
   },
   "config.section.lookups": {
@@ -369,7 +379,7 @@
     "message": "Elemente per lot de sincronizare"
   },
   "options.maxitems.hint": {
-    "message": "Numărul maxim de elemente pe care serverul le poate returna pentru o cerere de sincronizare (EAS WindowSize). Valorile mai mari sincronizează mai rapid pe conexiuni stabile, cele mai mici sunt mai fiabile pe conexiuni instabile și folosesc mai puțină memorie. Implicit: 25."
+    "message": "Numărul maxim de elemente pe care serverul le poate returna per cerere de sincronizare. Valorile mari sincronizează mai repede pe conexiuni bune, cele mici sunt mai fiabile pe conexiuni instabile, folosesc mai puțină memorie și oferă un feedback mai bun în interfață. Cea mai mică valoare permisă este 5, fiindcă sub ea bugetul de cereri al serverului se duce doar pe paginare. Implicit: 25."
   },
   "options.mstodo": {
     "message": "Mod de compatibilitate Microsoft To Do"
@@ -397,6 +407,12 @@
         "example": "3"
       }
     }
+  },
+  "eas.migration.recurrenceEnabled": {
+    "message": "Sincronizarea recurențelor activată: resursele acestui cont sunt reconstruite de pe server."
+  },
+  "eas.sync.warning.recurrenceDisabled": {
+    "message": "Sincronizarea recurențelor este dezactivată. A fost o măsură de precauție în versiunile beta timpurii și nu mai este necesară. Se recomandă activarea ei în setările contului."
   },
   "eas.sync.error.protocolFault": {
     "message": "Serverul a respins cererea de sincronizare ca fiind incorectă (cod $STATUS$)",

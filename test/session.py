@@ -471,6 +471,31 @@ def _clear_event_log():
     ok("clearEventLog")
 
 
+def ensure_recurrence(session, sections):
+    """Switch recurrence sync on for the run, for sections that need it.
+
+    With `syncrecurrence` false the codec emits no recurrence at all -
+    deliberately, and the client-side rejection for sub-daily rules is
+    gated on the same flag, because nothing can be misrepresented if
+    nothing is sent. Every assertion about a series then fails, or worse
+    passes vacuously: section 12's "the hourly event must not be pushed"
+    reads as a code regression when it is an account setting.
+
+    Only asked for when a selected section declares `NEEDS_RECURRENCE`, so
+    a run that never touches a series leaves the flag alone.
+    """
+    if (session.account.get("custom") or {}).get("syncrecurrence"):
+        return
+    print(
+        f"  {session.account['accountName']} has recurrence sync off and "
+        f"section(s) {', '.join(sections)} test recurrence; switching it on "
+        f"for this run."
+    )
+    _override_account_custom(
+        session.account, "syncrecurrence", True, "recurrence sync"
+    )
+
+
 # TbSync's own account record, which is where `custom` lives.
 ACCOUNTS_KEY = "tbsync.accounts"
 
@@ -668,13 +693,16 @@ def _ensure_no_sync_after_change(account):
     Seen before this existed: preflight's own writes armed the timer,
     preflight then rebound the calendar, and the timer fired at a target
     that no longer existed.
+
+    One setting covers calendars and address books alike, so clearing it
+    here covers both.
     """
     value = (account.get("custom") or {}).get("syncOnChange")
     if value == "0":
         return
     shown = "the default" if value is None else f"{value} seconds"
     print(
-        f"  {account['accountName']} syncs a calendar after every change "
+        f"  {account['accountName']} syncs a resource after every change "
         f"({shown}); switching it off for this run."
     )
     _override_account_custom(account, "syncOnChange", "0", "sync-after-change")
