@@ -1,7 +1,8 @@
 /**
  * EAS MeetingResponse — tells the server the user Accepted / Tentatively
  * accepted / Declined a meeting invite, by referencing the existing
- * Calendar-collection item ([MS-ASCMD] §2.2.2.10 / §3.1.5.5).
+ * Calendar-collection item or a source meeting-request email found by
+ * Search ([MS-ASCMD] §2.2.3.98.2).
  *
  * This is the protocol-correct replacement for pushing the itip-driven
  * self-attendee PARTSTAT edit back as a plain `Sync <Change>`: the server
@@ -21,8 +22,8 @@
  *   <MeetingResponse>
  *     <Request>
  *       <UserResponse>1|2|3</UserResponse>
- *       <airsync:CollectionId>…</airsync:CollectionId>
- *       <airsync:RequestId>…</airsync:RequestId>
+ *       <CollectionId>…</CollectionId> + <RequestId>…</RequestId>
+ *         OR <search:LongId>…</search:LongId> (source email)
  *       [<InstanceId>…</InstanceId>]
  *       [<SendResponse/>]        (16.0+ only)
  *     </Request>
@@ -39,7 +40,8 @@
  * [<CalendarId/>]</Result></MeetingResponse>`. `CalendarId` is only present
  * when the server created/moved an item into the Calendar folder as a
  * result of the response; the caller's next regular pull sync reconciles
- * that, so it's surfaced but not acted on here.
+ * that; the caller can stamp this CalendarId immediately. A Search LongId
+ * itself must never be stored as a calendar item's ServerId.
  */
 
 import { createWBXML } from "../wbxml.mjs";
@@ -49,6 +51,7 @@ import { readPathFrom } from "./wbxml-helpers.mjs";
 export function buildMeetingResponseBody({
   collectionId,
   serverID,
+  longId,
   userResponse,
   instanceId,
   asVersion,
@@ -62,8 +65,16 @@ export function buildMeetingResponseBody({
   // codepage itself (0x06/0x08) - distinct from AirSync's own
   // CollectionId (0x12) and from RequestId, which AirSync doesn't
   // define at all. No switchpage needed/wanted here.
-  w.atag("CollectionId", collectionId);
-  w.atag("RequestId", serverID);
+  if (longId) {
+    // MS-ASCMD 2.2.3.98.2: this Search id addresses the source email,
+    // not a calendar item, and excludes CollectionId and RequestId.
+    w.switchpage("Search");
+    w.atag("LongId", longId);
+    w.switchpage("MeetingResponse");
+  } else {
+    w.atag("CollectionId", collectionId);
+    w.atag("RequestId", serverID);
+  }
   // A whole recurring series is one EAS item, so responding to a single
   // occurrence names that instance rather than addressing a different item.
   // InstanceId follows RequestId in the schema and is valid from 14.1 on.
@@ -95,10 +106,11 @@ export async function sendMeetingResponse({
   asVersion,
   collectionId,
   serverID,
+  longId = null,
   userResponse,
   instanceId = null,
 }) {
-  if (!collectionId || !serverID || !userResponse) return null;
+  if (!userResponse || (longId ? longId.length > 256 : !collectionId || !serverID)) return null;
   // MeetingResponseRequest.xsd restricts InstanceId to exactly 24 characters
   // (the extended form 2026-08-10T07:45:00.000Z) - unlike the AirSyncBase
   // InstanceId, which is the 16-character basic form. Getting it wrong is
@@ -113,6 +125,7 @@ export async function sendMeetingResponse({
       body: buildMeetingResponseBody({
         collectionId,
         serverID,
+        longId,
         userResponse,
         instanceId,
         asVersion,

@@ -1916,10 +1916,9 @@ export function isReceivedMeeting(ical, userEmail = null) {
 
 /** The same event, as something this mailbox may actually hold.
  *
- *  For an invitation the server has no copy of, which can therefore never be
- *  answered: `invitationPhase` holds such an entry waiting for a ServerId
- *  that is not coming, and after long enough the honest thing is to stop
- *  calling it a meeting.
+ *  This is an explicit conversion helper. The sync runner does not call it:
+ *  a missing ServerId, however long it has been missing, is not evidence
+ *  that the server holds no copy of the meeting.
  *
  *  The guest list goes, and that is the load-bearing part. On 16.x a client
  *  may state neither the organizer nor an attendee's status, so an `<Add>`

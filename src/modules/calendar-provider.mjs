@@ -45,6 +45,14 @@ import {
 } from "./eas/calendar-codec.mjs";
 import { clientSchedulingFor } from "./eas/client-scheduling.mjs";
 import {
+  prepareClientInvitation,
+  rememberClientInvitation,
+  forgetClientInvitation,
+  isClientInvitation,
+  mergeClientInvitationOccurrence,
+  withClientInvitationLock,
+} from "./eas/client-invitations.mjs";
+import {
   localQueue,
   lookupBinding,
   rememberBindings,
@@ -306,11 +314,9 @@ let registered = false;
 /** Which of the platform's flags this write arrived with, for the log.
  *  `invitation` means iTIP processing is writing the item - the user
  *  accepted an emailed invitation - and `offline` that this is a replay
- *  of something queued while Thunderbird was offline. Neither changes
- *  what we do: a replayed edit is still a real edit, and responding to
- *  an invitation properly is MeetingResponse, which we do not implement
- *  yet. They are logged because an edit that arrived either way is
- *  otherwise indistinguishable from a plain one. */
+ *  of something queued while Thunderbird was offline. The invitation flag
+ *  also permits the explicit IMAP invitation policy to mark a source;
+ *  ordinary imports must not acquire that policy. */
 function flagsOf(hookOptions) {
   const flags = Object.entries(hookOptions ?? {})
     .filter(([, on]) => on)
@@ -336,9 +342,9 @@ function flagsOf(hookOptions) {
  *
  *  Returns the props to hand back, or null when the item already has an
  *  id and nothing needs saying. */
-export function identify(item) {
+export function identify(item, { preserveUid = false } = {}) {
   if (!item || item.id) return null;
-  const uid = crypto.randomUUID();
+  let uid = crypto.randomUUID();
   try {
     const vcal = new ICAL.Component(ICAL.parse(item.item));
     // EVERY component, not just the master. A recurring item arrives with
@@ -352,9 +358,16 @@ export function identify(item) {
       .getAllSubcomponents()
       .filter((c) => c.name === "vevent" || c.name === "vtodo");
     if (!comps.length) return null;
+    if (preserveUid) {
+      uid = comps[0].getFirstPropertyValue("uid");
+      if (!uid || comps.some(comp => comp.getFirstPropertyValue("uid") !== uid)) {
+        throw new Error("Zaproszenie nie ma poprawnego identyfikatora UID. Nie zapisano zmian.");
+      }
+    }
     for (const comp of comps) comp.updatePropertyWithValue("uid", uid);
     return { ...item, id: uid, item: vcal.toString() };
   } catch {
+    if (preserveUid) throw new Error("Zaproszenie nie ma poprawnego identyfikatora UID. Nie zapisano zmian.");
     // A blob we cannot parse is not worth failing the user's save over -
     // the caller keeps the item as it came and logs the refusal.
     return null;
@@ -449,6 +462,60 @@ async function guardStamps(item, priorIcal) {
   return { ...item, item: guarded };
 }
 
+async function prepareImapInvitation(calendarId, item, priorBlob, hookOptions) {
+  if (item?.type !== "event" || typeof item.item !== "string") return item;
+  const key = "eas.imapInvitations." + calendarId;
+  const stored = await browser.storage.local.get({ [key]: null });
+  const mode = stored[key];
+  let ownAttendee = false;
+  if (mode?.user) {
+    const address = value => String(value || "").replace(/^mailto:/i, "").toLowerCase();
+    const vcal = new ICAL.Component(ICAL.parse(item.item));
+    const event = vcal.getFirstSubcomponent("vevent");
+    const user = address(mode.user);
+    ownAttendee = !!event?.getAllProperties("attendee")
+      .some(prop => address(prop.getFirstValue()) === user);
+  }
+  const blob = prepareClientInvitation({
+    blob: item.item,
+    priorBlob,
+    enabled: ownAttendee && hookOptions?.invitation === true,
+    userEmail: mode?.user || "",
+  });
+  return blob === item.item ? item : { ...item, item: blob };
+}
+
+async function completeClientOccurrence(calendarId, item, priorBlob, hookOptions) {
+  if (item?.type !== "event" || typeof item.item !== "string") return { item, priorBlob };
+  const incoming = new ICAL.Component(ICAL.parse(item.item));
+  const events = incoming.getAllSubcomponents("vevent");
+  if (!events.length || events.some(event => !event.hasProperty("recurrence-id"))) {
+    return { item, priorBlob };
+  }
+  const masterBlob = await priorIcalOf(calendarId, item);
+  if (isClientInvitation(masterBlob)) {
+    const merged = mergeClientInvitationOccurrence({ blob: item.item, masterBlob });
+    if (merged !== item.item) return { item: { ...item, item: merged }, priorBlob: masterBlob };
+    throw new Error("Nie można połączyć tego wystąpienia z zapisanym zaproszeniem. Nie zapisano zmian.");
+  }
+  const rawMarker = /(?:^|\r?\n)X-EAS-CLIENT-INVITATION:1(?:\r?\n|$)/i;
+  const key = "eas.imapInvitations." + calendarId;
+  const policy = await browser.storage.local.get({ [key]: null });
+  const user = policy[key]?.user;
+  const address = value => String(value || "").replace(/^mailto:/i, "").toLowerCase();
+  const foreignInvitation = user && events.some(event => {
+    const organizer = address(event.getFirstPropertyValue("organizer"));
+    return organizer && organizer !== address(user) && event.getAllProperties("attendee")
+      .some(attendee => address(attendee.getFirstValue()) === address(user));
+  });
+  if (rawMarker.test(item.item) || rawMarker.test(priorBlob || "") ||
+      (hookOptions?.invitation === true && foreignInvitation &&
+        !readEasServerIdFromIcal(masterBlob || priorBlob || item.item))) {
+    throw new Error("Brak pełnego zaproszenia dla tego wystąpienia. Otwórz zaproszenie całego cyklu. Nie zapisano zmian.");
+  }
+  return { item, priorBlob };
+}
+
 /** Keep the shapes `recurrence-shape.mjs` describes: at most one rule per
  *  item, and a list of dates only on an item a server stated that way.
  *  An item breaking that is reduced to the piece keeping its identity, and
@@ -468,6 +535,9 @@ async function conformItem(calendarId, item, flags) {
   if (typeof ical !== "string" || !calendarId) return null;
   const conformed = conformRecurrence(ical);
   if (!conformed) return null;
+  if (isClientInvitation(ical)) {
+    throw new Error("To zaproszenie ma cykl, którego kalendarz Exchange nie obsługuje. Nie zapisano zmian.");
+  }
 
   const writeId = calendarStore.cacheId(calendarId);
   const type = item?.type === "task" ? "task" : "event";
@@ -661,57 +731,79 @@ export function registerCalendarProvider() {
     // An item created in Thunderbird's dialog has no id yet; give it one
     // and hand the props back, so the platform adopts our id instead of
     // minting its own after we have already filed the queue entry.
-    const base = identify(item) ?? item;
+    const base = identify(item, { preserveUid: hookOptions?.invitation === true }) ?? item;
+    return withClientInvitationLock(calendar?.id, base?.id, async () => {
     // An id is a UID here, so "is this already in the calendar?" is one
     // read. It usually is not - but an import of an item we already sync
     // arrives as a create, and the platform's own importer expects the
     // calendar to refuse a duplicate id, which ours does not. Without this
     // the item would be overwritten by a copy that has no identity, and a
     // synced event would quietly detach from the server.
-    const prior = await priorIcalOf(calendar?.id, base);
-    const guarded = await guardStamps(base, prior);
+    const incoming = await completeClientOccurrence(calendar?.id, base,
+      await priorIcalOf(calendar?.id, base), hookOptions);
+    const prior = incoming.priorBlob;
+    const guarded = await prepareImapInvitation(calendar?.id,
+      await guardStamps(incoming.item, prior), prior, hookOptions);
     // The same lookup that saves the stamps also says what this write is:
     // an item the server already knows is being overwritten, not created.
     const op = opForCreatedItem(prior);
     const flags = flagsOf(hookOptions);
     // Before the record, so what is queued is the shape this item became.
     const conformed = await conformItem(calendar?.id, guarded, flags);
+    const savedBlob = conformed ?? guarded?.item ?? item?.item;
+    if (isClientInvitation(savedBlob)) {
+      await rememberClientInvitation(calendar?.id, guarded?.id ?? item?.id,
+        savedBlob, readEasServerIdFromIcal(savedBlob));
+    }
     await record(calendar?.id, guarded?.id ?? item?.id, op, {
       type: item?.type,
       // What the recurring push needs to see which overrides were there
       // before the edit - the update hook is handed it by the platform.
       ...(op === "updated" ? { oldIcal: prior } : {}),
-      ical: conformed ?? guarded?.item ?? item?.item,
+      ical: savedBlob,
       flags,
     });
     if (conformed) return { ...guarded, item: conformed };
     return guarded === item ? { item } : guarded;
+    });
   }, options);
 
   provider.onItemUpdated.addListener(
     async (calendar, item, oldItem, hookOptions) => {
-      const oldIcal = oldItem?.item ?? null;
-      const guarded = await guardStamps(item, oldIcal);
+      return withClientInvitationLock(calendar?.id, item?.id, async () => {
+      const incoming = await completeClientOccurrence(calendar?.id, item,
+        oldItem?.item ?? null, hookOptions);
+      const oldIcal = incoming.priorBlob;
+      const guarded = await prepareImapInvitation(calendar?.id,
+        await guardStamps(incoming.item, oldIcal), oldIcal, hookOptions);
       const flags = flagsOf(hookOptions);
       const conformed = await conformItem(calendar?.id, guarded, flags);
+      const savedBlob = conformed ?? guarded?.item ?? item?.item;
+      if (isClientInvitation(savedBlob)) {
+        await rememberClientInvitation(calendar?.id, item?.id,
+          savedBlob, readEasServerIdFromIcal(savedBlob));
+      }
       await record(calendar?.id, item?.id, "updated", {
         type: item?.type,
         oldIcal,
-        ical: conformed ?? guarded?.item ?? item?.item,
+        ical: savedBlob,
         flags,
       });
       if (conformed) return { ...guarded, item: conformed };
       return guarded === item ? { item } : guarded;
+      });
     },
     options,
   );
 
   provider.onItemRemoved.addListener(async (calendar, item, hookOptions) => {
-    await record(calendar?.id, item?.id, "deleted", {
-      type: item?.type,
-      flags: flagsOf(hookOptions),
+    return withClientInvitationLock(calendar?.id, item?.id, async () => {
+      await record(calendar?.id, item?.id, "deleted", {
+        type: item?.type,
+        flags: flagsOf(hookOptions),
+      });
+      return {};
     });
-    return {};
   }, options);
 
   // The calendar asking to be refreshed: the Reload button, and the timer
@@ -870,6 +962,8 @@ function registerTargetLifecycle() {
           message: `[target] could not reset the sync state of ${mine.accountId}/${mine.folderId}: ${err?.message ?? String(err)}`,
         }),
       );
+    await browser.storage.local.remove("eas.imapInvitations." + id);
+    await forgetClientInvitation(id);
     await host?.folderTargetRemoved({ targetID: id }).catch((err) =>
       report?.({
         level: "warning",

@@ -288,6 +288,15 @@
   "config.calendar.syncRecurrence": {
     "message": "Synchronizuj cykliczne wydarzenia/zadania i wyjątki"
   },
+  "config.calendar.imapInvitations": {
+    "message": "Zaproszenia z poczty IMAP"
+  },
+  "config.readOnlyBanner.imap": {
+    "message": "Gdy konto jest połączone, możesz zmienić tylko obsługę zaproszeń z poczty IMAP. Pozostałe ustawienia są zablokowane."
+  },
+  "config.calendar.imapInvitations.hint": {
+    "message": "Thunderbird wysyła odpowiedzi na zaproszenia z poczty IMAP. Termin zapisuje w domyślnym kalendarzu Microsoft 365. Ta opcja nie zmienia ustawień poczty."
+  },
   "config.calendar.syncRecurrence.hint": {
     "message": "Po włączeniu reguły powtarzania i wyjątki dla pojedynczych wystąpień są synchronizowane w obie strony z serwerem."
   },

@@ -4,8 +4,8 @@
  * Contacts, Calendar.
  *
  * `readOnly=true` means the account is currently connected in TbSync;
- * we must not allow edits while it's live. Banner explains why; every
- * input renders disabled; Save is hidden; Cancel becomes Close.
+ * connection settings stay locked while it is live. The local IMAP
+ * invitation option can be saved separately without reconnecting.
  *
  * Account type is set at setup and not editable here. The dropdown is
  * always rendered in `locked` mode - purely for visual parity with the
@@ -56,6 +56,7 @@ const FIELD_IDS = [
   "contacts-name-separator",
   "calendar-sync-limit",
   "sync-recurrence",
+  "imap-invitations",
   "gal-enabled",
   "freebusy-enabled",
 ];
@@ -166,6 +167,7 @@ async function load() {
   // ── Calendar section ───────────────────────────────────────────────────
   $("calendar-sync-limit").value = account.calendarSyncLimit || "7";
   $("sync-recurrence").checked = !!account.syncRecurrence;
+  $("imap-invitations").checked = account.imapInvitations === true;
   // One way only. The row is offered while the setting is off, so it can be
   // switched on, and withheld once it is on, so it cannot be switched back.
   $("sync-recurrence-row").hidden = !!account.syncRecurrence;
@@ -285,8 +287,8 @@ function applyReadOnly() {
   const banner = $("readonly-banner");
   if (readOnly) {
     banner.textContent = i18n(
-      "config.readOnlyBanner",
-      "To prevent synchronization errors, settings cannot be edited while the account is enabled.",
+      "config.readOnlyBanner.imap",
+      "While connected, you can change only invitations from IMAP mail.",
     );
     banner.classList.add("visible");
   } else {
@@ -296,7 +298,8 @@ function applyReadOnly() {
     const el = $(id);
     if (el) el.disabled = readOnly;
   }
-  $("btn-save").hidden = readOnly;
+  $("imap-invitations").disabled = false;
+  $("btn-save").hidden = false;
   const cancelBtn = $("btn-cancel");
   cancelBtn.textContent = readOnly
     ? i18n("config.close", "Close")
@@ -304,7 +307,11 @@ function applyReadOnly() {
 }
 
 async function onSave() {
-  if (readOnly) return;
+  if (readOnly) {
+    clearError();
+    await savePatch({ imapInvitations: $("imap-invitations").checked });
+    return;
+  }
   clearError();
 
   const accountName = $("account-name").value.trim();
@@ -337,6 +344,7 @@ async function onSave() {
     contactsDisplayOverride: $("contacts-display-override").checked,
     contactsNameSeparator: $("contacts-name-separator").value,
     calendarSyncLimit: $("calendar-sync-limit").value,
+    imapInvitations: $("imap-invitations").checked,
     syncOnChange: $("sync-on-change").value,
   };
 
@@ -381,6 +389,10 @@ async function onSave() {
     if (pw) patch.password = pw;
   }
 
+  await savePatch(patch);
+}
+
+async function savePatch(patch) {
   $("btn-save").disabled = true;
   try {
     const reply = await browser.runtime.sendMessage({

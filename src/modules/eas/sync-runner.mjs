@@ -38,6 +38,7 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
+import { nonConformingShape } from "../recurrence-shape.mjs";
 import { easRequest, RETRY_LATER_BACKOFF_MS } from "../network.mjs";
 import { canonicalPropertyString } from "./calendar-codec.mjs";
 import { readPath, readPathFrom } from "./wbxml-helpers.mjs";
@@ -50,7 +51,6 @@ import {
   announceableOf,
   droppedAttendees,
   isReceivedMeeting,
-  plainCopyOfInvitation,
   sameAnnounceable,
   preserveAlarmAck,
   preserveSelfPartstat,
@@ -60,6 +60,18 @@ import {
   serverKnownPartstat,
 } from "./calendar-codec.mjs";
 import { sendMeetingResponse } from "./meeting-response.mjs";
+import { findMeetingRequestLongId } from "./meeting-request-search.mjs";
+import {
+  isClientInvitation,
+  prepareClientInvitation,
+  toClientAppointment,
+  restoreClientInvitation,
+  rememberClientInvitation,
+  clientInvitationFor,
+  clientInvitationByServerId,
+  forgetClientInvitation,
+  withClientInvitationLock,
+} from "./client-invitations.mjs";
 import {
   rememberClientScheduling,
   versionNeedsClientScheduling,
@@ -169,13 +181,10 @@ const INSTANCE_RETRY_DELAY_MS = Object.freeze({
   [STATUS_RETRY]: 1000,
 });
 
-// How long an answer to an invitation waits for the server to name the
-// meeting before we stop expecting it to. `invitationPhase` runs after the
-// pull, so every hold is one full sync that asked and came back without it -
-// but a mailbox can be a little behind its own inbox, and this is the room
-// that gives it. Long, because what follows is not reversible: the meeting
-// becomes the user's own event and the guest list is gone.
-const INVITATION_HOLD_MS = 2 * 60 * 60 * 1000;
+// Escalate a missing invitation ServerId after two hours. Elapsed time
+// cannot establish whether the server holds the meeting, so it changes
+// only the log level, never the invitation or its queued answer.
+const INVITATION_WARNING_MS = 2 * 60 * 60 * 1000;
 
 /* ── DEV: fixture injection ─────────────────────────────────────────────
  *
@@ -485,6 +494,40 @@ function makeQueue({ folder, accountId, folderId }) {
   });
 }
 
+/** The calendar keeps the original iTIP object. Only the wire copy is an
+ * appointment: Exchange must not invite the original attendees again. */
+export function clientInvitationCodec(codec) {
+  return {
+    ...codec,
+    appendApplicationDataFromBlob(options) {
+      const client = isClientInvitation(options.blob);
+      codec.appendApplicationDataFromBlob({
+        ...options,
+        blob: client ? toClientAppointment(options.blob) : options.blob,
+      });
+      if (client && options.op === "add" && parseFloat(options.asVersion) >= 16) {
+        const calendar = new ICAL.Component(ICAL.parse(options.blob));
+        const uid = calendar.getFirstSubcomponent("vevent")?.getFirstPropertyValue("uid");
+        // Stable only for creation, never on Change. This lets Exchange
+        // recognise a retried Add whose acknowledgement was lost.
+        if (uid && String(uid).length <= 300) {
+          options.builder.switchpage("Calendar");
+          options.builder.atag("ClientUid", String(uid));
+        }
+      }
+    },
+    ...(codec.listInstanceCommands ? {
+      listInstanceCommands(options) {
+        return codec.listInstanceCommands({
+          ...options,
+          blob: isClientInvitation(options.blob)
+            ? toClientAppointment(options.blob) : options.blob,
+        });
+      },
+    } : {}),
+  };
+}
+
 async function runOneSync({
   provider,
   account,
@@ -520,7 +563,8 @@ async function runOneSync({
     syncRecurrence: account.custom?.syncrecurrence === true,
     msTodoCompat,
     conflict: conflictPolicyOf(account),
-    itemKind,
+    itemKind: itemKind.changelogKind === "event"
+      ? { ...itemKind, codec: clientInvitationCodec(itemKind.codec) } : itemKind,
     store: itemKind.storeFactory(folder.targetID),
     synckey,
     // Pre-bound info-level event-log emitter the codec calls when it
@@ -714,10 +758,15 @@ async function runOneSync({
         const item = await ctx.store.get(e.itemId);
         if (
           item &&
+          !isClientInvitation(item.blob) &&
           isReceivedMeeting(item.blob, accountUserAddress(ctx.account))
         ) {
-          invitationAnswers.push(e);
-          continue;
+          const adoption = await adoptPendingImapInvitation(ctx, e);
+          if (adoption === "held") continue;
+          if (!adoption) {
+            invitationAnswers.push(e);
+            continue;
+          }
         }
       }
       userEdits.push(e);
@@ -1322,6 +1371,55 @@ async function pullPhase(ctx) {
 
 /* ── Push phase ───────────────────────────────────────────────────── */
 
+/** Explicit opt-in also applies to already accepted, still unsent invitations.
+ * Re-accepting identical mail is not reliable: native iTIP can ignore it.
+ * This only transfers storage ownership; it never sends a reply from sync. */
+async function adoptPendingImapInvitation(ctx, entry) {
+  if (ctx.account?.custom?.imapInvitations !== true ||
+      String(ctx.folder?.custom?.type) !== "8") return false;
+  return withClientInvitationLock(ctx.targetID, entry.itemId, async () => {
+    const cached = await ctx.store.get(entry.itemId);
+    const saved = await clientInvitationFor(ctx.targetID, entry.itemId);
+    const current = saved && cached ? { ...cached, blob: saved.blob } : cached;
+    if (!current?.blob || ctx.indexMap.serverIdFor(entry.itemId) ||
+        ctx.itemKind.codec.readEasServerIdFromBlob(current.blob)) return false;
+    if ((await ctx.queue.pending()).some(pending =>
+      pending.itemId === entry.itemId && pending.status === "deleted_by_user")) return false;
+    const user = accountUserAddress(ctx.account).replace(/^mailto:/i, "").toLowerCase();
+    const event = new ICAL.Component(ICAL.parse(current.blob)).getAllSubcomponents("vevent")
+      .find(component => !component.hasProperty("recurrence-id"));
+    const address = value => String(value || "").replace(/^mailto:/i, "").toLowerCase();
+    const organizer = address(event?.getFirstPropertyValue("organizer"));
+    if (!user || !organizer || organizer === user || !event.getAllProperties("attendee")
+      .some(attendee => address(attendee.getFirstValue()) === user)) return false;
+    const own = event.getAllProperties("attendee")
+      .find(attendee => address(attendee.getFirstValue()) === user);
+    if (event.getFirstPropertyValue("uid") !== entry.itemId ||
+        address(event.getFirstPropertyValue("x-moz-invited-attendee")) !== user ||
+        !["ACCEPTED", "TENTATIVE", "DECLINED"].includes(String(own.getParameter("partstat")).toUpperCase())) return false;
+    const rejected = nonConformingShape(event) || ctx.itemKind.codec.clientRejectReason?.({
+      blob: current.blob, syncRecurrence: ctx.syncRecurrence, asVersion: ctx.asVersion,
+    });
+    if (rejected) {
+      ctx.eventLog("warning", `[event-sync] holding IMAP invitation ${entry.itemId}: ` +
+        "its recurrence cannot be stored without changing the source; keeping the invitation unchanged");
+      return "held";
+    }
+    const blob = prepareClientInvitation({ blob: current.blob, enabled: true, userEmail: user });
+    if (!isClientInvitation(blob)) return false;
+    await rememberClientInvitation(ctx.targetID, entry.itemId, blob);
+    await ctx.queue.markServerWrite({ parentId: ctx.targetID, itemId: entry.itemId,
+      kind: ctx.itemKind.changelogKind, status: SERVER_TAG_STATUSES[1] });
+    await ctx.store.update(entry.itemId, blob);
+    // No server address exists yet. This is the first calendar creation,
+    // including when the old version had retained it as modified_by_user.
+    await ctx.queue.record({ parentId: ctx.targetID, itemId: entry.itemId,
+      kind: ctx.itemKind.changelogKind, op: "created" });
+    entry.status = "added_by_user";
+    return true;
+  });
+}
+
 async function pushPhase(ctx, userEdits) {
   const failedItems = new Set();
   // Recurring masters pushed in this pass whose blob carries overrides.
@@ -1583,9 +1681,9 @@ async function pushPhase(ctx, userEdits) {
  *  Each entry is a queued edit to a meeting somebody else organises. The
  *  only thing we may tell the server about one is the user's answer, and
  *  MeetingResponse is how - [MS-ASCMD] 2.2.2.10. It addresses the item by
- *  `RequestId`, which is its ServerId, so this runs after the pull: an
- *  invitation Thunderbird filed from the email has no ServerId at all until
- *  the server's own copy has come down and been adopted onto it.
+ *  `RequestId`, which is its ServerId, so this runs after the pull. When
+ *  there is no calendar ServerId, 16.x can instead address the original
+ *  meeting-request email by its Search LongId, matched by exact UID.
  *
  *  Nothing here waits. Exchange acknowledges receipt and applies the answer
  *  to the calendar afterwards - measured at absent after 24 s and present
@@ -1597,7 +1695,7 @@ async function pushPhase(ctx, userEdits) {
  *  sent later. The difference matters: a kept entry lights the needs-sync
  *  badge until it goes, so keeping one that can never go leaves a badge
  *  nobody can clear. */
-async function invitationPhase(ctx, entries) {
+export async function invitationPhase(ctx, entries) {
   // Responding to an invitation from the calendar item is 14.0 and later.
   // Below that the only way is the meeting request in the Inbox, and we do
   // not sync mail - so these can never be sent, at all, ever.
@@ -1666,32 +1764,31 @@ async function invitationPhase(ctx, entries) {
       await dropEntry(ctx, entry);
       continue;
     }
-    const serverID = ctx.itemKind.codec.readEasServerIdFromBlob(item.blob);
-    if (!serverID) {
-      // The user answered before we had ever seen the server's copy. Usually
-      // it arrives, is adopted onto this item and brings an id with it, so
-      // waiting is right and this stays queued for the next sync.
-      //
-      // But it may never come: an invitation addressed to somebody else and
-      // only redirected here was never created in this mailbox, so there is
-      // no copy to wait for and no id will ever exist. Nothing readable on
-      // the item says which of the two this is - Thunderbird repairs the
-      // guest list when it files such an invitation - and only time can
-      // tell them apart.
+    // As in the push phase, an iTIP replacement may have dropped the
+    // cached stamp while the folder index still knows the server's id.
+    const serverID =
+      ctx.itemKind.codec.readEasServerIdFromBlob(item.blob) ??
+      ctx.indexMap.serverIdFor(entry.itemId);
+    // An invitation filed from email may not yet have a calendar copy.
+    // Search can identify its source request by exact UID on 16.x. Its
+    // LongId is temporary addressing information, never a calendar stamp.
+    // Responding to source mail creates the item in the default Calendar.
+    // Other/shared calendars cannot safely adopt that returned CalendarId.
+    const canSearchSource = String(ctx.folder?.custom?.type) === "8";
+    const longId = serverID || !canSearchSource ? null : await findMeetingRequestLongId({
+      account: ctx.account, asVersion: ctx.asVersion, blob: item.blob,
+    });
+    if (!serverID && !longId) {
+      // A later pull may adopt the server's copy and supply its id. We
+      // cannot distinguish delay, an unmatched UID or an absent server
+      // copy here. Keep both the invitation and the user's answer intact.
       const heldMs = Date.now() - (entry.timestamp ?? 0);
-      if (heldMs < INVITATION_HOLD_MS) {
-        const leftMin = Math.max(
-          1,
-          Math.round((INVITATION_HOLD_MS - heldMs) / 60_000),
-        );
-        ctx.eventLog(
-          "info",
-          `[event-sync] holding the answer to ${entry.itemId}: the server has not ` +
-            `named this meeting yet - ${leftMin} min before it becomes a plain event`,
-        );
-        continue;
-      }
-      await convertHeldInvitation(ctx, entry, item, heldMs);
+      ctx.eventLog(
+        heldMs >= INVITATION_WARNING_MS ? "warning" : "info",
+        `[event-sync] holding the answer to ${entry.itemId}: no ServerId is ` +
+          `available for this invitation; keeping the invitation and its ` +
+          `answer unchanged for a later sync`,
+      );
       continue;
     }
 
@@ -1737,6 +1834,7 @@ async function invitationPhase(ctx, entries) {
         asVersion: ctx.asVersion,
         collectionId: ctx.collectionId,
         serverID,
+        ...(longId ? { longId } : {}),
         userResponse: answer.userResponse,
         instanceId: answer.instanceId,
       });
@@ -1803,12 +1901,14 @@ async function invitationPhase(ctx, entries) {
       continue;
     }
     const status = lastStatus;
-    // 2 is an invalid meeting request and 4 a meeting that cannot be
+    // A rejected source email may be stale; leave its answer queued so a
+    // later pull can provide the calendar identity instead. With a known
+    // calendar ServerId, 2 is an invalid meeting request and 4 one that cannot be
     // responded to - a cancelled one, or somebody else's delegate. Neither
     // improves by being retried, and a queue entry that can never go is a
     // badge that can never clear. 3 is a server-side sync-state problem
     // that does improve, so that one waits.
-    if (status === "2" || status === "4") {
+    if (!longId && (status === "2" || status === "4")) {
       ctx.provider.reportEventLog({
         level: "warning",
         accountId: ctx.accountId,
@@ -1826,50 +1926,6 @@ async function invitationPhase(ctx, entries) {
         `(${status ? `Status ${status}` : "no response"}); leaving it queued`,
     );
   }
-}
-
-/**
- * Stop waiting for a meeting the server is never going to name, and let the
- * user keep the appointment as their own.
- *
- * Reached only after `INVITATION_HOLD_MS` of holding, which - because
- * `invitationPhase` runs after the pull - is that many syncs that asked the
- * server and came back without this meeting.
- *
- * The queue entry is deliberately left alone. It is an `added_by_user` and
- * stays one, and the rewrite is what releases it: with the mailbox as
- * `ORGANIZER` the item is no longer a received meeting, so the next sync's
- * push dispatcher does not divert it, and it goes out through `pushPhase`
- * as an ordinary `<Add>` - the only command that could work, there being no
- * ServerId to address a `<Change>` to.
- *
- * The write goes through the store like every other write this file makes,
- * which means `<id>#cache` and therefore no item hook: the rewrite cannot
- * come back as a fresh user edit.
- */
-async function convertHeldInvitation(ctx, entry, item, heldMs) {
-  const heldHours = Math.max(1, Math.round(heldMs / 3_600_000));
-  const plain = plainCopyOfInvitation(item.blob, {
-    summaryPrefix: browser.i18n.getMessage(
-      "calendar.invitationCopy.summaryPrefix",
-    ),
-    // The address the diversion compares against, so that this is certain
-    // to stop looking like somebody else's meeting.
-    organizer: accountUserAddress(ctx.account),
-  });
-  await ctx.queue.markServerWrite({
-    parentId: ctx.targetID,
-    itemId: entry.itemId,
-    status: SERVER_TAG_STATUSES[1],
-    kind: ctx.itemKind.changelogKind,
-  });
-  await ctx.store.update(entry.itemId, plain);
-  ctx.eventLog(
-    "warning",
-    `[event-sync] the answer to ${entry.itemId} could not be sent for ` +
-      `${heldHours} h - this mailbox holds no copy of the meeting, so it has ` +
-      `been kept as a plain event and the guest list dropped`,
-  );
 }
 
 /** Take a queued edit out of the queue, having established that nothing
@@ -1897,7 +1953,7 @@ async function mailAnsweredMeetings(ctx, sent, failedItems) {
     const entry = built.entry;
     if (!entry || failedItems?.has?.(entry.itemId)) continue;
     const item = await ctx.store.get(entry.itemId);
-    if (!item || !isReceivedMeeting(item.blob, userEmail)) continue;
+    if (!item || isClientInvitation(item.blob) || !isReceivedMeeting(item.blob, userEmail)) continue;
     const answer = selfUserResponses(item.blob, userEmail).find(
       (a) => !a.instanceId,
     );
@@ -2045,6 +2101,7 @@ async function sendOwedMessages(ctx, note, userEmail) {
  *  re-running the response would be a second MeetingResponse.
  */
 async function mailTheOrganizer(ctx, entry, item, answer) {
+  if (isClientInvitation(item.blob)) return false;
   if (parseFloat(ctx.asVersion) >= 16) return false;
   // An occurrence is answered against the series it belongs to, and the
   // reply carries no RECURRENCE-ID, so one message per item is right.
@@ -2395,12 +2452,12 @@ async function buildPushBatch(ctx, slice, failedItems) {
       // folder whose legacy upgrade did not finish. Ordinary edits cannot,
       // since an add edited before it is pushed stays `added_by_user`.
       if (!serverID) {
-        await dropUnsatisfiableEntry(
-          ctx,
-          entry,
-          "no ServerId in the item or the indexMap, so a change cannot be " +
-            "addressed - a syncKey reset is what recovers this",
-        );
+        ctx.provider.reportEventLog({
+          level: "warning", accountId: ctx.accountId, folderId: ctx.folderId,
+          message: `[${ctx.itemKind.changelogKind}-sync] holding change for ${entry.itemId}: ` +
+            "no ServerId in the item or the indexMap; keeping the local change for recovery",
+        });
+        failedItems.add(entry.itemId);
         continue;
       }
       mods.push({ entry, serverID, item: it });
@@ -2435,6 +2492,31 @@ async function buildPushBatch(ctx, slice, failedItems) {
 }
 
 /* ── Apply responses to our push ──────────────────────────────────── */
+
+async function acknowledgeClientAdd(ctx, sentEntry, serverID, instanceMasters, followUpMasters) {
+  const { itemId, parentId, kind } = sentEntry.entry;
+  await withClientInvitationLock(ctx.targetID, itemId, async () => {
+    const current = await ctx.store.get(itemId);
+    // The hook persists source before returning to the native cache writer.
+    const saved = await clientInvitationFor(ctx.targetID, itemId);
+    const source = saved?.blob ?? current?.blob ?? sentEntry.item.blob;
+    const pending = await ctx.queue.pending();
+    const deleted = !current || pending.some((entry) =>
+      entry.itemId === itemId && entry.status === "deleted_by_user");
+    const stamped = ctx.itemKind.codec.stampEasServerId(source, serverID);
+    await ctx.queue.markServerWrite({ parentId, itemId, kind, status: SERVER_TAG_STATUSES[1] });
+    if (!deleted) await ctx.store.update(itemId, stamped);
+    await rememberClientInvitation(ctx.targetID, itemId, stamped, serverID);
+    ctx.indexMap.set(itemId, serverID);
+    await ctx.queue.remove({ parentId, itemId, kind });
+    if (deleted || source !== sentEntry.item.blob) {
+      await ctx.queue.record({ parentId, itemId, kind, op: deleted ? "deleted" : "updated" });
+    } else if (blobHasInstanceOverrides(source)) {
+      instanceMasters?.push({ serverID, blob: source });
+      followUpMasters?.push({ serverID, blob: source });
+    }
+  });
+}
 
 export async function applyResponses(
   ctx,
@@ -2510,6 +2592,10 @@ export async function applyResponses(
       reportRejectedPushItem(ctx, "add", status, sentEntry, "warning");
       continue;
     }
+    if (isClientInvitation(sentEntry.item.blob)) {
+      await acknowledgeClientAdd(ctx, sentEntry, serverId, instanceMasters, followUpMasters);
+      continue;
+    }
     const stamped = ctx.itemKind.codec.stampEasServerId(
       sentEntry.item.blob,
       serverId,
@@ -2582,6 +2668,12 @@ export async function applyResponses(
       const serverId = readPathFrom(node, ["ServerId"]);
       const sentEntry = sent.mods.find((m) => m.serverID === serverId);
       if (sentEntry) {
+        if (isClientInvitation(sentEntry.item.blob)) {
+          // A deletion in Outlook/Teams wins over a pending mail update.
+          // Recreating this appointment would undo the user's deletion.
+          await removeClientInvitation(ctx, sentEntry.entry.itemId);
+          continue;
+        }
         await ctx.queue.record({
           parentId: sentEntry.entry.parentId,
           itemId: sentEntry.entry.itemId,
@@ -2620,6 +2712,9 @@ export async function applyResponses(
         kind: sentEntry.entry.kind,
       });
       ctx.indexMap.remove(sentEntry.entry.itemId);
+      if (ctx.itemKind.changelogKind === "event") {
+        await forgetClientInvitation(ctx.targetID, sentEntry.entry.itemId);
+      }
     } else {
       // Still not tracked - legacy didn't either ("What can we do about
       // failed deletes? SyncLog" - sync.js:1073), and its soft-fail path
@@ -2636,6 +2731,23 @@ export async function applyResponses(
     );
     const status = ack ? readPathFrom(ack, ["Status"]) : STATUS_OK;
     if (!ack || status === STATUS_OK) {
+      if (isClientInvitation(m.item.blob)) {
+        await withClientInvitationLock(ctx.targetID, m.entry.itemId, async () => {
+          const current = await ctx.store.get(m.entry.itemId);
+          const saved = await clientInvitationFor(ctx.targetID, m.entry.itemId);
+          const source = saved?.blob ?? current?.blob;
+          const pending = await ctx.queue.pending();
+          const deleted = !current || pending.some((entry) =>
+            entry.itemId === m.entry.itemId && entry.status === "deleted_by_user");
+          await ctx.queue.remove({ parentId: m.entry.parentId, itemId: m.entry.itemId, kind: m.entry.kind });
+          if (source) await rememberClientInvitation(ctx.targetID, m.entry.itemId, source, m.serverID);
+          if (deleted || source !== m.item.blob) {
+            await ctx.queue.record({ parentId: m.entry.parentId, itemId: m.entry.itemId,
+              kind: m.entry.kind, op: deleted ? "deleted" : "updated" });
+          }
+        });
+        continue;
+      }
       await ctx.queue.remove({
         parentId: m.entry.parentId,
         itemId: m.entry.itemId,
@@ -2657,13 +2769,16 @@ export async function applyResponses(
         kind: d.entry.kind,
       });
       ctx.indexMap.remove(d.entry.itemId);
+      if (ctx.itemKind.changelogKind === "event") {
+        await forgetClientInvitation(ctx.targetID, d.entry.itemId);
+      }
     }
   }
 }
 
 /* ── Apply server commands ───────────────────────────────────────── */
 
-async function applyServerCommands(ctx, commands) {
+export async function applyServerCommands(ctx, commands) {
   let processed = 0;
   // Once, at the top: the loops below write to the store, and a check
   // between two of those writes would leave the batch half-applied for no
@@ -2692,7 +2807,7 @@ async function applyServerCommands(ctx, commands) {
     processed++;
   }
   for (const node of commands.softDeletes) {
-    await applyDelete(ctx, node, noteBacklog);
+    await applyDelete(ctx, node, noteBacklog, true);
     processed++;
   }
   await upgradeNoteBacklog(ctx, noteBacklog);
@@ -2841,6 +2956,31 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
     return applyChangeFromAd(ctx, ad, existing, serverID, resolved);
   }
 
+  // A cache reset deliberately removes local items and the ordinary index.
+  // Recover the source identity only when the server offers its actual
+  // item. A ledger entry alone never creates or resurrects an appointment.
+  const source = ctx.itemKind.changelogKind === "event"
+    ? await clientInvitationByServerId(ctx.targetID, serverID) : null;
+  if (source) {
+    return withClientInvitationLock(ctx.targetID, source.itemId, async () => {
+      const latest = await clientInvitationFor(ctx.targetID, source.itemId);
+      if (!latest) return;
+      const fresh = await ctx.store.get(source.itemId);
+      if (fresh) {
+        return applyChangeFromAdUnlocked(ctx, ad, {
+          itemId: source.itemId, blob: latest.blob,
+        }, serverID, resolved);
+      }
+      return createPulledItem(ctx, ad, serverID, resolved, latest);
+    });
+  }
+  return createPulledItem(ctx, ad, serverID, resolved, null);
+}
+
+async function createPulledItem(ctx, ad, serverID, resolved, source) {
+  if (source && (await ctx.queue.pending()).some((entry) =>
+    entry.itemId === source.itemId && entry.status === "deleted_by_user")) return;
+
   // The UID the server gave this item. Every mailbox holding the same
   // meeting names it the same way, and it is the one identifier that
   // survives the server deleting and re-creating an item when somebody
@@ -2851,7 +2991,9 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
   noteUidClaim(ctx.uidClaims, serverUid, serverID);
   const kind = ctx.itemKind.changelogKind;
   let newId;
-  if (serverUid) {
+  if (source) {
+    newId = source.itemId;
+  } else if (serverUid) {
     newId = serverUid;
     ctx.eventLog(
       "debug",
@@ -2888,8 +3030,9 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
       );
     }
   }
-  const blob = await ctx.itemKind.codec.applicationDataToBlob({
+  let blob = await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
+    ...(source ? { existingBlob: source.blob } : {}),
     serverID,
     asVersion: ctx.asVersion,
     separator: ctx.separator,
@@ -2901,6 +3044,10 @@ async function applyAdd(ctx, addNode, noteBacklog = null) {
     eventLog: ctx.eventLog,
     nativePlainText: resolved.nativePlainText,
   });
+  if (source) {
+    blob = restoreClientInvitation({ builtBlob: blob, sourceBlob: source.blob });
+    await rememberClientInvitation(ctx.targetID, newId, blob, serverID);
+  }
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,
     itemId: newId,
@@ -2937,7 +3084,12 @@ async function applyChange(ctx, changeNode, noteBacklog = null) {
   if (!ad) return;
   await maybeRecordFallbackOrganizerName(ctx, ad);
   const existing = await findExistingByServerId(ctx, serverID);
-  if (!existing) return declineChangeForUnknownItem(ctx, serverID);
+  if (!existing) {
+    const source = ctx.itemKind.changelogKind === "event"
+      ? await clientInvitationByServerId(ctx.targetID, serverID) : null;
+    if (source) return applyAdd(ctx, changeNode, noteBacklog);
+    return declineChangeForUnknownItem(ctx, serverID);
+  }
   noteUidClaim(ctx.uidClaims, existing.itemId, serverID);
   // 16.1 per-instance Change: ApplicationData carries <InstanceId> and
   // is scoped to a single occurrence of the master event referenced by
@@ -2955,8 +3107,26 @@ async function applyChange(ctx, changeNode, noteBacklog = null) {
 }
 
 async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
+  if (isClientInvitation(existing.blob)) {
+    return withClientInvitationLock(ctx.targetID, existing.itemId, async () => {
+      const fresh = await ctx.store.get(existing.itemId);
+      if (!fresh) return;
+      const source = await clientInvitationFor(ctx.targetID, existing.itemId);
+      return applyExceptionChangeUnlocked(ctx, ad, {
+        itemId: existing.itemId, blob: source?.blob ?? fresh.blob,
+      }, instanceId, serverID);
+    });
+  }
+  return applyExceptionChangeUnlocked(ctx, ad, existing, instanceId, serverID);
+}
+
+async function applyExceptionChangeUnlocked(ctx, ad, existing, instanceId, serverID) {
+  // A newer accepted mail is still waiting to reach this server item.
+  // The instance path must not bypass the same guard as master Changes.
+  if (isClientInvitation(existing.blob) && (await ctx.queue.pending())
+    .some((entry) => entry.itemId === existing.itemId)) return;
   const instanceUtc = parseEasInstanceId(instanceId);
-  if (!instanceUtc) return applyChangeFromAd(ctx, ad, existing, serverID);
+  if (!instanceUtc) return applyChangeFromAdUnlocked(ctx, ad, existing, serverID);
 
   const deleted = readPathFrom(ad, ["Deleted"]) === "1";
   const codec = ctx.itemKind.codec;
@@ -3001,6 +3171,11 @@ async function applyExceptionChange(ctx, ad, existing, instanceId, serverID) {
         `no ServerId stamp; restamping from the server command (${serverID})`,
     });
     nextBlob = codec.stampEasServerId(nextBlob, serverID);
+  }
+
+  if (isClientInvitation(existing.blob)) {
+    nextBlob = restoreClientInvitation({ builtBlob: nextBlob, sourceBlob: existing.blob });
+    await rememberClientInvitation(ctx.targetID, existing.itemId, nextBlob, serverID);
   }
 
   await ctx.queue.markServerWrite({
@@ -3176,6 +3351,22 @@ async function resolveBody(
 }
 
 async function applyChangeFromAd(
+  ctx, ad, existing, serverID = null, resolved = null, noteBacklog = null,
+) {
+  if (isClientInvitation(existing.blob)) {
+    return withClientInvitationLock(ctx.targetID, existing.itemId, async () => {
+      const fresh = await ctx.store.get(existing.itemId);
+      if (!fresh) return;
+      const source = await clientInvitationFor(ctx.targetID, existing.itemId);
+      return applyChangeFromAdUnlocked(ctx, ad, {
+        itemId: existing.itemId, blob: source?.blob ?? fresh.blob,
+      }, serverID, resolved, noteBacklog);
+    });
+  }
+  return applyChangeFromAdUnlocked(ctx, ad, existing, serverID, resolved, noteBacklog);
+}
+
+async function applyChangeFromAdUnlocked(
   ctx,
   ad,
   existing,
@@ -3223,7 +3414,11 @@ async function applyChangeFromAd(
   // current local blob instead of rebuilding from scratch. Exchange
   // routinely echoes Changes carrying only the modified fields (e.g.
   // just <DtStamp>); without merge, untouched fields would be lost.
-  let blob = await ctx.itemKind.codec.applicationDataToBlob({
+  const pendingClientWrite = isClientInvitation(existing.blob) &&
+    (await ctx.queue.pending()).some((entry) => entry.itemId === existing.itemId);
+  let blob = pendingClientWrite
+    ? ctx.itemKind.codec.stampEasServerId(existing.blob, id)
+    : await ctx.itemKind.codec.applicationDataToBlob({
     adNode: ad,
     existingBlob: existing.blob,
     serverID: id,
@@ -3243,6 +3438,10 @@ async function applyChangeFromAd(
   // below would then read that back and send it. The user accepts, the
   // calendar looks right, and the organizer never hears.
   if (ctx.itemKind.changelogKind === "event") {
+    if (isClientInvitation(existing.blob)) {
+      blob = restoreClientInvitation({ builtBlob: blob, sourceBlob: existing.blob });
+      await rememberClientInvitation(ctx.targetID, existing.itemId, blob, id);
+    }
     blob = preserveSelfPartstat({
       builtIcal: blob,
       priorIcal: existing.blob,
@@ -3330,13 +3529,39 @@ export async function noteExceptionsDroppedByServer(ctx, ad, existing, blob) {
   });
 }
 
-async function applyDelete(ctx, delNode, noteBacklog = null) {
+async function removeClientInvitation(ctx, itemId, retainSource = false) {
+  return withClientInvitationLock(ctx.targetID, itemId,
+    () => removeClientInvitationUnlocked(ctx, itemId, retainSource));
+}
+
+async function removeClientInvitationUnlocked(ctx, itemId, retainSource) {
+  // SoftDelete only leaves the current sync window. It does not acknowledge
+  // any pending user mutation and must not discard it or its source.
+  if (retainSource && (await ctx.queue.pending()).some((entry) =>
+    entry.itemId === itemId)) return;
+  await ctx.queue.markServerWrite({
+    parentId: ctx.targetID, itemId,
+    status: SERVER_TAG_STATUSES[2], kind: ctx.itemKind.changelogKind,
+  });
+  if (await ctx.store.get(itemId)) await ctx.store.delete(itemId);
+  await ctx.queue.remove({ parentId: ctx.targetID, itemId, kind: ctx.itemKind.changelogKind });
+  if (!retainSource) await forgetClientInvitation(ctx.targetID, itemId);
+  ctx.indexMap.remove(itemId);
+}
+
+async function applyDelete(ctx, delNode, noteBacklog = null, retainSource = false) {
   const serverID = readPathFrom(delNode, ["ServerId"]);
   if (!serverID) return;
   // A deletion outranks a pending note upgrade - fetching the rich note of
   // an item this same window removed would resurrect it as a change.
   noteBacklog?.delete(serverID);
   const existing = await findExistingByServerId(ctx, serverID);
+  const source = ctx.itemKind.changelogKind === "event"
+    ? await clientInvitationByServerId(ctx.targetID, serverID) : null;
+  if (source || (existing && isClientInvitation(existing.blob))) {
+    await removeClientInvitation(ctx, existing?.itemId ?? source.itemId, retainSource);
+    return;
+  }
   if (!existing) return;
   await ctx.queue.markServerWrite({
     parentId: ctx.targetID,

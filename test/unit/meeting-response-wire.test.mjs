@@ -75,3 +75,18 @@ test("declining is announced too", () => {
   // so nothing is left locally to notice it by.
   assert.match(xml({ asVersion: "16.1", userResponse: 3 }), /<SendResponse\s*\/>/);
 });
+
+test("a source email's Search LongId excludes calendar addressing", () => {
+  const body = buildMeetingResponseBody({
+    ...REQUEST, asVersion: "16.1", longId: "mail-source-1",
+    instanceId: "2026-09-08T09:00:00.000Z",
+  });
+  const text = decodeWBXML(body);
+  assert.match(text, /<LongId xmlns='Search'>mail-source-1<\/LongId>/);
+  assert.doesNotMatch(text, /CollectionId|RequestId/);
+  assert.match(text, /<InstanceId>/);
+  assert.match(text, /<SendResponse\s*\/>/);
+  // 0x00/0x0f selects Search, 0x58 is its LongId content token.
+  // Verify the WBXML page switch as well as the decoded namespace.
+  assert.ok(Buffer.from(body).includes(Buffer.from([0x00, 0x0f, 0x58])));
+});

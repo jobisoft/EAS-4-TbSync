@@ -288,6 +288,15 @@
   "config.calendar.syncRecurrence": {
     "message": "Sync recurring events / tasks and exceptions"
   },
+  "config.calendar.imapInvitations": {
+    "message": "Invitations from IMAP mail"
+  },
+  "config.readOnlyBanner.imap": {
+    "message": "While connected, you can change only invitations from IMAP mail. Other settings are locked."
+  },
+  "config.calendar.imapInvitations.hint": {
+    "message": "Thunderbird sends replies to invitations from IMAP mail and saves the event in the default Microsoft 365 calendar. This option does not change mail settings."
+  },
   "config.calendar.syncRecurrence.hint": {
     "message": "When enabled, recurrence rules and per-instance exceptions round-trip with the server."
   },

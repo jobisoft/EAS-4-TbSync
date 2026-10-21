@@ -114,6 +114,7 @@ import {
 } from "./eas/calendar-sync.mjs";
 import { healFolderIndex, healIsDue } from "./eas/index-heal.mjs";
 import {
+  accountUserAddress,
   fetchUserInformation,
   sendDeviceInformation,
   shouldSendDeviceInformation,
@@ -151,6 +152,7 @@ import {
  *  wrapper is told it rather than knowing it. */
 const CALENDAR_TYPE = "ext-eas4tbsync@jobisoft.de";
 const CALENDAR_URL = "moz-eas-calendar://";
+const imapModeUpdates = new Map();
 
 /** EAS FolderSync status codes that indicate the server wants us to run
  *  Provision (in-band equivalent of the HTTP-449 path). */
@@ -1638,6 +1640,8 @@ export class EasProvider extends TbSyncProviderImplementation {
           }),
         );
 
+      await this.updateImapInvitationMode(ctx.account, [folder]);
+
       // Calendars made before the account knew its own address carry no
       // owner; declaring it here reaches them without a recreate.
       const owner = calendarOwner(ctx.account);
@@ -1839,6 +1843,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Calendar section.
       calendarSyncLimit: c.synclimit || "7",
       syncRecurrence: !!c.syncrecurrence,
+      imapInvitations: c.imapInvitations === true,
       // Anything unrecognised, including the absent value of an account
       // that predates the setting, reads as the default - the popup must
       // never render a select with no option selected.
@@ -1858,6 +1863,47 @@ export class EasProvider extends TbSyncProviderImplementation {
         c.asversion !== "2.5" &&
         easCommandAdvertised(ctx.account, "ResolveRecipients"),
     };
+  }
+
+  /** Local policy only. Saving this option never connects or sends mail. */
+  async updateImapInvitationMode(account, folders) {
+    const key = account.accountId;
+    const previous = imapModeUpdates.get(key) || Promise.resolve();
+    const write = previous.catch(() => {}).then(() => this.#writeImapInvitationMode(account, folders));
+    imapModeUpdates.set(key, write);
+    try {
+      await write;
+    } finally {
+      if (imapModeUpdates.get(key) === write) imapModeUpdates.delete(key);
+    }
+  }
+
+  async #writeImapInvitationMode(account, folders) {
+    // A sync can hold an account snapshot from before a config save.
+    // Read the current option before publishing native/hook policy.
+    account = (await this.getAccount(account.accountId))?.account || account;
+    const user = accountUserAddress(account);
+    for (const folder of folders) {
+      if (!folder.targetID || folder.targetType !== "calendars") continue;
+      const enabled = account.custom?.imapInvitations === true &&
+        String(folder.custom?.type) === "8" && !!user;
+      const key = "eas.imapInvitations." + folder.targetID;
+      const calendar = await messenger.calendar.calendars.get(folder.targetID);
+      if (!enabled && calendar && calendar.capabilities?.imapInvitations !== false) {
+        await messenger.calendar.calendars.update(folder.targetID, {
+          capabilities: { imapInvitations: false },
+        });
+      }
+      // On enable, publish hook policy before permitting SMTP. On disable,
+      // stop SMTP first. Per-calendar keys prevent cross-account lost updates.
+      if (enabled) await browser.storage.local.set({ [key]: { user } });
+      else await browser.storage.local.remove(key);
+      if (enabled && calendar && calendar.capabilities?.imapInvitations !== true) {
+        await messenger.calendar.calendars.update(folder.targetID, {
+          capabilities: { imapInvitations: true },
+        });
+      }
+    }
   }
 
   /**
@@ -2046,6 +2092,9 @@ export class EasProvider extends TbSyncProviderImplementation {
   async saveAccountFromConfig({ accountId, patch }) {
     const ctx = await this.#loadContext(accountId);
     if (!ctx) throw withCode(new Error("Unknown account"), ERR.UNKNOWN_ACCOUNT);
+    if (ctx.account.enabled === true && Object.keys(patch).some(key => key !== "imapInvitations")) {
+      throw withCode(new Error("Gdy konto jest połączone, można zmienić tylko obsługę zaproszeń z poczty IMAP."), ERR.UNKNOWN_COMMAND);
+    }
     const topLevelPatch = {};
     const customPatch = {};
 
@@ -2124,6 +2173,9 @@ export class EasProvider extends TbSyncProviderImplementation {
     if ("syncRecurrence" in patch) {
       customPatch.syncrecurrence = !!patch.syncRecurrence;
     }
+    if ("imapInvitations" in patch) {
+      customPatch.imapInvitations = patch.imapInvitations === true;
+    }
     if ("galEnabled" in patch) {
       customPatch.galenabled = !!patch.galEnabled;
     }
@@ -2135,6 +2187,12 @@ export class EasProvider extends TbSyncProviderImplementation {
     if (Object.keys(customPatch).length) outgoing.custom = customPatch;
     if (Object.keys(outgoing).length) {
       await this.updateAccount({ accountId, patch: outgoing });
+    }
+    if ("imapInvitations" in patch) {
+      await this.updateImapInvitationMode({
+        ...ctx.account,
+        custom: { ...ctx.account.custom, ...customPatch },
+      }, ctx.folders || []);
     }
 
     // Re-evaluate the GAL listener against the post-save state. Both

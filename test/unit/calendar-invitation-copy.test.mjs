@@ -12,8 +12,10 @@
  * attendee's status, so the server would make the user the organizer and
  * invite all of them in the user's name.
  *
- * After long enough the answer is given up on and the appointment is kept
- * as the user's own. The two things that must be true of the result are
+ * The conversion helper can keep the appointment as the user's own. The
+ * sync runner must not invoke it automatically when an answer waits for
+ * an id; that behaviour is covered by invitation-phase.test.mjs.
+ * The two things that must be true of an explicit conversion's result are
  * asserted here: it no longer reads as somebody else's meeting, so the push
  * stops diverting it, and it carries no answer anybody could try to send.
  *

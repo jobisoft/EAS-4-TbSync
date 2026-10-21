@@ -9,16 +9,34 @@ var { cal } = ChromeUtils.importESModule("resource:///modules/calendar/calUtils.
 var { ExtensionSupport } = ChromeUtils.importESModule("resource:///modules/ExtensionSupport.sys.mjs");
 
 var { CalItipEmailTransport } = ChromeUtils.importESModule("resource:///modules/CalItipEmailTransport.sys.mjs");
+var { MailServices } = ChromeUtils.importESModule("resource:///modules/MailServices.sys.mjs");
 
-// TODO move me
-// Have the server take care of scheduling. This can be de-duplicated in
-// CalItipEmailTransport.sys.mjs
-class CalItipNoEmailTransport extends CalItipEmailTransport {
-  wrappedJSObject = this;
-  QueryInterface = ChromeUtils.generateQI(["calIItipTransport"]);
+// Keep server scheduling for our meetings. Only replies to explicitly
+// marked IMAP invitations (or a newly opted-in source) use Thunderbird mail.
+class CalItipImapReplyTransport extends CalItipEmailTransport {
+  constructor(calendar) {
+    super();
+    this.calendar = calendar;
+  }
 
-  sendItems() {
-    return true;
+  getIdentityAndAccount() {
+    const identity = this.calendar.clientInvitationMailIdentity();
+    return { identity, account: identity && MailServices.accounts.findAccountForIdentity(identity) };
+  }
+
+  sendItems(recipients, itipItem, fromAttendee) {
+    const items = itipItem.getItemList();
+    if (!items.length || !items.every(item =>
+      this.calendar.isImapInvitationReply(itipItem.responseMethod, item))) {
+      return true;
+    }
+    const { identity, account } = this.getIdentityAndAccount();
+    const user = String(this.calendar.capabilities.organizer || "").replace(/^mailto:/i, "").toLowerCase();
+    const sender = String(fromAttendee?.id || "").replace(/^mailto:/i, "").toLowerCase();
+    // The stock transport falls back to a default identity when calendar
+    // configuration is absent. A reply must never use another mailbox.
+    if (!identity || !account || identity.email.toLowerCase() !== user || sender !== user) return false;
+    return super.sendItems(recipients, itipItem, fromAttendee);
   }
 }
 
@@ -204,7 +222,33 @@ class ExtCalendar extends cal.provider.BaseClass {
   // Outgoing mail stopped regardless, one layer lower, where the transport
   // for "server" reports success without sending - so what was wrong was
   // only what the user was being told.
-  canNotify() {
+  isImapInvitationReply(method, item) {
+    if (method !== "REPLY" || !item) {
+      return false;
+    }
+    const address = value => String(value || "").replace(/^mailto:/i, "").toLowerCase();
+    const user = address(this.capabilities.organizer);
+    const organizer = address(item.organizer?.id);
+    if (!user || !organizer || user === organizer ||
+        !item.getAttendees().some(attendee => address(attendee.id) === user)) {
+      return false;
+    }
+    const master = item.parentItem || item;
+    const marked = item.getProperty("X-EAS-CLIENT-INVITATION") === "1" ||
+      master.getProperty("X-EAS-CLIENT-INVITATION") === "1";
+    // The first iTIP reply may be built from the original mail item before
+    // the asynchronous provider hook has returned its marked copy.
+    return marked || (this.capabilities.imapInvitations === true &&
+      !(item.getProperty("X-EAS-SERVERID") || master.getProperty("X-EAS-SERVERID")));
+  }
+
+  clientInvitationMailIdentity() {
+    const user = String(this.capabilities.organizer || "").replace(/^mailto:/i, "").toLowerCase();
+    return MailServices.accounts.allIdentities.find(candidate => candidate.email.toLowerCase() === user) || null;
+  }
+
+  canNotify(method, item) {
+    if (this.isImapInvitationReply(method, item)) return false;
     return this.capabilities.scheduling == "server";
   }
 
@@ -232,11 +276,19 @@ class ExtCalendar extends cal.provider.BaseClass {
           return this.capabilities.organizerName;
         }
         break;
+      case "imip.identity":
+      case "imip.account":
+        if (this.capabilities.imapInvitations === true) {
+          const identity = this.clientInvitationMailIdentity();
+          if (!identity) return null;
+          return name === "imip.identity" ? identity : MailServices.accounts.findAccountForIdentity(identity);
+        }
+        break;
       case "imip.identity.disabled":
         return this.capabilities.scheduling == "none";
       case "itip.transport":
         if (this.capabilities.scheduling == "server") {
-          return new CalItipNoEmailTransport();
+          return new CalItipImapReplyTransport(this);
         } else if (this.capabilities.scheduling == "none") {
           return null;
         }
