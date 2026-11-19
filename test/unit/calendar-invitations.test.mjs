@@ -114,6 +114,39 @@ test("our own meetings stay ours", () => {
   );
 });
 
+test("an organizer with no attendees is an appointment, not an invitation", () => {
+  // What a webinar or booking service hands out as an "add to calendar"
+  // file: it names its source as ORGANIZER and invites nobody. Treated as a
+  // received meeting it never left Thunderbird - the push held it back, and
+  // with no answer to send the queued edit was dropped on every sync.
+  assert.equal(
+    isReceivedMeeting(itip({ invited: null }), ME),
+    false,
+    "nobody to answer for",
+  );
+  assert.equal(
+    isReceivedMeeting(itip({ invited: null }), null),
+    false,
+    "and not because our own address is unknown",
+  );
+});
+
+test("a guest list without the user on it is still somebody else's", () => {
+  // Pushing it on 16.x would let the server re-invite every guest in the
+  // user's name, so only the absence of every attendee lifts the rule.
+  const ical = itip()
+    .replace(`CN=${ME}:mailto:${ME}`, "CN=Guest:mailto:guest@example.invalid")
+    .replace(/X-MOZ-INVITED-ATTENDEE:[^\r]*\r\n/, "");
+  assert.equal(isReceivedMeeting(ical, ME), true);
+});
+
+test("the server's R bit still decides an item without attendees", () => {
+  // A pulled item carries the server's statement; the attendee rule only
+  // applies where that statement is missing.
+  const ical = pulled("3").replace(/ATTENDEE;[^\r]*\r\n/, "");
+  assert.equal(isReceivedMeeting(ical, ME), true);
+});
+
 test("an item nobody has said anything about is ours", () => {
   assert.equal(
     isReceivedMeeting("BEGIN:VCALENDAR\r\nEND:VCALENDAR", ME),

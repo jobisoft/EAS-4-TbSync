@@ -1889,6 +1889,14 @@ export function droppedAttendees(from, now) {
  *  test the platform itself uses to decide an item is an invitation
  *  (`calProviderBase.isInvitation`).
  *
+ *  An item with an organizer but no attendees at all is not an invitation
+ *  either. The platform agrees - `isInvitation` asks for the user among the
+ *  attendees - and so does the outbound codec, which writes such an item as
+ *  a plain appointment (`MeetingStatus` 0). It is what a webinar or booking
+ *  service hands out as an "add to calendar" file: there is nobody to answer
+ *  and nobody the server could re-invite, so holding it back as a meeting
+ *  only keeps it off the server for good.
+ *
  *  False whenever neither signal is conclusive: an item nobody has said
  *  anything about is ours. */
 export function isReceivedMeeting(ical, userEmail = null) {
@@ -1909,6 +1917,11 @@ export function isReceivedMeeting(ical, userEmail = null) {
 
   const orgProp = master.getFirstProperty("organizer");
   if (!orgProp) return false; // names nobody, which is not the same as us
+  // Nobody invited, so nobody to answer for: an appointment that happens to
+  // name its source. Only the absence of every attendee qualifies - a guest
+  // list without the user on it still goes to people the server would
+  // re-invite in the user's name.
+  if (!master.hasProperty("attendee")) return false;
   const self = selfAddress(master, userEmail);
   if (!self) return false;
   return stripMailto(stringOf(orgProp.getFirstValue())).toLowerCase() !== self;
