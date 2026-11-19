@@ -19,6 +19,9 @@ a folder is the session id naming the current binding. If that stops moving,
 edits outlive the calendar they were made against.
 """
 
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
 import bridge
 import harness
 import probes
@@ -293,6 +296,39 @@ def _occurrence_series(s):
     return item
 
 
+def _override_start(ics, recurrence_id):
+    """When the override of `recurrence_id` starts, as an instant (UTC).
+
+    The same instant is stored as UTC or in the account's zone depending on
+    whether a sync has run since it was written, so a test that wants to know
+    it was kept compares the instant, not the text.
+    """
+    lines = ics.replace("\r\n ", "").splitlines()
+    block = None
+    for line in lines:
+        if line == "BEGIN:VEVENT":
+            block = []
+        elif line == "END:VEVENT" and block is not None:
+            if "RECURRENCE-ID:" + recurrence_id in block or any(
+                l.startswith("RECURRENCE-ID") and l.endswith(":" + recurrence_id) for l in block
+            ):
+                for l in block:
+                    if l.startswith("DTSTART"):
+                        params, _, value = l.partition(":")
+                        zone = None
+                        for param in params.split(";")[1:]:
+                            if param.startswith("TZID="):
+                                zone = ZoneInfo(param[len("TZID="):])
+                        if value.endswith("Z"):
+                            return datetime.strptime(value, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+                        moment = datetime.strptime(value, "%Y%m%dT%H%M%S")
+                        return moment.replace(tzinfo=zone or timezone.utc).astimezone(timezone.utc)
+            block = None
+        elif block is not None:
+            block.append(line)
+    return None
+
+
 @test("7.9", "editing one occurrence persists - the series keeps the rest")
 def t_6_9(s):
     """A lone occurrence has no parent in it, and that used to be fatal.
@@ -325,7 +361,11 @@ def t_6_9(s):
     )
     stored = ok("items.get", id=item["id"])["item"]
     harness.contains(stored, "RECURRENCE-ID", "the override was not stored")
-    harness.contains(stored, "DTSTART:20261118T113000Z", "the new time was not stored")
+    harness.eq(
+        _override_start(stored, "20261118T090000Z"),
+        datetime(2026, 11, 18, 11, 30, tzinfo=timezone.utc),
+        "the new time was not stored",
+    )
     harness.contains(stored, "RRULE", "the series lost its recurrence rule")
     harness.contains(stored, "X-EAS-SERVERID", "the series lost its server identity")
     s.settle("events")
@@ -356,7 +396,11 @@ def t_6_10(s):
     )
     stored = ok("items.get", id=item["id"])["item"]
     harness.contains(stored, "DTSTART:20261119T140000Z", "the second override was not stored")
-    harness.contains(stored, "DTSTART:20261118T113000Z", "7.9's override was lost")
+    harness.eq(
+        _override_start(stored, "20261118T090000Z"),
+        datetime(2026, 11, 18, 11, 30, tzinfo=timezone.utc),
+        "7.9's override was lost or moved",
+    )
     harness.contains(stored, "RRULE", "the series lost its recurrence rule")
     s.settle("events")
 
