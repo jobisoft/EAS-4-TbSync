@@ -7,7 +7,17 @@ This file lists files that were not created by this project and are maintained u
 ## calendar Experiments API
 
 - **Files** : `/experiments/calendar/*`
-- **Source** : https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fthunderbird%2Fwebext-experiments%2Ftree%2Fb7f7cb3e76807903a785a03784d6e7df7b213f21%2Fcalendar%2Fexperiments%2Fcalendar
+- **Source** : https://github.com/thunderbird/webext-experiments, path
+  `calendar/experiments/calendar`, from pull request #75
+  (https://github.com/thunderbird/webext-experiments/pull/75, not merged yet),
+  branch `compatibility-for-160-and-other-fixes` at commit
+  `78b584e4250d294f1554f5b27e524a583763c57b` (26 commits on top of upstream
+  `b7f7cb3e76807903a785a03784d6e7df7b213f21`). Once that pull request is
+  merged, this is the merged upstream commit.
+- **Updating** : never edit these copies. They are an exact 1:1 copy of the
+  `webext-experiments` checkout beside the TbSync repository, written by
+  `TbSync/common/vendor.sh` (`vendor.sh --check` verifies only). See
+  `TbSync/common/README.md`.
 - **License** : MPL 2.0
 
 ---

@@ -69,7 +69,7 @@ async function loadInternal(eventLog) {
     fetchCsvLines("modules/eas/timezonedata/Aliases.csv"),
   ]);
   const rawCurrentZone = await messenger.calendar.timezones.currentZone;
-  // An empty id means the calendar service has no default timezone, i.e. it
+  // No id (null) means the calendar service has no default timezone, i.e. it
   // was never primed - in which case every zone lookup below is suspect,
   // not just this one.
   if (!rawCurrentZone) {
@@ -221,10 +221,9 @@ async function loadTzInfo(tzid) {
     _tzInfoCache.set(tzid, info);
     return info;
   }
-  // Ask for "ical" explicitly. Our vendored schema defaults to it, but the
-  // upstream API this Experiment is being replaced by defaults to "jcal"
-  // (D302738) - which would hand us a parsed object where the code below
-  // expects the raw VTIMEZONE text.
+  // Ask for "ical" explicitly. The API defaults to "jcal" (as D302738 does),
+  // which would hand us a parsed object where the code below expects the raw
+  // VTIMEZONE text.
   const def = await messenger.calendar.timezones.getDefinition(tzid, "ical");
   if (!def) {
     _tzInfoCache.set(tzid, null);
