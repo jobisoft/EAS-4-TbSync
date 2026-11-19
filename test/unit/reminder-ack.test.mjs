@@ -32,8 +32,21 @@ import { parseAdNode } from "./support/ad-node.mjs";
 
 before(() => ensureLoaded());
 
-const ACK = "20260916T084500Z";
-const SNOOZE = "20260916T090000Z";
+// The event starts five weeks from now, whenever the test runs. It has to be
+// in the future: the merge acknowledges a reminder for an event that has
+// already started, so an event in the past would carry an acknowledgement the
+// merge itself put there, and the test that expects the merge to clear it
+// would fail for that reason.
+const DAY = 24 * 60 * 60 * 1000;
+const ical = (ms) => new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+const midnight = new Date();
+midnight.setUTCHours(0, 0, 0, 0);
+const START_MS = midnight.getTime() + 35 * DAY + 9 * 60 * 60 * 1000;
+const START = ical(START_MS);
+const END = ical(START_MS + 30 * 60 * 1000);
+const STAMP = ical(START_MS - 15 * DAY);
+const ACK = ical(START_MS - 15 * 60 * 1000);
+const SNOOZE = START;
 
 /** An event with one reminder, plus whatever answer the user gave it. */
 const event = ({ trigger = "-PT15M", marks = [], rid = null } = {}) =>
@@ -43,9 +56,9 @@ const event = ({ trigger = "-PT15M", marks = [], rid = null } = {}) =>
     "PRODID:-//test//EN",
     "BEGIN:VEVENT",
     "UID:ack-uid",
-    "DTSTAMP:20260901T090000Z",
-    "DTSTART:20260916T090000Z",
-    "DTEND:20260916T093000Z",
+    `DTSTAMP:${STAMP}`,
+    `DTSTART:${START}`,
+    `DTEND:${END}`,
     "SUMMARY:planning",
     ...(rid ? [`RECURRENCE-ID:${rid}`] : []),
     ...marks,
@@ -67,9 +80,9 @@ const noAlarm = (marks = []) =>
     "PRODID:-//test//EN",
     "BEGIN:VEVENT",
     "UID:ack-uid",
-    "DTSTAMP:20260901T090000Z",
-    "DTSTART:20260916T090000Z",
-    "DTEND:20260916T093000Z",
+    `DTSTAMP:${STAMP}`,
+    `DTSTART:${START}`,
+    `DTEND:${END}`,
     "SUMMARY:planning",
     ...marks,
     "END:VEVENT",
@@ -148,14 +161,14 @@ test("an item nobody answered is left exactly as built", () => {
 
 /** A series and one override, each with its own reminder. `marks` go on
  *  whichever component the caller names. */
-const RID = "20260923T090000Z";
+const RID = ical(START_MS + 7 * DAY);
 const vevent = (extra) =>
   [
     "BEGIN:VEVENT",
     "UID:ack-uid",
-    "DTSTAMP:20260901T090000Z",
-    "DTSTART:20260916T090000Z",
-    "DTEND:20260916T093000Z",
+    `DTSTAMP:${STAMP}`,
+    `DTSTART:${START}`,
+    `DTEND:${END}`,
     "SUMMARY:planning",
     ...extra,
     "BEGIN:VALARM",
@@ -206,8 +219,8 @@ test("an item that will not parse is returned untouched", () => {
 
 const CHANGE_SAME_REMINDER = `<ApplicationData>
   <Subject xmlns="Calendar">planning, moved room</Subject>
-  <StartTime xmlns="Calendar">20260916T090000Z</StartTime>
-  <EndTime xmlns="Calendar">20260916T093000Z</EndTime>
+  <StartTime xmlns="Calendar">${START}</StartTime>
+  <EndTime xmlns="Calendar">${END}</EndTime>
   <Reminder xmlns="Calendar">15</Reminder>
 </ApplicationData>`;
 
