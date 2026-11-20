@@ -1813,6 +1813,9 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Connection (basic auth - empty for OAuth, popup hides them anyway).
       server: c.server ?? "",
       user: c.user ?? "",
+      // The server refused the login: the dialog points at the two fields
+      // that hold it. `error` is the host's own mark on the account record.
+      authError: ctx.account.error === "E:AUTH",
       // Account-type discriminator + identity (read-only display).
       servertype: c.servertype ?? "custom",
       authenticatedUserEmail: c.authenticatedUserEmail ?? null,

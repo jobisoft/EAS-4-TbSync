@@ -149,6 +149,11 @@ async function load() {
     $("server").readOnly = lockServerUser;
     $("user").readOnly = lockServerUser;
     // Password is always blank on load.
+    // The server rejected the login: say which fields to look at.
+    for (const id of ["user", "password"]) {
+      $(id).classList.toggle("invalid", !!account.authError);
+    }
+    $("auth-error-hint").hidden = !account.authError;
   } else {
     $("connection-section").hidden = true;
   }

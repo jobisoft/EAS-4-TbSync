@@ -646,5 +646,8 @@
   },
   "config.protocol.asVersion.unknownHint": {
     "message": "Serverul nu a comunicat ce versiuni acceptă, așa că sunt oferite toate."
+  },
+  "config.authError.hint": {
+    "message": "The server rejected this username or password. Check both and save."
   }
 }

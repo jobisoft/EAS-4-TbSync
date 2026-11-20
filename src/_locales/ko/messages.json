@@ -646,5 +646,8 @@
   },
   "config.protocol.asVersion.unknownHint": {
     "message": "서버가 지원 버전을 알려주지 않아 전체를 표시합니다."
+  },
+  "config.authError.hint": {
+    "message": "The server rejected this username or password. Check both and save."
   }
 }

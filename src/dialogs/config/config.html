@@ -63,6 +63,7 @@
         padding: 5px 8px; border: 1px solid var(--border-input); border-radius: 4px; font-size: 13px;
         background: var(--bg-card); color: var(--text-primary);
       }
+      .field input.invalid { border-color: var(--error-accent); }
       .field input:disabled,
       .field select:disabled { background: var(--bg-input-disabled); color: var(--text-tertiary); }
       .field .display {
@@ -151,6 +152,7 @@
       <div class="field">
         <label data-i18n-content="config.password"></label>
         <input id="password" type="password" autocomplete="new-password" spellcheck="false" />
+        <span id="auth-error-hint" class="hint" data-i18n-content="config.authError.hint" hidden></span>
       </div>
     </div>
 

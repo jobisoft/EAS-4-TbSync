@@ -646,5 +646,8 @@
   },
   "config.protocol.asVersion.unknownHint": {
     "message": "O servidor non indicou que versións admite, polo que se ofrecen todas."
+  },
+  "config.authError.hint": {
+    "message": "The server rejected this username or password. Check both and save."
   }
 }

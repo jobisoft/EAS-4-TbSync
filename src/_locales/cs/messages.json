@@ -646,5 +646,8 @@
   },
   "config.protocol.asVersion.unknownHint": {
     "message": "Server nesdělil, které verze podporuje, proto jsou nabízeny všechny."
+  },
+  "config.authError.hint": {
+    "message": "The server rejected this username or password. Check both and save."
   }
 }
