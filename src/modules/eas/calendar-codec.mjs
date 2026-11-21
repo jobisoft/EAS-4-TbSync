@@ -25,7 +25,11 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
-import { readPathFrom, isFiletimeZero } from "./wbxml-helpers.mjs";
+import {
+  readPathFrom,
+  readChildTexts,
+  isFiletimeZero,
+} from "./wbxml-helpers.mjs";
 import {
   readBodyIntoDescription,
   appendBodyFromDescription,
@@ -305,7 +309,7 @@ async function populateVeventFromAd({
   // the AD; the AD's children replace the prior set.
   if (childByTag(adNode, "Categories")) {
     vevent.removeAllProperties("categories");
-    const cats = collectChildren(adNode, "Categories", "Category");
+    const cats = readChildTexts(childByTag(adNode, "Categories"), "Category");
     if (cats.length) {
       const prop = new ICAL.Property("categories", vevent);
       prop.setValues(cats);
@@ -2822,25 +2826,6 @@ function childByTag(node, tag) {
   if (!node?.children) return null;
   for (const c of node.children) if (c.tagName === tag) return c;
   return null;
-}
-
-function collectChildren(adNode, wrapperTag, childTag) {
-  const wrapper = childByTag(adNode, wrapperTag);
-  if (!wrapper) return [];
-  const out = [];
-  for (const c of wrapper.children) {
-    if (c.tagName === childTag) {
-      const t = c.textContent;
-      if (t != null) {
-        try {
-          out.push(decodeURIComponent(t));
-        } catch {
-          out.push(t);
-        }
-      }
-    }
-  }
-  return out;
 }
 
 /** What we last told the organiser, or null. */

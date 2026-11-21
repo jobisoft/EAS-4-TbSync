@@ -14,6 +14,7 @@ import { installWebextEnv } from "./support/webext-env.mjs";
 installWebextEnv();
 import ICAL from "../../src/vendor/ical.min.js";
 import { applicationDataToIcal } from "../../src/modules/eas/calendar-codec.mjs";
+import { createWBXML, decodeWBXML } from "../../src/modules/wbxml.mjs";
 import { ensureLoaded } from "../../src/modules/eas/timezone-mapping.mjs";
 import { parseAdNode } from "./support/ad-node.mjs";
 
@@ -135,4 +136,40 @@ test("applicationDataToIcal: a delta-only Change (DtStamp only) leaves other fie
     "mailto:organizer@example.invalid",
     "Organizer should survive a delta that doesn't mention it",
   );
+});
+
+test("applicationDataToIcal: accented category names come through the wire unchanged", async () => {
+  // Built and decoded by the real WBXML encoder and decoder, so the text
+  // reaches the codec the way the server's answer does.
+  const w = createWBXML("AirSync");
+  w.otag("ApplicationData");
+  w.switchpage("Calendar");
+  w.atag("StartTime", "20261201T100000Z");
+  w.atag("EndTime", "20261201T110000Z");
+  w.atag("Subject", "R\u00e9union");
+  w.atag("UID", "categories-accents-uid");
+  w.otag("Categories");
+  w.atag("Category", "D\u00e9placement");
+  w.atag("Category", "Cong\u00e9s");
+  w.ctag();
+  w.switchpage("AirSync");
+  w.ctag();
+
+  const icalString = await applicationDataToIcal({
+    adNode: parseAdNode(decodeWBXML(w.getBytes())),
+    existingIcal: null,
+    serverID: "server-id-accents",
+    asVersion: "16.1",
+    defaultTimezone: "UTC",
+    syncRecurrence: false,
+    uid: null,
+    userEmail: "user@example.invalid",
+  });
+
+  const vevent = masterVevent(icalString);
+  assert.equal(vevent.getFirstPropertyValue("summary"), "R\u00e9union");
+  assert.deepEqual(vevent.getFirstProperty("categories").getValues(), [
+    "D\u00e9placement",
+    "Cong\u00e9s",
+  ]);
 });

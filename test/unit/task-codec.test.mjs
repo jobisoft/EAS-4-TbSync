@@ -227,3 +227,36 @@ END:VCALENDAR
     ["Work", "Home"],
   );
 });
+
+test("applicationDataToIcal: accented category names come through the wire unchanged", async () => {
+  // Built and decoded by the real WBXML encoder and decoder, so the text
+  // reaches the codec the way the server's answer does.
+  const w = createWBXML("AirSync");
+  w.otag("ApplicationData");
+  w.switchpage("Tasks");
+  w.atag("Subject", "Tâche");
+  w.otag("Categories");
+  w.atag("Category", "Déplacement");
+  w.atag("Category", "Congés");
+  w.ctag();
+  w.switchpage("AirSync");
+  w.ctag();
+
+  const ical = await applicationDataToIcal({
+    adNode: parseAdNode(decodeWBXML(w.getBytes())),
+    existingIcal: null,
+    serverID: "server-id-task-accents",
+    asVersion: "16.1",
+    defaultTimezone: "UTC",
+    syncRecurrence: false,
+    msTodoCompat: false,
+    uid: null,
+  });
+
+  const vtodo = firstVtodo(ical);
+  assert.equal(vtodo.getFirstPropertyValue("summary"), "Tâche");
+  assert.deepEqual(vtodo.getFirstProperty("categories").getValues(), [
+    "Déplacement",
+    "Congés",
+  ]);
+});

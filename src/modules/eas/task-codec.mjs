@@ -11,7 +11,11 @@
  */
 
 import ICAL from "../../vendor/ical.min.js";
-import { readPathFrom, isFiletimeZero } from "./wbxml-helpers.mjs";
+import {
+  readPathFrom,
+  readChildTexts,
+  isFiletimeZero,
+} from "./wbxml-helpers.mjs";
 import {
   readBodyIntoDescription,
   appendBodyFromDescription,
@@ -195,7 +199,7 @@ export async function applicationDataToIcal({
   // the AD; the AD's children replace the prior set.
   if (childByTag(adNode, "Categories")) {
     vtodo.removeAllProperties("categories");
-    const cats = collectChildren(adNode, "Categories", "Category");
+    const cats = readChildTexts(childByTag(adNode, "Categories"), "Category");
     if (cats.length) {
       const prop = new ICAL.Property("categories", vtodo);
       prop.setValues(cats);
@@ -647,21 +651,3 @@ function childByTag(node, tag) {
   return null;
 }
 
-function collectChildren(adNode, wrapperTag, childTag) {
-  const wrapper = childByTag(adNode, wrapperTag);
-  if (!wrapper) return [];
-  const out = [];
-  for (const c of wrapper.children) {
-    if (c.tagName === childTag) {
-      const t = c.textContent;
-      if (t != null) {
-        try {
-          out.push(decodeURIComponent(t));
-        } catch {
-          out.push(t);
-        }
-      }
-    }
-  }
-  return out;
-}
