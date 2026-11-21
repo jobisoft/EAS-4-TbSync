@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Este dispositivo vence"
   },
+  "config.protocol.followRenames": {
+    "message": "Acompanhar a renomeação de pastas no servidor"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Acompanhar, a menos que eu tenha renomeado localmente"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Sempre acompanhar"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Nunca acompanhar"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "O catálogo de endereços, a agenda ou a lista de tarefas local assume o novo nome da pasta. «Sempre acompanhar» também substitui um nome escolhido manualmente."
+  },
   "config.contacts.displayOverride": {
     "message": "Substituir o nome exibido por “Nome” + “Sobrenome”"
   },

@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Gaña este dispositivo"
   },
+  "config.protocol.followRenames": {
+    "message": "Seguir os cambios de nome de cartafoles no servidor"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Seguir, salvo que o renomease localmente"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Seguir sempre"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Non seguir nunca"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "A axenda de enderezos, o calendario ou a lista de tarefas local adopta o novo nome do cartafol. «Seguir sempre» tamén substitúe un nome escollido manualmente."
+  },
   "config.contacts.displayOverride": {
     "message": "Substituír o nome amosado por «Nome» + «Apelidos»"
   },

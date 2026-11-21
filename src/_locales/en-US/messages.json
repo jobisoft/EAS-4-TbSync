@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "This device wins"
   },
+  "config.protocol.followRenames": {
+    "message": "Follow folder renames on the server"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Follow, unless I renamed it locally"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Always follow"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Never follow"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "The local address book, calendar or task list follows the new name of the folder. \"Always follow\" also replaces a name you chose yourself."
+  },
   "config.contacts.displayOverride": {
     "message": "Override Display Name with \"First Name\" + \"Second Name\""
   },

@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Wygrywa to urządzenie"
   },
+  "config.protocol.followRenames": {
+    "message": "Podążaj za zmianami nazw folderów na serwerze"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Podążaj, chyba że zmieniłem nazwę lokalnie"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Zawsze podążaj"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Nigdy nie podążaj"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Lokalna książka adresowa, kalendarz lub lista zadań przyjmuje nową nazwę folderu. „Zawsze podążaj” zastępuje także nazwę wybraną ręcznie."
+  },
   "config.contacts.displayOverride": {
     "message": "Zastąp wyświetlaną nazwę formą „Imię” + „Nazwisko”"
   },

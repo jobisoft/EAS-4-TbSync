@@ -132,6 +132,12 @@ import {
 } from "./gal.mjs";
 import { forgetFreeBusyCache, refreshFreeBusyListener } from "./free-busy.mjs";
 import { easCommandAdvertised } from "./eas/allowed-commands.mjs";
+import {
+  FOLLOW_MODES,
+  followModeOf,
+  genResourceName,
+  planNameFollow,
+} from "./eas/target-name.mjs";
 import { setEventLogSink } from "./eas-event-log.mjs";
 // Cyclic: upgrades.mjs imports `easTypeToFolderType`,
 // `finalizeFolderListForPush` and `iconForServerType` from this module.
@@ -187,6 +193,7 @@ const ALLOWED_CALENDAR_SYNC_LIMITS = ["0", "4", "5", "6", "7"];
  *  server's copy wins a two-writer conflict (default), "0" = this device
  *  wins. */
 const ALLOWED_CONFLICT_VALUES = ["0", "1"];
+const ALLOWED_FOLLOW_MODES = FOLLOW_MODES;
 
 /** How long a calendar or address book must stay quiet before an edit in
  *  it is synced, in seconds. "0" is off, and then an edit waits for the
@@ -1111,10 +1118,11 @@ export class EasProvider extends TbSyncProviderImplementation {
       const initial = syncResult.adds
         .map((a) => folderDescriptorFromAdd(a))
         .filter(Boolean);
-      await this.pushFolderList({
-        accountId,
-        folders: await finalizeFolderListForPush(initial),
-      });
+      const pushed = await finalizeFolderListForPush(initial);
+      await this.pushFolderList({ accountId, folders: pushed });
+      // A resync that follows a recovery pushes every folder again, so
+      // this is where a rename that came in meanwhile is seen.
+      await this.#followServerRenames(ctx, pushed);
     } else if (
       syncResult.adds.length ||
       syncResult.updates.length ||
@@ -1125,6 +1133,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       // its PUSH_FOLDER_LIST handler - it always did for address books, and
       // owns calendars too now.
       await this.pushFolderList({ accountId, folders: merged });
+      await this.#followServerRenames(ctx, merged);
     }
 
     // 6) Persist the new FolderSync continuation key.
@@ -1836,6 +1845,7 @@ export class EasProvider extends TbSyncProviderImplementation {
       // Absent (pre-option accounts) means server wins - the value the
       // sync also falls back to.
       conflict: c.conflict === "0" ? "0" : "1",
+      followServerRenames: followModeOf(c),
       // Contacts section.
       contactsDisplayOverride: !!c.displayoverride,
       contactsNameSeparator: c.seperator || "10",
@@ -2091,6 +2101,16 @@ export class EasProvider extends TbSyncProviderImplementation {
       }
       customPatch.conflict = v;
     }
+    if ("followServerRenames" in patch) {
+      const v = String(patch.followServerRenames ?? "");
+      if (!ALLOWED_FOLLOW_MODES.includes(v)) {
+        throw withCode(
+          new Error("Invalid rename-following selection"),
+          ERR.UNKNOWN_COMMAND,
+        );
+      }
+      customPatch.followServerRenames = v;
+    }
     if ("contactsDisplayOverride" in patch) {
       customPatch.displayoverride = !!patch.contactsDisplayOverride;
     }
@@ -2166,6 +2186,43 @@ export class EasProvider extends TbSyncProviderImplementation {
 
   // ── Internals ─────────────────────────────────────────────────────────
 
+  /** Carry a folder's new name on the server over to the resource that was
+   *  created for it, as far as the account's setting allows. Run after the
+   *  folder list was pushed, with `ctx.folders` still the rows as they were
+   *  before. A resource that cannot be renamed is a warning and nothing
+   *  more: the folder sync must go on to persist its continuation key. */
+  async #followServerRenames(ctx, pushed) {
+    const plan = planNameFollow({
+      oldRows: ctx.folders,
+      newDescriptors: pushed,
+      accountName: ctx.account.accountName,
+      mode: followModeOf(ctx.account.custom),
+    });
+    for (const item of plan) {
+      try {
+        if (item.targetID) {
+          if (item.targetType === "contacts") {
+            await messenger.addressBooks.update(item.targetID, {
+              name: item.name,
+            });
+          } else {
+            await calendarStore.renameCalendar(item.targetID, item.name);
+          }
+        }
+        await this.updateFolder({
+          accountId: ctx.account.accountId,
+          folderId: item.folderId,
+          patch: { targetName: item.name },
+        });
+      } catch (err) {
+        this.reportEventLog({
+          level: "warning",
+          message: `[target] could not rename the local copy of a folder renamed on the server to "${item.name}": ${err?.message ?? String(err)}`,
+        });
+      }
+    }
+  }
+
   async #loadContext(accountId) {
     const rv = await this.getAccount(accountId);
     if (!rv?.account) return null;
@@ -2206,7 +2263,7 @@ function calendarOwner(account) {
 function localNameForFolder(folder, ctx) {
   const stored = folder?.targetName?.trim?.();
   if (stored) return stored;
-  return `${folder.displayName} (${ctx.account.accountName})`;
+  return genResourceName(folder.displayName, ctx.account.accountName);
 }
 
 /** EAS requires a stable device identifier. 32 chars is the de-facto

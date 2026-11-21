@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Den här enheten vinner"
   },
+  "config.protocol.followRenames": {
+    "message": "Följ mappars namnbyten på servern"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Följ, om jag inte har döpt om den lokalt"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Följ alltid"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Följ aldrig"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Den lokala adressboken, kalendern eller uppgiftslistan får mappens nya namn. ”Följ alltid” ersätter även ett manuellt valt namn."
+  },
   "config.contacts.displayOverride": {
     "message": "Åsidosätt visningsnamnet med \"Förnamn\" + \"Efternamn\""
   },

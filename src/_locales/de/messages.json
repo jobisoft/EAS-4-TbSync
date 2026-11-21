@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Dieses Gerät gewinnt"
   },
+  "config.protocol.followRenames": {
+    "message": "Umbenennung von Ordnern auf dem Server übernehmen"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Übernehmen, außer der Name wurde lokal geändert"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Immer übernehmen"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Nie übernehmen"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Das lokale Adressbuch, der Kalender oder die Aufgabenliste übernimmt den neuen Namen des Ordners. „Immer übernehmen“ ersetzt auch einen selbst gewählten Namen."
+  },
   "config.contacts.displayOverride": {
     "message": "Anzeigenamen mit „Vorname“ + „Nachname“ überschreiben"
   },

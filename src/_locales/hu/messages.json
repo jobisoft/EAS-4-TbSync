@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Ez az eszköz nyer"
   },
+  "config.protocol.followRenames": {
+    "message": "A mappák kiszolgálón történő átnevezésének követése"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Követés, kivéve ha helyben átneveztem"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Mindig követés"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Nincs követés"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "A helyi címjegyzék, naptár vagy feladatlista átveszi a mappa új nevét. A „Mindig követés” a kézzel választott nevet is felülírja."
+  },
   "config.contacts.displayOverride": {
     "message": "A megjelenített név felülírása ezzel: „Keresztnév” + „Vezetéknév”"
   },

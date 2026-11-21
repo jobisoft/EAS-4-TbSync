@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Това устройство печели"
   },
+  "config.protocol.followRenames": {
+    "message": "Следване на преименуването на папки на сървъра"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Следване, освен ако не съм го преименувал локално"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Винаги следване"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Никога да не се следва"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Локалният адресник, календар или списък със задачи приема новото име на папката. „Винаги следване“ заменя и име, избрано ръчно."
+  },
   "config.contacts.displayOverride": {
     "message": "Замяна на показваното име с „Собствено име“ + „Фамилия“"
   },

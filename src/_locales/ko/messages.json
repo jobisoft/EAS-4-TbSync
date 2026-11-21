@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "이 기기 우선"
   },
+  "config.protocol.followRenames": {
+    "message": "서버의 폴더 이름 변경 따르기"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "따르기(로컬에서 직접 이름을 바꾼 경우 제외)"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "항상 따르기"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "따르지 않음"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "로컬 주소록, 캘린더 또는 할 일 목록이 폴더의 새 이름을 따릅니다. '항상 따르기'을 선택하면 직접 지정한 이름도 바뀝니다."
+  },
   "config.contacts.displayOverride": {
     "message": "표시 이름을 \"이름\" + \"성\"으로 재정의"
   },

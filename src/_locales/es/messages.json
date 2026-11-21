@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Gana este dispositivo"
   },
+  "config.protocol.followRenames": {
+    "message": "Seguir los cambios de nombre de carpetas en el servidor"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Seguir, salvo que lo haya renombrado localmente"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Seguir siempre"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "No seguir nunca"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "La libreta de direcciones, el calendario o la lista de tareas local adopta el nuevo nombre de la carpeta. «Seguir siempre» también sustituye un nombre elegido manualmente."
+  },
   "config.contacts.displayOverride": {
     "message": "Reemplazar el nombre mostrado por «Nombre» + «Apellidos»"
   },

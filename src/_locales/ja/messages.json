@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "このデバイスを優先"
   },
+  "config.protocol.followRenames": {
+    "message": "サーバー上のフォルダー名の変更に追従する"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "追従する（ローカルで名前を変更した場合を除く）"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "常に追従する"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "追従しない"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "ローカルのアドレス帳、カレンダー、またはタスクリストが、フォルダーの新しい名前に追従します。「常に追従する」を選ぶと、手動で付けた名前も置き換えられます。"
+  },
   "config.contacts.displayOverride": {
     "message": "表示名を「名」+「姓」で上書き"
   },

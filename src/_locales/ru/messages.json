@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Побеждает это устройство"
   },
+  "config.protocol.followRenames": {
+    "message": "Следовать переименованию папок на сервере"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Следовать, если я не переименовал локально"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Всегда следовать"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Никогда не следовать"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Локальная адресная книга, календарь или список задач принимает новое имя папки. «Всегда следовать» заменяет и имя, выбранное вручную."
+  },
   "config.contacts.displayOverride": {
     "message": "Заменить отображаемое имя на «Имя» + «Фамилия»"
   },

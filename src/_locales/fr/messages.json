@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Cet appareil gagne"
   },
+  "config.protocol.followRenames": {
+    "message": "Suivre le renommage des dossiers sur le serveur"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Suivre, sauf si je l'ai renommé localement"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Toujours suivre"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Ne jamais suivre"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Le carnet d'adresses, l'agenda ou la liste de tâches local reprend le nouveau nom du dossier. « Toujours suivre » remplace aussi un nom choisi manuellement."
+  },
   "config.contacts.displayOverride": {
     "message": "Remplacer le nom affiché par « Prénom » + « Nom »"
   },

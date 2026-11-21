@@ -52,6 +52,7 @@ const FIELD_IDS = [
   "as-version-selected",
   "provision",
   "conflict-policy",
+  "follow-renames",
   "contacts-display-override",
   "contacts-name-separator",
   "calendar-sync-limit",
@@ -163,6 +164,7 @@ async function load() {
   populateAsVersionDropdown(account);
   $("provision").checked = account.provision !== false;
   $("conflict-policy").value = account.conflict || "1";
+  $("follow-renames").value = account.followServerRenames || "unmodified";
 
   // ── Contacts section ───────────────────────────────────────────────────
   $("contacts-display-override").checked = !!account.contactsDisplayOverride;
@@ -339,6 +341,7 @@ async function onSave() {
     asVersionSelected,
     provision: $("provision").checked,
     conflict: $("conflict-policy").value,
+    followServerRenames: $("follow-renames").value,
     contactsDisplayOverride: $("contacts-display-override").checked,
     contactsNameSeparator: $("contacts-name-separator").value,
     calendarSyncLimit: $("calendar-sync-limit").value,

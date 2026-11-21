@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Vince questo dispositivo"
   },
+  "config.protocol.followRenames": {
+    "message": "Segui la ridenominazione delle cartelle sul server"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Segui, a meno che non l'abbia rinominato localmente"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Segui sempre"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Non seguire mai"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "La rubrica, il calendario o l'elenco attività locale assume il nuovo nome della cartella. «Segui sempre» sostituisce anche un nome scelto manualmente."
+  },
   "config.contacts.displayOverride": {
     "message": "Sovrascrivi il nome visualizzato con «Nome» + «Cognome»"
   },

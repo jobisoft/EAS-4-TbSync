@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Câștigă acest dispozitiv"
   },
+  "config.protocol.followRenames": {
+    "message": "Urmărește redenumirea dosarelor pe server"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Urmărește, cu excepția cazului în care l-am redenumit local"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Urmărește întotdeauna"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Nu urmări niciodată"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Agenda, calendarul sau lista de sarcini locală preia noul nume al dosarului. „Urmărește întotdeauna” înlocuiește și un nume ales manual."
+  },
   "config.contacts.displayOverride": {
     "message": "Suprascrie numele afișat cu „Prenume” + „Nume”"
   },

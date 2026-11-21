@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "Vyhrává toto zařízení"
   },
+  "config.protocol.followRenames": {
+    "message": "Sledovat přejmenování složek na serveru"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Sledovat, pokud jsem to místně nepřejmenoval"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Vždy sledovat"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Nikdy nesledovat"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Místní kniha adres, kalendář nebo seznam úkolů převezme nový název složky. „Vždy sledovat“ nahradí i ručně zvolený název."
+  },
   "config.contacts.displayOverride": {
     "message": "Přepsat zobrazované jméno tvarem „Křestní jméno“ + „Příjmení“"
   },

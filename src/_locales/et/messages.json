@@ -255,6 +255,21 @@
   "config.protocol.conflict.deviceWins": {
     "message": "See seade jääb peale"
   },
+  "config.protocol.followRenames": {
+    "message": "Järgi kaustade ümbernimetamist serveris"
+  },
+  "config.protocol.followRenames.unmodified": {
+    "message": "Järgi, välja arvatud juhul, kui nimetasin selle kohapeal ümber"
+  },
+  "config.protocol.followRenames.always": {
+    "message": "Järgi alati"
+  },
+  "config.protocol.followRenames.ignore": {
+    "message": "Ära kunagi järgi"
+  },
+  "config.protocol.followRenames.hint": {
+    "message": "Kohalik aadressiraamat, kalender või ülesannete loend võtab üle kausta uue nime. „Järgi alati” asendab ka käsitsi valitud nime."
+  },
   "config.contacts.displayOverride": {
     "message": "Asenda kuvatav nimi vormiga „Eesnimi“ + „Perekonnanimi“"
   },
