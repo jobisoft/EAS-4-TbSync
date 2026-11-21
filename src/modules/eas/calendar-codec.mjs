@@ -1937,6 +1937,66 @@ export function isReceivedMeeting(ical, userEmail = null) {
   return stripMailto(stringOf(orgProp.getFirstValue())).toLowerCase() !== self;
 }
 
+/** The same item without an organizer that invites nobody, or null when
+ *  there is nothing to take out.
+ *
+ *  A webinar or booking service hands out an "add to calendar" file that
+ *  names itself as `ORGANIZER` and lists no `ATTENDEE` at all. The name
+ *  says where the event came from, not who is meeting. `isReceivedMeeting`
+ *  cannot tell that from an invitation - the organizer is not the user - so
+ *  on 16.x the push holds the item back for an answer, there is none to
+ *  send, and the queued edit is dropped: the event never reaches the server.
+ *
+ *  Taking the organizer out at the door keeps the item in the shape the
+ *  protocol can carry. With no organizer the item reads as the user's own,
+ *  which is what the server stores it as anyway: on 16.x we may not state an
+ *  organizer, and the server puts the user there. Before 16.1 the codec
+ *  writes whatever organizer the item has, so one that is gone cannot be
+ *  sent either.
+ *
+ *  Only an item nobody is invited to qualifies, and that is asked of every
+ *  component, not only the master: an occurrence that names a guest is an
+ *  invitation, whose answer is what such an item is held back for. Anything
+ *  with an attendee anywhere is left exactly as it is.
+ *
+ *  An item the server has described (`X-EAS-MEETINGSTATUS`) is not ours to
+ *  rewrite either: the server's statement outranks anything we could infer.
+ *
+ *  An organizer that is the user's own is taken out as well. With nobody
+ *  invited it changes nothing - the server substitutes the user - and the
+ *  hooks that call this cannot learn the mailbox address on a 16.x calendar
+ *  to tell the two apart.
+ *
+ *  Returns null for anything it cannot read, as every transform here does: a
+ *  blob we cannot parse is not one to rewrite. */
+export function withoutSourceOrganizer(ical) {
+  try {
+    const vcal = parseVCalendar(ical);
+    if (!vcal) return null;
+    const components = vcal.getAllSubcomponents("vevent");
+    if (!components.length) return null;
+    const master = pickMasterVevent(vcal);
+    const serverSpoke = Number.isFinite(
+      parseInt(
+        master?.getFirstPropertyValue(X_EAS_MEETINGSTATUS.toLowerCase()),
+        10,
+      ),
+    );
+    if (serverSpoke) return null;
+    if (components.some((comp) => comp.hasProperty("attendee"))) return null;
+
+    let removed = false;
+    for (const comp of components) {
+      if (!comp.hasProperty("organizer")) continue;
+      comp.removeAllProperties("organizer");
+      removed = true;
+    }
+    return removed ? vcal.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The same event, as something this mailbox may actually hold.
  *
  *  For an invitation the server has no copy of, which can therefore never be

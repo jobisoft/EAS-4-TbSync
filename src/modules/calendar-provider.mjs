@@ -42,6 +42,7 @@ import {
   isReceivedMeeting,
   pinEasStamps,
   readEasServerIdFromIcal,
+  withoutSourceOrganizer,
 } from "./eas/calendar-codec.mjs";
 import { clientSchedulingFor } from "./eas/client-scheduling.mjs";
 import {
@@ -449,6 +450,34 @@ async function guardStamps(item, priorIcal) {
   return { ...item, item: guarded };
 }
 
+/** Take out an organizer that invites nobody - see `withoutSourceOrganizer`
+ *  for what qualifies and why. Returns the item the platform should store:
+ *  the same object when nothing needed doing, so the common path allocates
+ *  nothing.
+ *
+ *  It runs here, inside the hook, because this is where an item enters the
+ *  calendar from outside: an import, a paste, the event dialog, the items
+ *  API. The platform stores what the hook returns, and our own sync writes
+ *  to `<id>#cache` and fires no hook, so the rewrite cannot come back as a
+ *  fresh user edit - and the queue entry that follows is filed against the
+ *  shape the item became.
+ *
+ *  Never throws, for the reason `conformItem` does not either: the hook is
+ *  holding the user's save. */
+function dropSourceOrganizer(item) {
+  const ical = item?.item;
+  if (typeof ical !== "string") return item;
+  const stripped = withoutSourceOrganizer(ical);
+  if (!stripped) return item;
+  report?.({
+    level: "debug",
+    message:
+      `[event-sync] ${item.id ?? "an item"} names an organizer but invites ` +
+      `nobody; the organizer was dropped before it was stored`,
+  });
+  return { ...item, item: stripped };
+}
+
 /** Keep the shapes `recurrence-shape.mjs` describes: at most one rule per
  *  item, and a list of dates only on an item a server stated that way.
  *  An item breaking that is reduced to the piece keeping its identity, and
@@ -669,7 +698,7 @@ export function registerCalendarProvider() {
     // the item would be overwritten by a copy that has no identity, and a
     // synced event would quietly detach from the server.
     const prior = await priorIcalOf(calendar?.id, base);
-    const guarded = await guardStamps(base, prior);
+    const guarded = dropSourceOrganizer(await guardStamps(base, prior));
     // The same lookup that saves the stamps also says what this write is:
     // an item the server already knows is being overwritten, not created.
     const op = opForCreatedItem(prior);
@@ -691,7 +720,7 @@ export function registerCalendarProvider() {
   provider.onItemUpdated.addListener(
     async (calendar, item, oldItem, hookOptions) => {
       const oldIcal = oldItem?.item ?? null;
-      const guarded = await guardStamps(item, oldIcal);
+      const guarded = dropSourceOrganizer(await guardStamps(item, oldIcal));
       const flags = flagsOf(hookOptions);
       const conformed = await conformItem(calendar?.id, guarded, flags);
       await record(calendar?.id, item?.id, "updated", {
