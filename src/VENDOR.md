@@ -25,7 +25,7 @@ This file lists files that were not created by this project and are maintained u
 ## ical.min.js
 
 - **File** : `/vendor/ical.min.js`
-- **Source** : https://github.com/kewisch/ical.js/releases/download/v2.2.1/ical.min.js
+- **Source** : https://cdn.jsdelivr.net/npm/ical.js@2.2.1/dist/ical.min.js
 - **Version** : v2.2.1
 - **License** : MPL 2.0 (see header of [ical.min.js](./ical.min.js))
 
