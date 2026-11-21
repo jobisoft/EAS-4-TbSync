@@ -1,0 +1,42 @@
+{
+  "manifest_version": 2,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "outlook-web-helper@jobisoft.de",
+      "strict_min_version": "115.0"
+    }
+  },
+  "name": "Outlook Web Helper",
+  "version": "1.0.0",
+  "author": "John Bieling",
+  "description": "Read and drive the logged-in Outlook on the web calendar from local scripts through a helper app on 127.0.0.1.",
+  "permissions": [
+    "nativeMessaging",
+    "https://outlook.live.com/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "icons": {
+    "32": "icon32.png",
+    "64": "icon64.png"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://outlook.live.com/*"
+      ],
+      "js": [
+        "content/outlook-web.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

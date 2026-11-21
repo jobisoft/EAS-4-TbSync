@@ -1,0 +1,7 @@
+{
+  "name": "outlook_web_helper_host",
+  "description": "Native helper for the Outlook Web Helper add-on",
+  "path": "/path/to/native-messaging-app/outlook_web_helper_host.py",
+  "type": "stdio",
+  "allowed_extensions": ["outlook-web-helper@jobisoft.de"]
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Outlook Web Helper</title>
+  <link rel="stylesheet" href="options.css" />
+  <script src="options.js" type="module"></script>
+</head>
+
+<body>
+  <div class="page">
+    <div class="page-header">
+      <img src="../icon64.png" alt="" />
+      <div>
+        <h1>Outlook Web Helper</h1>
+        <p>Read and drive the logged-in Outlook on the web calendar from local scripts.</p>
+      </div>
+    </div>
+
+    <div id="banner" class="banner banner-checking">
+      <div class="spinner" id="banner-spinner"></div>
+      <div class="banner-text">
+        <strong id="banner-title">Checking the helper app ...</strong>
+        <span id="banner-detail"></span>
+      </div>
+      <button id="retry-btn" type="button" class="secondary" hidden>Try again</button>
+    </div>
+
+    <!-- Setup: shown while the helper app cannot be reached -->
+    <div id="setup-section" class="section" hidden>
+      <h2>Install the helper app</h2>
+      <p>The add-on cannot read the web page and listen for scripts on its own. It needs the small Python helper app (Python 3 is required). Register it once:</p>
+      <ol>
+        <li>Open the folder <code>native-messaging-app</code> of the Outlook Web Helper source.</li>
+        <li data-os="win">Double-click <code>install.bat</code> and answer <code>y</code>.</li>
+        <li data-os="unix">Run <code>bash install.sh</code> in a terminal and answer <code>y</code>.</li>
+        <li>Restart Firefox, load the add-on again and open this page.</li>
+      </ol>
+    </div>
+
+    <div id="main" hidden>
+      <div class="section">
+        <h2>Status</h2>
+        <table class="kv">
+          <tr><th>Add-on</th><td id="addon-version"></td></tr>
+          <tr><th>Helper app</th><td id="host-version"></td></tr>
+          <tr><th>Uptime of the helper app</th><td id="uptime"></td></tr>
+          <tr><th>Config file</th><td><code id="config-path"></code></td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>HTTP API</h2>
+        <p>Scripts reach the add-on through this address. Only this computer can connect. The port is set in the config file.</p>
+        <table class="kv">
+          <tr><th>Address</th><td><code id="api-url"></code>
+            <button id="copy-url-btn" type="button" class="secondary small">Copy</button></td></tr>
+          <tr><th>Token</th><td><code id="token" class="token"></code>
+            <button id="show-token-btn" type="button" class="secondary small">Show</button>
+            <button id="copy-token-btn" type="button" class="secondary small">Copy</button>
+            <button id="new-token-btn" type="button" class="secondary small danger">New token</button></td></tr>
+        </table>
+        <p class="small">Send the token as <code>Authorization: Bearer &lt;token&gt;</code>. Keep it secret. A new token ends the access of every script that has the old one.</p>
+      </div>
+
+      <div class="section">
+        <h2>Outlook on the web</h2>
+        <div class="row">
+          <button id="open-outlook-btn" type="button">Open the Outlook calendar</button>
+        </div>
+        <div id="tab-list" class="tab-list"></div>
+        <p class="small">Log in in that tab. The add-on only works on <code>outlook.live.com</code> tabs.</p>
+      </div>
+
+      <div class="section">
+        <h2>Latest requests</h2>
+        <div id="recent"></div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
