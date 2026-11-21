@@ -73,6 +73,7 @@ function makeCodec(modCodec) {
     // back to a normal master-update for codecs that don't implement them.
     applyInstanceChange: modCodec.applyInstanceChange,
     applyInstanceDelete: modCodec.applyInstanceDelete,
+    storesRecurrence: modCodec.storesRecurrence,
     listInstanceCommands: modCodec.listInstanceCommands,
   };
 }

@@ -659,6 +659,25 @@ function pickMasterVevent(vcal) {
   return all[0] ?? null;
 }
 
+/** Whether the event we hold is a series: its master states a rule or a list
+ *  of dates. `false` for an event that is one occurrence and nothing more,
+ *  which is what a mailbox holds when it was invited to a single occurrence
+ *  of somebody else's series. `null` when the blob cannot be read, so the
+ *  caller can tell "not a series" from "no answer".
+ *
+ *  An `<InstanceId>` names an occurrence of a series. Against an event that
+ *  is not one there is nothing to name, and building an override on it makes
+ *  a calendar item Thunderbird refuses (#372). */
+export function storesRecurrence(ical) {
+  const vcal = parseVCalendar(ical);
+  if (!vcal) return null;
+  const master = pickMasterVevent(vcal);
+  if (!master) return null;
+  return !!(
+    master.getFirstProperty("rrule") || master.getFirstProperty("rdate")
+  );
+}
+
 /** The component our stamps belong on, for a blob that may hold either kind.
  *
  *  One calendar type serves events and tasks, so anything reached through

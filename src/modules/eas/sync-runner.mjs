@@ -2949,6 +2949,25 @@ async function applyChange(ctx, changeNode, noteBacklog = null) {
     ctx.syncRecurrence &&
     ctx.itemKind.codec.applyInstanceChange
   ) {
+    // An <InstanceId> names an occurrence of a series. A mailbox invited to
+    // one occurrence of somebody else's series holds just that occurrence as
+    // an event of its own, and the server still says "instance" when it
+    // changes it (#372). There is no series to put an override on - building
+    // one makes an item Thunderbird refuses, and the refusal fails the whole
+    // folder on every sync - so the command is about the item itself. The
+    // InstanceId is not compared with the item's start: it is the local
+    // midnight of the day, so the two differ by design.
+    if (ctx.itemKind.codec.storesRecurrence?.(existing.blob) === false) {
+      ctx.provider.reportEventLog({
+        level: "debug",
+        accountId: ctx.accountId,
+        folderId: ctx.folderId,
+        message:
+          `[${ctx.itemKind.changelogKind}-sync] per-instance change ` +
+          `for ${serverID} (${instanceId}) applied to the single event it is held as`,
+      });
+      return applyChangeFromAd(ctx, ad, existing, serverID, null, noteBacklog);
+    }
     return applyExceptionChange(ctx, ad, existing, instanceId, serverID);
   }
   return applyChangeFromAd(ctx, ad, existing, serverID, null, noteBacklog);
