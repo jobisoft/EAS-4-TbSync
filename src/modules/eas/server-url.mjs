@@ -14,6 +14,9 @@
  * rules are restored verbatim:
  *
  *   - a missing scheme means https (createAccount.js:251-254)
+ *   - plain `http://` without a port is upgraded to https, see
+ *     `upgradeInsecureUrl` (an explicit port or a loopback host is the
+ *     user deliberately addressing a specific plain-http listener)
  *   - the path ends at /Microsoft-Server-ActiveSync unless it already
  *     does, compared case-sensitively (network.js:103-104)
  *
@@ -29,6 +32,34 @@
 const ENDPOINT_PATH = "/Microsoft-Server-ActiveSync";
 const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
 
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * The one place that decides whether a URL may go out as plain http.
+ *
+ * Credentials and sync data must travel encrypted, so `http://` is
+ * rewritten to `https://` - except where the user has clearly chosen a
+ * plain listener: an explicit port (`http://host:8080`) or a loopback
+ * host (`http://localhost`, the mock server). A default port 80 is not
+ * explicit; the URL parser drops it, so it is upgraded too.
+ *
+ * @param {string|URL} input
+ * @returns {string|URL} same type as the input; non-http input unchanged
+ */
+export function upgradeInsecureUrl(input) {
+  let url;
+  try {
+    url = new URL(input);
+  } catch {
+    return input;
+  }
+  if (url.protocol !== "http:") return input;
+  if (url.port !== "") return input;
+  if (LOOPBACK_HOSTS.has(url.hostname)) return input;
+  url.protocol = "https:";
+  return input instanceof URL ? url : url.href;
+}
+
 /**
  * @param {string} input raw `custom.server`
  * @returns {string|null} the URL to contact, or null if unusable
@@ -43,7 +74,7 @@ export function normalizeCustomServerUrl(input) {
 
   let parsed;
   try {
-    parsed = new URL(withScheme);
+    parsed = new URL(upgradeInsecureUrl(withScheme));
   } catch {
     return null;
   }

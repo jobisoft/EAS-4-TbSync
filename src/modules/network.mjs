@@ -29,7 +29,10 @@ import {
   ANCHOR_MAILBOX_HOSTS,
   ANCHOR_MAILBOX_MARKER,
 } from "./anchor-mailbox.mjs";
-import { normalizeCustomServerUrl } from "./eas/server-url.mjs";
+import {
+  normalizeCustomServerUrl,
+  upgradeInsecureUrl,
+} from "./eas/server-url.mjs";
 
 const DEFAULT_USER_AGENT = "Thunderbird ActiveSync";
 const CUSTOM_USER_AGENT_STORAGE_KEY = "tbsync.useragent";
@@ -569,7 +572,12 @@ async function fetchWithTimeout(url, init, cancelSignal = null, opts = {}) {
       else cancelSignal.addEventListener("abort", onCancel, { once: true });
     }
     try {
-      const resp = await fetch(url, { ...init, signal: controller.signal });
+      // Central guard: whatever account mode produced `url`, plain http
+      // never leaves here unless upgradeInsecureUrl allows it.
+      const resp = await fetch(upgradeInsecureUrl(url), {
+        ...init,
+        signal: controller.signal,
+      });
       if (!readBody) return { resp, buf: null };
       // Error responses are read too: a 500 from a non-Microsoft server
       // usually carries its own explanation as HTML or text, and dropping
