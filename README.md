@@ -29,10 +29,6 @@ instant is always preserved. Neither are incoming all-day events. Pushing an
 all-day event *back* to a non-Exchange server that ignores the blob we send
 can still shift the date by a day for users east of UTC.
 
-## Want to add or fix a localization?
-To help translating this project, please visit [crowdin.com](https://crowdin.com/profile/jobisoft), where the localizations are managed. If you want to add a new language, just contact me and I will set it up.
-
-
 ## External data sources
 
 * TbSync uses a [timezone mapping](https://github.com/mattjohnsonpint/TimeZoneConverter/blob/master/src/TimeZoneConverter/Data/Mapping.csv.gz) provided by [Matt Johnson-Pint](https://github.com/mattjohnsonpint)
